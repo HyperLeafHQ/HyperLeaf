@@ -129,22 +129,20 @@ Deposit caps are enforced during each vault's initial period and raised progress
 
 Deployed on HyperEVM. All source code verified on HyperEVM Explorer.
 
-| Contract | Address (Testnet) | Description |
-|----------|------------------|-------------|
-| `NestVault.sol` | 0x6f8d22C8... | NEST liquid staking vault |
-| `HNest.sol` | 0xe86961EA... | hNEST receipt token |
-| `NestVault.sol` | NEST liquid staking vault |
-| `HNest.sol` | hNEST receipt token |
-| `BaseVault.sol` | Shared vault logic inherited by all vaults |
-| `interfaces/` | External protocol interfaces |
-| `keeper/` | Weekly automation scripts |
+| Contract        | Address (Testnet)                            | Description                                |
+| --------------- | -------------------------------------------- | ------------------------------------------ |
+| `NestVault.sol` | `0x6f8d22C85e505eCA309635EA552f5067C026A2A9` | NEST liquid staking vault                  |
+| `HNest.sol`     | `0xe86961EAF3CD4ED87497641fF32E55875aB7189f` | hNEST receipt token                        |
+| `BaseVault.sol` | —                                            | Shared vault logic inherited by all vaults |
+| `interfaces/`   | —                                            | External protocol interfaces               |
+| `keeper/`       | —                                            | Weekly automation scripts                  |
 
 ---
 
 ## Development
 
 ```bash
-git clone git clone https://github.com/HyperLeafHQ/hyperleaf
+git clone https://github.com/HyperLeafHQ/HyperLeaf
 cd hyperleaf
 npm install
 
