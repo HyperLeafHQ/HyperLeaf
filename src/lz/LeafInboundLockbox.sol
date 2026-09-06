@@ -5,12 +5,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {LeafOApp} from "./LeafOApp.sol";
+import {LeafYieldFee} from "./LeafYieldFee.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 
 /// @title LeafInboundLockbox
-/// @notice C1 source lockbox: lock inner token, mint closed OFT on HyperEVM.
-///         Reverse LZ messages are rejected. Do not add a redeem later; deploy C2 instead.
-contract LeafInboundLockbox is LeafOApp, ReentrancyGuard {
+/// @notice C1 source lockbox. Reverse LZ rejected. 1% of new yield to feeRecipient.
+contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable innerToken;
@@ -24,17 +24,39 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard {
     error CapExceeded();
     error InboundOnly();
 
-    constructor(address token_, address endpoint_, address owner_, address guardian_, uint256 depositCap_)
-        LeafOApp(endpoint_, owner_, guardian_)
-    {
+    constructor(
+        address token_,
+        address endpoint_,
+        address owner_,
+        address guardian_,
+        address feeRecipient_,
+        uint256 depositCap_
+    ) LeafOApp(endpoint_, owner_, guardian_) {
         if (token_ == address(0)) revert ZeroAddress();
         innerToken = IERC20(token_);
         depositCap = depositCap_;
+        _initFee(feeRecipient_);
     }
 
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
+    }
+
+    function setFeeRecipient(address recipient) external onlyOwner {
+        _setFeeRecipient(recipient);
+    }
+
+    function harvest() external nonReentrant {
+        _harvestInner(innerToken, 0);
+    }
+
+    function harvestToken(IERC20 token) external nonReentrant {
+        if (address(token) == address(innerToken)) {
+            _harvestInner(innerToken, 0);
+        } else {
+            _harvestOther(token);
+        }
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
@@ -47,9 +69,12 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
 
+        _harvestInner(innerToken, 0);
+
         uint256 got = _pull(msg.sender, amount);
         if (totalLocked + got > depositCap) revert CapExceeded();
         totalLocked += got;
+        _accountDeposit(got);
 
         bytes memory payload = abi.encode(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
