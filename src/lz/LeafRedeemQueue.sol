@@ -5,13 +5,15 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {LeafOApp} from "./LeafOApp.sol";
+import {LeafYieldFee} from "./LeafYieldFee.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 
 /// @title LeafRedeemQueue
-/// @notice C2 source lockbox. Inbound lock+mint like L. Outbound burn on HyperEVM
-///         opens a ticket; inner token is claimable after `redeemDelay`.
-///         Delay must be >= the underlying protocol unstake. Do not use for C1.
-contract LeafRedeemQueue is LeafOApp, ReentrancyGuard {
+/// @notice C2 source lockbox. 1% of new yield → feeRecipient. No fee on in/out.
+///         Inbound lock+mint like L. Outbound burn on HyperEVM opens a ticket;
+///         inner token is claimable after `redeemDelay`. Delay must be >= the
+///         underlying protocol unstake. Do not use for C1.
+contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     using SafeERC20 for IERC20;
 
     struct Ticket {
@@ -25,6 +27,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard {
     uint64 public immutable redeemDelay;
     uint256 public depositCap;
     uint256 public totalLocked;
+    uint256 public pendingTicketAssets;
     uint256 public nextTicketId;
     mapping(uint256 id => Ticket) public tickets;
 
@@ -45,6 +48,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard {
         address endpoint_,
         address owner_,
         address guardian_,
+        address feeRecipient_,
         uint256 depositCap_,
         uint64 redeemDelay_
     ) LeafOApp(endpoint_, owner_, guardian_) {
@@ -52,11 +56,28 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard {
         innerToken = IERC20(token_);
         depositCap = depositCap_;
         redeemDelay = redeemDelay_;
+        _initFee(feeRecipient_);
     }
 
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
+    }
+
+    function setFeeRecipient(address recipient) external onlyOwner {
+        _setFeeRecipient(recipient);
+    }
+
+    function harvest() external nonReentrant {
+        _harvestInner(innerToken, pendingTicketAssets);
+    }
+
+    function harvestToken(IERC20 token) external nonReentrant {
+        if (address(token) == address(innerToken)) {
+            _harvestInner(innerToken, pendingTicketAssets);
+        } else {
+            _harvestOther(token);
+        }
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
@@ -69,9 +90,12 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
 
+        _harvestInner(innerToken, pendingTicketAssets);
+
         uint256 got = _pull(msg.sender, amount);
         if (totalLocked + got > depositCap) revert CapExceeded();
         totalLocked += got;
+        _accountDeposit(got);
 
         bytes memory payload = abi.encode(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
@@ -91,6 +115,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard {
         if (t.claimed) revert AlreadyClaimed();
         if (block.timestamp < t.eta) revert NotMature();
         t.claimed = true;
+        pendingTicketAssets -= t.amount;
         innerToken.safeTransfer(t.to, t.amount);
         emit RedeemClaimed(id, t.to, t.amount);
     }
@@ -106,11 +131,16 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard {
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();
         if (amount > totalLocked) revert InsufficientLocked();
+
+        _harvestInner(innerToken, pendingTicketAssets);
+        uint256 assetsOut = _assetsForShares(innerToken, amount, totalLocked, pendingTicketAssets);
         totalLocked -= amount;
+        pendingTicketAssets += assetsOut;
         uint256 id = nextTicketId++;
         uint64 eta = uint64(block.timestamp) + redeemDelay;
-        tickets[id] = Ticket(to, amount, eta, false);
-        emit RedeemQueued(id, to, amount, eta, guid);
+        tickets[id] = Ticket(to, assetsOut, eta, false);
+        _syncAccounted(innerToken, pendingTicketAssets);
+        emit RedeemQueued(id, to, assetsOut, eta, guid);
     }
 
     function _pull(address from, uint256 amount) internal returns (uint256 got) {
