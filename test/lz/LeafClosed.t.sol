@@ -63,6 +63,7 @@ contract LeafClosedTest is Test {
     LeafOFT queuedOft;
     address owner = address(0xA11CE);
     address guardian = address(0xB0B);
+    address feeTo = address(0xFEE);
     address user = address(0xCAFE);
     uint32 constant SRC_EID = 30102;
     uint32 constant DST_EID = 30367;
@@ -73,9 +74,9 @@ contract LeafClosedTest is Test {
         epDst = new MockEndpoint(DST_EID);
         token = new MockToken();
         vm.startPrank(owner);
-        box = new LeafInboundLockbox(address(token), address(epSrc), owner, guardian, 1_000e18);
+        box = new LeafInboundLockbox(address(token), address(epSrc), owner, guardian, feeTo, 1_000e18);
         oft = new LeafClosedOFT("Hyperliquid BLUAI 4Year", "BLUAI4Y", LOCK_4Y, address(epDst), owner, guardian);
-        queue = new LeafRedeemQueue(address(token), address(epSrc), owner, guardian, 1_000e18, 7 days);
+        queue = new LeafRedeemQueue(address(token), address(epSrc), owner, guardian, feeTo, 1_000e18, 7 days);
         queuedOft = new LeafOFT("Hyperliquid VIRTUAL 30D", "VIRTUAL30D", address(epDst), owner, guardian);
         box.setPeer(DST_EID, address(oft));
         oft.setPeer(SRC_EID, address(box));
@@ -115,6 +116,18 @@ contract LeafClosedTest is Test {
         vm.expectRevert(LeafInboundLockbox.InboundOnly.selector);
         epSrc.deliverLockbox(address(box), back, payload);
         assertEq(token.balanceOf(address(box)), 10e18);
+        assertEq(token.balanceOf(feeTo), 0);
+    }
+
+    function testC1HarvestTakesOnePercentStaysAsBacking() public {
+        testC1MintsAndBlocksRedeem();
+        token.mint(address(box), 100e18);
+        box.harvest();
+        assertEq(token.balanceOf(feeTo), 1e18);
+        assertEq(token.balanceOf(address(box)), 109e18);
+        box.harvest();
+        assertEq(token.balanceOf(feeTo), 1e18);
+        assertEq(token.balanceOf(address(box)), 109e18);
     }
 
     function testC2QueueThenClaim() public {
@@ -147,7 +160,72 @@ contract LeafClosedTest is Test {
         vm.warp(uint256(eta));
         queue.claim(0);
         assertEq(token.balanceOf(user), 95e18);
+        assertEq(token.balanceOf(feeTo), 0);
         (, , , bool claimedAfter) = queue.tickets(0);
         assertTrue(claimedAfter);
+    }
+
+    function testC2HarvestThenProRataTicket() public {
+        vm.startPrank(user);
+        token.approve(address(queue), 8e18);
+        queue.sendTo{value: 0.01 ether}(DST_EID, user, 8e18);
+        vm.stopPrank();
+        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(8e18));
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: SRC_EID, sender: bytes32(uint256(uint160(address(queue)))), nonce: 1
+        });
+        epDst.deliver(address(queuedOft), origin, payload);
+
+        token.mint(address(queue), 100e18);
+        queue.harvest();
+        assertEq(token.balanceOf(feeTo), 1e18);
+
+        vm.prank(user);
+        queuedOft.sendTo{value: 0.01 ether}(SRC_EID, user, 8e18);
+        bytes memory back = abi.encode(bytes32(uint256(uint160(user))), uint256(8e18));
+        ILayerZeroEndpointV2.Origin memory o2 = ILayerZeroEndpointV2.Origin({
+            srcEid: DST_EID, sender: bytes32(uint256(uint160(address(queuedOft)))), nonce: 1
+        });
+        epSrc.deliverQueue(address(queue), o2, back);
+        (, uint256 amount, uint64 eta,) = queue.tickets(0);
+        assertEq(amount, 107e18);
+
+        vm.warp(uint256(eta));
+        queue.claim(0);
+        assertEq(token.balanceOf(user), 92e18 + 107e18);
+        assertEq(token.balanceOf(feeTo), 1e18);
+    }
+
+    function testC2HarvestDoesNotTouchQueuedTickets() public {
+        vm.startPrank(user);
+        token.approve(address(queue), 8e18);
+        queue.sendTo{value: 0.01 ether}(DST_EID, user, 8e18);
+        vm.stopPrank();
+        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(8e18));
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: SRC_EID, sender: bytes32(uint256(uint160(address(queue)))), nonce: 1
+        });
+        epDst.deliver(address(queuedOft), origin, payload);
+
+        vm.prank(user);
+        queuedOft.sendTo{value: 0.01 ether}(SRC_EID, user, 3e18);
+        bytes memory back = abi.encode(bytes32(uint256(uint160(user))), uint256(3e18));
+        ILayerZeroEndpointV2.Origin memory o2 = ILayerZeroEndpointV2.Origin({
+            srcEid: DST_EID, sender: bytes32(uint256(uint160(address(queuedOft)))), nonce: 1
+        });
+        epSrc.deliverQueue(address(queue), o2, back);
+        (, uint256 ticketAmt, uint64 eta,) = queue.tickets(0);
+        assertEq(ticketAmt, 3e18);
+        assertEq(queue.pendingTicketAssets(), 3e18);
+
+        token.mint(address(queue), 100e18);
+        queue.harvest();
+        assertEq(token.balanceOf(feeTo), 1e18);
+        (, uint256 ticketAfter,,) = queue.tickets(0);
+        assertEq(ticketAfter, 3e18);
+
+        vm.warp(uint256(eta));
+        queue.claim(0);
+        assertEq(token.balanceOf(user), 95e18);
     }
 }
