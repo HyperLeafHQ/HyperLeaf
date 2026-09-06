@@ -1,8 +1,8 @@
 {
   "kinds": {
-    "L": "Liquid receipt. Lock sToken, instant redeem same sToken. HyperEVM ticker hPREFIX.",
-    "C1": "No liquid receipt / long lock. Inbound only. Exit is the HyperEVM market. Ticker encodes lock (BLUAI4Y).",
-    "C2": "No liquid receipt, protocol unstake is possible. Burn hToken, wait redeemDelay, claim inner on source."
+    "L": "Liquid or instant-unstake. Lock inner token/receipt, instant redeem same thing. HyperEVM ticker hPREFIX. Job is to introduce the asset.",
+    "C1": "Long lock / no transferable receipt. Inbound only. Exit is the HyperEVM market. Ticker encodes lock.",
+    "C2": "Unstake exists with a known wait. Burn hToken, wait redeemDelay, claim inner on source."
   },
   "listings": [
     {
@@ -12,8 +12,51 @@
       "name": "Hyperleaf sKAITO",
       "innerSymbol": "sKAITO",
       "source": "base",
+      "sourceEid": 30184,
       "exit": "instant-receipt",
-      "status": "code-ready"
+      "infra": "evm",
+      "status": "code-ready",
+      "priority": 1
+    },
+    {
+      "id": "hquid",
+      "kind": "L",
+      "symbol": "hQUID",
+      "name": "Hyperleaf QUID",
+      "innerSymbol": "QUID",
+      "innerToken": "0x1a44233fae8d50f1aeb3a5d58dd426ff4814cb53",
+      "source": "base",
+      "sourceEid": 30184,
+      "exit": "instant-inner",
+      "infra": "evm",
+      "note": "Squid $QUID. Stake has no lock (unstake anytime). No need to wrap their stake position. Lock QUID, mint hQUID, redeem QUID. Same job as Unit: put the asset on HyperEVM.",
+      "contracts": {
+        "source": "LeafOFTAdapter",
+        "hyperevm": "LeafOFT"
+      },
+      "status": "code-ready-not-deployed",
+      "priority": 2
+    },
+    {
+      "id": "virtual4y",
+      "kind": "C1",
+      "symbol": "VIRTUAL4Y",
+      "name": "Hyperliquid VIRTUAL 4Year",
+      "innerSymbol": "VIRTUAL",
+      "source": "base",
+      "sourceEid": 30184,
+      "lockLabel": "4y",
+      "lockSeconds": 126144000,
+      "exit": "market-only",
+      "infra": "evm",
+      "pairsWithUnit": "uVIRTUAL",
+      "note": "veVIRTUAL is not a liquid 1:1 ERC20. C1 closed ticker so the book is not confused with Unit VIRTUAL. Official UI max lock is often 2y; ticker follows the 4y product you want. Do not turn this into C2 later.",
+      "contracts": {
+        "source": "LeafInboundLockbox",
+        "hyperevm": "LeafClosedOFT"
+      },
+      "status": "code-ready-not-deployed",
+      "priority": 3
     },
     {
       "id": "bluai4y",
@@ -27,14 +70,49 @@
       "lockLabel": "4y",
       "lockSeconds": 126144000,
       "exit": "market-only",
+      "infra": "evm",
       "risk": "high",
-      "priority": "low",
+      "priority": 6,
       "contracts": {
         "source": "LeafInboundLockbox",
         "hyperevm": "LeafClosedOFT"
       },
-      "disclaimer": "Closed-end. No protocol redeem. Price can trade below NAV. 4y is in the ticker, not an on-chain unstake.",
+      "disclaimer": "Closed-end. No protocol redeem. Price can trade below NAV.",
       "status": "code-ready-not-deployed"
+    },
+    {
+      "id": "bonk12m",
+      "kind": "C1",
+      "symbol": "BONK12M",
+      "name": "Hyperliquid BONK 12Month",
+      "innerSymbol": "BONK",
+      "source": "solana",
+      "lockLabel": "12m",
+      "lockSeconds": 31536000,
+      "exit": "market-only",
+      "infra": "solana-pending",
+      "pairsWithUnit": "uBONK",
+      "note": "Bonk Rewards 12-month lock. No early withdraw. Needs Solana lockbox. Do not wrap BONKsol (that is a SOL LST).",
+      "status": "blocked-on-solana",
+      "priority": 4
+    },
+    {
+      "id": "met",
+      "kind": "C2",
+      "symbol": "hMET",
+      "name": "Hyperleaf MET",
+      "innerSymbol": "MET",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "redeemDelayLabel": "21d",
+      "infra": "solana-pending",
+      "note": "Meteora MET. Unstake is allowed, ~21 day unbonding. C2: burn hMET, wait, claim MET on Solana. Yield is USDC/fees on Meteora, not on the hToken.",
+      "contracts": {
+        "source": "LeafRedeemQueue",
+        "hyperevm": "LeafOFT"
+      },
+      "status": "blocked-on-solana",
+      "priority": 5
     }
   ]
 }
