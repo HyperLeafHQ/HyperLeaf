@@ -55,7 +55,7 @@ Each asset is an isolated vault. One vault's risk never touches another.
 
 ---
 
-> ⚠️ **Testnet / pre-open.** Mock testnet may be live; mainnet open-deposit is gated. Only **internal review** so far — not a third-party audit. Do not send funds you cannot lose.
+> ⚠️ **Mainnet (HyperEVM 999) — capped open.** Deposits may be enabled subject to on-chain `depositCap` / pause. **Not yet externally audited.** Do not send funds you cannot lose. App: https://hyperleaf.finance/app/
 
 ## Supported Assets
 
@@ -117,7 +117,7 @@ HyperLeaf does not eliminate staking risk. It makes staking risk liquid.
 
 - **Lock risk**: underlying assets are staked and subject to the lock periods of their native protocols
 - **Market risk**: receipt token price is set by the market and may trade below NAV
-- **Smart contract risk**: contracts may contain bugs; only **internal review** has been done so far — **not** a substitute for a third-party audit
+- **Smart contract risk**: contracts may contain bugs; **Not yet externally audited** — not a substitute for a third-party audit
 - **Dependency risk**: vaults depend on the interfaces of their underlying staking protocols; upgrades to those protocols may require vault upgrades
 - **Reward variability**: staking yield depends on Nest / underlying performance and is not guaranteed
 - **Yield rails**: Nest/HEV may compound on Nest’s side; HyperLeaf share NAV is **not** auto-uplifted while `recordCompound` is disabled. Liquid HYPE from Nest’s **public HYPE Spring** is Nest-side airdrop/share — not a HyperLeaf wallet drip
@@ -130,13 +130,16 @@ Deposit caps are enforced during each vault's initial period and raised progress
 
 Deployed on HyperEVM. All source code verified on HyperEVM Explorer.
 
-| Contract        | Address (Testnet)                            | Description                                |
+| Contract        | Address (Mainnet 999)                        | Description                                |
 | --------------- | -------------------------------------------- | ------------------------------------------ |
-| `NestVault.sol` | `0x6f8d22C85e505eCA309635EA552f5067C026A2A9` | NEST liquid staking vault                  |
-| `HNest.sol`     | `0xe86961EAF3CD4ED87497641fF32E55875aB7189f` | hNEST receipt token                        |
+| `NestVault.sol` | `0x4f6615761A772e10d7f802B1C29654ABD90fF30d` | NEST liquid staking vault                  |
+| `HNest.sol`     | `0x2101621F51D7E05518D6680C62d04Ad47bC4e05D` | hNEST receipt token                        |
+| `HevAdapter.sol`| `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2` | Nest HEV attach adapter                    |
 | `BaseVault.sol` | —                                            | Shared vault logic inherited by all vaults |
 | `interfaces/`   | —                                            | External protocol interfaces               |
 | `keeper/`       | —                                            | Weekly automation scripts                  |
+
+Testnet (998) mock (internal only): NestVault `0x6f8d22C85e505eCA309635EA552f5067C026A2A9`, HNest `0xe86961EAF3CD4ED87497641fF32E55875aB7189f`.
 
 ---
 
@@ -165,7 +168,7 @@ Read `DEV_REQUIREMENTS.md` before writing any code. The most critical pre-deploy
 
 | Vault | Kind | Status | Notes |
 |-------|------|--------|--------|
-| NestVault / hNEST | **Internal review only** | Completed v1 + retest (see `docs/INTERNAL_AUDIT_v1*.md`) | **Not** a third-party audit. Do not describe the protocol as “audited.” |
+| NestVault / hNEST | **Not yet externally audited** | Internal review docs may exist under `docs/` | **Not** a third-party audit. Do not describe the protocol as “audited.” |
 
 Third-party audits, if commissioned later, will be disclosed explicitly with reports. Until then, assume unaudited smart-contract risk.
 
