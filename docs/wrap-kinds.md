@@ -28,14 +28,16 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 ## Queue
 
 1. **hxSQUID** (L, Base)
-2. **hcbETH** (L, Base) — pair with Unit uETH
-3. **hVIRTUALMAX** (C1, Base, Virtuals Auto Max-lock)
-4. **hKAITO** (L, Base) — after omnichain holder
-5. **hsAVAX** (L, Avalanche) — pair with Unit uAVAX
-6. **BONK12M** (C1, Solana — testnet mock only)
-7. **hMET** (C2, Solana — testnet mock only)
-8. **BLUAI4Y** (C1, BSC)
-9. **hshMON** (L, Monad — pending LZ)
+2. **hcbETH** (L, Base)
+3. **hveAERO** (ve-NFT, Base — new lockbox)
+4. **hstkAAVE** (L, Ethereum)
+5. **hsWBERA** (L, Berachain — LZ)
+6. **hAEVO** (C1, Ethereum)
+7. **hGMX** (C1, Arbitrum)
+8. **hJupSOL** (L, Solana)
+9. **hANSEM** (L, Solana, ansem.io)
 10. **hwstETH** (L, Ethereum) — later, own ticker
+
+Blocked until omnichain holder: **hKAITO**, **hVIRTUALMAX**.
 
 hNEST is native HyperEVM, not this wrap.

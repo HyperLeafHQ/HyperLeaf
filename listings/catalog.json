@@ -38,7 +38,7 @@
       "infra": "evm",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "blocked-omnichain-holder",
-      "priority": 10
+      "priority": 50
     },
     {
       "id": "hxsquid",
@@ -144,8 +144,8 @@
       },
       "alias": ["virtual4y"],
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true, "mockStake": true },
-      "status": "testnet-ready",
-      "priority": 4
+      "status": "blocked-omnichain-holder",
+      "priority": 50
     },
     {
       "id": "bluai4y",
@@ -250,9 +250,103 @@
         "pullInner": false,
         "toHype": ["launchpad-airdrops"]
       },
-      "note": "Watchlist. ansem.io / ansem.xyz: launches airdrop to $ANSEM holders (same shape as veVIRTUAL). Solana, not this EVM repo. Confirm mint + whether a stake receipt exists before design. Same dust+filter rules as hVIRTUALMAX.",
+      "note": "Watchlist. ansem.io on Solana only — no extra-chain claims. Launch airdrops to $ANSEM holders. Confirm mint before design. Dust+filter like Virtuals, without the holder problem.",
       "status": "watchlist",
-      "priority": 30
+      "priority": 12
+    },
+    {
+      "id": "hveaero",
+      "kind": "ve-nft",
+      "symbol": "hveAERO",
+      "name": "Hyperleaf veAERO",
+      "innerSymbol": "veAERO",
+      "innerToken": "0xeBf418Fe2512e7E6bd9b87a8F0f294aCDC67e6B4",
+      "underlying": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "yield": { "inner": "aero-rebase-and-bribes", "pullInner": false, "toHype": ["bribe-erc20s"] },
+      "note": "VotingEscrow ERC-721, not ERC-20. Cannot use LeafOFTAdapter. Needs a Nest-style veNFT lockbox (createLock / merge). Bribes and rebase are on Base — no extra-chain claim. Do not ship until the NFT lockbox exists.",
+      "status": "needs-venft-lockbox",
+      "priority": 3
+    },
+    {
+      "id": "hstkaave",
+      "kind": "L",
+      "symbol": "hstkAAVE",
+      "name": "Hyperleaf stkAAVE",
+      "innerSymbol": "stkAAVE",
+      "innerToken": "0x4da27a545c0c5B758a6BA100e3a049001de870f5",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": { "inner": "keep-stkaave", "pullInner": false, "toHype": ["AAVE"] },
+      "note": "Aave Safety Module. Slashable. L returns stkAAVE; protocol never starts the 20d cooldown. pokeRewards for AAVE emissions. Ethereum gas.",
+      "status": "later",
+      "priority": 5
+    },
+    {
+      "id": "hswbera",
+      "kind": "L",
+      "symbol": "hsWBERA",
+      "name": "Hyperleaf sWBERA",
+      "innerSymbol": "sWBERA",
+      "innerToken": "0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a",
+      "source": "berachain",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "yield": { "inner": "erc4626-rate", "pullInner": false, "toHype": [] },
+      "note": "Official PoL vault, rate grows in WBERA. 7d unbond exists — we never call it; redeem sWBERA. Wait LayerZero Berachain.",
+      "status": "later",
+      "priority": 6
+    },
+    {
+      "id": "haevo",
+      "kind": "C1",
+      "symbol": "hAEVO",
+      "name": "Hyperleaf AEVO staked",
+      "innerSymbol": "AEVO",
+      "stake": "0x38913051E01D4F6910cB66bB9aC3cb77D746Ad81",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "market-only",
+      "infra": "evm",
+      "note": "sAEVO is NOT an ERC-20 — account stake on AevoStaking. Treat as C1. Rewards/perks often off-chain on the exchange. Confirm a harvestable on-chain reward before build.",
+      "status": "later",
+      "priority": 7
+    },
+    {
+      "id": "hgmx",
+      "kind": "C1",
+      "symbol": "hGMX",
+      "name": "Hyperleaf staked GMX",
+      "innerSymbol": "GMX",
+      "source": "arbitrum",
+      "sourceChainId": 42161,
+      "sourceEid": 30110,
+      "exit": "market-only",
+      "infra": "evm",
+      "note": "RewardRouter / esGMX / multiplier points are account-based, not a single receipt. C1 until we map harvest. Arb only for v1.",
+      "status": "later",
+      "priority": 8
+    },
+    {
+      "id": "hjupsol",
+      "kind": "L",
+      "symbol": "hJupSOL",
+      "name": "Hyperleaf JupSOL",
+      "innerSymbol": "JupSOL",
+      "source": "solana",
+      "exit": "instant-receipt",
+      "infra": "solana-pending",
+      "pairsWithUnit": "uSOL",
+      "note": "Jupiter LST (rate). If you meant vote-locked JUP instead, that is a different listing. Solana lockbox required.",
+      "status": "later",
+      "priority": 9
     }
   ]
 }

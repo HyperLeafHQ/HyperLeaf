@@ -195,16 +195,19 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | Order | Ticker | Kind | Source | Inner | Why this slot |
 | ----- | ------ | ---- | ------ | ----- | ------------- |
 | 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
-| 1 | **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
-| 2 | **hcbETH** | L | Base | [cbETH](https://basescan.org/token/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22) | Base ETH LST. PoS in the rate. Pairs with Unit uETH. |
-| 3 | **hVIRTUALMAX** | C1 | Base | VIRTUAL → Virtuals Auto Max-lock (`stake(…, 104, true)`) | Never redeem. Agent merkle airdrops on Base only, dust skipped. |
-| later | **hANSEM** | L | Solana | $ANSEM | Watchlist. Launchpad airdrops to holders, same shape as Virtuals. |
-| later | **hwstETH** | L | Ethereum | wstETH | Separate ticker. Do not mix with hcbETH. |
-| later | **hKAITO** | L | Base | sKAITO | Blocked on omnichain holder: eco claims are often not on Base. |
-| later | **hshMON** | L | Monad | shMON | Same Adapter as other EVM LSTs. |
-| later | **BLUAI4Y** | C1 | BSC | BLUAI 4y | High user risk. First use of the BSC → Relay → WHYPE route. |
-| last | **BONK12M** | C1 | Solana | BONK 12-month lock | Needs a Solana lockbox. Not in this EVM repo yet. |
-| last | **hMET** | C2 | Solana | MET (~21d unbond) | Same. |
+| 1 | **hxSQUID** | L | Base | xSQUID | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
+| 2 | **hcbETH** | L | Base | cbETH | Base ETH LST. PoS in the rate. |
+| 3 | **hveAERO** | ve-NFT | Base | veAERO 721 | After L. Needs a Nest-style NFT lockbox. Bribes on Base. |
+| 4 | **hstkAAVE** | L | Ethereum | stkAAVE | Safety Module. Never start cooldown. |
+| 5 | **hsWBERA** | L | Berachain | sWBERA | Official PoL 4626. Wait LZ. |
+| 6 | **hAEVO** | C1 | Ethereum | AEVO stake | sAEVO is not a token. |
+| 7 | **hGMX** | C1 | Arbitrum | staked GMX | Account-based esGMX. |
+| 8 | **hJupSOL** | L | Solana | JupSOL | Pairs Unit uSOL. Solana lockbox. |
+| 9 | **hANSEM** | L | Solana | $ANSEM | ansem.io only. No extra-chain claims. |
+| later | **hwstETH** | L | Ethereum | wstETH | Own ticker. Do not mix with hcbETH. |
+| later | **BLUAI4Y** | C1 | BSC | BLUAI 4y | High user risk. |
+| last | **BONK12M** / **hMET** | C1/C2 | Solana | | Solana lockbox. |
+| blocked | **hKAITO** / **hVIRTUALMAX** | L/C1 | Base | | Extra-chain airdrops. After CREATE2 holder. |
 
 RAM / HYBR official LSTs are **out of scope**. ENA / sENA is **out of scope** (already on HyperCore). Hyperliquid-native LSTs (HYPE LST) are **out of scope**.
 
@@ -220,13 +223,19 @@ Deploy mock **hxSQUID** on Base testnet + HyperEVM testnet. Deposit, mint, redee
 **Phase B — mainnet hxSQUID only**
 Tiny cap. `claimRewards(lockbox, max)` → QUID → WHYPE. Watch LZ peers.
 
-**Phase C — hcbETH, then hVIRTUALMAX**
-Copy the proven Base L path onto Coinbase cbETH. C1 Auto Max-lock next.
+**Phase C — hcbETH**
+Copy the proven Base L path onto Coinbase cbETH.
 
-**Phase D — hKAITO after omnichain holder; hwstETH on Ethereum if we want Lido**
-CREATE2 `LeafOmnichainHolder` on every EVM that has an eco claim. sKAITO sits in the twin so the same address can `pokeClaim` on BSC/ETH. Not before.
+**Phase D — hveAERO**
+Only after an NFT lockbox (not OFT adapter). Base bribes, no extra-chain claims.
 
-**Phase E — NestVault v2 (optional redeploy)**
+**Phase E — stkAAVE / sWBERA / AEVO / GMX / JupSOL / ANSEM**
+One kind at a time. Solana listings wait on a non-EVM lockbox.
+
+**Phase F — hKAITO / hVIRTUALMAX**
+Blocked until CREATE2 omnichain holder. Extra-chain eco/agent claims.
+
+**Phase G — NestVault v2 (optional redeploy)**
 Verified compound 1% + EpochGate mint delay (PR #5). Live 10k test NEST can stay; do not migrate user funds until v2 is tested.
 
 **Phase F — BSC / Solana**
