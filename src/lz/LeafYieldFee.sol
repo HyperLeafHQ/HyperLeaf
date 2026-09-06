@@ -14,8 +14,17 @@ abstract contract LeafYieldFee {
     uint256 public lastAccounted;
     mapping(address token => uint256 accounted) public lastAccountedToken;
 
+    bool public convertYieldToHype;
+    address public harvester;
+
+    event ConvertModeSet(bool enabled);
+    event HarvesterSet(address indexed harvester);
+    event YieldPulled(address indexed token, address indexed to, uint256 amount);
     event FeeRecipientUpdated(address indexed recipient);
     event YieldHarvested(address indexed token, uint256 yieldAmount, uint256 fee);
+
+    error NotHarvester();
+    error NoYield();
 
     error FeeRecipientZero();
 
@@ -39,7 +48,18 @@ abstract contract LeafYieldFee {
         lastAccounted = bal > reserved ? bal - reserved : 0;
     }
 
+    function _setConvertYieldToHype(bool enabled) internal {
+        convertYieldToHype = enabled;
+        emit ConvertModeSet(enabled);
+    }
+
+    function _setHarvester(address harvester_) internal {
+        harvester = harvester_;
+        emit HarvesterSet(harvester_);
+    }
+
     function _harvestInner(IERC20 token, uint256 reserved) internal returns (uint256 fee) {
+        if (convertYieldToHype) return 0;
         uint256 bal = token.balanceOf(address(this));
         if (bal <= reserved) {
             lastAccounted = 0;
@@ -58,6 +78,7 @@ abstract contract LeafYieldFee {
     }
 
     function _harvestOther(IERC20 token) internal returns (uint256 fee) {
+        if (convertYieldToHype) return 0;
         uint256 bal = token.balanceOf(address(this));
         uint256 last = lastAccountedToken[address(token)];
         if (bal <= last) return 0;
@@ -74,8 +95,25 @@ abstract contract LeafYieldFee {
         returns (uint256)
     {
         if (shares == 0 || totalShares == 0) return 0;
+        if (convertYieldToHype) return shares;
         uint256 bal = token.balanceOf(address(this));
         uint256 free = bal > reserved ? bal - reserved : 0;
         return (shares * free) / totalShares;
+    }
+
+    /// @dev Inner surplus = balance − reserved principal. Side tokens: full balance.
+    function _pullYield(IERC20 token, IERC20 inner, uint256 reserved, address to) internal returns (uint256 amt) {
+        if (address(token) == address(inner)) {
+            uint256 bal = token.balanceOf(address(this));
+            if (bal <= reserved) revert NoYield();
+            amt = bal - reserved;
+            lastAccounted = reserved;
+        } else {
+            amt = token.balanceOf(address(this));
+            lastAccountedToken[address(token)] = 0;
+            if (amt == 0) revert NoYield();
+        }
+        token.safeTransfer(to, amt);
+        emit YieldPulled(address(token), to, amt);
     }
 }

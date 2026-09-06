@@ -5,6 +5,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {LeafOApp} from "./LeafOApp.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
+import {ILeafHypeRewarder} from "./ILeafHypeRewarder.sol";
 
 /// @title LeafOFT
 /// @notice HyperEVM-side receipt. Mint on verified LZ message, burn to send back.
@@ -12,6 +13,10 @@ import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     error ZeroAmount();
 
+    ILeafHypeRewarder public hypeRewarder;
+    bytes32 public listingId;
+
+    event HypeRewarderSet(address indexed rewarder, bytes32 listingId);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
 
@@ -20,6 +25,12 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         ERC20(name_, symbol_)
         ERC20Permit(name_)
     {}
+
+    function setHypeRewarder(address rewarder, bytes32 listingId_) external onlyOwner {
+        hypeRewarder = ILeafHypeRewarder(rewarder);
+        listingId = listingId_;
+        emit HypeRewarderSet(rewarder, listingId_);
+    }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
         public
@@ -54,5 +65,21 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         if (to == address(0) || amount == 0) revert ZeroAmount();
         _mint(to, amount);
         emit BridgedIn(to, origin.srcEid, amount, guid);
+    }
+
+    function _update(address from, address to, uint256 value) internal override {
+        if (address(hypeRewarder) != address(0)) {
+            if (from != address(0) && to != address(0)) {
+                hypeRewarder.settle(listingId, from);
+                hypeRewarder.settle(listingId, to);
+            } else if (from != address(0)) {
+                hypeRewarder.settle(listingId, from);
+            }
+        }
+        super._update(from, to, value);
+        if (address(hypeRewarder) != address(0)) {
+            if (from != address(0)) hypeRewarder.updateDebt(listingId, from);
+            if (to != address(0)) hypeRewarder.updateDebt(listingId, to);
+        }
     }
 }

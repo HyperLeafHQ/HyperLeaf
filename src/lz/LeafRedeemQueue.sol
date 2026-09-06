@@ -68,6 +68,20 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setFeeRecipient(recipient);
     }
 
+    function setConvertYieldToHype(bool enabled) external onlyOwner {
+        _setConvertYieldToHype(enabled);
+    }
+
+    function setHarvester(address harvester_) external onlyOwner {
+        _setHarvester(harvester_);
+    }
+
+    function pullYield(IERC20 token, address to) external nonReentrant {
+        if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
+        if (to == address(0)) revert ZeroAddress();
+        _pullYield(token, innerToken, totalLocked + pendingTicketAssets, to);
+    }
+
     function harvest() external nonReentrant {
         _harvestInner(innerToken, pendingTicketAssets);
     }

@@ -14,7 +14,12 @@ Deploy: `docs/testnet-deploy.md`. Ids: `src/lz/AssetCatalog.sol`.
 
 ## Fees
 
-1% of **newly accrued** staking yield to `feeRecipient`. No protocol fee on lock, unlock, or claim. Users pay LayerZero + gas.
+Default: 1% of newly accrued inner yield stays as inner (`harvest`).
+
+**HYPE convert mode** (`setConvertYieldToHype(true)`): surplus is pulled by the
+harvester, swapped to HyperEVM WHYPE, then `LeafHypeRewarder.notify` — 1%
+protocol / 99% claimable HYPE. Redeem of principal is 1:1. See `docs/HYPE_YIELD.md`.
+
 
 ## Queue
 
