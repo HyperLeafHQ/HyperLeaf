@@ -20,8 +20,11 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * @notice hNEST core vault: deposit NEST → lock veNEST → deposit HEV → mint hNEST.
  *
  * Yield / accounting:
- * 1) veNEST auto-compound into locked positions (share price) — recording via recordCompound is DISABLED (HL-002)
- * 2) Residual ERC20 HYPE swept from HevAdapter (usually 0) distributed MasterChef-style — NOT liquid Nest HYPE rewards
+ * 1) veNEST auto-compound into locked positions — `recordCompound` stays DISABLED (HL-002).
+ *    Verified increments from `HevAdapter.pendingLockedNestShare` (or unlock surplus)
+ *    are booked via `bookVerifiedYield`: 1% minted as hNEST to feeRecipient, 99% raises NAV.
+ * 2) Residual ERC20 HYPE swept from HevAdapter (usually 0) distributed MasterChef-style —
+ *    NOT Nest's "new veNEST this week" HYPE. That stream belongs in EpochHNestGate.
  *
  * HEV mode: harvest does NOT vote or increaseUnlockTime (HEV auto-votes).
  *
@@ -91,6 +94,11 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     uint256 public accHypePerShare; // 1e18 precision
     uint256 public lastHypeBalance;
 
+    /// @notice Last booked HEV locked-NEST-share per veNFT. Yield is the on-chain delta only.
+    mapping(uint256 => uint256) public bookedLockedShare;
+    /// @notice If set, only this address (the epoch gate) may call deposit. address(0) = anyone.
+    address public depositGate;
+
     event Deposited(address indexed user, uint256 nestAmount, uint256 hNestMinted);
     event WithdrawRequested(address indexed user, uint256 hNestBurned, uint256 nestAmount, uint256 queueIndex);
     event WithdrawFulfilled(address indexed user, uint256 nestAmount, uint256 queueIndex);
@@ -109,6 +117,8 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     event IdleToppedUp(address indexed from, uint256 amount);
     event DettachForLiquidity(uint256 indexed tokenId, uint256 unlockEligibleAt);
     event NestUnlocked(uint256 indexed tokenId, uint256 principal);
+    event YieldBooked(uint256 addedNest, uint256 feeAssets, uint256 feeShares);
+    event DepositGateUpdated(address oldGate, address newGate);
 
     error ZeroAmount();
     error ZeroAddress();
@@ -129,6 +139,8 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     error CompoundDisabled();
     error DepositsDisabled();
     error HevAdapterNotSet();
+    error NoVerifiedYield();
+    error OnlyDepositGate();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -181,6 +193,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
         if (!depositsEnabled) revert DepositsDisabled();
+        if (depositGate != address(0) && msg.sender != depositGate) revert OnlyDepositGate();
         if (nestAmount == 0) revert ZeroAmount();
         if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
 
@@ -396,10 +409,34 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     /**
      * @notice DISABLED (HL-002): unbacked compound must not raise totalNestLocked.
-     * @dev Always reverts CompoundDisabled. Kept as stub so ABI/callers fail closed.
+     * @dev Always reverts CompoundDisabled. Use `bookVerifiedYield` for adapter-backed deltas.
      */
     function recordCompound(uint256) external pure {
         revert CompoundDisabled();
+    }
+
+    /**
+     * @notice Book NEST compound that is visible on-chain via `pendingLockedNestShare`.
+     *         1% (feeBps) is minted as hNEST to `feeRecipient`; 99% raises share price for holders.
+     * @dev No-ops the old keeper-supplied number. Reverts if the adapter delta is zero.
+     *      Does not trust donations / topUpIdle (those never raise last booked share).
+     */
+    function bookVerifiedYield() external onlyKeeper nonReentrant {
+        if (address(hevAdapter) == address(0)) revert HevAdapterNotSet();
+        uint256 y;
+        uint256 n = veNFTIds.length;
+        for (uint256 i; i < n; ++i) {
+            uint256 tokenId = veNFTIds[i];
+            if (!inHev[tokenId]) continue;
+            uint256 pending = hevAdapter.pendingLockedNestShare(tokenId);
+            uint256 booked = bookedLockedShare[tokenId];
+            if (pending > booked) {
+                y += pending - booked;
+                bookedLockedShare[tokenId] = pending;
+            }
+        }
+        if (y == 0) revert NoVerifiedYield();
+        _bookYield(y);
     }
 
     // ============ Internal ============
@@ -450,12 +487,20 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             }
 
             uint256 principal = nestPrincipal[tokenId];
+            uint256 booked = bookedLockedShare[tokenId];
+            uint256 balBefore = nestToken.balanceOf(address(this));
             veNEST.withdraw(tokenId);
+            uint256 withdrawn = nestToken.balanceOf(address(this)) - balBefore;
             delete nestPrincipal[tokenId];
             delete unlockEligibleAt[tokenId];
             delete attachedAt[tokenId];
+            delete bookedLockedShare[tokenId];
             emit NestUnlocked(tokenId, principal);
             _removeNFTFromArray(i);
+            // Realized compound not yet booked (pending view was 0 / lagging).
+            if (withdrawn > principal + booked) {
+                _bookYield(withdrawn - principal - booked);
+            }
             unchecked {
                 nftCount--;
             }
@@ -512,6 +557,32 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         veNFTIds.pop();
     }
 
+    /**
+     * @dev Book `y` newly verified NEST. Mint feeBps of it as hNEST to the protocol;
+     *      the rest raises NAV for existing holders. Classic ERC-4626 performance-fee shares:
+     *      feeShares = feeAssets * supply / (assetsAfter - feeAssets).
+     */
+    function _bookYield(uint256 y) internal {
+        if (y == 0) return;
+        uint256 feeAssets = (y * feeBps) / BASIS_POINTS;
+        uint256 supply = hNest.totalSupply();
+        totalNestLocked += y;
+
+        uint256 feeShares;
+        if (feeAssets > 0 && supply > 0 && totalNestLocked > feeAssets) {
+            feeShares = (feeAssets * supply) / (totalNestLocked - feeAssets);
+            if (feeShares > 0) {
+                if (hNest.balanceOf(feeRecipient) > 0) {
+                    _claimResidualHypeInternal(feeRecipient);
+                }
+                hNest.mint(feeRecipient, feeShares);
+                hypeRewardDebt[feeRecipient] = (hNest.balanceOf(feeRecipient) * accHypePerShare) / 1e18;
+            }
+        }
+        emit YieldBooked(y, feeAssets, feeShares);
+        emit NestCompoundRecorded(y);
+    }
+
     // ============ Views ============
 
     function sharePrice() external view returns (uint256) {
@@ -559,6 +630,19 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     function getVeNFTId(uint256 index) external view returns (uint256) {
         return veNFTIds[index];
+    }
+
+    /// @notice Adapter-visible NEST compound not yet booked into share price.
+    function pendingVerifiedYield() external view returns (uint256 y) {
+        if (address(hevAdapter) == address(0)) return 0;
+        uint256 n = veNFTIds.length;
+        for (uint256 i; i < n; ++i) {
+            uint256 tokenId = veNFTIds[i];
+            if (!inHev[tokenId]) continue;
+            uint256 pending = hevAdapter.pendingLockedNestShare(tokenId);
+            uint256 booked = bookedLockedShare[tokenId];
+            if (pending > booked) y += pending - booked;
+        }
     }
 
     // ============ Admin ============
@@ -627,6 +711,12 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     function setDepositsEnabled(bool enabled) external onlyOwner {
         depositsEnabled = enabled;
         emit DepositsEnabledUpdated(enabled);
+    }
+
+    /// @notice Restrict deposit() to the epoch gate. address(0) restores public deposits.
+    function setDepositGate(address _gate) external onlyOwner {
+        emit DepositGateUpdated(depositGate, _gate);
+        depositGate = _gate;
     }
 
     /// @notice Set guardian. Owner only. address(0) disables the guardian role.

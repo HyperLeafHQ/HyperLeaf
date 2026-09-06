@@ -674,4 +674,79 @@ contract NestVaultTest is Test {
         vm.expectRevert(NestVault.DettachBufferBpsTooHigh.selector);
         vault.setDettachBufferBps(5_001);
     }
+
+    // ============ Verified NEST yield fee (1% protocol / 99% NAV) ============
+
+    function test_BookVerifiedYieldMints1PercentToProtocol() public {
+        vm.prank(alice);
+        vault.deposit(10_000 ether);
+
+        uint256 tokenId = vault.getVeNFTId(0);
+        adapter.seedLockedNestShare(tokenId, 100 ether);
+        assertEq(vault.pendingVerifiedYield(), 100 ether);
+
+        vm.prank(keeper);
+        vault.bookVerifiedYield();
+
+        // 100 NEST yield, 1% = 1 NEST as fee shares
+        // feeShares = 1e18 * 10000e18 / (10100e18 - 1e18) = 10000/10099 ether
+        uint256 feeShares = (uint256(1 ether) * uint256(10_000 ether)) / (uint256(10_100 ether) - uint256(1 ether));
+        assertEq(hNest.balanceOf(feeRecipient), feeShares);
+        assertEq(vault.totalNestLocked(), 10_100 ether);
+
+        uint256 userAssets = (hNest.balanceOf(alice) * vault.totalNestLocked()) / hNest.totalSupply();
+        assertApproxEqAbs(userAssets, 10_099 ether, 1e12);
+
+        uint256 protoAssets = (hNest.balanceOf(feeRecipient) * vault.totalNestLocked()) / hNest.totalSupply();
+        assertApproxEqAbs(protoAssets, 1 ether, 1e12);
+
+        // Repeat with no new yield is a revert (no double-dip)
+        vm.prank(keeper);
+        vm.expectRevert(NestVault.NoVerifiedYield.selector);
+        vault.bookVerifiedYield();
+    }
+
+    function test_BookVerifiedYieldZeroDeltaReverts() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(keeper);
+        vm.expectRevert(NestVault.NoVerifiedYield.selector);
+        vault.bookVerifiedYield();
+    }
+
+    function test_RecordCompoundStillDisabledAfterYieldPath() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(keeper);
+        vm.expectRevert(NestVault.CompoundDisabled.selector);
+        vault.recordCompound(10 ether);
+    }
+
+    function test_TopUpIdleIsNotYield() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(keeper);
+        vault.topUpIdle(50 ether);
+        assertEq(vault.pendingVerifiedYield(), 0);
+        vm.prank(keeper);
+        vm.expectRevert(NestVault.NoVerifiedYield.selector);
+        vault.bookVerifiedYield();
+        assertEq(vault.sharePrice(), 1e18);
+    }
+
+    function test_DepositGateBlocksDirectDeposit() public {
+        address gate = makeAddr("gate");
+        vault.setDepositGate(gate);
+
+        vm.prank(alice);
+        vm.expectRevert(NestVault.OnlyDepositGate.selector);
+        vault.deposit(1 ether);
+
+        nest.mint(gate, 10 ether);
+        vm.startPrank(gate);
+        nest.approve(address(vault), type(uint256).max);
+        vault.deposit(10 ether);
+        vm.stopPrank();
+        assertEq(hNest.balanceOf(gate), 10 ether);
+    }
 }

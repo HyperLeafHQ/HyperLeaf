@@ -20,6 +20,7 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
     bool public custodyEnabled;
     mapping(uint256 => bool) public deposited;
     mapping(uint256 => uint256) public pending;
+    mapping(uint256 => uint256) public lockedNestShare;
 
     constructor(address ve_, address hype_, address vault_) {
         ve = IVotingEscrow(ve_);
@@ -39,6 +40,11 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
     function seedReward(uint256 tokenId, uint256 amount) external {
         pending[tokenId] += amount;
         require(hype.transferFrom(msg.sender, address(this), amount), "transfer");
+    }
+
+    /// @notice Tests inject HEV locked NEST share (view only — NEST stays in the NFT).
+    function seedLockedNestShare(uint256 tokenId, uint256 amount) external {
+        lockedNestShare[tokenId] = amount;
     }
 
     function depositVeNFT(uint256 tokenId) external {
@@ -82,9 +88,9 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
         }
     }
 
-    /// @dev Mock maps injected residual amounts; live pendingLockedNestShare is NEST share.
+    /// @dev Live pendingLockedNestShare is NEST share, independent of residual HYPE.
     function pendingLockedNestShare(uint256 tokenId) external view returns (uint256) {
-        return pending[tokenId];
+        return lockedNestShare[tokenId];
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
