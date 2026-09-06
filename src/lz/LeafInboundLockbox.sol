@@ -59,6 +59,14 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setConverter(converter_);
     }
 
+    function setClaimTarget(address t, bool allowed) public virtual onlyOwner {
+        _setClaimTarget(address(innerToken), t, allowed);
+    }
+
+    function pokeClaim(address t, bytes calldata data) external {
+        _pokeClaim(address(innerToken), t, data);
+    }
+
     function pullYield(IERC20 token, address to) external nonReentrant {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
         _requireConverter(to);

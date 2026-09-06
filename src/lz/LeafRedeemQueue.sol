@@ -83,6 +83,14 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setConverter(converter_);
     }
 
+    function setClaimTarget(address t, bool allowed) external onlyOwner {
+        _setClaimTarget(address(innerToken), t, allowed);
+    }
+
+    function pokeClaim(address t, bytes calldata data) external {
+        _pokeClaim(address(innerToken), t, data);
+    }
+
     /// @notice Can only raise the wait. Existing tickets keep their eta.
     function setRedeemDelay(uint64 delay) external onlyOwner {
         if (delay < redeemDelay) revert DelayTooLow();

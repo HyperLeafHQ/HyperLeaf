@@ -153,4 +153,34 @@ contract LeafHarvestSplitTest is Test {
         vm.expectRevert();
         src.harvest(alice);
     }
+
+    function testPokeClaimMustBeAllowlistedAndPaysLockbox() public {
+        MockToken drop = new MockToken("DROP", "DROP");
+        MockSignClaim sign = new MockSignClaim(drop);
+        drop.mint(address(sign), 5e18);
+        vm.prank(alice);
+        vm.expectRevert();
+        adapter.pokeClaim(address(sign), abi.encodeWithSelector(MockSignClaim.claim.selector));
+        vm.prank(owner);
+        adapter.setClaimTarget(address(sign), true);
+        vm.prank(owner);
+        vm.expectRevert();
+        adapter.setClaimTarget(address(xsquid), true);
+        adapter.pokeClaim(address(sign), abi.encodeWithSelector(MockSignClaim.claim.selector));
+        assertEq(drop.balanceOf(address(adapter)), 5e18);
+        vm.prank(harvester);
+        adapter.pullYield(drop, converter);
+        assertEq(drop.balanceOf(converter), 5e18);
+    }
+}
+
+contract MockSignClaim {
+    MockToken public immutable token;
+    constructor(MockToken t) {
+        token = t;
+    }
+    function claim() external {
+        uint256 b = token.balanceOf(address(this));
+        token.transfer(msg.sender, b);
+    }
 }

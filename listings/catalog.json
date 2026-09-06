@@ -18,10 +18,17 @@
       "name": "Hyperleaf sKAITO",
       "innerSymbol": "sKAITO",
       "innerToken": "0x548D3B444da39686d1a6F1544781d154e7cD1EF7",
+      "underlying": "0x98d0baa52b2D063E780DE12F615f963Fe8537553",
       "yield": {
         "inner": "erc4626-in-skaito",
         "pullInner": false,
         "toHype": ["airdrop-erc20s"]
+      },
+      "claim": "owner setClaimTarget each Sign/TokenTable campaign; anyone pokeClaim; then pullYield",
+      "note": "L redeem returns sKAITO, not KAITO (official unstake is 7d cooldown — protocol never calls it). sKAITO is transferable; Base spot is thin. On HyperEVM hKAITO is also the KAITO spot proxy. BLACKLISTED_ROLE exists; team describes it as investor airdrop exclusion — if the lockbox is ever listed, L redeem can fail. Eco airdrops are per-campaign Sign contracts, often linear vest.",
+      "refs": {
+        "depositTx": "0x69c5660ffd3812b8ec45e5f306f67ab6cf46ac5a15a46231fb4403cfae39ee86",
+        "transferTx": "0x153490b1982756aa423287c491e39ee30b323aad0e7965798b71b38a7f16a398"
       },
       "source": "base",
       "sourceChainId": 8453,

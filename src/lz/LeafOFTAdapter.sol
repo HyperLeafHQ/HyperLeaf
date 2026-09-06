@@ -62,6 +62,15 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setConverter(converter_);
     }
 
+    function setClaimTarget(address t, bool allowed) external onlyOwner {
+        _setClaimTarget(address(innerToken), t, allowed);
+    }
+
+    /// @notice Anyone pays gas. Allowlisted Sign/TokenTable claim, as this lockbox.
+    function pokeClaim(address t, bytes calldata data) external {
+        _pokeClaim(address(innerToken), t, data);
+    }
+
     /// @notice Pull side-token surplus to the allowlisted converter only.
     function pullYield(IERC20 token, address to) external nonReentrant {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
