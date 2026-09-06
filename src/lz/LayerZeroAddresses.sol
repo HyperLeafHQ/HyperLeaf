@@ -4,11 +4,14 @@ pragma solidity ^0.8.24;
 /// @notice Canonical LayerZero V2 addresses used by Hyperleaf wrap.
 /// @dev Google Cloud DVN is on Base but NOT on HyperEVM. Optional 2-of-3 is
 ///      LayerZero Labs + Nethermind + Horizen (present on both).
+///      BSC DVNs are not hardcoded - pull from metadata before SetSecurityStack.
 library LayerZeroAddresses {
     uint32 internal constant EID_BASE = 30184;
     uint32 internal constant EID_HYPEREVM = 30367;
+    uint32 internal constant EID_BSC = 30102;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
+    uint32 internal constant EID_BSC_TESTNET = 40102;
 
     address internal constant ENDPOINT_BASE = 0x1a44076050125825900e736c501f859c50fE728c;
     address internal constant SEND_ULN_BASE = 0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2;
@@ -19,6 +22,9 @@ library LayerZeroAddresses {
     address internal constant SEND_ULN_HYPEREVM = 0xfd76d9CB0Bac839725aB79127E7411fe71b1e3CA;
     address internal constant RECEIVE_ULN_HYPEREVM = 0x7cacBe439EaD55fa1c22790330b12835c6884a91;
     address internal constant EXECUTOR_HYPEREVM = 0x41Bdb4aa4A63a5b2Efc531858d3118392B1A1C3d;
+
+    /// @dev Same canonical V2 endpoint as most EVMs including BSC.
+    address internal constant ENDPOINT_BSC = 0x1a44076050125825900e736c501f859c50fE728c;
 
     address internal constant ENDPOINT_BASE_SEPOLIA = 0x6EDCE65403992e310A62460808c4b910D972f10f;
     address internal constant ENDPOINT_HYPEREVM_TESTNET = 0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1;
@@ -37,4 +43,7 @@ library LayerZeroAddresses {
     uint128 internal constant LZ_RECEIVE_GAS = 200_000;
     uint64 internal constant CONFIRMATIONS_BASE = 12;
     uint64 internal constant CONFIRMATIONS_HYPEREVM = 5;
+    uint64 internal constant CONFIRMATIONS_BSC = 15;
+
+    uint32 internal constant LOCK_4Y = 4 * 365 days;
 }
