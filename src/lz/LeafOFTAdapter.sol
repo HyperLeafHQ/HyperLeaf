@@ -25,6 +25,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error ZeroAmount();
     error CapExceeded();
     error InsufficientLocked();
+    error CannotPullInner();
 
     constructor(
         address token_,
@@ -61,6 +62,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function pullYield(IERC20 token, address to) external nonReentrant {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
         if (to == address(0)) revert ZeroAddress();
+        if (address(token) == address(innerToken)) revert CannotPullInner();
         _pullYield(token, innerToken, totalLocked, to);
     }
 

@@ -16,9 +16,13 @@ Deploy: `docs/testnet-deploy.md`. Ids: `src/lz/AssetCatalog.sol`.
 
 Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 
-**HYPE convert mode** (`setConvertYieldToHype(true)`): surplus is pulled by the
-harvester, swapped to HyperEVM WHYPE, then `LeafHypeRewarder.notify` — 1%
-protocol / 99% claimable HYPE. Redeem of principal is 1:1. See `docs/HYPE_YIELD.md`.
+**HYPE convert** (`docs/HYPE_YIELD.md`):
+
+1. Anyone: `LeafCallRewardSource.harvest(lockbox)` — claim into the lockbox, pay gas, no swap.
+2. Keeper weekly: `pullYield` QUID / extra BLUAI / airdrops → WHYPE → `notify` 1%/99%.
+3. L never `pullYield` sKAITO or xSQUID. C1 BLUAI4Y may pull extra inner BLUAI only.
+
+
 
 
 ## Queue

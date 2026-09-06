@@ -18,6 +18,11 @@
       "name": "Hyperleaf sKAITO",
       "innerSymbol": "sKAITO",
       "innerToken": "0x548D3B444da39686d1a6F1544781d154e7cD1EF7",
+      "yield": {
+        "inner": "erc4626-in-skaito",
+        "pullInner": false,
+        "toHype": ["airdrop-erc20s"]
+      },
       "source": "base",
       "sourceChainId": 8453,
       "sourceEid": 30184,
@@ -35,14 +40,19 @@
       "name": "Hyperleaf xSQUID",
       "innerSymbol": "xSQUID",
       "innerToken": "0x13af2Db622d167745518aBfD59a8C4FFEe54937a",
-      "underlying": "0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53",
+      "rewardToken": "0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53",
+      "yield": {
+        "inner": "keep-xsquid",
+        "pullInner": false,
+        "toHype": ["QUID"]
+      },
+      "note": "L unlock returns xSQUID (like hKAITO). QUID dividends → HYPE (like BLUAI). Never pull xSQUID.",
       "source": "base",
       "sourceChainId": 8453,
       "sourceEid": 30184,
       "sourceEidTest": 40245,
       "exit": "instant-receipt",
       "infra": "evm",
-      "note": "Wrap xSQUID receipt. User who wants QUID calls Squid redeem (cooldown).",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "testnet-ready",
       "priority": 2
@@ -93,6 +103,11 @@
       "name": "Hyperliquid BLUAI 4Year",
       "innerSymbol": "BLUAI",
       "innerToken": "0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD",
+      "yield": {
+        "inner": "surplus-bluai",
+        "pullInner": true,
+        "toHype": ["BLUAI"]
+      },
       "source": "bsc",
       "sourceChainId": 56,
       "sourceEid": 30102,

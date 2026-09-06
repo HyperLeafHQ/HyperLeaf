@@ -118,9 +118,9 @@ contract LeafHypeRewarderTest is Test {
         adapter.pullYield(inner, harvester);
         inner.mint(address(adapter), 5e18);
         vm.prank(harvester);
+        vm.expectRevert();
         adapter.pullYield(inner, harvester);
-        assertEq(inner.balanceOf(harvester), 5e18);
-        assertEq(inner.balanceOf(address(adapter)), 50e18);
+        assertEq(inner.balanceOf(address(adapter)), 55e18);
     }
 
     function testStrangerCannotPull() public {

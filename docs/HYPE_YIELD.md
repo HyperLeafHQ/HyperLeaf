@@ -1,47 +1,48 @@
-# Convert staking yield to HYPE
+# Yield: claim on source, convert off-chain, pay HYPE
 
-Users keep the locked principal. Newly accrued staking yield is sold for
-**canonical HyperEVM HYPE** (WHYPE `0x555…555`). Protocol takes **1%**, holders
-claim **99%**. No protocol fee on lock / unlock.
+Two steps. Do not merge them into one user button.
 
-NEST is unchanged (already HYPE).
+## 1. Permissionless `harvestRewards()` (source chain)
 
-## Routes (keeper, not in the lockbox)
+Anyone pays gas. Call `LeafCallRewardSource.harvest(lockbox)` or the farm’s own claim if it already pays the lockbox. No swap. No inner movement.
 
-| Source | Harvest into | Bridge | Why |
+- Settled BLUAI / QUID / airdrops land **in the lockbox**.
+- No swap. No inner receipt movement.
+- Pass a `LeafCallRewardSource` (owner-set protocol claim payload) or the farm if it already implements `harvest(lockbox)`.
+
+## 2. Weekly (or size-gated) keeper — not 24/7
+
+Harvester-only `pullYield`. Then swap + bridge + `LeafHypeRewarder.notify`.
+
+| Listing | Unlock | What you may pull | What you must not pull |
 | --- | --- | --- | --- |
-| Solana (BONK / MET / JupSOL) | Wormhole HYPE `98sMhvDwXj1RQi5c5Mndm3vPe9cBqPrbLaufMXFNMh5g` | Wormhole Portal → HyperEVM WHYPE | Deep Jupiter books |
-| Base (sKAITO airdrops, QUID, VIRTUAL) | Wormhole NTT HYPE `0x15D0e0c55a3E7eE67152aD7E89acf164253Ff68d` | Portal / Relay → WHYPE | Official NTT. **Not** cbHYPE (too thin) |
-| BSC (BLUAI) | USDC, never the fake BSC “HYPE” | **Relay** intent, dest = HyperEVM WHYPE. Fallback: deBridge USDC then swap | Relay is one quote to WHYPE; deBridge if Relay has no fill |
+| **hKAITO** | L, return sKAITO | Eco airdrop ERC-20s (allowlisted) | **sKAITO** — PoS is already in the ERC-4626 rate |
+| **hxSQUID** | L, return xSQUID | **QUID** | **xSQUID** |
+| **BLUAI4Y** | C1, market only | Extra **BLUAI** (`pullInnerEnabled = true`, surplus only) | Principal (`totalLocked`) |
+| **VIRTUAL4Y** | C1 | Side rewards if any | Locked VIRTUAL |
 
-sKAITO share growth: `pullYield` can take the extra sKAITO, but the keeper
-**must not auto-sell** while Base sKAITO books are thin. Side-token airdrops yes.
+`pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner`. C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked`.
 
-## Contracts
+1% protocol / 99% holders happens on HyperEVM at `notify`, not on the source swap.
 
-1. Source lockbox: `setConvertYieldToHype(true)` + `setHarvester`. Redeem is 1:1.
-   `pullYield(token, to)` sends only `balance - principal` (inner) or the full
-   side-token balance. Principal cannot move.
-2. HyperEVM `LeafHypeRewarder`: `notify(id, amount)` pulls WHYPE, 1% feeRecipient,
-   99% `accHypePerShare`. `LeafOFT.setHypeRewarder` settles on transfer.
-3. User: `claim(id, to)`.
+## Routes (keeper)
+
+| Source | Harvest into | Bridge |
+| --- | --- | --- |
+| Base (QUID, KAITO airdrops) | Wormhole NTT HYPE `0x15D0…f68d` | Portal / Relay → WHYPE |
+| BSC (BLUAI surplus) | USDC — never fake BSC HYPE | **Relay** dest=WHYPE; deBridge USDC fallback |
+| Solana | Wormhole HYPE `98sMhv…Mh5g` | Portal |
+
+Not cbHYPE. Not BSC ticker-HYPE.
+
+Run when surplus clears Relay min and gas < ~1% of the batch. Weekly is enough. Cron / Gelato, not a mint relayer.
 
 ## Deploy
 
 ```
-OWNER=… FEE_RECIPIENT=… forge script script/lz/DeployHypeRewarder.s.sol \
-  --rpc-url $HYPEREVM_RPC_URL --broadcast --private-key $PK
-
-# per listing
-cast send $OFT "setHypeRewarder(address,bytes32)" $REWARDER $ID
-cast send $REWARDER "register(bytes32,address)" $ID $OFT
+# after wrap + rewarder
 cast send $ADAPTER "setConvertYieldToHype(bool)" true
 cast send $ADAPTER "setHarvester(address)" $KEEPER
+# poke: harvestRewards(LEAF_CALL_SOURCE) — anyone
+# BLUAI4Y C1 pullYield(BLUAI) is extra inner only
 ```
-
-`ID = keccak256(bytes("hkaito"))` (same as `AssetCatalog` ids).
-
-## Keeper
-
-`keeper/hypeYield.ts` — pull surplus, swap per table, `notify`. Weekly is enough.
-Do not run a 24/7 VPS for minting; this is harvest-only.

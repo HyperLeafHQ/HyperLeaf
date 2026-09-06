@@ -1,16 +1,19 @@
 /**
- * Convert lockbox surplus → HyperEVM WHYPE → LeafHypeRewarder.notify.
+ * Two-step harvest. Do not swap inside the lockbox.
  *
- * Routes
- *  Base:  swap side tokens / extra inner → Wormhole HYPE → Portal/Relay to WHYPE
- *  Solana: Jupiter → Wormhole HYPE mint 98sMhv…Mh5g → Portal to WHYPE
- *  BSC:   swap BLUAI → USDC, then Relay quote destChain=999 destToken=WHYPE.
- *         Fallback deBridge USDC → HyperEVM, then Project X to WHYPE.
- *  Never buy BSC ticker-HYPE or Base cbHYPE.
+ * 1) Anyone, any time (source chain): LeafCallRewardSource.harvest(lockbox)
+ *    or the farm's claim if it already pays the lockbox. Caller pays gas.
+ *    — claims QUID / BLUAI into the box. Caller pays gas.
+ * 2) Keeper weekly or when surplus > Relay min:
+ *    pullYield(allowlisted token) → swap/bridge → LeafHypeRewarder.notify
  *
- * sKAITO extra shares: skip the swap while the Base pool is thin.
+ * pullInnerEnabled:
+ *   false  hKAITO / hxSQUID  (never sell sKAITO or xSQUID)
+ *   true   BLUAI4Y           (extra BLUAI only; reserved = totalLocked)
  *
- * env: KEEPER_PRIVATE_KEY, ADAPTER, INNER, REWARDER, LISTING_ID, WHYPE
+ * Base: QUID / airdrops → Wormhole HYPE → Portal/Relay → WHYPE
+ * BSC:  BLUAI → USDC → Relay destChain=999 destToken=WHYPE
+ * Never BSC fake HYPE, never cbHYPE.
  */
 const RELAY_QUOTE = "https://api.relay.link/quote/v2";
 const WHYPE = "0x5555555555555555555555555555555555555555";

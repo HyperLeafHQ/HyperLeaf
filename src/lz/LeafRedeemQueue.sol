@@ -42,6 +42,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error NotMature();
     error AlreadyClaimed();
     error UnknownTicket();
+    error CannotPullInner();
 
     constructor(
         address token_,
@@ -79,6 +80,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function pullYield(IERC20 token, address to) external nonReentrant {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
         if (to == address(0)) revert ZeroAddress();
+        if (address(token) == address(innerToken)) revert CannotPullInner();
         _pullYield(token, innerToken, totalLocked + pendingTicketAssets, to);
     }
 

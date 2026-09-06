@@ -16,6 +16,9 @@ library HypeAddresses {
     /// @dev Circle native USDC on BSC (harvest hop, not a HYPE stand-in).
     address internal constant USDC_BSC = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d;
 
+    /// @dev QUID on Base. hxSQUID side-yield; never pull xSQUID.
+    address internal constant QUID_BASE = 0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53;
+
     uint256 internal constant HYPEREVM_CHAIN_ID = 999;
     uint256 internal constant BASE_CHAIN_ID = 8453;
     uint256 internal constant BSC_CHAIN_ID = 56;

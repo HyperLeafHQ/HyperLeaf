@@ -76,23 +76,20 @@ Security (Base ↔ HyperEVM): optional 2-of-3 DVNs (LayerZero Labs + Nethermind 
 
 ### 2. Yield → HyperEVM HYPE (wrap)
 
-Principal stays 1:1 in the lockbox. Newly accrued staking yield is **not** mixed into NAV once `convertYieldToHype` is on.
+Two steps. Do not merge them into one on-chain swap.
 
-1. Owner sets `convertYieldToHype(true)` and a `harvester`.
-2. `pullYield` can only take `balance − principal` (inner) or a side-token balance. Principal cannot move.
-3. Keeper swaps that surplus to **canonical HyperEVM WHYPE** (`0x555…555`).
-4. `LeafHypeRewarder.notify` — **1% protocol / 99% holders**. Users `claim`.
-5. hToken transfers settle like MasterChef: the seller keeps HYPE already earned; the buyer starts from zero.
+1. **Anyone**, source chain: `LeafCallRewardSource.harvest(lockbox)` (or the farm claim) — settled QUID / BLUAI land **in** the lockbox. Caller pays gas. No DEX.
+2. **Keeper**, weekly or when the batch clears Relay min: `pullYield` → swap/bridge → `LeafHypeRewarder.notify` (**1% / 99%**). Users `claim` WHYPE.
 
-| Source | Harvest into | Bridge to WHYPE |
-| ------ | ------------ | ---------------- |
-| Solana | Wormhole HYPE `98sMhvDwXj1RQi5c5Mndm3vPe9cBqPrbLaufMXFNMh5g` | Wormhole Portal |
-| Base | Wormhole NTT HYPE `0x15D0e0c55a3E7eE67152aD7E89acf164253Ff68d` | Portal / Relay |
-| BSC | USDC — **never** fake BSC “HYPE” | **Relay** intent dest=WHYPE; deBridge USDC fallback |
+L adapters **cannot** `pullYield` sKAITO / xSQUID. C1 **can** pull extra BLUAI above `totalLocked`.
 
-Do **not** harvest into Base cbHYPE (too thin). Do **not** auto-sell sKAITO share growth while Base sKAITO books are thin; side-token airdrops yes.
+| Listing | Unlock | Pull to HYPE | Never pull |
+| ------- | ------ | ------------ | ---------- |
+| hKAITO | L, sKAITO | Eco airdrop ERC-20s | sKAITO (PoS already in the 4626 rate) |
+| hxSQUID | L, xSQUID | QUID | xSQUID |
+| BLUAI4Y | C1, market only | Extra BLUAI (`pullInnerEnabled`) | Principal (`totalLocked`) |
 
-Details: [`docs/HYPE_YIELD.md`](docs/HYPE_YIELD.md).
+`pullInnerEnabled` is not a switch: L forbids inner pulls, C1 allows surplus BLUAI. Details: [`docs/HYPE_YIELD.md`](docs/HYPE_YIELD.md).
 
 ### 3. Native: hNEST
 
