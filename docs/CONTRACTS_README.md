@@ -1,23 +1,19 @@
-# hNEST MVP
+# hNEST / NestVault — contracts notes
 
-forge test; see src/config/HyperEVMAddresses.sol
+`forge test`; addresses in `src/config/HyperEVMAddresses.sol` and `deployments/`.
+
+## Yield rails (product wording)
+
+1. **Auto-compound into share value** — Nest/HEV compounding increases the NEST backing per hNEST (NAV / share price). This is the primary HyperLeaf accrual. Do **not** describe it as a user “auto-reinvest claim” button.
+2. **Nest public HYPE Spring share** — any liquid HYPE from Nest’s public HYPE Spring is Nest-protocol airdrop/eligibility for the vault’s locks; claim UX/ABI lives on Nest until HyperLeaf wires a vault claim. Do **not** promise “claim HYPE anytime in HyperLeaf UI”.
+3. MEGAHYPE — not live; do not invent.
 
 ## Risks
-HEV ABI unverified; exit delays; hNEST discount; EOA custody possible; feeBps; no MEGAHYPE.
-风险: ABI未核实; 退出延迟; 折价; 可能EOA托管; 无MEGAHYPE。
 
-## HEV ABI TODOs
-1. Voter.attachManagedNFT(tokenId,1)
-2. Voter.dettachManagedNFT spelling
-3. Claim HYPE via Virtual Rewarder / VeNestDistributor
-4. NFT transfer before attach?
-5. Fork tests
-6. Do not invent MEGAHYPE
+HEV / VR source gaps; exit delays (idle + dettach ~26w worst path); hNEST secondary discount; role custody; feeBps.
 
-## Pause / guardian (emergency controls)
+## Pause / guardian
 
-- `guardian` (or `owner`) can `pause()` — blocks both `deposit` and `requestWithdraw`.
-- Only `owner` can `unpause()` — guardian and keeper cannot (prevents hot-wallet/keeper unpause hijack).
-- Keeper cannot pause or unpause.
-- `setGuardian(address)` is `onlyOwner`; `address(0)` disables the guardian role.
-- **Required before mainnet:** run a testnet pause drill (guardian pause → verify deposit/withdraw blocked → owner unpause → verify restored).
+- Guardian or owner can `pause()` (blocks deposit + requestWithdraw).
+- Only owner `unpause()`.
+- See `docs/DEPLOYMENT_CHECKLIST.md` for mainnet roles + idle + topUp budget.

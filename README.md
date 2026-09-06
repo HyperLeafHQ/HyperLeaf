@@ -2,7 +2,7 @@
 
 **Every asset deserves liquidity. Every yield deserves a market.**
 
-HyperLeaf is a multi-chain liquid staking protocol built on HyperEVM. Deposit any supported staking asset, receive a freely tradable ERC-20 receipt token, and keep earning rewards — without waiting for lock periods to expire.
+HyperLeaf is a multi-chain liquid staking protocol built on HyperEVM. Deposit any supported staking asset, receive a freely tradable ERC-20 receipt token, and keep accruing underlying yield mainly as **rising share value (auto-compound)** — with a market exit instead of waiting out every lock.
 
 Where Hyperliquid brings liquidity to trading, HyperLeaf brings liquidity to staking.
 
@@ -23,7 +23,7 @@ The result is stranded capital. Users bear full downside risk with no ability to
 
 HyperLeaf wraps staking positions into liquid ERC-20 receipt tokens — one per supported asset — deployable, tradable, and composable within the HyperEVM ecosystem.
 
-A user who deposits into HyperLeaf does not give up yield. They gain an exit. The underlying position continues earning. The receipt token can be sold, used as collateral, or held to accumulate rewards. Risk is no longer locked in. It can be priced, traded, and transferred to whoever is willing to hold it.
+A user who deposits into HyperLeaf does not give up yield. They gain an exit. The underlying position continues earning. The receipt token can be sold, used as collateral, or held while **share NAV compounds**; Nest HYPE Spring (if any) is shared via Nest’s public airdrop rules, not as an always-on HyperLeaf claim. Risk is no longer locked in. It can be priced, traded, and transferred to whoever is willing to hold it.
 
 This is not a new idea. It is a missing piece of infrastructure that every staking ecosystem eventually needs. HyperLeaf builds it for HyperEVM — starting with the assets already there, expanding to every chain where demand exists.
 
@@ -35,20 +35,20 @@ This is not a new idea. It is a missing piece of infrastructure that every staki
 User deposits staking asset (e.g. NEST)
             │
             ▼
-HyperLeaf Vault locks asset into native staking protocol
+HyperLeaf Vault locks asset into native staking (e.g. Nest veNEST → HEV)
             │
-            ├── Auto-manages staking (voting, compounding, claiming)
-            └── Distributes rewards to receipt token holders
+            ├── Auto-manages lock / HEV attach (no active user voting required)
+            └── Yield to receipt holders arrives in two rails:
                         │
-                        ├── Auto-compounded yield → receipt token NAV increases
-                        └── Protocol reward tokens → claimable by holders anytime
+                        ├── Auto-compound into share value → hNEST NAV / share price rises
+                        └── Nest public HYPE Spring airdrop share → claim on Nest (not a HyperLeaf “claim anytime” button)
             │
             ▼
 User receives receipt token (e.g. hNEST) — freely tradable ERC-20
             │
             ├── Sell on any HyperEVM DEX for instant liquidity
-            ├── Claim accumulated reward tokens anytime
-            └── Redeem via withdrawal queue when staking position expires
+            ├── Participate in Nest’s public HYPE Spring for the vault’s eligible share (when Nest UI/ABI allows)
+            └── Redeem via withdrawal queue (idle buffer / unlock windows — not instant 1:1)
 ```
 
 Each asset is an isolated vault. One vault's risk never touches another.
@@ -89,9 +89,10 @@ HyperLeafFactory
 - Accepts one input asset
 - Locks into the asset's native staking protocol
 - Issues one ERC-20 receipt token
-- Runs a weekly keeper for reward harvesting and compounding
-- Maintains a withdrawal queue for native redemption
-- Takes 1% of reward token distributions as protocol fee
+- Keeper maintains vault ops (queue / idle / selective dettach); Nest HEV handles auto-vote / lock extension
+- Auto-compound accrues as **share value / NAV**, not as a separate “reinvest claim” button
+- Maintains a withdrawal queue for native redemption (plus lean idle buffer)
+- Protocol fee (if any) is taken only from fee-configured reward streams to `feeRecipient` — not marketed as liquid HYPE Spring inside HyperLeaf
 
 **Receipt tokens are standard ERC-20 with ERC-2612 permit support.** They require no special handling to list on DEXs, use as collateral, or integrate into other protocols.
 
@@ -119,7 +120,8 @@ HyperLeaf does not eliminate staking risk. It makes staking risk liquid.
 - **Market risk**: receipt token price is set by the market and may trade below NAV
 - **Smart contract risk**: each vault is audited before launch; audit reports are published in this repository
 - **Dependency risk**: vaults depend on the interfaces of their underlying staking protocols; upgrades to those protocols may require vault upgrades
-- **Reward variability**: staking rewards depend on underlying protocol performance and are not guaranteed
+- **Reward variability**: staking yield depends on Nest / underlying performance and is not guaranteed
+- **Share compounding vs HYPE Spring**: primary HyperLeaf accrual is **auto-compound into hNEST share value (NAV)**. Liquid HYPE from Nest’s **public HYPE Spring** is a separate Nest-side airdrop/share; HyperLeaf does not currently expose a built-in “claim HYPE anytime” path — holders should treat Spring as Nest-protocol eligibility/share, not as a HyperLeaf wallet drip
 
 Deposit caps are enforced during each vault's initial period and raised progressively as the vault matures.
 
