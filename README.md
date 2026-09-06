@@ -198,9 +198,9 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 1 | **hxSQUID** | L | Base | xSQUID | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
 | 2 | **hcbETH** | L | Base | cbETH | Base ETH LST. PoS in the rate. |
 | 3 | **hveAERO** | ve-NFT | Base | veAERO 721 | After L. Needs a Nest-style NFT lockbox. Bribes on Base. |
-| 4 | **hstkAAVE** | L | Ethereum | stkAAVE | Safety Module. Next research. Never start cooldown. |
-| later | **hETHFI** | L | Ethereum | sETHFI | Wrap receipt. |
-| later | **hLSSKY** | C1 | Ethereum | SKY LockStake urn | Not transferable LSSKY. |
+| 4 | **hLSSKY** | C1 | Ethereum | SKY LockStake urn | Next Ethereum research. LSSKY is not transferable — we create the market. |
+| hold | **hstkAAVE** | L | Ethereum | stkAAVE | Legacy Safety Module. Umbrella is the new backstop. Do not ship until SM fate + voting delegate + HyperEVM spot gap are clear. |
+| watch | **Umbrella** | risk | Ethereum | aUSDC / GHO … | Not “support AAVE”. Separate product if we ever tokenize a specific cover pool. |
 | later | **hstDRV** | C2 | Ethereum | stDRV 28d | DRV already on HyperEVM. |
 | watch | **hSNX / hDYDX / hveCRV / hSYRUP** | | | | SNX stake retired; SYRUP stake sunset; veCRV after veAERO. |
 | 5 | **hsWBERA** | L | Berachain | sWBERA | Official PoL 4626. Wait LZ. |
@@ -233,10 +233,13 @@ Copy the proven Base L path onto Coinbase cbETH.
 **Phase D — hveAERO**
 Only after an NFT lockbox (not OFT adapter). Base bribes, no extra-chain claims.
 
-**Phase E — stkAAVE / sWBERA / AEVO / GMX / JupSOL / ANSEM**
+**Phase E — Ethereum: Sky LockStake first, not stkAAVE**
+hLSSKY needs an urn lockbox. stkAAVE stays on hold through the Umbrella migration. Umbrella itself is a different product (cover aUSDC/GHO, not wrap AAVE).
+
+**Phase F — sWBERA / AEVO / GMX / JupSOL / ANSEM**
 One kind at a time. Solana listings wait on a non-EVM lockbox.
 
-**Phase F — hKAITO / hVIRTUALMAX**
+**Phase G — hKAITO / hVIRTUALMAX**
 Blocked until CREATE2 omnichain holder. Extra-chain eco/agent claims.
 
 **Phase G — NestVault v2 (optional redeploy)**

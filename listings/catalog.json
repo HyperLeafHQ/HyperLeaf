@@ -293,9 +293,9 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "yield": { "inner": "keep-stkaave", "pullInner": false, "toHype": ["AAVE"] },
-      "note": "First research after Base L. Aave Safety Module. Slashable. Wrap stkAAVE (not raw AAVE). L returns stkAAVE; protocol never starts the 20d cooldown. Claim AAVE emissions via pokeRewards. Ethereum gas.",
-      "status": "research-next",
-      "priority": 4
+      "note": "HOLD. Do not ship stkAAVE→hAAVE while Safety Module is being replaced by Umbrella. stkAAVE still pays ~150 AAVE/day and still votes, but it is legacy insurance. Tokenizing it is tokenizing governance power (must stay delegated to a protocol address, not follow the hToken) plus duration risk if SM sunsets. If we wrap later: wrap stkAAVE not raw AAVE; never start the 20d cooldown; never slash-aware accounting beyond disclosing max 20% legacy slash. Hyperliquid already has an AAVE perp — confirm a HyperEVM spot gap before building.",
+      "status": "hold-umbrella-migration",
+      "priority": 18
     },
     {
       "id": "hswbera",
@@ -381,9 +381,9 @@
       "sourceChainId": 1,
       "exit": "market-or-custom",
       "infra": "evm",
-      "note": "Sky LockStake Engine: SKY → urn/vault → LSSKY. LSSKY is not a user-transferable ERC-20; the urn cannot be transferred. Needs a dedicated urn lockbox (not OFT adapter). Research before build.",
-      "status": "research",
-      "priority": 11
+      "note": "Next Ethereum research after Base L+veAERO. Sky LockStake Engine: SKY → non-transferable urn → LSSKY. HyperLeaf's job is the missing liquid ticket. Cleaner than Aave: one current mechanism, no SM→Umbrella sunset. Needs an urn lockbox (not OFT adapter). Do not wrap raw SKY.",
+      "status": "research-next",
+      "priority": 4
     },
     {
       "id": "hethfi",
@@ -453,6 +453,20 @@
       "note": "Maple MIP-019 sunset staking. stSYRUP unstake-only. Lowest priority; yield story is gone.",
       "status": "watchlist",
       "priority": 40
+    },
+    {
+      "id": "aave-umbrella",
+      "kind": "C1",
+      "symbol": "hUmbrella",
+      "name": "Hyperleaf Aave Umbrella (not AAVE)",
+      "innerSymbol": "aUSDC/aUSDT/aWETH/staked-GHO",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "note": "Not an AAVE wrapper. Umbrella is asset-specific insurance: stake aUSDC/aUSDT/aWETH/GHO, keep Aave supply yield + safety incentives, take that asset's bad-debt slash. A HyperLeaf listing here is a risk-tranche product, not hAAVE. Wait until Umbrella is the settled backstop and we want a specific market (likely GHO or aUSDC), not a ticker for its own sake.",
+      "status": "watchlist",
+      "priority": 19
     }
   ]
 }
