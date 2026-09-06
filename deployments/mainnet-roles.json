@@ -1,7 +1,7 @@
 {
   "chainId": 999,
   "network": "HyperEVM mainnet",
-  "updatedAt": "2026-09-06T19:35:00+08:00",
+  "updatedAt": "2026-09-06T19:37:00+08:00",
   "roles": {
     "owner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
     "guardian": "0x12dF4528E7Cc3db07A509c966c6405b69A25Ef2e",
@@ -16,7 +16,8 @@
     "notes": "1% deposit skim; 50 NEST absolute floor; initial topUpIdle 50 NEST from keeper hot wallet before setMinIdleNest.",
     "topUpIdleBudget": "50000000000000000000",
     "topUpIdleBudgetHuman": "50 NEST",
-    "topUpIdleSource": "0xc321DD8826a30D8a6D973821a3dB7b8090955887"
+    "topUpIdleSource": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
+    "vaultIdleNestBalanceApproxHuman": "150 NEST (prefer live chain)"
   },
   "policy": {
     "depositsEnabledDefault": true,
@@ -31,10 +32,21 @@
     "HevAdapter": "0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2"
   },
   "ownership": {
-    "NestVault_pendingOwner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
-    "NestVault_acceptOwnershipRequired": true,
-    "HevAdapter_owner": "0x24458f0bC44C4607172d1151Cd938012Be33156e"
+    "NestVault_owner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
+    "NestVault_pendingOwner": "0x0000000000000000000000000000000000000000",
+    "NestVault_acceptOwnershipRequired": false,
+    "HevAdapter_owner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
+    "note": "Owner acceptOwnership completed."
   },
   "depositCap": "20000000000000000000000",
-  "depositCapHuman": "20000 NEST"
+  "depositCapHuman": "20000 NEST",
+  "onChainVerified": {
+    "depositsEnabled": true,
+    "depositCapHuman": "20000 NEST",
+    "totalNestLockedApproxHuman": "10001 NEST",
+    "note": "Prefer live chain / app."
+  },
+  "actionRequired": [
+    "Prefer live chain / app for depositsEnabled, depositCap, idle, and TVL."
+  ]
 }
