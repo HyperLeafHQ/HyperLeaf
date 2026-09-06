@@ -197,7 +197,8 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
 | 1 | **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
 | 2 | **hcbETH** | L | Base | [cbETH](https://basescan.org/token/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22) | Base ETH LST. PoS in the rate. Pairs with Unit uETH. |
-| 3 | **hVIRTUALMAX** | C1 | Base | VIRTUAL → Virtuals Auto Max-lock (`stake(…, 104, true)`) | Never official redeem. ve stays 1:1. Agent airdrops → HYPE. |
+| 3 | **hVIRTUALMAX** | C1 | Base | VIRTUAL → Virtuals Auto Max-lock (`stake(…, 104, true)`) | Never redeem. Agent merkle airdrops on Base only, dust skipped. |
+| later | **hANSEM** | L | Solana | $ANSEM | Watchlist. Launchpad airdrops to holders, same shape as Virtuals. |
 | later | **hwstETH** | L | Ethereum | wstETH | Separate ticker. Do not mix with hcbETH. |
 | later | **hKAITO** | L | Base | sKAITO | Blocked on omnichain holder: eco claims are often not on Base. |
 | later | **hshMON** | L | Monad | shMON | Same Adapter as other EVM LSTs. |

@@ -136,7 +136,12 @@
       "exit": "market-only",
       "infra": "evm",
       "pairsWithUnit": "uVIRTUAL",
-      "note": "Auto Max-lock on Virtuals (104w, autoRenew). Never official redeem. Not 4 years.",
+      "note": "Auto Max-lock on Virtuals (104w, autoRenew). Never official redeem. Not 4 years. Yield is agent merkle airdrops (claim(index,account,amount,proof)), not VIRTUAL inflation. v1 harvests Base only, and only when a drop is worth gas+keeper time — 6–7 dust launches/day are skipped, never auto-swapped (honeypot risk). ETH/Arb/Robinhood (4663) claims need the omnichain holder; RH gas makes dust negative EV. Same holder blocker as hKAITO.",
+      "refs": {
+        "stakeTx": "0x9d8f5040ba94fa0e6091ebc27a16808dcf7e3710901648b1c1a0304886f515d5",
+        "baseMerkleClaimTx": "0xee45c4899f836906366deb38d30840512aae01989531e5d1109d5ebf808db75c",
+        "robinhoodClaimTx": "0xa941a3e7d72f30afcc3e0977459aaaf2b0af883a155ff7f1ebe243f17bf413dc"
+      },
       "alias": ["virtual4y"],
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true, "mockStake": true },
       "status": "testnet-ready",
@@ -230,6 +235,24 @@
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "testnet-mock-only",
       "priority": 9
+    },
+    {
+      "id": "hansem",
+      "kind": "L",
+      "symbol": "hANSEM",
+      "name": "Hyperleaf ANSEM",
+      "innerSymbol": "ANSEM",
+      "source": "solana",
+      "exit": "instant-receipt",
+      "infra": "solana-pending",
+      "yield": {
+        "inner": "keep-ansem",
+        "pullInner": false,
+        "toHype": ["launchpad-airdrops"]
+      },
+      "note": "Watchlist. ansem.io / ansem.xyz: launches airdrop to $ANSEM holders (same shape as veVIRTUAL). Solana, not this EVM repo. Confirm mint + whether a stake receipt exists before design. Same dust+filter rules as hVIRTUALMAX.",
+      "status": "watchlist",
+      "priority": 30
     }
   ]
 }
