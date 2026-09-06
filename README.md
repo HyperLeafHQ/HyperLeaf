@@ -1,8 +1,10 @@
 # HyperLeaf
 
-**Unit for LSTs.** Every yield-bearing receipt deserves a HyperEVM market.
+**Infrastructure for liquid staking on HyperEVM.**
 
-HyperLeaf brings staking and locked assets onto Hyperliquid as tradable ERC-20s. Native HyperEVM vaults (hNEST) sit next to cross-chain wraps (LayerZero). One listing, one risk, one ticker — not a single Nest-only product.
+Bring more assets onto HyperEVM, and keep the extra income of holding them — staking yield, points, fee share, lock multipliers.
+
+HyperLeaf wraps staking receipts and locked positions into tradable ERC-20s on HyperEVM. Native vaults (hNEST) sit next to cross-chain wraps (LayerZero). One listing, one risk, one ticker.
 
 App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https://x.com/HyperLeafHQ)
 
@@ -12,13 +14,11 @@ App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https:/
 
 ## Why it exists
 
-Hyperliquid already has **Unit** for canonical assets (uETH, uSOL, uBONK…). It does not wrap the *staked / locked* form of those assets, and it does not list every long-tail token with real yield.
+HyperEVM still lacks a default layer for *staked and locked* assets. Spot can already show up through other bridges. The missing piece is the yield-bearing form: liquid receipts, vote-escrow, duration locks — still earning on the source protocol, still tradable on HyperEVM.
 
-HyperLeaf fills that gap:
-
-1. **Pair with Unit** — `VIRTUAL4Y` next to `uVIRTUAL`, `BONK12M` next to `uBONK`, LST receipts next to the Unit spot.
-2. **Introduce assets Unit does not list** — sKAITO, xSQUID, MET, and others with PoS / points / fee share.
-3. **Price the lock** — if the source cannot unstake freely, the HyperEVM ticker says so (`BLUAI4Y`, `VIRTUAL4Y`). Exit is the book, not a fake 1:1 redeem.
+1. **Introduce the asset** — sKAITO, xSQUID, MET, and other tokens that are not native to HyperEVM.
+2. **Keep the extra income** — wrap the receipt or the lock, not only the dead spot. PoS, points, fee share stay with the underlying position.
+3. **Price the lock** — if the source cannot unstake freely, the ticker says so (`VIRTUAL4Y`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
 
 ---
 
@@ -39,7 +39,7 @@ Never mix exits on one pair. Never turn a live C1 into C2.
 
 | Kind | When | Source contract | HyperEVM | Exit |
 | ---- | ---- | --------------- | -------- | ---- |
-| **L** | Transferable receipt, or unstake is the user’s problem | `LeafOFTAdapter` | `LeafOFT` (`h` + asset) | Instant: return the **same receipt** |
+| **L** | Transferable receipt | `LeafOFTAdapter` | `LeafOFT` (`h` + asset) | Instant: return the **same receipt** |
 | **C1** | Long lock / no liquid receipt | `LeafInboundLockbox` | `LeafClosedOFT` (lock in ticker) | **Market only**. `send` reverts |
 | **C2** | Unstake exists, known wait | `LeafRedeemQueue` | `LeafOFT` | Burn → wait `redeemDelay` → `claim` on source |
 
@@ -61,7 +61,7 @@ Full table: [`listings/catalog.json`](listings/catalog.json) · kinds: [`docs/wr
 | **hMET** | C2 | Solana | MET (~21d unbond) | Queued claim | Needs Solana lockbox |
 | **BLUAI4Y** | C1 | BSC | BLUAI 4y | Market only | Code ready (low priority) |
 
-Later EVM LSTs that reuse the same Adapter: shMON, sAVAX, wstETH (only if Lido has not already shipped an OFT). Solana/Sui (JupSOL, SUI LSTs) wait on a non-EVM lockbox.
+Later EVM LSTs reuse the same Adapter: shMON, sAVAX, wstETH (if the issuer has not shipped their own OFT). Solana/Sui wait on a non-EVM lockbox.
 
 RAM / HYBR official LSTs are **out of scope**. ENA / sENA is **out of scope** (already on HyperCore).
 
