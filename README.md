@@ -2,104 +2,236 @@
 
 **Infrastructure for liquid staking on HyperEVM.**
 
-Bring more assets onto HyperEVM, and keep the extra income of holding them — staking yield, points, fee share, lock multipliers.
+Bring more assets onto HyperEVM and keep the extra income of holding them — staking yield, points, fee share, lock multipliers.
 
-HyperLeaf wraps staking receipts and locked positions into tradable ERC-20s on HyperEVM. Native vaults (hNEST) sit next to cross-chain wraps (LayerZero). One listing, one risk, one ticker.
+The product is not “just another bridge.” Spot can already show up on HyperEVM. HyperLeaf wraps the *yield-bearing* form: liquid receipts, vote-escrow, duration locks. Principal stays 1:1 in a source lockbox. New staking yield is converted to **HyperEVM HYPE** (WHYPE). Holders claim HYPE. Protocol takes **1% of that yield only**.
 
 App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https://x.com/HyperLeafHQ)
 
-> Mainnet HyperEVM (999) **hNEST is live and capped**. Wrap listings are **code-ready, not deployed**. **Not externally audited.** Do not deposit funds you cannot lose.
+> Mainnet HyperEVM (999): **hNEST is live and capped**. Wrap listings and HYPE conversion are **in this repo, not deployed**. **Not externally audited.** Do not deposit funds you cannot lose.
 
-Wrap contracts and the asset catalog live on branch [`feat/lz-oft-wrap`](https://github.com/HyperLeafHQ/HyperLeaf/tree/feat/lz-oft-wrap) until merged.
+---
+
+## Code status
+
+| What | Where | Deployed? |
+| ---- | ----- | --------- |
+| Live hNEST (NestVault / HNest / HevAdapter) | [`main`](https://github.com/HyperLeafHQ/HyperLeaf) | HyperEVM 999, capped |
+| Wrap L / C1 / C2 + LayerZero OFT + **yield → HYPE** | this branch [`feat/lz-oft-wrap`](https://github.com/HyperLeafHQ/HyperLeaf/tree/feat/lz-oft-wrap) · [PR #4](https://github.com/HyperLeafHQ/HyperLeaf/pull/4) | No |
+| Next NestVault (verified 1% compound fee + mint-delay EpochGate) | [`feat/hnest-yield-fee-gate`](https://github.com/HyperLeafHQ/HyperLeaf/tree/feat/hnest-yield-fee-gate) · [PR #5](https://github.com/HyperLeafHQ/HyperLeaf/pull/5) | No — live vault is not this code |
+
+Default GitHub `main` is the live NestVault only. **HYPE conversion (`LeafHypeRewarder`, `pullYield`, `convertYieldToHype`) is this wrap branch.** It is not on `main` until PR #4 merges.
 
 ---
 
 ## Why it exists
 
-HyperEVM still lacks a default layer for *staked and locked* assets. Spot can already show up through other bridges. The missing piece is the yield-bearing form: liquid receipts, vote-escrow, duration locks — still earning on the source protocol, still tradable on HyperEVM.
-
-1. **Introduce the asset** — sKAITO, xSQUID, MET, and other tokens that are not native to HyperEVM.
-2. **Keep the extra income** — wrap the receipt or the lock, not only the dead spot. PoS, points, fee share stay with the underlying position.
-3. **Price the lock** — if the source cannot unstake freely, the ticker says so (`VIRTUAL4Y`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
+1. **Introduce the asset** — sKAITO, xSQUID, wstETH, MET … tokens that are not native to HyperEVM.
+2. **Keep the extra income** — wrap the receipt or the lock, not only dead spot.
+3. **Pay that income in HYPE** — “use assets you already have to earn HYPE.”
+4. **Price the lock** — if the source cannot unstake freely, the ticker says so (`VIRTUAL4Y`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
 
 ---
 
 ## Two product lines
 
-| Line | Where the asset lives | HyperEVM token | Status |
-| ---- | --------------------- | -------------- | ------ |
-| **Native vault** | Already on HyperEVM | `hNEST` | Live (capped) |
-| **Cross-chain wrap** | Base / BSC / later Solana | `hKAITO`, `hxSQUID`, `VIRTUAL4Y`, … | Contracts ready, not mainnet |
+| Line | Where the asset lives | HyperEVM token | Yield |
+| ---- | --------------------- | -------------- | ----- |
+| **Native vault** | Already on HyperEVM | `hNEST` | Nest-side HYPE + (later) verified NEST compound |
+| **Cross-chain wrap** | Base / BSC / later Solana | `hKAITO`, `hxSQUID`, `VIRTUAL4Y`, … | Surplus inner/side tokens → WHYPE |
 
 Each listing is isolated. A bug or pause in one lockbox does not move another listing’s backing.
 
 ---
 
-## Listing kinds (wrap)
+## Mechanisms
+
+### 1. Wrap: lock on source, mint on HyperEVM
+
+LayerZero V2 OFT. Users pay the official Executor. HyperLeaf does **not** run a 24h mint/burn relayer.
+
+```
+Source chain (Base / BSC / …)
+  user locks the inner receipt or the locked position
+        |  LayerZero message (user pays)
+        v
+HyperEVM
+  mint the listing ticker
+        |
+        +-- trade on a HyperEVM DEX  (always)
+        +-- L:  burn → unlock the **same receipt** on source (instant)
+        +-- C1: no protocol redeem; sell the ticker
+        +-- C2: burn → wait → `claim` inner on source
+```
 
 Never mix exits on one pair. Never turn a live C1 into C2.
 
-| Kind | When | Source contract | HyperEVM | Exit |
-| ---- | ---- | --------------- | -------- | ---- |
-| **L** | Transferable receipt | `LeafOFTAdapter` | `LeafOFT` (`h` + asset) | Instant: return the **same receipt** |
-| **C1** | Long lock / no liquid receipt | `LeafInboundLockbox` | `LeafClosedOFT` (lock in ticker) | **Market only** |
-| **C2** | Unstake exists, known wait | `LeafRedeemQueue` | `LeafOFT` | Burn, wait, `claim` on source |
+| Kind | When | Source | HyperEVM | Exit |
+| ---- | ---- | ------ | -------- | ---- |
+| **L** | Transferable receipt | `LeafOFTAdapter` | `LeafOFT` | Instant: same receipt |
+| **C1** | Long lock / no liquid receipt | `LeafInboundLockbox` | `LeafClosedOFT` | Market only. `send` reverts |
+| **C2** | Unstake exists, known wait | `LeafRedeemQueue` | `LeafOFT` | Burn, wait `redeemDelay`, `claim` |
 
-LayerZero V2 OFT. Users pay the Executor. HyperLeaf does **not** run a 24h relayer.
+Security (Base ↔ HyperEVM): optional 2-of-3 DVNs (LayerZero Labs + Nethermind + Horizen). A HyperLeaf DVN veto is later, and stays off until a worker is actually online on both chains.
 
----
+### 2. Yield → HyperEVM HYPE (wrap)
 
-## Assets
+Principal stays 1:1 in the lockbox. Newly accrued staking yield is **not** mixed into NAV once `convertYieldToHype` is on.
 
-| Ticker | Kind | Source | Inner | Exit | Status |
-| ------ | ---- | ------ | ----- | ---- | ------ |
-| **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | DEX or Nest-side windows | Live, capped |
-| **hKAITO** | L | Base | sKAITO | Instant sKAITO | Code ready |
-| **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Instant xSQUID | Code ready |
-| **VIRTUAL4Y** | C1 | Base | VIRTUAL (ve) | Market only | Code ready |
-| **BONK12M** | C1 | Solana | BONK 12-month lock | Market only | Needs Solana lockbox |
-| **hMET** | C2 | Solana | MET (~21d unbond) | Queued claim | Needs Solana lockbox |
-| **BLUAI4Y** | C1 | BSC | BLUAI 4y | Market only | Code ready (low priority) |
+1. Owner sets `convertYieldToHype(true)` and a `harvester`.
+2. `pullYield` can only take `balance − principal` (inner) or a side-token balance. Principal cannot move.
+3. Keeper swaps that surplus to **canonical HyperEVM WHYPE** (`0x555…555`).
+4. `LeafHypeRewarder.notify` — **1% protocol / 99% holders**. Users `claim`.
+5. hToken transfers settle like MasterChef: the seller keeps HYPE already earned; the buyer starts from zero.
 
-Later EVM LSTs reuse the same Adapter: shMON, sAVAX, wstETH (if the issuer has not shipped their own OFT). Solana/Sui wait on a non-EVM lockbox.
+| Source | Harvest into | Bridge to WHYPE |
+| ------ | ------------ | ---------------- |
+| Solana | Wormhole HYPE `98sMhvDwXj1RQi5c5Mndm3vPe9cBqPrbLaufMXFNMh5g` | Wormhole Portal |
+| Base | Wormhole NTT HYPE `0x15D0e0c55a3E7eE67152aD7E89acf164253Ff68d` | Portal / Relay |
+| BSC | USDC — **never** fake BSC “HYPE” | **Relay** intent dest=WHYPE; deBridge USDC fallback |
 
-RAM / HYBR official LSTs are **out of scope**. ENA / sENA is **out of scope** (already on HyperCore).
+Do **not** harvest into Base cbHYPE (too thin). Do **not** auto-sell sKAITO share growth while Base sKAITO books are thin; side-token airdrops yes.
 
----
+Details: [`docs/HYPE_YIELD.md`](docs/HYPE_YIELD.md).
 
-## Fees
+### 3. Native: hNEST
 
-Protocol revenue is **1% of staking yield only**. Deposits, withdrawals, and wrap lock/unlock/claim take **no** protocol fee. Users still pay LayerZero messaging + gas.
+Deposits NEST, attaches Nest HEV, issues **hNEST**.
 
-| Surface | Charged | Not charged |
-| ------- | ------- | ----------- |
-| **Wrap L / C2** | 1% of newly accrued inner yield. 99% to holders on redeem. | Lock / unlock / claim |
-| **Wrap C1** | Same 1%. Remaining 99% stays as extra backing. | No protocol redeem |
-| **hNEST (live)** | 1% of residual HYPE on `harvest` (`feeBps = 100`) | NEST deposit / withdraw |
+Honest limits of the **live** vault:
 
-Live NestVault is not redeployed for this. Wrap fee code lives on `feat/lz-oft-wrap`.
+- `recordCompound` is **disabled** — no unbacked share-price mint.
+- Nest public HYPE Spring is **Nest-side**, not a HyperLeaf claim button.
+- Withdrawals follow Nest/HEV windows plus an idle buffer — not instant 1:1.
+- Live fee: **1% of residual HYPE** on `harvest` (`feeBps = 100`). NEST deposit / withdraw: **0%**.
 
----
+Designed, not live (PR #5):
 
-## Native: hNEST (live)
+- Verified compound: book only `pendingLockedNestShare` deltas; 1% of that growth as protocol shares, 99% NAV to holders.
+- **EpochGate is a mint delay**, not a transfer lock. Circulating hNEST stays a normal ERC-20. New deposits wait one Nest epoch before hNEST is minted.
 
-| Contract | Address (HyperEVM 999) |
+### Live contracts (HyperEVM 999)
+
+| Contract | Address |
 | -------- | ------- |
 | NestVault | `0x4f6615761A772e10d7f802B1C29654ABD90fF30d` |
 | HNest | `0x2101621F51D7E05518D6680C62d04Ad47bC4e05D` |
 | HevAdapter | `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2` |
 | NEST | `0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035` |
 
-Honest limits: `recordCompound` disabled; Nest HYPE Spring is Nest-side; withdrawals are not instant 1:1.
+---
+
+## Fees
+
+Protocol revenue is **1% of staking yield only**. Lock, unlock, queued claim, and NEST deposit/withdraw take **no** protocol fee. Users still pay LayerZero + gas.
+
+| Surface | Charged | Not charged |
+| ------- | ------- | ----------- |
+| **Wrap (HYPE convert on)** | 1% of WHYPE at `notify`. 99% claimable. Redeem of principal is 1:1. | Lock / unlock / claim |
+| **Wrap (legacy inner harvest)** | 1% of newly accrued inner; 99% stays in the box / backing | Same |
+| **hNEST live** | 1% of residual HYPE on `harvest` | NEST in / out |
+
+---
+
+## Assets and launch order
+
+Listings go **one path at a time**. Same chain + same Kind can batch after that path is proven. Do not launch nine tickers on day one: nine empty books, nine harvest routes, nine blast radii.
+
+Success for a listing is not “it compiled.” It is: small deposit and redeem match, principal cannot be pulled as yield, and one real surplus has become claimable HYPE.
+
+| Order | Ticker | Kind | Source | Inner | Why this slot |
+| ----- | ------ | ---- | ------ | ----- | ------------- |
+| 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
+| 1 | **hKAITO** | L | Base | sKAITO | First wrap: Base, instant redeem, simplest story. Cap tiny. Harvest airdrops; do not auto-sell sKAITO rebase. |
+| 2 | **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Same chain, same L contracts. QUID is real-time yield — first clean HYPE-convert drill. |
+| 3 | **hwstETH** | L | Ethereum / LST home | wstETH | After L is trusted. Pairs against Unit uETH — this is the liquidity thesis. |
+| 4 | **VIRTUAL4Y** | C1 | Base | VIRTUAL (ve, not 1:1 ERC-20) | After L is trusted. “Sell, don’t redeem” must not ship in the same week as a buggy L. |
+| 5 | **hshMON** | L | Monad | shMON | Same Adapter as other EVM LSTs. |
+| later | **BLUAI4Y** | C1 | BSC | BLUAI 4y | High user risk. First use of the BSC → Relay → WHYPE route. |
+| last | **BONK12M** | C1 | Solana | BONK 12-month lock | Needs a Solana lockbox. Not in this EVM repo yet. |
+| last | **hMET** | C2 | Solana | MET (~21d unbond) | Same. |
+
+RAM / HYBR official LSTs are **out of scope**. ENA / sENA is **out of scope** (already on HyperCore). Hyperliquid-native LSTs (HYPE LST) are **out of scope**.
+
+Catalog: [`listings/catalog.json`](listings/catalog.json) · kinds: [`docs/wrap-kinds.md`](docs/wrap-kinds.md).
+
+---
+
+## Roadmap
+
+**Phase A — testnet, one L end-to-end**
+Deploy mock hKAITO on Base testnet + HyperEVM testnet. Deposit, mint, redeem, `pullYield`, `notify`, claim HYPE. Then one C1 mock and one C2 mock so the three exits are not confused.
+
+**Phase B — mainnet hKAITO only**
+Tiny cap. Watch LZ peers, DVN, Executor quotes. Harvest side airdrops to WHYPE if size is real; skip sKAITO share-growth sells.
+
+**Phase C — hxSQUID, then hwstETH**
+Copy the proven Base L path. Seed hwstETH vs Unit uETH only after hKAITO/hxSQUID books are honest.
+
+**Phase D — C1 VIRTUAL4Y**
+Same Base stack, different exit. Do not enable protocol redeem later.
+
+**Phase E — NestVault v2 (optional redeploy)**
+Verified compound 1% + EpochGate mint delay (PR #5). Live 10k test NEST can stay; do not migrate user funds until v2 is tested.
+
+**Phase F — BSC / Solana**
+BLUAI4Y only after Relay WHYPE fills are routine. Solana listings wait on a non-EVM lockbox.
+
+---
+
+## Architecture
+
+Wrap + HYPE conversion live on [`feat/lz-oft-wrap`](https://github.com/HyperLeafHQ/HyperLeaf/tree/feat/lz-oft-wrap). `main` is the live NestVault.
+
+```
+src/
+  NestVault.sol / HNest.sol / HevAdapter.sol   # live-style native hNEST
+  lz/
+    LeafOFTAdapter.sol / LeafOFT.sol           # L
+    LeafInboundLockbox.sol / LeafClosedOFT.sol # C1
+    LeafRedeemQueue.sol                        # C2
+    LeafYieldFee.sol                           # harvest + convertYieldToHype + pullYield
+    LeafHypeRewarder.sol                       # 1% / 99% WHYPE
+    HypeAddresses.sol                          # WHYPE, Wormhole HYPE, USDC BSC
+    LeafSecurity.sol / LayerZeroAddresses.sol / AssetCatalog.sol
+listings/catalog.json
+docs/HYPE_YIELD.md
+docs/wrap-kinds.md
+docs/testnet-deploy.md
+keeper/hypeYield.ts                            # pull → swap → notify stub
+```
 
 ---
 
 ## Risk
 
-- **Not externally audited**
-- C1 tickers can trade below NAV
-- Source points/airdrops usually accrue to the lockbox, not the hToken holder
+HyperLeaf makes lock and staking risk **tradable**. It does not remove it.
+
+- Smart-contract risk — **not externally audited**
+- C1 closed tickers can trade at a persistent discount to NAV
+- Keeper / harvest key can pull surplus yield, not principal — still a hot wallet; keep it small
+- Points / airdrops on source stakes usually accrue to the **lockbox**, not the hToken until harvested
 - LayerZero / DVN / Executor liveness
+- Thin HYPE books on source chains — wrong ticker (BSC HYPE, cbHYPE) will brick the harvest
+- Underlying protocol upgrades (Nest HEV, Squid StakedToken, Meteora, …)
+- Deposit caps and pause are expected in the first months of each listing
+
+---
+
+## Develop
+
+```bash
+git clone https://github.com/HyperLeafHQ/HyperLeaf
+forge test                 # native hNEST
+git checkout feat/lz-oft-wrap
+forge test                 # wrap + HYPE rewarder
+```
+
+Wrap tests: `test/lz/` (including `LeafHypeRewarder.t.sol`). Native tests: `test/NestVault.t.sol`.
+
+Deploy wrap: `script/lz/` (`DeployTestnetSource`, `DeployTestnetDest`, `WirePeers`, `DeployHypeRewarder`, `SetSecurityStack`).
+
+Set `OWNER` / `GUARDIAN` to **your** wallets before any mainnet broadcast. Do not leave a bot as owner. Set `FEE_RECIPIENT`. Set `harvester` to a key that can only `pullYield`, not `setPeer`.
 
 ---
 
