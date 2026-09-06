@@ -16,15 +16,19 @@ abstract contract LeafYieldFee {
 
     bool public convertYieldToHype;
     address public harvester;
+    /// @dev pullYield destination. Harvester cannot redirect surplus to self.
+    address public converter;
 
     event ConvertModeSet(bool enabled);
     event HarvesterSet(address indexed harvester);
+    event ConverterSet(address indexed converter);
     event YieldPulled(address indexed token, address indexed to, uint256 amount);
     event FeeRecipientUpdated(address indexed recipient);
     event YieldHarvested(address indexed token, uint256 yieldAmount, uint256 fee);
 
     error NotHarvester();
     error NoYield();
+    error BadConverter();
 
     error FeeRecipientZero();
 
@@ -56,6 +60,16 @@ abstract contract LeafYieldFee {
     function _setHarvester(address harvester_) internal {
         harvester = harvester_;
         emit HarvesterSet(harvester_);
+    }
+
+    function _setConverter(address converter_) internal {
+        if (converter_ == address(0)) revert BadConverter();
+        converter = converter_;
+        emit ConverterSet(converter_);
+    }
+
+    function _requireConverter(address to) internal view {
+        if (converter == address(0) || to != converter) revert BadConverter();
     }
 
     function _harvestInner(IERC20 token, uint256 reserved) internal returns (uint256 fee) {

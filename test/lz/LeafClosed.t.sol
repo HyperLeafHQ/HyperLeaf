@@ -228,4 +228,13 @@ contract LeafClosedTest is Test {
         queue.claim(0);
         assertEq(token.balanceOf(user), 95e18);
     }
+
+    function testC2DelayOnlyIncreases() public {
+        vm.prank(owner);
+        queue.setRedeemDelay(14 days);
+        assertEq(queue.redeemDelay(), 14 days);
+        vm.prank(owner);
+        vm.expectRevert(LeafRedeemQueue.DelayTooLow.selector);
+        queue.setRedeemDelay(7 days);
+    }
 }

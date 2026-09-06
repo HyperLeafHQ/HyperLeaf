@@ -39,6 +39,7 @@ contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
     error UnknownPool();
     error OnlyHToken();
     error AlreadyRegistered();
+    error NoSupply();
 
     constructor(address hype_, address owner_, address feeRecipient_) Ownable(owner_) {
         if (hype_ == address(0) || owner_ == address(0) || feeRecipient_ == address(0)) revert ZeroAddress();
@@ -64,17 +65,13 @@ contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
         Pool storage p = pools[id];
         if (!p.exists) revert UnknownPool();
         if (amount == 0) return;
+        uint256 supply = IERC20(p.hToken).totalSupply();
+        if (supply == 0) revert NoSupply();
         hype.safeTransferFrom(msg.sender, address(this), amount);
         uint256 fee = (amount * FEE_BPS) / BPS;
         if (fee > 0) hype.safeTransfer(feeRecipient, fee);
         uint256 dist = amount - fee;
-        uint256 supply = IERC20(p.hToken).totalSupply();
         if (dist == 0) {
-            emit Notified(id, amount, fee, 0);
-            return;
-        }
-        if (supply == 0) {
-            hype.safeTransfer(feeRecipient, dist);
             emit Notified(id, amount, fee, 0);
             return;
         }

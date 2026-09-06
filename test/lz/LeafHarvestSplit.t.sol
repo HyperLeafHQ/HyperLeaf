@@ -70,6 +70,7 @@ contract LeafHarvestSplitTest is Test {
     address guardian = address(0xB0B);
     address feeTo = address(0xFEE);
     address harvester = address(0x1111);
+    address converter = address(0xC0);
     address alice = address(0xA1);
 
     function setUp() public {
@@ -82,9 +83,11 @@ contract LeafHarvestSplitTest is Test {
         adapter = new LeafOFTAdapter(address(xsquid), address(ep), owner, guardian, feeTo, 10_000e18);
         lockbox = new LeafInboundLockbox(address(bluai), address(ep), owner, guardian, feeTo, 10_000e18);
         adapter.setHarvester(harvester);
+        adapter.setConverter(converter);
         adapter.setConvertYieldToHype(true);
         adapter.setPeer(30367, address(1));
         lockbox.setHarvester(harvester);
+        lockbox.setConverter(converter);
         lockbox.setConvertYieldToHype(true);
         lockbox.setPeer(30367, address(1));
         vm.stopPrank();
@@ -109,15 +112,18 @@ contract LeafHarvestSplitTest is Test {
         xsquid.mint(address(adapter), 3e18);
         vm.prank(harvester);
         vm.expectRevert(LeafOFTAdapter.CannotPullInner.selector);
-        adapter.pullYield(xsquid, harvester);
+        adapter.pullYield(xsquid, converter);
     }
 
     function testHarvesterPullsQuidOnly() public {
         farm.seed(4e18);
         farm.harvest(address(adapter));
         vm.prank(harvester);
+        vm.expectRevert();
         adapter.pullYield(quid, harvester);
-        assertEq(quid.balanceOf(harvester), 4e18);
+        vm.prank(harvester);
+        adapter.pullYield(quid, converter);
+        assertEq(quid.balanceOf(converter), 4e18);
         assertEq(quid.balanceOf(address(adapter)), 0);
     }
 
@@ -125,8 +131,8 @@ contract LeafHarvestSplitTest is Test {
         MockToken dust = new MockToken("DUST", "DUST");
         dust.mint(address(adapter), 1e18);
         vm.prank(harvester);
-        adapter.pullYield(dust, harvester);
-        assertEq(dust.balanceOf(harvester), 1e18);
+        adapter.pullYield(dust, converter);
+        assertEq(dust.balanceOf(converter), 1e18);
     }
 
     function testBluaiPullsInnerSurplusNotPrincipal() public {
@@ -136,8 +142,8 @@ contract LeafHarvestSplitTest is Test {
         vm.stopPrank();
         bluai.mint(address(lockbox), 8e18);
         vm.prank(harvester);
-        lockbox.pullYield(bluai, harvester);
-        assertEq(bluai.balanceOf(harvester), 8e18);
+        lockbox.pullYield(bluai, converter);
+        assertEq(bluai.balanceOf(converter), 8e18);
         assertEq(bluai.balanceOf(address(lockbox)), 50e18);
     }
 

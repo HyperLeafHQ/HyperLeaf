@@ -58,10 +58,14 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setHarvester(harvester_);
     }
 
-    /// @notice Pull surplus inner (or a side token) to the converter. Cannot touch principal.
+    function setConverter(address converter_) external onlyOwner {
+        _setConverter(converter_);
+    }
+
+    /// @notice Pull side-token surplus to the allowlisted converter only.
     function pullYield(IERC20 token, address to) external nonReentrant {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
-        if (to == address(0)) revert ZeroAddress();
+        _requireConverter(to);
         if (address(token) == address(innerToken)) revert CannotPullInner();
         _pullYield(token, innerToken, totalLocked, to);
     }

@@ -24,7 +24,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     IERC20 public immutable innerToken;
-    uint64 public immutable redeemDelay;
+    uint64 public redeemDelay;
     uint256 public depositCap;
     uint256 public totalLocked;
     uint256 public pendingTicketAssets;
@@ -35,6 +35,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event RedeemQueued(uint256 indexed id, address indexed to, uint256 amount, uint64 eta, bytes32 guid);
     event RedeemClaimed(uint256 indexed id, address indexed to, uint256 amount);
+    event RedeemDelayUpdated(uint64 delay);
 
     error ZeroAmount();
     error CapExceeded();
@@ -43,6 +44,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error AlreadyClaimed();
     error UnknownTicket();
     error CannotPullInner();
+    error DelayTooLow();
 
     constructor(
         address token_,
@@ -77,9 +79,20 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setHarvester(harvester_);
     }
 
+    function setConverter(address converter_) external onlyOwner {
+        _setConverter(converter_);
+    }
+
+    /// @notice Can only raise the wait. Existing tickets keep their eta.
+    function setRedeemDelay(uint64 delay) external onlyOwner {
+        if (delay < redeemDelay) revert DelayTooLow();
+        redeemDelay = delay;
+        emit RedeemDelayUpdated(delay);
+    }
+
     function pullYield(IERC20 token, address to) external nonReentrant {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
-        if (to == address(0)) revert ZeroAddress();
+        _requireConverter(to);
         if (address(token) == address(innerToken)) revert CannotPullInner();
         _pullYield(token, innerToken, totalLocked + pendingTicketAssets, to);
     }

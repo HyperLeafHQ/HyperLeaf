@@ -66,6 +66,7 @@ contract LeafHypeRewarderTest is Test {
         rewarder.register(ID, address(oft));
         oft.setHypeRewarder(address(rewarder), ID);
         adapter.setHarvester(harvester);
+        adapter.setConverter(harvester);
         adapter.setConvertYieldToHype(true);
         adapter.setPeer(DST, address(oft));
         oft.setPeer(SRC, address(adapter));
@@ -108,7 +109,15 @@ contract LeafHypeRewarderTest is Test {
         assertEq(rewarder.pending(ID, bob), 0);
     }
 
-    function testPullYieldCannotTouchPrincipal() public {
+    function testNotifyZeroSupplyReverts() public {
+        whype.mint(address(this), 10e18);
+        whype.approve(address(rewarder), 10e18);
+        vm.expectRevert(LeafHypeRewarder.NoSupply.selector);
+        rewarder.notify(ID, 10e18);
+        assertEq(whype.balanceOf(address(this)), 10e18);
+    }
+
+    function testPullYieldRejectsNonConverter() public {
         vm.startPrank(alice);
         inner.approve(address(adapter), 50e18);
         adapter.sendTo{value: 0.01 ether}(DST, alice, 50e18);

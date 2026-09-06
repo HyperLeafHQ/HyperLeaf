@@ -43,6 +43,10 @@ Run when surplus clears Relay min and gas < ~1% of the batch. Weekly is enough. 
 # after wrap + rewarder
 cast send $ADAPTER "setConvertYieldToHype(bool)" true
 cast send $ADAPTER "setHarvester(address)" $KEEPER
+cast send $ADAPTER "setConverter(address)" $CONVERTER
+# poke: LeafCallRewardSource.harvest(lockbox) — anyone
+# pullYield only to $CONVERTER. notify reverts if hToken supply is 0.
+
 # poke: harvestRewards(LEAF_CALL_SOURCE) — anyone
 # BLUAI4Y C1 pullYield(BLUAI) is extra inner only
 ```
