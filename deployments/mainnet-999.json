@@ -1,7 +1,7 @@
 {
   "chainId": 999,
   "network": "HyperEVM mainnet",
-  "updatedAt": "2026-09-06T17:35:00+08:00",
+  "updatedAt": "2026-09-06T19:37:00+08:00",
   "rpc": "https://rpc.hyperliquid.xyz/evm",
   "hypeToken": "0x5555555555555555555555555555555555555555",
   "nestToken": "0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035",
@@ -34,10 +34,10 @@
   "ownership": {
     "NestVault": {
       "pattern": "Ownable2Step",
-      "owner": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
-      "pendingOwner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
-      "acceptOwnershipRequired": true,
-      "note": "Owner EOA must call NestVault.acceptOwnership()"
+      "owner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
+      "pendingOwner": "0x0000000000000000000000000000000000000000",
+      "acceptOwnershipRequired": false,
+      "note": "Owner acceptOwnership completed; live owner is protocol Owner EOA."
     },
     "HevAdapter": {
       "pattern": "Ownable (one-step)",
@@ -52,24 +52,32 @@
     "minIdleNestHuman": "50 NEST",
     "topUpIdle": "50000000000000000000",
     "topUpIdleHuman": "50 NEST",
-    "vaultIdleNestBalance": "50000000000000000000"
+    "vaultIdleNestBalance": "150000000000000000000",
+    "vaultIdleNestBalanceHuman": "150 NEST (approx; prefer live chain)"
   },
   "onChainVerified": {
-    "depositsEnabled": false,
+    "asOf": "2026-09-06",
+    "depositsEnabled": true,
+    "depositCapHuman": "20000 NEST",
     "idleDepositBps": 100,
     "minIdleNest": "50000000000000000000",
-    "vaultIdleNestBalance": "50000000000000000000",
+    "vaultIdleNestBalanceApprox": "150000000000000000000",
+    "totalNestLockedApprox": "10001000000000000000000",
+    "totalNestLockedHumanApprox": "10001 NEST",
     "guardian": "0x12dF4528E7Cc3db07A509c966c6405b69A25Ef2e",
     "keeper": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
     "feeRecipient": "0x76c8c4586F0a3d335CF7192eBbB4FE6Ed5Af3804",
     "adapterVault": "0x4f6615761A772e10d7f802B1C29654ABD90fF30d",
-    "bigBlocks": "usingBigBlocks=false after deploy+config"
+    "note": "Snapshot only \u2014 prefer live chain / app if values differ."
   },
   "actionRequired": [
-    "Owner 0x24458f0bC44C4607172d1151Cd938012Be33156e must call NestVault.acceptOwnership()",
-    "Do NOT setDepositsEnabled(true) until DEPLOYMENT_CHECKLIST smoke checks complete"
+    "Prefer live chain / app for depositsEnabled, depositCap, idle, and TVL (totalNestLocked)."
   ],
-  "policy": {},
+  "policy": {
+    "depositsEnabled": true,
+    "cappedOpen": true,
+    "note": "Capped open \u2260 marketing launch; Not yet externally audited."
+  },
   "depositCap": "20000000000000000000000",
   "depositCapHuman": "20000 NEST"
 }
