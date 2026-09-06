@@ -19,11 +19,14 @@ abstract contract LeafYieldFee {
     /// @dev pullYield destination. Harvester cannot redirect surplus to self.
     address public converter;
     mapping(address target => bool) public claimTarget;
+    /// @dev e.g. xSQUID `claimRewards(address,uint256)` = 0x9a99b4f0. Forced args: (this, max).
+    bytes4 public rewardsSelector;
 
     event ConvertModeSet(bool enabled);
     event HarvesterSet(address indexed harvester);
     event ConverterSet(address indexed converter);
     event ClaimTargetSet(address indexed target, bool allowed);
+    event RewardsSelectorSet(bytes4 selector);
     event YieldPulled(address indexed token, address indexed to, uint256 amount);
     event FeeRecipientUpdated(address indexed recipient);
     event YieldHarvested(address indexed token, uint256 yieldAmount, uint256 fee);
@@ -86,7 +89,21 @@ abstract contract LeafYieldFee {
     ///      campaign pays `msg.sender` (Sign / TokenTable linear vest).
     function _pokeClaim(address inner, address t, bytes calldata data) internal {
         if (!claimTarget[t] || t == inner) revert BadClaimTarget();
-        (bool ok,) = t.call(data);
+        (bool ok,) = t.call{value: msg.value}(data);
+        if (!ok) revert ClaimFailed();
+    }
+
+    function _setRewardsSelector(bytes4 s) internal {
+        rewardsSelector = s;
+        emit RewardsSelectorSet(s);
+    }
+
+    /// @dev Claims as this lockbox. Selector must be rewards, not redeem — same
+    ///      arity as Squid redeem, different 4 bytes (0x9a99b4f0 vs redeem).
+    function _pokeRewards(address inner) internal {
+        bytes4 s = rewardsSelector;
+        if (s == bytes4(0) || inner == address(0)) revert BadClaimTarget();
+        (bool ok,) = inner.call{value: msg.value}(abi.encodeWithSelector(s, address(this), type(uint256).max));
         if (!ok) revert ClaimFailed();
     }
 

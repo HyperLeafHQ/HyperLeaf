@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafCallRewardSource} from "src/lz/LeafCallRewardSource.sol";
@@ -11,8 +12,17 @@ import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZero
 
 contract MockToken is ERC20 {
     constructor(string memory n, string memory s) ERC20(n, s) {}
+    IERC20 public payout;
     function mint(address to, uint256 a) external {
         _mint(to, a);
+    }
+    function setPayout(address p) external {
+        payout = IERC20(p);
+    }
+    function claimRewards(address to, uint256) external {
+        if (address(payout) == address(0)) return;
+        uint256 a = payout.balanceOf(address(this));
+        if (a > 0) payout.transfer(to, a);
     }
 }
 
@@ -171,6 +181,31 @@ contract LeafHarvestSplitTest is Test {
         vm.prank(harvester);
         adapter.pullYield(drop, converter);
         assertEq(drop.balanceOf(converter), 5e18);
+    }
+
+    function testPokeRewardsClaimsQuidToLockbox() public {
+        bytes4 sel = bytes4(keccak256("claimRewards(address,uint256)"));
+        assertEq(sel, bytes4(0x9a99b4f0));
+        xsquid.setPayout(address(quid));
+        quid.mint(address(xsquid), 27e18);
+        vm.prank(alice);
+        vm.expectRevert();
+        adapter.pokeRewards();
+        vm.prank(owner);
+        adapter.setRewardsSelector(sel);
+        adapter.pokeRewards();
+        assertEq(quid.balanceOf(address(adapter)), 27e18);
+        vm.startPrank(alice);
+        xsquid.approve(address(adapter), 10e18);
+        adapter.sendTo{value: 0.01 ether}(30367, alice, 10e18);
+        vm.stopPrank();
+        assertEq(xsquid.balanceOf(address(adapter)), 10e18);
+        vm.prank(harvester);
+        adapter.pullYield(quid, converter);
+        assertEq(quid.balanceOf(converter), 27e18);
+        vm.prank(harvester);
+        vm.expectRevert();
+        adapter.pullYield(xsquid, converter);
     }
 }
 

@@ -37,8 +37,8 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
-      "status": "testnet-ready",
-      "priority": 1
+      "status": "blocked-omnichain-holder",
+      "priority": 10
     },
     {
       "id": "hxsquid",
@@ -53,7 +53,12 @@
         "pullInner": false,
         "toHype": ["QUID"]
       },
-      "note": "L unlock returns xSQUID (like hKAITO). QUID dividends → HYPE (like BLUAI). Never pull xSQUID.",
+      "claim": "pokeRewards → claimRewards(lockbox, max) selector 0x9a99b4f0 on inner (same address as xSQUID). Then pullYield QUID. Never allowlist inner as pokeClaim target (redeem has same arity).",
+      "note": "L returns xSQUID. Principal redeem is 1:1 QUID at Squid. Extra QUID is claimRewards, not share-price. Never pull xSQUID.",
+      "refs": {
+        "redeemTx": "0x9ffec4c8d3548ba544fc7fbd73e1c7187d13c9664c901e76e1a909222dfc0886",
+        "claimRewardsTx": "0xbd4cf0f3463bb5a56d967c3fbb0571794643f023de5671590171f31e5c60d6a5"
+      },
       "source": "base",
       "sourceChainId": 8453,
       "sourceEid": 30184,
@@ -62,7 +67,7 @@
       "infra": "evm",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "testnet-ready",
-      "priority": 2
+      "priority": 1
     },
     {
       "id": "hwsteth",

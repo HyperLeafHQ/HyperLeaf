@@ -66,9 +66,18 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setClaimTarget(address(innerToken), t, allowed);
     }
 
+    function setRewardsSelector(bytes4 s) external onlyOwner {
+        _setRewardsSelector(s);
+    }
+
     /// @notice Anyone pays gas. Allowlisted Sign/TokenTable claim, as this lockbox.
-    function pokeClaim(address t, bytes calldata data) external {
+    function pokeClaim(address t, bytes calldata data) external payable {
         _pokeClaim(address(innerToken), t, data);
+    }
+
+    /// @notice Squid-style: claimRewards(this, max) on the inner staking token.
+    function pokeRewards() external payable {
+        _pokeRewards(address(innerToken));
     }
 
     /// @notice Pull side-token surplus to the allowlisted converter only.

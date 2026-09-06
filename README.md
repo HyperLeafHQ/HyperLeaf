@@ -195,11 +195,11 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | Order | Ticker | Kind | Source | Inner | Why this slot |
 | ----- | ------ | ---- | ------ | ----- | ------------- |
 | 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
-| 1 | **hKAITO** | L | Base | sKAITO | First wrap: Base, instant redeem, simplest story. Cap tiny. Harvest airdrops; do not auto-sell sKAITO rebase. |
-| 2 | **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Same chain, same L contracts. QUID is real-time yield — first clean HYPE-convert drill. |
-| 3 | **hwstETH** | L | Ethereum / LST home | wstETH | After L is trusted. Pairs against Unit uETH — this is the liquidity thesis. |
-| 4 | **hVIRTUALMAX** | C1 | Base | VIRTUAL → Virtuals Auto Max-lock (`stake(…, 104, true)`) | Never official redeem. ve stays 1:1. Agent airdrops → HYPE. |
-| 5 | **hshMON** | L | Monad | shMON | Same Adapter as other EVM LSTs. |
+| 1 | **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
+| 2 | **hwstETH** | L | Ethereum / LST home | wstETH | After L is trusted. Pairs against Unit uETH. |
+| 3 | **hVIRTUALMAX** | C1 | Base | VIRTUAL → Virtuals Auto Max-lock (`stake(…, 104, true)`) | Never official redeem. ve stays 1:1. Agent airdrops → HYPE. |
+| later | **hKAITO** | L | Base | sKAITO | Blocked on omnichain holder: eco claims are often not on Base. |
+| later | **hshMON** | L | Monad | shMON | Same Adapter as other EVM LSTs. |
 | later | **BLUAI4Y** | C1 | BSC | BLUAI 4y | High user risk. First use of the BSC → Relay → WHYPE route. |
 | last | **BONK12M** | C1 | Solana | BONK 12-month lock | Needs a Solana lockbox. Not in this EVM repo yet. |
 | last | **hMET** | C2 | Solana | MET (~21d unbond) | Same. |
@@ -213,16 +213,16 @@ Catalog: [`listings/catalog.json`](listings/catalog.json) · kinds: [`docs/wrap-
 ## Roadmap
 
 **Phase A — testnet, one L end-to-end**
-Deploy mock hKAITO on Base testnet + HyperEVM testnet. Deposit, mint, redeem, `pullYield`, `notify`, claim HYPE. Then one C1 mock and one C2 mock so the three exits are not confused.
+Deploy mock **hxSQUID** on Base testnet + HyperEVM testnet. Deposit, mint, redeem, `pokeRewards` / `pullYield`, `notify`, claim HYPE. Then one C1 mock and one C2 mock so the three exits are not confused.
 
-**Phase B — mainnet hKAITO only**
-Tiny cap. Watch LZ peers, DVN, Executor quotes. Harvest side airdrops to WHYPE if size is real; skip sKAITO share-growth sells.
+**Phase B — mainnet hxSQUID only**
+Tiny cap. `claimRewards(lockbox, max)` → QUID → WHYPE. Watch LZ peers.
 
-**Phase C — hxSQUID, then hwstETH**
-Copy the proven Base L path. Seed hwstETH vs Unit uETH only after hKAITO/hxSQUID books are honest.
+**Phase C — hwstETH, then hVIRTUALMAX**
+Copy the proven Base L path. C1 Auto Max-lock next. Do not enable protocol redeem on VIRTUAL.
 
-**Phase D — C1 hVIRTUALMAX**
-Same Base stack, Virtuals Auto Max-lock. Do not enable protocol redeem.
+**Phase D — hKAITO after omnichain holder**
+CREATE2 `LeafOmnichainHolder` on every EVM that has an eco claim. sKAITO sits in the twin so the same address can `pokeClaim` on BSC/ETH. Not before.
 
 **Phase E — NestVault v2 (optional redeploy)**
 Verified compound 1% + EpochGate mint delay (PR #5). Live 10k test NEST can stay; do not migrate user funds until v2 is tested.
