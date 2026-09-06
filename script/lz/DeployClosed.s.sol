@@ -6,20 +6,19 @@ import {LeafClosedOFT} from "src/lz/LeafClosedOFT.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
-/// @notice C1 deploy. On BSC: lockbox. On HyperEVM: BLUAI4Y (or OFT_NAME/SYMBOL).
-///         OWNER and GUARDIAN must be YOUR wallets, not a bot.
 contract DeployClosed is Script {
     function run() external {
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
+        address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
         uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(1_000e18));
         uint256 chainId = block.chainid;
 
         vm.startBroadcast();
         if (chainId == 56 || chainId == 97) {
             address inner = vm.envAddress("INNER_TOKEN");
-            address endpoint = A.ENDPOINT_BSC;
-            LeafInboundLockbox box = new LeafInboundLockbox(inner, endpoint, owner, guardian, cap);
+            LeafInboundLockbox box =
+                new LeafInboundLockbox(inner, A.ENDPOINT_BSC, owner, guardian, feeRecipient, cap);
             console2.log("LeafInboundLockbox", address(box));
         } else if (chainId == 999 || chainId == 998) {
             string memory name = vm.envOr("OFT_NAME", string("Hyperliquid BLUAI 4Year"));
@@ -28,6 +27,11 @@ contract DeployClosed is Script {
             address endpoint = chainId == 999 ? A.ENDPOINT_HYPEREVM : A.ENDPOINT_HYPEREVM_TESTNET;
             LeafClosedOFT oft = new LeafClosedOFT(name, symbol, lockSeconds, endpoint, owner, guardian);
             console2.log("LeafClosedOFT", address(oft));
+        } else if (chainId == 8453) {
+            address inner = vm.envAddress("INNER_TOKEN");
+            LeafInboundLockbox box =
+                new LeafInboundLockbox(inner, A.ENDPOINT_BASE, owner, guardian, feeRecipient, cap);
+            console2.log("LeafInboundLockbox", address(box));
         } else {
             revert("unsupported chain");
         }
