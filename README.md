@@ -2,13 +2,49 @@
 
 **Infrastructure for liquid staking on HyperEVM.**
 
-Bring more assets onto HyperEVM and keep the extra income of holding them — staking yield, points, fee share, lock multipliers.
+Not another HYPE LST. kHYPE and stHYPE already proved people will hold yield-bearing HYPE. HyperLeaf does not compete on a slightly higher APY.
 
-The product is not “just another bridge.” Spot can already show up on HyperEVM. HyperLeaf wraps the *yield-bearing* form: liquid receipts, vote-escrow, duration locks. Principal stays 1:1 in a source lockbox. New staking yield is converted to **HyperEVM HYPE** (WHYPE). Holders claim HYPE. Protocol takes **1% of that yield only**.
+It is the **ingress layer**: take assets that would not otherwise live on HyperEVM, **keep their economic state** (principal, yield, lock, exit), and issue a **Leaf asset** other protocols can use as collateral, LP, or margin.
+
+> Bring assets. Keep their yield. Make them productive.
+
+Spot bridges already move dead tokens. HyperLeaf moves the *yield-bearing form* — liquid receipts, vote-escrow, duration locks — and pays **new staking yield in HyperEVM HYPE** (WHYPE). Protocol take: **1% of that yield only**. No deposit or withdraw fee.
 
 App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https://x.com/HyperLeafHQ)
 
 > Mainnet HyperEVM (999): **hNEST is live and capped**. Wrap listings and HYPE conversion are **in this repo, not deployed**. **Not externally audited.** Do not deposit funds you cannot lose.
+
+A Leaf asset is **not a wrapped copy**. It is the HyperEVM financial form of that claim. Success is not HyperLeaf TVL. Success is a third protocol saying **“we support Leaf assets.”**
+
+---
+
+## Four words we will not mix
+
+| Word | Means | Does **not** mean |
+| ---- | ----- | ----------------- |
+| **Backed** | Realizable underlying exists for outstanding Leaf supply | You can exit at NAV today |
+| **Redeemable** | This listing has a protocol path home (L instant, C2 queued) | The book is deep |
+| **Liquid** | Someone will bid on a HyperEVM DEX | Protocol 1:1 |
+| **Fungible** | One ticker, one claim type | Every listing exits the same way |
+
+C1 (`hVIRTUALMAX`, `BLUAI4Y`, `BONK12M`) is **backed, not protocol-redeemable**. Market below NAV is a liquidity price, not a depeg — unless backing itself is gone. UI must never print “1 hX = 1 X, anytime.”
+
+L / C1 / C2 are the product, not patches. Different assets have different exit topology; HyperEVM still sees one ERC-20.
+
+---
+
+## Representation invariant
+
+At every moment, for every listing:
+
+```
+outstanding Leaf claims  ≤  economically realizable underlying
+                           (principal + booked yield − pending redemptions − fees)
+```
+
+Not `balanceOf(lockbox)`. Realizable. Principal is never harvested as yield. Yield is never booked twice. A burn drops liabilities **before** assets leave. Cross-chain minted supply equals canonical locked claims.
+
+If a PR cannot show this still holds, it does not merge.
 
 ---
 
@@ -26,10 +62,14 @@ Default GitHub `main` is the live NestVault only. **HYPE conversion (`LeafHypeRe
 
 ## Why it exists
 
-1. **Introduce the asset** — sKAITO, xSQUID, wstETH, MET … tokens that are not native to HyperEVM.
+HyperEVM is a trading network, not a general-purpose L1 full of every asset. HyperLeaf’s job is to **bring the missing productive collateral in**, without stripping the yield that made the asset worth holding.
+
+1. **Ingress** — sKAITO, xSQUID, wstETH, MET … tokens that are not native here.
 2. **Keep the extra income** — wrap the receipt or the lock, not only dead spot.
 3. **Pay that income in HYPE** — “use assets you already have to earn HYPE.”
-4. **Price the lock** — if the source cannot unstake freely, the ticker says so (`hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
+4. **Tell the truth about the lock** — if the source cannot unstake freely, the ticker says so (`hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
+
+What we are **not**: a Kinetiq competitor, a points farm, a generic LayerZero wrapper, or a protocol whose north star is APY.
 
 ---
 
@@ -41,6 +81,22 @@ Default GitHub `main` is the live NestVault only. **HYPE conversion (`LeafHypeRe
 | **Cross-chain wrap** | Base / BSC / later Solana | `hKAITO`, `hxSQUID`, `hVIRTUALMAX`, … | Surplus inner/side tokens → WHYPE |
 
 Each listing is isolated. A bug or pause in one lockbox does not move another listing’s backing.
+
+LayerZero is a pipe. The product is the Leaf asset on HyperEVM.
+
+---
+
+## How we measure this
+
+Headline TVL is easy to rent. We care, in order:
+
+1. **Non-incentivized TVL** — would they stay if points stopped?
+2. **Integration count** — lending, DEX, vaults, (later) perps that treat a Leaf asset as collateral.
+3. **Utilization** — share of Leaf supply actually sitting in those protocols, not idle in wallets.
+4. **Honest books** — one listing at a time; redeem matches lock; yield is not principal.
+5. **Fee revenue** — 1% of real yield, from volume, not from locking users in.
+
+A $100M book used as collateral in twenty places beats a $500M farm with two pools.
 
 ---
 
