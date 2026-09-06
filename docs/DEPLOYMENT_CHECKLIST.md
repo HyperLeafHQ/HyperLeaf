@@ -24,6 +24,16 @@ Testnet may collapse roles for drills. **Copying testnet role collapse to mainne
 
 **Product assumption:** most exits via secondary market (sell hNEST); protocol redeem is minority backstop → lean idle is intentional.
 
+## Confirmed topUpIdle budget
+
+| Item | Value | Notes |
+|------|-------|--------|
+| Initial `topUpIdle` budget | **50 NEST** | Funded from Hyperleaf keeper/hot wallet before `setMinIdleNest(50e18)`. |
+| Purpose | Seed idle so floor can be set | Required because `setMinIdleNest` reverts if vault NEST balance &lt; new floor. |
+| Ongoing | Opportunistic | Further topUps only if queue gap / floor pressure; not a standing weekly mint. |
+
+Source of funds: hot wallet `0xc321DD8826a30D8a6D973821a3dB7b8090955887` (already holds mainnet NEST for ops).
+
 **Set order (important):**
 1. Deploy with `depositsEnabled = false`.
 2. Configure roles (Guardian / Keeper / feeRecipient) while deployer still Owner, **or** after user `acceptOwnership`.

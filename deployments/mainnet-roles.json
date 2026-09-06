@@ -13,12 +13,15 @@
     "idleDepositBps": 100,
     "minIdleNest": "50000000000000000000",
     "minIdleNestHuman": "50 NEST",
-    "notes": "1% deposit skim; 50 NEST absolute floor. topUpIdle >= 50 before setMinIdleNest."
+    "notes": "1% deposit skim; 50 NEST absolute floor; initial topUpIdle budget 50 NEST from keeper hot wallet before setMinIdleNest.",
+    "topUpIdleBudget": "50000000000000000000",
+    "topUpIdleBudgetHuman": "50 NEST",
+    "topUpIdleSource": "0xc321DD8826a30D8a6D973821a3dB7b8090955887"
   },
   "policy": {
     "depositsEnabledDefault": false,
     "recordCompound": "disabled",
-    "hypeSpring": "not wired — do not market liquid HYPE claims",
+    "hypeSpring": "not wired \u2014 do not market liquid HYPE claims",
     "exitAssumption": "Most exits via secondary market; protocol redeem is backstop"
   },
   "contracts": {
