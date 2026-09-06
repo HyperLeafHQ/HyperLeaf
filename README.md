@@ -29,7 +29,7 @@ Default GitHub `main` is the live NestVault only. **HYPE conversion (`LeafHypeRe
 1. **Introduce the asset** — sKAITO, xSQUID, wstETH, MET … tokens that are not native to HyperEVM.
 2. **Keep the extra income** — wrap the receipt or the lock, not only dead spot.
 3. **Pay that income in HYPE** — “use assets you already have to earn HYPE.”
-4. **Price the lock** — if the source cannot unstake freely, the ticker says so (`VIRTUAL4Y`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
+4. **Price the lock** — if the source cannot unstake freely, the ticker says so (`hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
 
 ---
 
@@ -38,7 +38,7 @@ Default GitHub `main` is the live NestVault only. **HYPE conversion (`LeafHypeRe
 | Line | Where the asset lives | HyperEVM token | Yield |
 | ---- | --------------------- | -------------- | ----- |
 | **Native vault** | Already on HyperEVM | `hNEST` | Nest-side HYPE + (later) verified NEST compound |
-| **Cross-chain wrap** | Base / BSC / later Solana | `hKAITO`, `hxSQUID`, `VIRTUAL4Y`, … | Surplus inner/side tokens → WHYPE |
+| **Cross-chain wrap** | Base / BSC / later Solana | `hKAITO`, `hxSQUID`, `hVIRTUALMAX`, … | Surplus inner/side tokens → WHYPE |
 
 Each listing is isolated. A bug or pause in one lockbox does not move another listing’s backing.
 
@@ -142,7 +142,7 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 1 | **hKAITO** | L | Base | sKAITO | First wrap: Base, instant redeem, simplest story. Cap tiny. Harvest airdrops; do not auto-sell sKAITO rebase. |
 | 2 | **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Same chain, same L contracts. QUID is real-time yield — first clean HYPE-convert drill. |
 | 3 | **hwstETH** | L | Ethereum / LST home | wstETH | After L is trusted. Pairs against Unit uETH — this is the liquidity thesis. |
-| 4 | **VIRTUAL4Y** | C1 | Base | VIRTUAL (ve, not 1:1 ERC-20) | After L is trusted. “Sell, don’t redeem” must not ship in the same week as a buggy L. |
+| 4 | **hVIRTUALMAX** | C1 | Base | VIRTUAL → Virtuals Auto Max-lock (`stake(…, 104, true)`) | Never official redeem. ve stays 1:1. Agent airdrops → HYPE. |
 | 5 | **hshMON** | L | Monad | shMON | Same Adapter as other EVM LSTs. |
 | later | **BLUAI4Y** | C1 | BSC | BLUAI 4y | High user risk. First use of the BSC → Relay → WHYPE route. |
 | last | **BONK12M** | C1 | Solana | BONK 12-month lock | Needs a Solana lockbox. Not in this EVM repo yet. |
@@ -165,8 +165,8 @@ Tiny cap. Watch LZ peers, DVN, Executor quotes. Harvest side airdrops to WHYPE i
 **Phase C — hxSQUID, then hwstETH**
 Copy the proven Base L path. Seed hwstETH vs Unit uETH only after hKAITO/hxSQUID books are honest.
 
-**Phase D — C1 VIRTUAL4Y**
-Same Base stack, different exit. Do not enable protocol redeem later.
+**Phase D — C1 hVIRTUALMAX**
+Same Base stack, Virtuals Auto Max-lock. Do not enable protocol redeem.
 
 **Phase E — NestVault v2 (optional redeploy)**
 Verified compound 1% + EpochGate mint delay (PR #5). Live 10k test NEST can stay; do not migrate user funds until v2 is tested.
