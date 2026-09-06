@@ -128,7 +128,7 @@ Deposit caps are enforced during each vault's initial period and raised progress
 
 ## Contracts
 
-Deployed on HyperEVM. All source code verified on HyperEVM Explorer.
+Deployed on HyperEVM. Source verified via Sourcify (explorer listings may be partial).
 
 | Contract        | Address (Mainnet 999)                        | Description                                |
 | --------------- | -------------------------------------------- | ------------------------------------------ |
