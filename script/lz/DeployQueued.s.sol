@@ -24,7 +24,7 @@ contract DeployQueued is Script {
             console2.log("LeafOFT", address(oft));
         } else {
             address inner = vm.envAddress("INNER_TOKEN");
-            address endpoint = chainId == 56 ? A.ENDPOINT_BSC : A.ENDPOINT_BASE;
+            address endpoint = A.endpoint(chainId);
             LeafRedeemQueue q =
                 new LeafRedeemQueue(inner, endpoint, owner, guardian, feeRecipient, cap, delay);
             console2.log("LeafRedeemQueue", address(q));

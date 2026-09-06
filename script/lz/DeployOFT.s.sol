@@ -11,8 +11,7 @@ contract DeployOFT is Script {
         address guardian = vm.envAddress("GUARDIAN");
         string memory name = vm.envOr("OFT_NAME", string("Hyperleaf sKAITO"));
         string memory symbol = vm.envOr("OFT_SYMBOL", string("hKAITO"));
-        uint256 chainId = block.chainid;
-        address endpoint = chainId == 999 ? A.ENDPOINT_HYPEREVM : A.ENDPOINT_HYPEREVM_TESTNET;
+        address endpoint = A.endpoint(block.chainid);
         vm.startBroadcast();
         LeafOFT oft = new LeafOFT(name, symbol, endpoint, owner, guardian);
         console2.log("LeafOFT", address(oft));

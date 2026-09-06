@@ -17,8 +17,9 @@ contract DeployClosed is Script {
         vm.startBroadcast();
         if (chainId == 56 || chainId == 97) {
             address inner = vm.envAddress("INNER_TOKEN");
+            address endpoint = A.endpoint(chainId);
             LeafInboundLockbox box =
-                new LeafInboundLockbox(inner, A.ENDPOINT_BSC, owner, guardian, feeRecipient, cap);
+                new LeafInboundLockbox(inner, endpoint, owner, guardian, feeRecipient, cap);
             console2.log("LeafInboundLockbox", address(box));
         } else if (chainId == 999 || chainId == 998) {
             string memory name = vm.envOr("OFT_NAME", string("Hyperliquid BLUAI 4Year"));
@@ -27,10 +28,10 @@ contract DeployClosed is Script {
             address endpoint = chainId == 999 ? A.ENDPOINT_HYPEREVM : A.ENDPOINT_HYPEREVM_TESTNET;
             LeafClosedOFT oft = new LeafClosedOFT(name, symbol, lockSeconds, endpoint, owner, guardian);
             console2.log("LeafClosedOFT", address(oft));
-        } else if (chainId == 8453) {
+        } else if (chainId == 8453 || chainId == 84532) {
             address inner = vm.envAddress("INNER_TOKEN");
             LeafInboundLockbox box =
-                new LeafInboundLockbox(inner, A.ENDPOINT_BASE, owner, guardian, feeRecipient, cap);
+                new LeafInboundLockbox(inner, A.endpoint(chainId), owner, guardian, feeRecipient, cap);
             console2.log("LeafInboundLockbox", address(box));
         } else {
             revert("unsupported chain");

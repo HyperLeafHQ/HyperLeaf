@@ -1,21 +1,31 @@
 {
   "kinds": {
-    "L": "Liquid or instant-unstake. Lock inner token/receipt, instant redeem same thing. HyperEVM ticker hPREFIX. Job is to introduce the asset.",
+    "L": "Liquid or instant-unstake. Lock inner token/receipt, instant redeem same thing. HyperEVM ticker hPREFIX.",
     "C1": "Long lock / no transferable receipt. Inbound only. Exit is the HyperEVM market. Ticker encodes lock.",
     "C2": "Unstake exists with a known wait. Burn hToken, wait redeemDelay, claim inner on source."
   },
+  "testnet": {
+    "hyperevm": { "chainId": 998, "eid": 40362, "endpoint": "0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1", "rpc": "https://rpc.hyperliquid-testnet.xyz/evm" },
+    "baseSepolia": { "chainId": 84532, "eid": 40245, "endpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f" },
+    "bscTestnet": { "chainId": 97, "eid": 40102, "endpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f" },
+    "note": "HyperEVM testnet DVNs are only LayerZero Labs + P2P. Do not set the mainnet 2-of-3 ULN on testnet."
+  },
   "listings": [
     {
-      "id": "skaite",
+      "id": "hkaito",
       "kind": "L",
       "symbol": "hKAITO",
       "name": "Hyperleaf sKAITO",
       "innerSymbol": "sKAITO",
+      "innerToken": "0x548D3B444da39686d1a6F1544781d154e7cD1EF7",
       "source": "base",
+      "sourceChainId": 8453,
       "sourceEid": 30184,
+      "sourceEidTest": 40245,
       "exit": "instant-receipt",
       "infra": "evm",
-      "status": "code-ready",
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
+      "status": "testnet-ready",
       "priority": 1
     },
     {
@@ -25,18 +35,36 @@
       "name": "Hyperleaf xSQUID",
       "innerSymbol": "xSQUID",
       "innerToken": "0x13af2Db622d167745518aBfD59a8C4FFEe54937a",
+      "underlying": "0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53",
       "source": "base",
+      "sourceChainId": 8453,
       "sourceEid": 30184,
+      "sourceEidTest": 40245,
       "exit": "instant-receipt",
       "infra": "evm",
-      "note": "Squid StakedToken. xSQUID is a transferable ERC-20 receipt for QUID (1:1 in redeem tx 0x9ffec4c8...). Wrap xSQUID, mint hxSQUID, redeem xSQUID. User who wants QUID calls Squid redeem themselves (cooldown + redeem). Do not wrap spot QUID.",
-      "underlying": "0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53",
-      "contracts": {
-        "source": "LeafOFTAdapter",
-        "hyperevm": "LeafOFT"
-      },
-      "status": "code-ready-not-deployed",
+      "note": "Wrap xSQUID receipt. User who wants QUID calls Squid redeem (cooldown).",
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
+      "status": "testnet-ready",
       "priority": 2
+    },
+    {
+      "id": "hwsteth",
+      "kind": "L",
+      "symbol": "hwstETH",
+      "name": "Hyperleaf wstETH",
+      "innerSymbol": "wstETH",
+      "innerToken": "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "sourceEidTest": 40245,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "pairsWithUnit": "uETH",
+      "note": "Base wrapped stETH (Superbridge). Pairs with Unit uETH.",
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
+      "status": "testnet-ready",
+      "priority": 3
     },
     {
       "id": "virtual4y",
@@ -44,20 +72,19 @@
       "symbol": "VIRTUAL4Y",
       "name": "Hyperliquid VIRTUAL 4Year",
       "innerSymbol": "VIRTUAL",
+      "innerToken": "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
       "source": "base",
+      "sourceChainId": 8453,
       "sourceEid": 30184,
+      "sourceEidTest": 40245,
       "lockLabel": "4y",
       "lockSeconds": 126144000,
       "exit": "market-only",
       "infra": "evm",
       "pairsWithUnit": "uVIRTUAL",
-      "note": "veVIRTUAL is not a liquid 1:1 ERC20. C1 closed ticker so the book is not confused with Unit VIRTUAL.",
-      "contracts": {
-        "source": "LeafInboundLockbox",
-        "hyperevm": "LeafClosedOFT"
-      },
-      "status": "code-ready-not-deployed",
-      "priority": 3
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
+      "status": "testnet-ready",
+      "priority": 4
     },
     {
       "id": "bluai4y",
@@ -67,18 +94,36 @@
       "innerSymbol": "BLUAI",
       "innerToken": "0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD",
       "source": "bsc",
+      "sourceChainId": 56,
       "sourceEid": 30102,
+      "sourceEidTest": 40102,
       "lockLabel": "4y",
       "lockSeconds": 126144000,
       "exit": "market-only",
       "infra": "evm",
       "risk": "high",
-      "priority": 6,
-      "contracts": {
-        "source": "LeafInboundLockbox",
-        "hyperevm": "LeafClosedOFT"
-      },
-      "status": "code-ready-not-deployed"
+      "testnet": { "sourceChain": "bsc-testnet", "mockInner": true },
+      "status": "testnet-ready",
+      "priority": 8
+    },
+    {
+      "id": "hsavax",
+      "kind": "L",
+      "symbol": "hsAVAX",
+      "name": "Hyperleaf sAVAX",
+      "innerSymbol": "sAVAX",
+      "innerToken": "0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE",
+      "source": "avalanche",
+      "sourceChainId": 43114,
+      "sourceEid": 30106,
+      "sourceEidTest": 40106,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "pairsWithUnit": "uAVAX",
+      "note": "Testnet script deploys a mock on Base Sepolia until Fuji wiring is used.",
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true, "fujiLater": true },
+      "status": "testnet-ready-mock",
+      "priority": 5
     },
     {
       "id": "bonk12m",
@@ -92,21 +137,38 @@
       "exit": "market-only",
       "infra": "solana-pending",
       "pairsWithUnit": "uBONK",
-      "status": "blocked-on-solana",
-      "priority": 4
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true, "purpose": "exercise C1 contracts" },
+      "status": "testnet-mock-only",
+      "priority": 6
     },
     {
-      "id": "met",
+      "id": "hmet",
       "kind": "C2",
       "symbol": "hMET",
       "name": "Hyperleaf MET",
       "innerSymbol": "MET",
       "source": "solana",
       "exit": "queued-unstake",
+      "redeemDelay": 1814400,
       "redeemDelayLabel": "21d",
       "infra": "solana-pending",
-      "status": "blocked-on-solana",
-      "priority": 5
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true, "purpose": "exercise C2 queue" },
+      "status": "testnet-mock-only",
+      "priority": 7
+    },
+    {
+      "id": "hshmon",
+      "kind": "L",
+      "symbol": "hshMON",
+      "name": "Hyperleaf shMON",
+      "innerSymbol": "shMON",
+      "source": "monad",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "pairsWithUnit": "uMON",
+      "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
+      "status": "testnet-mock-only",
+      "priority": 9
     }
   ]
 }

@@ -9,9 +9,11 @@ library LayerZeroAddresses {
     uint32 internal constant EID_BASE = 30184;
     uint32 internal constant EID_HYPEREVM = 30367;
     uint32 internal constant EID_BSC = 30102;
+    uint32 internal constant EID_AVALANCHE = 30106;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
     uint32 internal constant EID_BSC_TESTNET = 40102;
+    uint32 internal constant EID_AVALANCHE_FUJI = 40106;
 
     address internal constant ENDPOINT_BASE = 0x1a44076050125825900e736c501f859c50fE728c;
     address internal constant SEND_ULN_BASE = 0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2;
@@ -28,6 +30,21 @@ library LayerZeroAddresses {
 
     address internal constant ENDPOINT_BASE_SEPOLIA = 0x6EDCE65403992e310A62460808c4b910D972f10f;
     address internal constant ENDPOINT_HYPEREVM_TESTNET = 0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1;
+    address internal constant ENDPOINT_BSC_TESTNET = 0x6EDCE65403992e310A62460808c4b910D972f10f;
+
+    address internal constant SEND_ULN_HYPEREVM_TESTNET = 0x43E505ba192aaC7BABdC1A796c87844171011684;
+    address internal constant RECEIVE_ULN_HYPEREVM_TESTNET = 0x012f6eaE2A0Bf5916f48b5F37C62Bcfb7C1ffdA1;
+    address internal constant EXECUTOR_HYPEREVM_TESTNET = 0x72e34F44Eb09058bdDaf1aeEebDEC062f1844b00;
+
+    function endpoint(uint256 chainId) internal pure returns (address) {
+        if (chainId == 8453) return ENDPOINT_BASE;
+        if (chainId == 84532) return ENDPOINT_BASE_SEPOLIA;
+        if (chainId == 56) return ENDPOINT_BSC;
+        if (chainId == 97) return ENDPOINT_BSC_TESTNET;
+        if (chainId == 999) return ENDPOINT_HYPEREVM;
+        if (chainId == 998) return ENDPOINT_HYPEREVM_TESTNET;
+        revert("lz: no endpoint");
+    }
 
     address internal constant DVN_LZ_LABS_BASE = 0x9e059a54699a285714207b43B055483E78FAac25;
     address internal constant DVN_HORIZEN_BASE = 0xa7b5189bcA84Cd304D8553977c7C614329750d99;
