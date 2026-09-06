@@ -201,6 +201,7 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 4 | **hLSSKY** | C1 | Ethereum | SKY LockStake urn | Next Ethereum research. LSSKY is not transferable — we create the market. |
 | hold | **hstkAAVE** | L | Ethereum | stkAAVE | Legacy Safety Module. Umbrella is the new backstop. Do not ship until SM fate + voting delegate + HyperEVM spot gap are clear. |
 | watch | **Umbrella** | risk | Ethereum | aUSDC / GHO … | Not “support AAVE”. Separate product if we ever tokenize a specific cover pool. |
+| later | **hETHFI** | L | Ethereum | sETHFI | Wrap receipt, not raw ETHFI. |
 | later | **hstDRV** | C2 | Ethereum | stDRV 28d | DRV already on HyperEVM. |
 | watch | **hSNX / hDYDX / hveCRV / hSYRUP** | | | | SNX stake retired; SYRUP stake sunset; veCRV after veAERO. |
 | 5 | **hsWBERA** | L | Berachain | sWBERA | Official PoL 4626. Wait LZ. |
@@ -242,11 +243,8 @@ One kind at a time. Solana listings wait on a non-EVM lockbox.
 **Phase G — hKAITO / hVIRTUALMAX**
 Blocked until CREATE2 omnichain holder. Extra-chain eco/agent claims.
 
-**Phase G — NestVault v2 (optional redeploy)**
+**Phase H — NestVault v2 (optional redeploy)**
 Verified compound 1% + EpochGate mint delay (PR #5). Live 10k test NEST can stay; do not migrate user funds until v2 is tested.
-
-**Phase F — BSC / Solana**
-BLUAI4Y only after Relay WHYPE fills are routine. Solana listings wait on a non-EVM lockbox.
 
 ---
 
