@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title IHevAdapter
- * @notice Adapter around Nest HEV / ManagedNFT / HYPE Spring claim.
+ * @notice Adapter around Nest HEV / ManagedNFT attach-detach and residual token sweep.
  *
  * Live wiring targets (see HyperEVMAddresses):
  * - HEV strategy: 0x96F7b8BA7580d3E510B0Fb3F0E135a743d8eb17a (managedTokenId=1)
@@ -12,8 +12,8 @@ pragma solidity ^0.8.20;
  * - Entry: Voter.attachToManagedNFT(tokenId, 1)
  * - Exit: Voter.dettachFromManagedNFT(tokenId)
  *
- * MEGAHYPE is NOT launched. Virtual rewarder accrues buyback-token (NEST) shares;
- * HEV description mentions exclusive MEGAHYPE — do not invent claim paths for it.
+ * MEGAHYPE is NOT launched. Virtual rewarder accrues buyback-token (NEST) shares.
+ * Do not invent liquid HYPE claim paths.
  *
  * Unit-test stubs may no-op or custody NFTs without calling live Voter.
  */
@@ -22,8 +22,10 @@ interface IHevAdapter {
 
     function withdrawVeNFT(uint256 tokenId) external;
 
-    /// @notice Claim accrued rewards into `recipient`. VR harvest is strategy-gated; see HEV_ABI_PROBE.md.
-    function claimHype(uint256[] calldata tokenIds, address recipient) external returns (uint256 amountClaimed);
+    /// @notice Sweep residual HYPE ERC20 sitting on the adapter to `recipient` (usually 0).
+    /// @dev Not a Nest user HYPE / MEGAHYPE claim. VR harvest is strategy-gated.
+    function sweepResidualHype(uint256[] calldata tokenIds, address recipient) external returns (uint256 amountClaimed);
 
-    function pendingHype(uint256 tokenId) external view returns (uint256);
+    /// @notice Pending locked rewards share denominated in NEST (HEV.getLockedRewardsBalance), not liquid HYPE.
+    function pendingLockedNestShare(uint256 tokenId) external view returns (uint256);
 }

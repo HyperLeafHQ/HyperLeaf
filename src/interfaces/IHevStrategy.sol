@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
  * @title IHevStrategy
  * @notice Nest CompoundVeNESTManagedNFTStrategyUpgradeable views / operator claims.
  * @dev claimRewards / claimBribes act on the managed NFT gauges (operator path),
- *      not a per-user HYPE Spring claim. User pending = getLockedRewardsBalance (NEST).
+ *      not a per-user liquid HYPE claim. User pending = getLockedRewardsBalance (NEST share).
  */
 interface IHevStrategy {
     function managedTokenId() external view returns (uint256);

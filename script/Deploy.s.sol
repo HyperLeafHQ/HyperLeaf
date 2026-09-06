@@ -38,6 +38,8 @@ contract Deploy is Script {
         require(address(vault) == predictedVault, "vault address mismatch");
         require(address(vault.hNest()) == address(hNest), "hNest mismatch");
         adapter.setVault(address(vault));
+        // depositsEnabled stays false until Owner completes DEPLOYMENT_CHECKLIST.md
+        // (roles split, idle params, Ownable2Step handoff). Do NOT enable here.
         vm.stopBroadcast();
 
         console2.log("HevAdapter", address(adapter));
@@ -46,5 +48,7 @@ contract Deploy is Script {
         console2.log("guardian", guardian);
         console2.log("HEV_STRATEGY", HyperEVMAddresses.HEV_STRATEGY);
         console2.log("managedTokenId", managedTokenId);
+        console2.log("depositsEnabled (must be false)", vault.depositsEnabled());
+        console2.log("NEXT: Ownable2Step to user Owner; setGuardian; idle params; then setDepositsEnabled(true)");
     }
 }

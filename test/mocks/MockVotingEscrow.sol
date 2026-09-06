@@ -9,16 +9,16 @@ import {IVotingEscrow} from "../../src/interfaces/IVotingEscrow.sol";
  * @title MockVotingEscrow
  * @notice Unit-test veNEST mirroring HyperEVM createLockFor / getNftState.
  * @dev While attached, amount+end are zeroed (mainnet). On mockDettach:
- *      - default: restore prior end (legacy timed-unlock unit tests)
- *      - liveDettachReset=true: set end = now+26w (matches onDettachFromManagedNFT)
+ *      - default liveDettachReset=true: set end = now+26w (matches onDettachFromManagedNFT)
+ *      - opt-out liveDettachReset=false: restore prior end (legacy timed-unlock tests)
  */
 contract MockVotingEscrow is ERC721 {
     uint256 public constant MAX_LOCK_TIME = 26 weeks;
 
     IERC20 public immutable nest;
     uint256 public nextId = 1;
-    /// @notice When true, mockDettach resets end to now+26w like live Nest.
-    bool public liveDettachReset;
+    /// @notice When true (default), mockDettach resets end to now+26w like live Nest (HL-005).
+    bool public liveDettachReset = true;
 
     mapping(uint256 => IVotingEscrow.LockedBalance) internal _locked;
     mapping(uint256 => bool) internal _attached;

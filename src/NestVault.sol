@@ -19,9 +19,9 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * @title NestVault
  * @notice hNEST core vault: deposit NEST → lock veNEST → deposit HEV → mint hNEST.
  *
- * Yield:
- * 1) veNEST auto-compound (share price) via Nest HEV
- * 2) HYPE Spring rewards claimed via IHevAdapter, distributed MasterChef-style
+ * Yield / accounting:
+ * 1) veNEST auto-compound into locked positions (share price) — recording via recordCompound is DISABLED (HL-002)
+ * 2) Residual ERC20 HYPE swept from HevAdapter (usually 0) distributed MasterChef-style — NOT liquid Nest HYPE rewards
  *
  * HEV mode: harvest does NOT vote or increaseUnlockTime (HEV auto-votes).
  *
@@ -29,6 +29,7 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * - Idle NEST buffer (deposit skim + optional keeper top-up) serves the queue
  * - Do NOT dettach on every requestWithdraw (live onDettach resets lock to ~now+26w)
  * - Attached getNftState amount/end are zero — use nestPrincipal / unlockEligibleAt
+ * - dettachForLiquidity caps principal to queue gap + owner buffer bps (HL-003)
  */
 contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, INestVaultHype {
     using SafeERC20 for IERC20;
@@ -40,6 +41,8 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     uint256 public constant MAX_FEE_BPS = 500;
     /// @notice Cap on deposit skim into idle buffer (safety: keep most capital productive).
     uint256 public constant MAX_IDLE_DEPOSIT_BPS = 2_000;
+    /// @notice Cap on optional overshoot when dettaching for liquidity (gap + buffer).
+    uint256 public constant MAX_DETTACH_BUFFER_BPS = 5_000;
 
     IERC20 public immutable nestToken;
     IVotingEscrow public immutable veNEST;
@@ -58,6 +61,10 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     uint256 public minIdleNest;
     /// @notice Portion of each deposit kept as idle NEST (not locked into veNFT).
     uint256 public idleDepositBps;
+    /// @notice Extra bps of queue gap allowed when selecting dettach principal (owner-set).
+    uint256 public dettachBufferBps;
+    /// @notice Deposits closed until owner enables (HL-007). Default false.
+    bool public depositsEnabled;
 
     uint256[] public veNFTIds;
     mapping(uint256 => bool) public inHev;
@@ -93,7 +100,9 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     event FeeUpdated(uint256 oldFee, uint256 newFee);
     event DepositCapUpdated(uint256 oldCap, uint256 newCap);
     event HevAdapterUpdated(address oldAdapter, address newAdapter);
-    event HypeClaimed(address indexed user, uint256 amount);
+    event ResidualHypeClaimed(address indexed user, uint256 amount);
+    event DepositsEnabledUpdated(bool enabled);
+    event DettachBufferBpsUpdated(uint256 oldBps, uint256 newBps);
     event NestCompoundRecorded(uint256 addedNest);
     event MinIdleNestUpdated(uint256 oldMin, uint256 newMin);
     event IdleDepositBpsUpdated(uint256 oldBps, uint256 newBps);
@@ -113,9 +122,13 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     error InvalidHNest();
     error IdleBufferShortfall(uint256 available, uint256 required);
     error IdleDepositBpsTooHigh();
+    error DettachBufferBpsTooHigh();
     error DettachTooEarly(uint256 tokenId, uint256 availableAt);
     error NotInHev(uint256 tokenId);
     error UnknownNft(uint256 tokenId);
+    error CompoundDisabled();
+    error DepositsDisabled();
+    error HevAdapterNotSet();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -167,6 +180,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     // ============ User ============
 
     function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
+        if (!depositsEnabled) revert DepositsDisabled();
         if (nestAmount == 0) revert ZeroAmount();
         if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
 
@@ -223,7 +237,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         if (hNestAmount == 0) revert ZeroAmount();
         if (hNest.balanceOf(msg.sender) < hNestAmount) revert InsufficientHNest();
 
-        _claimHypeInternal(msg.sender);
+        _claimResidualHypeInternal(msg.sender);
 
         uint256 totalSupply = hNest.totalSupply();
         uint256 nestAmount = (hNestAmount * totalNestLocked) / totalSupply;
@@ -241,15 +255,19 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         emit WithdrawRequested(msg.sender, hNestAmount, nestAmount, queueIndex);
     }
 
-    function claimHype() external nonReentrant {
-        _claimHypeInternal(msg.sender);
+    /**
+     * @notice Claim residual HYPE ERC20 accrued to the caller via MasterChef debt.
+     * @dev Not Nest liquid HYPE / MEGAHYPE rewards — only tokens swept into the vault.
+     */
+    function claimResidualHype() external nonReentrant {
+        _claimResidualHypeInternal(msg.sender);
     }
 
     // ============ HNest transfer hooks ============
 
-    function settleHype(address user) external override {
+    function settleResidualHype(address user) external override {
         if (msg.sender != address(hNest)) revert OnlyHNest();
-        _claimHypeInternal(user);
+        _claimResidualHypeInternal(user);
     }
 
     function updateDebt(address user) external override {
@@ -260,9 +278,10 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     // ============ Keeper (HEV mode) ============
 
     /**
-     * @notice Weekly keeper job: claim HYPE via HEV adapter, update MasterChef acc,
+     * @notice Weekly keeper job: sweep residual HYPE from adapter (usually 0), update MasterChef acc,
      *         process withdraw queue. Does NOT vote or increaseUnlockTime (HEV auto-votes).
      * @dev Does not dettach NFTs. Does not revert on idle shortfall (queue waits).
+     *      Does not invent Nest liquid HYPE rewards.
      */
     function harvest() external onlyKeeper nonReentrant {
         uint256 nestCompounded = 0;
@@ -271,7 +290,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
         if (address(hevAdapter) != address(0) && veNFTIds.length > 0) {
             uint256 beforeBal = hypeToken.balanceOf(address(this));
-            hevAdapter.claimHype(veNFTIds, address(this));
+            hevAdapter.sweepResidualHype(veNFTIds, address(this));
             uint256 hypeGained = hypeToken.balanceOf(address(this)) - beforeBal;
 
             if (hypeGained > 0) {
@@ -329,6 +348,8 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     /**
      * @notice Batch dettach NFTs only when queue needs liquidity. Starts ~26w unlock clock.
      * @dev Requires DETACHMENT_LOCK_DURATION (4d) since attach. Does not call veNEST.withdraw.
+     *      Caps cumulative nestPrincipal dettached to queue gap + dettachBufferBps (HL-003).
+     *      Requires non-zero hevAdapter and successful withdrawVeNFT before clearing inHev (HL-008).
      */
     function dettachForLiquidity(uint256[] calldata tokenIds) external onlyKeeper nonReentrant {
         uint256 pending = _pendingWithdrawNest();
@@ -337,8 +358,15 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             // No need to reset 26w clocks if idle already covers the queue
             return;
         }
+        if (address(hevAdapter) == address(0)) revert HevAdapterNotSet();
+
+        uint256 gap = pending - available;
+        uint256 cap = gap + (gap * dettachBufferBps) / BASIS_POINTS;
+        uint256 dettachedPrincipal;
 
         for (uint256 i = 0; i < tokenIds.length; ++i) {
+            if (dettachedPrincipal >= cap) break;
+
             uint256 tokenId = tokenIds[i];
             if (nestPrincipal[tokenId] == 0) revert UnknownNft(tokenId);
             if (!inHev[tokenId]) revert NotInHev(tokenId);
@@ -346,12 +374,12 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             uint256 availableAt = attachedAt[tokenId] + DETACHMENT_LOCK_DURATION;
             if (block.timestamp < availableAt) revert DettachTooEarly(tokenId, availableAt);
 
-            if (address(hevAdapter) != address(0)) {
-                hevAdapter.withdrawVeNFT(tokenId);
-            }
+            // State changes only after successful adapter withdraw (HL-008).
+            hevAdapter.withdrawVeNFT(tokenId);
             inHev[tokenId] = false;
             // Mirror live onDettach: lock end ≈ now+26w. Do not trust getNftState while attached.
             unlockEligibleAt[tokenId] = block.timestamp + MAX_LOCK_DURATION;
+            dettachedPrincipal += nestPrincipal[tokenId];
             emit DettachForLiquidity(tokenId, unlockEligibleAt[tokenId]);
         }
     }
@@ -367,13 +395,11 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     }
 
     /**
-     * @notice Optional: keeper/owner records NEST that compounded into ve positions
-     *         (when readable from HEV/VE). Increases share price without minting.
+     * @notice DISABLED (HL-002): unbacked compound must not raise totalNestLocked.
+     * @dev Always reverts CompoundDisabled. Kept as stub so ABI/callers fail closed.
      */
-    function recordCompound(uint256 addedNest) external onlyKeeper {
-        if (addedNest == 0) revert ZeroAmount();
-        totalNestLocked += addedNest;
-        emit NestCompoundRecorded(addedNest);
+    function recordCompound(uint256) external pure {
+        revert CompoundDisabled();
     }
 
     // ============ Internal ============
@@ -464,7 +490,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         }
     }
 
-    function _claimHypeInternal(address user) internal {
+    function _claimResidualHypeInternal(address user) internal {
         _updateHypeAccumulator();
         uint256 userBalance = hNest.balanceOf(user);
         uint256 pending = (userBalance * accHypePerShare) / 1e18 - hypeRewardDebt[user];
@@ -473,7 +499,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             hypeToken.safeTransfer(user, pending);
             totalHypeDistributed += pending;
             lastHypeBalance = hypeToken.balanceOf(address(this));
-            emit HypeClaimed(user, pending);
+            emit ResidualHypeClaimed(user, pending);
         }
         hypeRewardDebt[user] = (userBalance * accHypePerShare) / 1e18;
     }
@@ -494,7 +520,10 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         return (totalNestLocked * 1e18) / totalSupply;
     }
 
-    function pendingHype(address user) external view returns (uint256) {
+    /**
+     * @notice Pending residual HYPE ERC20 for `user` (MasterChef debt), not Nest locked NEST share.
+     */
+    function pendingResidualHype(address user) external view returns (uint256) {
         uint256 currentAcc = accHypePerShare;
         uint256 currentBalance = hypeToken.balanceOf(address(this));
         if (currentBalance > lastHypeBalance && hNest.totalSupply() > 0) {
@@ -557,12 +586,13 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     }
 
     function setHevAdapter(address _hevAdapter) external onlyOwner {
+        if (_hevAdapter == address(0)) revert ZeroAddress();
         emit HevAdapterUpdated(address(hevAdapter), _hevAdapter);
         hevAdapter = IHevAdapter(_hevAdapter);
     }
 
     /// @notice Absolute idle floor. Reverts if current balance cannot cover the new floor.
-    function setMinIdleNest(uint256 _minIdleNest) external onlyGuardianOrOwner {
+    function setMinIdleNest(uint256 _minIdleNest) external onlyOwner {
         uint256 bal = nestToken.balanceOf(address(this));
         if (bal < _minIdleNest) revert IdleBufferShortfall(bal, _minIdleNest);
         emit MinIdleNestUpdated(minIdleNest, _minIdleNest);
@@ -570,7 +600,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     }
 
     /// @notice Deposit skim into idle buffer (0–MAX_IDLE_DEPOSIT_BPS).
-    function setIdleDepositBps(uint256 _idleDepositBps) external onlyGuardianOrOwner {
+    function setIdleDepositBps(uint256 _idleDepositBps) external onlyOwner {
         if (_idleDepositBps > MAX_IDLE_DEPOSIT_BPS) revert IdleDepositBpsTooHigh();
         emit IdleDepositBpsUpdated(idleDepositBps, _idleDepositBps);
         idleDepositBps = _idleDepositBps;
@@ -586,7 +616,21 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         _unpause();
     }
 
+    /// @notice Extra bps of queue gap allowed as dettach principal cap (0–MAX_DETTACH_BUFFER_BPS).
+    function setDettachBufferBps(uint256 _dettachBufferBps) external onlyOwner {
+        if (_dettachBufferBps > MAX_DETTACH_BUFFER_BPS) revert DettachBufferBpsTooHigh();
+        emit DettachBufferBpsUpdated(dettachBufferBps, _dettachBufferBps);
+        dettachBufferBps = _dettachBufferBps;
+    }
+
+    /// @notice Open/close deposits. Default false until owner enables after checklist (HL-007).
+    function setDepositsEnabled(bool enabled) external onlyOwner {
+        depositsEnabled = enabled;
+        emit DepositsEnabledUpdated(enabled);
+    }
+
     /// @notice Set guardian. Owner only. address(0) disables the guardian role.
+    /// @dev Guardian may pause only — cannot unpause or change idle params.
     function setGuardian(address _guardian) external onlyOwner {
         emit GuardianUpdated(guardian, _guardian);
         guardian = _guardian;

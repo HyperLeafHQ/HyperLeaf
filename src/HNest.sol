@@ -8,8 +8,9 @@ import {INestVaultHype} from "./interfaces/INestVaultHype.sol";
 /**
  * @title HNest
  * @notice Liquid staking receipt for NestVault deposits.
- *         Peer-to-peer transfers settle HYPE rewards via vault hooks so
- *         accrued HYPE follows the correct holder (MasterChef debt pattern).
+ *         Peer-to-peer transfers settle residual HYPE ERC20 via vault hooks so
+ *         accrued residual tokens follow the correct holder (MasterChef debt pattern).
+ *         Not Nest liquid HYPE / MEGAHYPE rewards.
  */
 contract HNest is ERC20, ERC20Permit {
     address public immutable vault;
@@ -34,14 +35,14 @@ contract HNest is ERC20, ERC20Permit {
     }
 
     /**
-     * @dev On P2P transfers: settle pending HYPE for both parties before balances
+     * @dev On P2P transfers: settle pending residual HYPE for both parties before balances
      *      change, then update debts after. Mint/burn skip hooks (vault manages debt).
      */
     function _update(address from, address to, uint256 value) internal override {
         bool isTransfer = from != address(0) && to != address(0);
         if (isTransfer) {
-            INestVaultHype(vault).settleHype(from);
-            INestVaultHype(vault).settleHype(to);
+            INestVaultHype(vault).settleResidualHype(from);
+            INestVaultHype(vault).settleResidualHype(to);
         }
         super._update(from, to, value);
         if (isTransfer) {

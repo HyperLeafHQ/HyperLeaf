@@ -1,11 +1,14 @@
 /**
- * hNEST Keeper脚本
+ * hNEST Keeper脚本（草稿 — 需按主网 runbook 重写）
  * 每周四 00:30 UTC（epoch结束后30分钟）自动执行
  *
  * 功能：
- * 1. 调用harvest()：投票、领取HYPE、复合NEST
- * 2. 监控赎回队列状态
+ * 1. 调用 harvest()：扫 adapter 残余 HYPE ERC20（通常为 0）、处理赎回队列
+ *    — 不投票；不 invent Nest 液态 HYPE；recordCompound 已禁用
+ * 2. 监控赎回队列 / idle 缺口（应扩展 dettachForLiquidity + topUpIdle）
  * 3. 异常告警
+ *
+ * 角色：Keeper = Hyperleaf 热钱包；绝非 Owner/Guardian。
  *
  * 运行：npx ts-node keeper.ts
  * 推荐部署在：Railway / Render / 任意VPS
@@ -32,19 +35,9 @@ const VAULT_ADDRESS = process.env.VAULT_ADDRESS as `0x${string}`;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN; // 可选，用于告警
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-// ============ 投票策略配置 ============
-// 每周投票给这些池子（按TVL和手续费收益排序，keeper可以手动调整）
-// HEV unused: const VOTE_POOLS = [
-  "0x...", // HYPE/USDT池地址（填入实际地址）
-  "0x...", // HYPE/WETH池地址
-  "0x...", // NEST/HYPE池地址
-];
-
-// const VOTE_WEIGHTS = [
-  5000, // 50%
-  3000, // 30%
-  2000, // 20%
-];
+// ============ 投票策略 ============
+// HEV auto-votes — keeper 不再投票。以下为历史占位，勿启用。
+// const VOTE_POOLS_UNUSED = [];
 
 // ============ ABI ============
 const VAULT_ABI = parseAbi([

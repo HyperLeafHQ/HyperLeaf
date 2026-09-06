@@ -35,7 +35,7 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
         custodyEnabled = enabled;
     }
 
-    /// @notice Tests inject claimable HYPE per token (adapter holds tokens).
+    /// @notice Tests inject residual HYPE per token (adapter holds tokens). Not Nest liquid HYPE ABI.
     function seedReward(uint256 tokenId, uint256 amount) external {
         pending[tokenId] += amount;
         require(hype.transferFrom(msg.sender, address(this), amount), "transfer");
@@ -68,7 +68,7 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
         }
     }
 
-    function claimHype(uint256[] calldata tokenIds, address recipient) external returns (uint256 amountClaimed) {
+    function sweepResidualHype(uint256[] calldata tokenIds, address recipient) external returns (uint256 amountClaimed) {
         require(msg.sender == vault, "only vault");
         for (uint256 i = 0; i < tokenIds.length; ++i) {
             uint256 amt = pending[tokenIds[i]];
@@ -82,7 +82,8 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
         }
     }
 
-    function pendingHype(uint256 tokenId) external view returns (uint256) {
+    /// @dev Mock maps injected residual amounts; live pendingLockedNestShare is NEST share.
+    function pendingLockedNestShare(uint256 tokenId) external view returns (uint256) {
         return pending[tokenId];
     }
 

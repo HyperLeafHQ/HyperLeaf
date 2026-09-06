@@ -21,7 +21,7 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * 2) Fallback: Voter.attachToManagedNFT(tokenId, HEV_MANAGED_TOKEN_ID) // 0xca82240d
  * 3) Exit: Voter.dettachFromManagedNFT(tokenId) // 0x12dd7200 intentional double-t
  * 4) Claim: VR.harvest strategy-only; user pending = getLockedRewardsBalance (NEST).
- *    MEGAHYPE not launched — claimHype only forwards stray HYPE ERC20 on this adapter.
+ *    MEGAHYPE not launched — sweepResidualHype only forwards stray HYPE ERC20 on this adapter.
  *
  * Withdraw timing (NestVault owns policy — see docs/WITHDRAW_WINDOWS.md):
  * - Do not call withdrawVeNFT on every redeem; onDettach resets lock end ≈ now+26w
@@ -104,9 +104,9 @@ contract HevAdapter is IHevAdapter, Ownable {
     }
 
     /// @inheritdoc IHevAdapter
-    /// @dev No user-facing HYPE Spring ABI yet. VR.harvest is strategy-only.
+    /// @dev No user-facing Nest liquid HYPE / MEGAHYPE ABI. VR.harvest is strategy-only.
     ///      Forwards any HYPE ERC20 sitting on this adapter (usually zero).
-    function claimHype(
+    function sweepResidualHype(
         uint256[] calldata,
         /* tokenIds */
         address recipient
@@ -118,9 +118,9 @@ contract HevAdapter is IHevAdapter, Ownable {
         // Confirmed absent: virtualRewarder.getReward(address)
         // Confirmed strategy-only: virtualRewarder.harvest(tokenId)
         // Confirmed operator (managed NFT): hevStrategy.claimRewards / claimBribes — not per-user
-        // Pending NEST share remains locked until dettach / compound — see pendingHype
+        // Pending NEST share remains locked until dettach — see pendingLockedNestShare
         if (virtualRewarder != address(0)) {
-            // no-op by design until Nest publishes a user HYPE claim surface
+            // no-op by design until Nest publishes a user liquid-HYPE claim surface
             virtualRewarder;
         }
         amountClaimed = hypeToken.balanceOf(address(this));
@@ -130,7 +130,7 @@ contract HevAdapter is IHevAdapter, Ownable {
     }
 
     /// @notice Pending locked rewards share (NEST-denominated via HEV), not liquid HYPE.
-    function pendingHype(uint256 tokenId) external view returns (uint256) {
+    function pendingLockedNestShare(uint256 tokenId) external view returns (uint256) {
         if (hevStrategy != address(0)) {
             return IHevStrategy(hevStrategy).getLockedRewardsBalance(tokenId);
         }

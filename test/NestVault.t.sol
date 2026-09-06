@@ -52,6 +52,7 @@ contract NestVaultTest is Test {
         tmp.setVault(address(vault));
         adapter = tmp;
         hNest = vault.hNest();
+        vault.setDepositsEnabled(true);
 
         nest.mint(alice, 10_000 ether);
         nest.mint(bob, 10_000 ether);
@@ -101,7 +102,7 @@ contract NestVaultTest is Test {
         vault.deposit(1 ether);
     }
 
-    function test_HarvestClaimsHypeNoVote() public {
+    function test_HarvestSweepsResidualHypeNoVote() public {
         vm.prank(alice);
         vault.deposit(100 ether);
 
@@ -118,15 +119,15 @@ contract NestVaultTest is Test {
         vault.harvest();
 
         assertEq(hype.balanceOf(feeRecipient), expectedFee);
-        assertEq(vault.pendingHype(alice), expectedNet);
+        assertEq(vault.pendingResidualHype(alice), expectedNet);
 
         vm.prank(alice);
-        vault.claimHype();
+        vault.claimResidualHype();
         assertEq(hype.balanceOf(alice), expectedNet);
-        assertEq(vault.pendingHype(alice), 0);
+        assertEq(vault.pendingResidualHype(alice), 0);
     }
 
-    function test_TransferSettlesHype() public {
+    function test_TransferSettlesResidualHype() public {
         vm.prank(alice);
         vault.deposit(100 ether);
 
@@ -138,16 +139,16 @@ contract NestVaultTest is Test {
         vm.prank(keeper);
         vault.harvest();
 
-        uint256 pendingBefore = vault.pendingHype(alice);
+        uint256 pendingBefore = vault.pendingResidualHype(alice);
         assertGt(pendingBefore, 0);
 
-        // Transfer half to bob — alice should receive pending HYPE; bob starts clean
+        // Transfer half to bob — alice should receive pending residual HYPE; bob starts clean
         vm.prank(alice);
         hNest.transfer(bob, 50 ether);
 
         assertEq(hype.balanceOf(alice), pendingBefore);
-        assertEq(vault.pendingHype(alice), 0);
-        assertEq(vault.pendingHype(bob), 0);
+        assertEq(vault.pendingResidualHype(alice), 0);
+        assertEq(vault.pendingResidualHype(bob), 0);
         assertEq(hNest.balanceOf(alice), 50 ether);
         assertEq(hNest.balanceOf(bob), 50 ether);
     }
@@ -178,7 +179,7 @@ contract NestVaultTest is Test {
         assertFalse(vault.inHev(tokenId));
         assertEq(vault.unlockEligibleAt(tokenId), block.timestamp + LOCK);
 
-        // Mock restores prior end (deposit+26w); vault still waits unlockEligibleAt (= dettach+26w)
+        // Default mock liveDettachReset=true: end = dettach+26w; vault waits unlockEligibleAt
         vm.warp(vault.unlockEligibleAt(tokenId) + 1);
 
         vm.prank(keeper);
@@ -189,14 +190,35 @@ contract NestVaultTest is Test {
         assertEq(pending, 0);
     }
 
-    function test_RecordCompoundRaisesSharePrice() public {
+    function test_RecordCompoundDisabled() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         assertEq(vault.sharePrice(), 1e18);
 
         vm.prank(keeper);
+        vm.expectRevert(NestVault.CompoundDisabled.selector);
         vault.recordCompound(10 ether);
-        assertEq(vault.sharePrice(), 1.1e18);
+        assertEq(vault.sharePrice(), 1e18);
+        assertEq(vault.totalNestLocked(), 100 ether);
+    }
+
+    function test_UnbackedCompoundCannotInflateWithdrawLiability() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+
+        // Unbacked compound must revert — cannot raise liability above vault assets
+        vm.prank(keeper);
+        vm.expectRevert(NestVault.CompoundDisabled.selector);
+        vault.recordCompound(900 ether);
+
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
+
+        (,, uint256 pending) = vault.withdrawQueueStatus();
+        assertEq(pending, 1);
+        // Queue liability equals deposited principal, not inflated
+        assertEq(vault.pendingWithdrawNest(), 100 ether);
+        assertEq(vault.totalNestLocked(), 0);
     }
 
     function test_PauseBlocksDeposit() public {
@@ -426,15 +448,22 @@ contract NestVaultTest is Test {
         assertEq(vault.unlockEligibleAt(tokenId), 0);
     }
 
-    function test_GuardianCanSetIdleParams() public {
+    function test_GuardianCannotSetIdleParams() public {
         vm.prank(guardian);
+        vm.expectRevert();
+        vault.setIdleDepositBps(500);
+
+        vm.prank(guardian);
+        vm.expectRevert();
+        vault.setMinIdleNest(1);
+
+        // Owner can set idle params
         vault.setIdleDepositBps(500);
         assertEq(vault.idleDepositBps(), 500);
 
         vm.prank(alice);
         vault.deposit(100 ether);
 
-        vm.prank(guardian);
         vault.setMinIdleNest(5 ether);
         assertEq(vault.minIdleNest(), 5 ether);
         assertEq(vault.availableIdleNest(), 0); // 5 idle, min 5
@@ -443,5 +472,206 @@ contract NestVaultTest is Test {
     function test_IdleDepositBpsCap() public {
         vm.expectRevert(NestVault.IdleDepositBpsTooHigh.selector);
         vault.setIdleDepositBps(2_001);
+    }
+
+    // ============ HL-007 depositsEnabled ============
+
+    function test_DepositsDisabledByDefaultUntilOwnerEnables() public {
+        MockHevAdapter tmp2 = new MockHevAdapter(address(ve), address(hype), address(0));
+        NestVault v2 = new NestVault(
+            address(nest),
+            address(ve),
+            address(hype),
+            address(tmp2),
+            feeRecipient,
+            keeper,
+            guardian,
+            0,
+            address(0)
+        );
+        tmp2.setVault(address(v2));
+        assertFalse(v2.depositsEnabled());
+
+        nest.mint(alice, 1 ether);
+        vm.prank(alice);
+        nest.approve(address(v2), type(uint256).max);
+        vm.prank(alice);
+        vm.expectRevert(NestVault.DepositsDisabled.selector);
+        v2.deposit(1 ether);
+
+        v2.setDepositsEnabled(true);
+        vm.prank(alice);
+        v2.deposit(1 ether);
+        assertEq(v2.hNest().balanceOf(alice), 1 ether);
+    }
+
+    // ============ HL-008 setHevAdapter(0) / dettach state machine ============
+
+    function test_SetHevAdapterRejectsZero() public {
+        vm.expectRevert(NestVault.ZeroAddress.selector);
+        vault.setHevAdapter(address(0));
+    }
+
+    function test_DettachCannotClearAdapterToZeroAndStuckPathPrevented() public {
+        MockHevAdapter a = new MockHevAdapter(address(ve), address(hype), address(0));
+        NestVault v0 = new NestVault(
+            address(nest),
+            address(ve),
+            address(hype),
+            address(a),
+            feeRecipient,
+            keeper,
+            guardian,
+            0,
+            address(0)
+        );
+        a.setVault(address(v0));
+        v0.setDepositsEnabled(true);
+
+        nest.mint(alice, 100 ether);
+        vm.prank(alice);
+        nest.approve(address(v0), type(uint256).max);
+        vm.prank(alice);
+        v0.deposit(100 ether);
+        vm.prank(alice);
+        v0.requestWithdraw(100 ether);
+
+        uint256 tokenId = v0.getVeNFTId(0);
+        assertTrue(v0.inHev(tokenId));
+
+        // Cannot clear adapter to zero (HL-008)
+        vm.expectRevert(NestVault.ZeroAddress.selector);
+        v0.setHevAdapter(address(0));
+
+        vm.warp(block.timestamp + DETACH_LOCK + 1);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+        vm.prank(keeper);
+        v0.dettachForLiquidity(ids);
+
+        // State cleared only after successful withdrawVeNFT — chain detached
+        assertFalse(v0.inHev(tokenId));
+        assertFalse(ve.getNftState(tokenId).isAttached);
+        assertGt(v0.unlockEligibleAt(tokenId), 0);
+    }
+
+    function test_DettachRequiresAdapterAndSucceedsOnlyAfterWithdraw() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
+
+        uint256 tokenId = vault.getVeNFTId(0);
+        assertTrue(vault.inHev(tokenId));
+        assertTrue(ve.getNftState(tokenId).isAttached);
+
+        vm.warp(block.timestamp + DETACH_LOCK + 1);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+
+        assertFalse(vault.inHev(tokenId));
+        assertFalse(ve.getNftState(tokenId).isAttached);
+        assertGt(vault.unlockEligibleAt(tokenId), 0);
+        vm.warp(vault.unlockEligibleAt(tokenId) + 1);
+        vm.prank(keeper);
+        vault.processWithdrawQueue();
+        assertEq(nest.balanceOf(alice), 10_000 ether);
+    }
+
+    // ============ HL-003 dettach principal cap ============
+
+    function test_DettachCapsPrincipalToQueueGap() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(bob);
+        vault.deposit(100 ether);
+
+        vm.prank(alice);
+        vault.requestWithdraw(50 ether);
+
+        uint256 id0 = vault.getVeNFTId(0);
+        uint256 id1 = vault.getVeNFTId(1);
+        vm.warp(block.timestamp + DETACH_LOCK + 1);
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = id0;
+        ids[1] = id1;
+
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+
+        uint256 dettached;
+        if (!vault.inHev(id0)) dettached += 1;
+        if (!vault.inHev(id1)) dettached += 1;
+        assertEq(dettached, 1);
+        assertTrue(vault.inHev(id0) != vault.inHev(id1));
+    }
+
+    function test_DettachBufferAllowsExtraPrincipal() public {
+        vault.setDettachBufferBps(5_000); // 50% buffer: gap 40 → cap 60; both 40-NEST NFTs may dettach
+
+        vm.prank(alice);
+        vault.deposit(40 ether);
+        vm.prank(bob);
+        vault.deposit(40 ether);
+
+        vm.prank(alice);
+        vault.requestWithdraw(40 ether);
+
+        uint256 id0 = vault.getVeNFTId(0);
+        uint256 id1 = vault.getVeNFTId(1);
+        vm.warp(block.timestamp + DETACH_LOCK + 1);
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = id0;
+        ids[1] = id1;
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+
+        assertFalse(vault.inHev(id0));
+        assertFalse(vault.inHev(id1));
+    }
+
+    function test_DettachSkipsWhenIdleCoversQueue() public {
+        vault.setIdleDepositBps(1_000);
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(alice);
+        vault.requestWithdraw(10 ether);
+
+        uint256 tokenId = vault.getVeNFTId(0);
+        vm.warp(block.timestamp + DETACH_LOCK + 1);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+        assertTrue(vault.inHev(tokenId));
+    }
+
+    function test_MockLiveDettachResetOptOut() public {
+        ve.setLiveDettachReset(false);
+        uint256 before = block.timestamp;
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        uint256 depositEnd = before + LOCK;
+
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
+        vm.warp(block.timestamp + DETACH_LOCK + 1);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+
+        assertEq(ve.getNftState(tokenId).locked.end, depositEnd);
+    }
+
+    function test_DettachBufferBpsCap() public {
+        vm.expectRevert(NestVault.DettachBufferBpsTooHigh.selector);
+        vault.setDettachBufferBps(5_001);
     }
 }
