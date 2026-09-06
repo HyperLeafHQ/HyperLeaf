@@ -1,0 +1,1905 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "AccessDenied",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "ArrayLengthMismatch",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "DisableDuringVotingPaused",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "DisabledManagedNft",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "DistributionWindow",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "GaugeAlreadyKilled",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "GaugeForPoolAlreadyExists",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "GaugeNotKilled",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "InvalidAddressKey",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "InvalidPercentageToLock",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "NoResetBefore",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "PoolNotCreatedByFactory",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "PoolNotInitialized",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "VoteDelay",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "ZeroPowerForPool",
+    "type": "error",
+    "inputs": []
+  },
+  {
+    "name": "AttachToManagedNFT",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "managedTokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "DettachFromManagedNFT",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "DistributeReward",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "gauge",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "GaugeCreated",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "internalBribe",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "externalBribe",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "pool",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "GaugeCreatedType",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "gaugeType",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "GaugeKilled",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "GaugeRevived",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "Initialized",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "version",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "NotifyReward",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "reward",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "RoleAdminChanged",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "previousAdminRole",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "newAdminRole",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "RoleGranted",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "RoleRevoked",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "SetDistributionWindowDuration",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "duration",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "SetVoteDelay",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "old",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "latest",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "UpdateAddress",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "key",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "value",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "VoteCast",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "voter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "epoch",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "pools",
+        "type": "address[]",
+        "indexed": false,
+        "internalType": "address[]"
+      },
+      {
+        "name": "voteWeights",
+        "type": "uint256[]",
+        "indexed": false,
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "totalVotingPower",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "VoteReset",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "voter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "epoch",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalResetVotingPower",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "VotingPaused",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "paused",
+        "type": "bool",
+        "indexed": true,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "DEFAULT_ADMIN_ROLE",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "aggregateClaim",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauges_",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "bribes_",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "bribes",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "tokens",
+            "type": "address[][]",
+            "internalType": "address[][]"
+          }
+        ],
+        "internalType": "struct IVoter.AggregateClaimBribesParams"
+      },
+      {
+        "name": "bribesByTokenId_",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "tokenId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "bribes",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "tokens",
+            "type": "address[][]",
+            "internalType": "address[][]"
+          }
+        ],
+        "internalType": "struct IVoter.AggregateClaimBribesByTokenIdParams"
+      },
+      {
+        "name": "blaze_",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "totalAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "signature",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ],
+        "internalType": "struct IVoter.AggregateClaimBlazeDataParams"
+      },
+      {
+        "name": "splitMerklAidrop_",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "inPureTokens",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "withPermanentLock",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "managedTokenIdForAttach",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "proofs",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ],
+        "internalType": "struct IVoter.AggregateClaimVeNestMerklAirdrop"
+      },
+      {
+        "name": "aggregateCreateLock_",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "percentageToLock",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lockDuration",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "to",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "shouldBoosted",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "withPermanentLock",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "managedTokenIdForAttach",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "internalType": "struct IVoter.AggregateCreateLockParams"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "attachToManagedNFT",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "managedTokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "bribeFactory",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "claimBribes",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "_bribes",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "_tokens",
+        "type": "address[][]",
+        "internalType": "address[][]"
+      },
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "claimBribes",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "_bribes",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "_tokens",
+        "type": "address[][]",
+        "internalType": "address[][]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "claimRewards",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauges_",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "compoundEmissionExtension",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "createCustomGauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "pool_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenA_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenB_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "externalBribesName_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "internalBribesName_",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "internalBribe",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "externalBribe",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "createV2Gauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "pool_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "internalBribe",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "externalBribe",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "createV3Gauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "pool_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "internalBribe",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "externalBribe",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "dettachFromManagedNFT",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "distribute",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauges_",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "distribute",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "start_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "finish_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "distributeAll",
+    "type": "function",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "distributeFees",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauges_",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "distributionWindowDuration",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "epochTimestamp",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "gaugeRewarder",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "gaugesState",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isGauge",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "isAlive",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "internalBribe",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "externalBribe",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "pool",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "claimable",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lastDistributionTimestamp",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getGaugeState",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "isGauge",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "isAlive",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "internalBribe",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "externalBribe",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "pool",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "claimable",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "index",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lastDistributionTimestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "internalType": "struct IVoter.GaugeState"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getRoleAdmin",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "grantRole",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "hasRole",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "index",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "indexPerEpoch",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "epoch",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "initialize",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "votingEscrow_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "isAlive",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "isGauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "killGauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "lastVotedTimestamps",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "managedNFTManager",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "minter",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "notifyRewardAmount",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "onAfterTokenMerge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "fromTokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "toTokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "onAfterTokenTransfer",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "from_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "onCompoundEmissionClaim",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "target_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "gauges_",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "blaze_",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "totalAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "signature",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ],
+        "internalType": "struct IVoter.AggregateClaimBlazeDataParams"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "toTargetLocks",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "toTargetBribePools",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "onDepositToManagedNFT",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "managedTokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "poke",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "poolForGauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "poolToGauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "pool",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "poolVote",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "poolVoteLength",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "pools",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "poolsCounts",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "totalCount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "v2PoolsCount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "v3PoolsCount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "reinitialize",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "epochs_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "epochIndexes_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "renounceRole",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "reset",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "reviveGauge",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "gauge_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "revokeRole",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "setDistributionWindowDuration",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "distributionWindowDuration_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "setVotingPause",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "isPaused_",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "supportsInterface",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "token",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "totalWeightsPerEpoch",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "updateAddress",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "key_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "value_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "v2GaugeFactory",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "v2PoolFactory",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "v2Pools",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "v3GaugeFactory",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "v3PoolFactory",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "v3Pools",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "veNestMerklAidrop",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "vote",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "poolsVotes_",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "weights_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "voteDelay",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "votes",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "votingEscrow",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "votingPaused",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "weightsPerEpoch",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "pool",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

@@ -1,0 +1,55 @@
+{
+  "network": "HyperEVM testnet",
+  "chainId": 998,
+  "rpc": "https://rpc.hyperliquid-testnet.xyz/evm",
+  "timestamp": "2026-09-03T04:55:06+08:00",
+  "timestampUnix": 1788382506,
+  "note": "MOCK deployment for frontend/internal pause drill. NOT mainnet. NOT real Nest HEV.",
+  "guardianNote": "guardian=deployer EOA for this drill ONLY. Production guardian MUST be user multisig.",
+  "deployer": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
+  "guardian": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
+  "keeper": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
+  "owner": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
+  "feeRecipient": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
+  "depositCap": "1000000000000000000000000",
+  "NestVault": "0x6f8d22C85e505eCA309635EA552f5067C026A2A9",
+  "HNest": "0xe86961EAF3CD4ED87497641fF32E55875aB7189f",
+  "HevAdapter": "0x4f6615761A772e10d7f802B1C29654ABD90fF30d",
+  "MockHevAdapter": "0x4f6615761A772e10d7f802B1C29654ABD90fF30d",
+  "NEST": "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
+  "HYPE": "0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2",
+  "MockVotingEscrow": "0x2101621F51D7E05518D6680C62d04Ad47bC4e05D",
+  "deployTxs": {
+    "MockNEST": "0x7cd1407fc2b776df149aecacaa1a1102eee26686312e21cf60bee912bbe3985d",
+    "MockHYPE": "0x2f538906ed4e408dbf9ac3f16a895993e061d53f514827ca216d923d600a6193",
+    "MockVotingEscrow": "0x6fa771d1ebf8933c49498bbb7b6be2c702dda137584f5d04758f86cb7df6d841",
+    "MockHevAdapter": "0x272019ed4eef99109bdbec617f1c9f7093e2d03bb45ec41cd16cde008abd68f1",
+    "HNest": "0x9d2467170d087c76a9d90bdc9902c806d6f50fddca14a0f36c0c96df0c611f87",
+    "NestVault": "0x182db10905068ee41428f149fb26dd6e48f121b02d7fe00e4e46bffef1318bea",
+    "setVault": "0xac04f727c3638b86616da4cdd918c380637552def8367ec4397e728207c70511",
+    "mintNEST": "0x470d75cad9d45821b9c4f1efd15df382f2e31ddda50ebe9ef99850dae0d8deab"
+  },
+  "smoke": {
+    "approve": "0x17cdfc78d6446cec98e00ab4c52bc7814e0ad31de39ddb75b4451ac2ad43d975",
+    "deposit1": "0x72bde0adfce4a86157d096108a046ae18873bc168f6a0a1b8f1ca2c3c8a1a470",
+    "pause": "0xa63df60a5645b66f841b032ed6e751aa9eedd66c09d81e37d877976b168231cd",
+    "depositWhilePaused": {
+      "result": "reverted",
+      "method": "eth_call",
+      "error": "EnforcedPause",
+      "note": "cast send estimate/call reverted; no state change (hNest stayed 1e18 until deposit2). Confirmed via eth_call after re-pause."
+    },
+    "unpause": "0x835f595352a7650934479b00dfde9c1a359948aa6d6fe0e76ec0f03412732343",
+    "deposit2": "0x5bb17e1df4f4fc84b8594349f89ef2ca04b2bf19767e4d023ff0cc269ebc8257",
+    "verifyPause2": "0x7a32df868fa791afcf4089f1cdb55e41604303cfab0c747a4385383ddd53e510",
+    "verifyUnpause2": "0xa69b8a0fc599f70b51796610321f26e0436fb4da4888bdc83e54cf9f7d9920cf",
+    "finalHNestBalance": "2000000000000000000",
+    "finalTotalNestLocked": "2000000000000000000",
+    "pausedAfterDrill": false
+  },
+  "hyperEvmConstraints": {
+    "blockGasLimit": 3000000,
+    "NestVaultDeploy": "Requires pre-deployed HNest (constructor arg) + forge create --gas-limit 3000000; via_ir optimizer_runs=1. In-script NestVault create OOGs under forge script simulation.",
+    "foundry": "via_ir=true, optimizer_runs=1"
+  }
+}

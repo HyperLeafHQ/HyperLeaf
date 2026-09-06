@@ -1,0 +1,30 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 1
+via_ir = true
+ffi = false
+# Public HyperEVM RPC rate-limits forge fork storage; run FOUNDRY_PROFILE=fork for HevForkTest.
+no_match_path = "test/HevFork.t.sol"
+
+[rpc_endpoints]
+hyperevm = "${HYPEREVM_RPC_URL}"
+
+[etherscan]
+hyperevm = { key = "${ETHERSCAN_API_KEY}", url = "${HYPEREVM_ETHERSCAN_API_URL}" }
+
+[profile.fork]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 1
+via_ir = true
+ffi = false
+# Override default no_match_path so HevFork is included under this profile.
+no_match_path = "test/NestVault.t.sol"
+match_path = "test/HevFork.t.sol"
