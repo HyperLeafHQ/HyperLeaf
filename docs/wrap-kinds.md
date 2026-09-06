@@ -10,6 +10,16 @@ HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset,
 | C1 | `LeafInboundLockbox` | `LeafClosedOFT` | Sell on HyperEVM only | lock in symbol (`VIRTUAL4Y`, `BONK12M`, `BLUAI4Y`) |
 | C2 | `LeafRedeemQueue` | `LeafOFT` | Burn, wait, `claim` on source | `hMET` (unstake exists) |
 
+## Fees
+
+1% of **newly accrued** staking yield to `feeRecipient` (`YIELD_FEE_BPS = 100`). No protocol fee on lock, unlock, or claim. Users pay LayerZero + gas.
+
+- L / C2: remaining 99% goes to holders via pro-rata redeem / ticket.
+- C1: remaining 99% stays as extra backing (no protocol redeem).
+- Repeat `harvest` with no new yield is a no-op.
+
+Side-token rewards (e.g. QUID on an xSQUID lockbox): 1% harvested, 99% stays in the lockbox until a rewarder exists.
+
 ## Queue
 
 1. **hKAITO** (L, Base) — current PR
