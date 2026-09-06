@@ -11,12 +11,13 @@ contract DeployAdapter is Script {
     function run() external {
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
+        address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
         address token = vm.envOr("INNER_TOKEN", SKAITO);
         uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(0));
         uint256 chainId = block.chainid;
         address endpoint = chainId == 8453 ? A.ENDPOINT_BASE : A.ENDPOINT_BASE_SEPOLIA;
         vm.startBroadcast();
-        LeafOFTAdapter adapter = new LeafOFTAdapter(token, endpoint, owner, guardian, cap);
+        LeafOFTAdapter adapter = new LeafOFTAdapter(token, endpoint, owner, guardian, feeRecipient, cap);
         console2.log("LeafOFTAdapter", address(adapter));
         vm.stopBroadcast();
     }
