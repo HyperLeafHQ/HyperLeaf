@@ -1,0 +1,40 @@
+{
+  "kinds": {
+    "L": "Liquid receipt. Lock sToken, instant redeem same sToken. HyperEVM ticker hPREFIX.",
+    "C1": "No liquid receipt / long lock. Inbound only. Exit is the HyperEVM market. Ticker encodes lock (BLUAI4Y).",
+    "C2": "No liquid receipt, protocol unstake is possible. Burn hToken, wait redeemDelay, claim inner on source."
+  },
+  "listings": [
+    {
+      "id": "skaite",
+      "kind": "L",
+      "symbol": "hKAITO",
+      "name": "Hyperleaf sKAITO",
+      "innerSymbol": "sKAITO",
+      "source": "base",
+      "exit": "instant-receipt",
+      "status": "code-ready"
+    },
+    {
+      "id": "bluai4y",
+      "kind": "C1",
+      "symbol": "BLUAI4Y",
+      "name": "Hyperliquid BLUAI 4Year",
+      "innerSymbol": "BLUAI",
+      "innerToken": "0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD",
+      "source": "bsc",
+      "sourceEid": 30102,
+      "lockLabel": "4y",
+      "lockSeconds": 126144000,
+      "exit": "market-only",
+      "risk": "high",
+      "priority": "low",
+      "contracts": {
+        "source": "LeafInboundLockbox",
+        "hyperevm": "LeafClosedOFT"
+      },
+      "disclaimer": "Closed-end. No protocol redeem. Price can trade below NAV. 4y is in the ticker, not an on-chain unstake.",
+      "status": "code-ready-not-deployed"
+    }
+  ]
+}
