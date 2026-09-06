@@ -10,12 +10,16 @@ import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZero
 
 contract MockToken is ERC20 {
     constructor() ERC20("sKAITO", "sKAITO") {}
-    function mint(address to, uint256 a) external { _mint(to, a); }
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
+    }
 }
 
 contract MockEndpoint is ILayerZeroEndpointV2 {
     uint32 public eid;
-    constructor(uint32 eid_) { eid = eid_; }
+    constructor(uint32 eid_) {
+        eid = eid_;
+    }
     function send(MessagingParams calldata _params, address) external payable returns (MessagingReceipt memory r) {
         r.guid = keccak256(abi.encode(_params, block.number));
         r.nonce = 1;
@@ -26,7 +30,9 @@ contract MockEndpoint is ILayerZeroEndpointV2 {
     }
     function setDelegate(address) external {}
     function setConfig(address, address, SetConfigParam[] calldata) external {}
-    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) { return ""; }
+    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) {
+        return "";
+    }
     function skip(address, uint32, bytes32, uint64) external {}
     function deliver(address oapp, Origin calldata origin, bytes calldata message) external {
         LeafOFT(payable(oapp)).lzReceive(origin, bytes32(uint256(1)), message, address(this), "");
@@ -44,6 +50,7 @@ contract LeafWrapTest is Test {
     LeafOFT oft;
     address owner = address(0xA11CE);
     address guardian = address(0xB0B);
+    address feeTo = address(0xFEE);
     address user = address(0xCAFE);
     uint32 constant SRC_EID = 30184;
     uint32 constant DST_EID = 30367;
@@ -53,7 +60,7 @@ contract LeafWrapTest is Test {
         epDst = new MockEndpoint(DST_EID);
         token = new MockToken();
         vm.prank(owner);
-        adapter = new LeafOFTAdapter(address(token), address(epSrc), owner, guardian, 1_000e18);
+        adapter = new LeafOFTAdapter(address(token), address(epSrc), owner, guardian, feeTo, 1_000e18);
         vm.prank(owner);
         oft = new LeafOFT("Hyperleaf sKAITO", "hKAITO", address(epDst), owner, guardian);
         vm.startPrank(owner);
@@ -76,9 +83,10 @@ contract LeafWrapTest is Test {
         epDst.deliver(address(oft), origin, payload);
         assertEq(oft.balanceOf(user), 10e18);
         assertEq(adapter.totalLocked(), 10e18);
+        assertEq(token.balanceOf(feeTo), 0);
     }
 
-    function testRedeemUnlocks() public {
+    function testRedeemUnlocksNoProtocolFeeOnPrincipal() public {
         testLockMintsOnDeliver();
         vm.prank(user);
         oft.sendTo{value: 0.01 ether}(SRC_EID, user, 4e18);
@@ -89,6 +97,35 @@ contract LeafWrapTest is Test {
         epSrc.deliverAdapter(address(adapter), origin, payload);
         assertEq(token.balanceOf(user), 94e18);
         assertEq(adapter.totalLocked(), 6e18);
+        assertEq(token.balanceOf(feeTo), 0);
+    }
+
+    function testHarvestTakesOnePercentOfYield() public {
+        testLockMintsOnDeliver();
+        token.mint(address(adapter), 100e18);
+        adapter.harvest();
+        assertEq(token.balanceOf(feeTo), 1e18);
+        adapter.harvest();
+        assertEq(token.balanceOf(feeTo), 1e18);
+        vm.prank(user);
+        oft.sendTo{value: 0.01 ether}(SRC_EID, user, 10e18);
+        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(10e18));
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: DST_EID, sender: bytes32(uint256(uint160(address(oft)))), nonce: 1
+        });
+        epSrc.deliverAdapter(address(adapter), origin, payload);
+        assertEq(token.balanceOf(user), 90e18 + 109e18);
+        assertEq(token.balanceOf(feeTo), 1e18);
+    }
+
+    function testHarvestOtherTokenTakesOnePercent() public {
+        MockToken reward = new MockToken();
+        reward.mint(address(adapter), 100e18);
+        adapter.harvestToken(reward);
+        assertEq(reward.balanceOf(feeTo), 1e18);
+        assertEq(reward.balanceOf(address(adapter)), 99e18);
+        adapter.harvestToken(reward);
+        assertEq(reward.balanceOf(feeTo), 1e18);
     }
 
     function testGuardianPause() public {
