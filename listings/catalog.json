@@ -70,12 +70,17 @@
       "priority": 1
     },
     {
-      "id": "hwsteth",
+      "id": "hcbeth",
       "kind": "L",
-      "symbol": "hwstETH",
-      "name": "Hyperleaf wstETH",
-      "innerSymbol": "wstETH",
-      "innerToken": "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+      "symbol": "hcbETH",
+      "name": "Hyperleaf cbETH",
+      "innerSymbol": "cbETH",
+      "innerToken": "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+      "yield": {
+        "inner": "cbeth-rate",
+        "pullInner": false,
+        "toHype": ["side-airdrops"]
+      },
       "source": "base",
       "sourceChainId": 8453,
       "sourceEid": 30184,
@@ -83,10 +88,29 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Base wrapped stETH (Superbridge). Pairs with Unit uETH.",
+      "note": "Base Coinbase staked ETH. PoS sits in cbETH/ETH rate — never sell inner for HYPE. Redeem same cbETH. Ethereum-mainnet wstETH is a later separate listing.",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "testnet-ready",
-      "priority": 3
+      "priority": 2
+    },
+    {
+      "id": "hwsteth",
+      "kind": "L",
+      "symbol": "hwstETH",
+      "name": "Hyperleaf wstETH",
+      "innerSymbol": "wstETH",
+      "innerToken": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "sourceEidTest": 40161,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "pairsWithUnit": "uETH",
+      "note": "Later. Canonical Lido wstETH on Ethereum L1. Do not mix with hcbETH supply.",
+      "testnet": { "sourceChain": "sepolia", "mockInner": true },
+      "status": "later",
+      "priority": 20
     },
     {
       "id": "hvirtualmax",

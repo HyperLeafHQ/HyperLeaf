@@ -12,7 +12,7 @@ import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
 /// @notice Source-chain half of a testnet wrap.
-///         ASSET=hkaito|hxsquid|hwsteth|hsavax|hvirtualmax|bluai4y|bonk12m|hmet|hshmon
+///         ASSET=hkaito|hxsquid|hcbeth|hwsteth|hsavax|hvirtualmax|bluai4y|bonk12m|hmet|hshmon
 ///         INNER_TOKEN unset → deploys a mintable mock (always, on testnet).
 contract DeployTestnetSource is Script {
     function run() external {

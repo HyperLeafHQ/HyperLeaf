@@ -28,7 +28,7 @@ Need gas: Base Sepolia ETH, BSC testnet BNB, HyperEVM testnet HYPE.
 | --- | --- | --- | --- |
 | `hkaito` | L | Base Sepolia | HyperEVM 998 |
 | `hxsquid` | L | Base Sepolia | 998 |
-| `hwsteth` | L | Base Sepolia | 998 |
+| `hcbeth` | L | Base Sepolia | 998 |
 | `hsavax` | L | Base Sepolia mock (Fuji later) | 998 |
 | `hvirtualmax` | C1 | Base Sepolia | 998 |
 | `bluai4y` | C1 | BSC testnet | 998 |
@@ -100,7 +100,7 @@ Quote native fee with `source.quote(eid, payload, options, false)` or overpay ~0
 
 | Asset | Testnet | Mainnet |
 | --- | --- | --- |
-| hKAITO, hxSQUID, hwstETH, hVIRTUALMAX, BLUAI4Y | real LZ path, mock inner | same contracts, real inner, SetSecurityStack |
+| hKAITO, hxSQUID, hcbETH, hVIRTUALMAX, BLUAI4Y | real LZ path, mock inner | same contracts, real inner, SetSecurityStack |
 | BONK12M, hMET | mock C1/C2 on Base Sepolia | needs Solana lockbox |
 | hsAVAX | mock on Base Sepolia | Avalanche + LZ 30106 |
 | hshMON | mock | Monad LZ |

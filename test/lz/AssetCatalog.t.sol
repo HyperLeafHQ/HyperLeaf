@@ -46,7 +46,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[9] memory ids = AssetCatalog.allIds();
+        string[10] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
@@ -90,7 +90,11 @@ contract AssetCatalogTest is Test {
     function testMainnetInnersSetForEvmAssets() public pure {
         assertTrue(AssetCatalog.get("hkaito").innerMainnet != address(0));
         assertTrue(AssetCatalog.get("hxsquid").innerMainnet != address(0));
+        assertTrue(AssetCatalog.get("hcbeth").innerMainnet != address(0));
+        assertEq(AssetCatalog.get("hcbeth").symbol, "hcbETH");
+        assertEq(AssetCatalog.get("hcbeth").sourceChainIdMain, 8453);
         assertTrue(AssetCatalog.get("hwsteth").innerMainnet != address(0));
+        assertEq(AssetCatalog.get("hwsteth").sourceChainIdMain, 1);
         assertTrue(AssetCatalog.get("hsavax").innerMainnet != address(0));
         assertTrue(AssetCatalog.get("hvirtualmax").innerMainnet != address(0));
         assertEq(AssetCatalog.get("virtual4y").id, "hvirtualmax");

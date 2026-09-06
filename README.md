@@ -64,7 +64,7 @@ Default GitHub `main` is the live NestVault only. **HYPE conversion (`LeafHypeRe
 
 HyperEVM is a trading network, not a general-purpose L1 full of every asset. HyperLeaf’s job is to **bring the missing productive collateral in**, without stripping the yield that made the asset worth holding.
 
-1. **Ingress** — sKAITO, xSQUID, wstETH, MET … tokens that are not native here.
+1. **Ingress** — sKAITO, xSQUID, cbETH, wstETH, MET … tokens that are not native here.
 2. **Keep the extra income** — wrap the receipt or the lock, not only dead spot.
 3. **Pay that income in HYPE** — “use assets you already have to earn HYPE.”
 4. **Tell the truth about the lock** — if the source cannot unstake freely, the ticker says so (`hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`). Exit is the book, not a fake 1:1 redeem.
@@ -196,8 +196,9 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | ----- | ------ | ---- | ------ | ----- | ------------- |
 | 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
 | 1 | **hxSQUID** | L | Base | [xSQUID](https://basescan.org/token/0x13af2Db622d167745518aBfD59a8C4FFEe54937a) | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
-| 2 | **hwstETH** | L | Ethereum / LST home | wstETH | After L is trusted. Pairs against Unit uETH. |
+| 2 | **hcbETH** | L | Base | [cbETH](https://basescan.org/token/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22) | Base ETH LST. PoS in the rate. Pairs with Unit uETH. |
 | 3 | **hVIRTUALMAX** | C1 | Base | VIRTUAL → Virtuals Auto Max-lock (`stake(…, 104, true)`) | Never official redeem. ve stays 1:1. Agent airdrops → HYPE. |
+| later | **hwstETH** | L | Ethereum | wstETH | Separate ticker. Do not mix with hcbETH. |
 | later | **hKAITO** | L | Base | sKAITO | Blocked on omnichain holder: eco claims are often not on Base. |
 | later | **hshMON** | L | Monad | shMON | Same Adapter as other EVM LSTs. |
 | later | **BLUAI4Y** | C1 | BSC | BLUAI 4y | High user risk. First use of the BSC → Relay → WHYPE route. |
@@ -218,10 +219,10 @@ Deploy mock **hxSQUID** on Base testnet + HyperEVM testnet. Deposit, mint, redee
 **Phase B — mainnet hxSQUID only**
 Tiny cap. `claimRewards(lockbox, max)` → QUID → WHYPE. Watch LZ peers.
 
-**Phase C — hwstETH, then hVIRTUALMAX**
-Copy the proven Base L path. C1 Auto Max-lock next. Do not enable protocol redeem on VIRTUAL.
+**Phase C — hcbETH, then hVIRTUALMAX**
+Copy the proven Base L path onto Coinbase cbETH. C1 Auto Max-lock next.
 
-**Phase D — hKAITO after omnichain holder**
+**Phase D — hKAITO after omnichain holder; hwstETH on Ethereum if we want Lido**
 CREATE2 `LeafOmnichainHolder` on every EVM that has an eco claim. sKAITO sits in the twin so the same address can `pokeClaim` on BSC/ETH. Not before.
 
 **Phase E — NestVault v2 (optional redeploy)**

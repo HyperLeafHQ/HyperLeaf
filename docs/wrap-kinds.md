@@ -6,7 +6,7 @@ HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset,
 
 | Kind | Source | HyperEVM | Exit | Ticker |
 | ---- | ------ | -------- | ---- | ------ |
-| L | `LeafOFTAdapter` | `LeafOFT` | Instant inner receipt | `hKAITO`, `hxSQUID`, `hwstETH`, `hsAVAX`, `hshMON` |
+| L | `LeafOFTAdapter` | `LeafOFT` | Instant inner receipt | `hKAITO`, `hxSQUID`, `hcbETH`, `hwstETH`, `hsAVAX`, `hshMON` |
 | C1 | `LeafInboundLockbox` / `LeafVirtualsLockbox` | `LeafClosedOFT` | Sell on HyperEVM only | `hVIRTUALMAX`, `BONK12M`, `BLUAI4Y` |
 | C2 | `LeafRedeemQueue` | `LeafOFT` | Burn, wait, `claim` | `hMET` |
 
@@ -27,14 +27,15 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 
 ## Queue
 
-1. **hKAITO** (L, Base)
-2. **hxSQUID** (L, Base)
-3. **hwstETH** (L, Base) — pair with Unit uETH
-4. **hVIRTUALMAX** (C1, Base, Virtuals Auto Max-lock)
+1. **hxSQUID** (L, Base)
+2. **hcbETH** (L, Base) — pair with Unit uETH
+3. **hVIRTUALMAX** (C1, Base, Virtuals Auto Max-lock)
+4. **hKAITO** (L, Base) — after omnichain holder
 5. **hsAVAX** (L, Avalanche) — pair with Unit uAVAX
 6. **BONK12M** (C1, Solana — testnet mock only)
 7. **hMET** (C2, Solana — testnet mock only)
 8. **BLUAI4Y** (C1, BSC)
 9. **hshMON** (L, Monad — pending LZ)
+10. **hwstETH** (L, Ethereum) — later, own ticker
 
 hNEST is native HyperEVM, not this wrap.
