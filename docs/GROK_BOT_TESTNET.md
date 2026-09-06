@@ -35,6 +35,7 @@ setRewardsSelector(0x9a99b4f0)
 
 Log every address in the PR. Tiny caps. Separate OWNER / GUARDIAN / HARVESTER.
 
-Testnet `bluai4y` uses a mock inner on BSC testnet and **does not** call `setFarm`. Mainnet (chain 56) owner calls `setFarm(0x94b9865E…5040, stake(uint256,uint256), 4, claimAll())`.
+Mainnet BLUAI owner ops after deploy: `setFarm` + `setFarmExit(unstake(uint256))`. After 4 years: `farmUnstake` then either `restakeIdle` or `setShareExit(true)` on source and `setRedeemEnabled(true)` on dest if HyperEVM trades at a discount.
+
 
 

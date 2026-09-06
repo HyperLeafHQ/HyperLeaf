@@ -198,7 +198,11 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 1 | **hxSQUID** | L | Base | xSQUID | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
 | 2 | **hcbETH** | L | Base | cbETH | Base ETH LST. PoS in the rate. |
 | 3 | **hveAERO** | ve-NFT | Base | veAERO 721 | After L. Needs a Nest-style NFT lockbox. Bribes on Base. |
-| 4 | **hstkAAVE** | L | Ethereum | stkAAVE | Safety Module. Never start cooldown. |
+| 4 | **hstkAAVE** | L | Ethereum | stkAAVE | Safety Module. Next research. Never start cooldown. |
+| later | **hETHFI** | L | Ethereum | sETHFI | Wrap receipt. |
+| later | **hLSSKY** | C1 | Ethereum | SKY LockStake urn | Not transferable LSSKY. |
+| later | **hstDRV** | C2 | Ethereum | stDRV 28d | DRV already on HyperEVM. |
+| watch | **hSNX / hDYDX / hveCRV / hSYRUP** | | | | SNX stake retired; SYRUP stake sunset; veCRV after veAERO. |
 | 5 | **hsWBERA** | L | Berachain | sWBERA | Official PoL 4626. Wait LZ. |
 | 6 | **hAEVO** | C1 | Ethereum | AEVO stake | sAEVO is not a token. |
 | 7 | **hGMX** | C1 | Arbitrum | staked GMX | Account-based esGMX. |

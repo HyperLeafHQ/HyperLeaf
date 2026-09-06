@@ -54,6 +54,7 @@ contract DeployTestnetSource is Script {
                     LeafInboundLockbox(source).setFarm(
                         stake, IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector
                     );
+                    LeafInboundLockbox(source).setFarmExit(IBluaiStake.unstake.selector);
                     console2.log("bluaiStake", stake);
                 }
             }

@@ -21,16 +21,25 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     address public farm;
     bytes4 public farmStakeSel;
     bytes4 public farmClaimSel;
+    bytes4 public farmExitSel;
     uint256 public farmStakeArg;
+    bool public farmPrincipalOut;
+    bool public shareExitEnabled;
 
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
+    event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
     event FarmSet(address farm, bytes4 stakeSel, uint256 arg, bytes4 claimSel);
+    event FarmExitSel(bytes4 sel);
+    event FarmUnstaked(uint256 amount);
+    event RestakedIdle(uint256 amount);
+    event ShareExitSet(bool on);
 
     error ZeroAmount();
     error CapExceeded();
     error InboundOnly();
     error BadStake();
+    error InsufficientLocked();
 
     constructor(
         address token_,
@@ -79,6 +88,34 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         farmStakeArg = arg;
         farmClaimSel = claimSel;
         emit FarmSet(farm_, stakeSel, arg, claimSel);
+    }
+
+    function setFarmExit(bytes4 exitSel) external onlyOwner {
+        farmExitSel = exitSel;
+        emit FarmExitSel(exitSel);
+    }
+
+    function setShareExit(bool on) external onlyOwner {
+        shareExitEnabled = on;
+        emit ShareExitSet(on);
+    }
+
+    /// @notice After the 4y lock: pull principal back. Then restakeIdle or setShareExit.
+    function farmUnstake(uint256 amount) external onlyOwner nonReentrant {
+        if (farm == address(0) || farmExitSel == bytes4(0) || amount == 0) revert BadStake();
+        uint256 before = innerToken.balanceOf(address(this));
+        (bool ok,) = farm.call(abi.encodeWithSelector(farmExitSel, amount));
+        if (!ok || innerToken.balanceOf(address(this)) <= before) revert BadStake();
+        farmPrincipalOut = false;
+        emit FarmUnstaked(amount);
+    }
+
+    /// @notice No HyperEVM discount → lock idle BLUAI for another 4 years.
+    function restakeIdle() external onlyOwner nonReentrant {
+        uint256 idle = innerToken.balanceOf(address(this));
+        if (idle == 0 || farm == address(0)) revert ZeroAmount();
+        _afterDeposit(idle);
+        emit RestakedIdle(idle);
     }
 
     function pokeClaim(address t, bytes calldata data) external payable {
@@ -147,12 +184,22 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         return send(dstEid, bytes32(uint256(uint160(to))), amount, msg.sender);
     }
 
-    function _lzReceive(ILayerZeroEndpointV2.Origin calldata, bytes32, bytes calldata, address, bytes calldata)
-        internal
-        pure
-        override
-    {
-        revert InboundOnly();
+    function _lzReceive(
+        ILayerZeroEndpointV2.Origin calldata origin,
+        bytes32 guid,
+        bytes calldata message,
+        address,
+        bytes calldata
+    ) internal override nonReentrant whenNotPaused {
+        if (!shareExitEnabled) revert InboundOnly();
+        (bytes32 toB, uint256 amount) = abi.decode(message, (bytes32, uint256));
+        address to = address(uint160(uint256(toB)));
+        if (to == address(0) || amount == 0) revert ZeroAmount();
+        if (amount > totalLocked) revert InsufficientLocked();
+        if (farmPrincipalOut) revert BadStake();
+        totalLocked -= amount;
+        innerToken.safeTransfer(to, amount);
+        emit BridgedIn(to, origin.srcEid, amount, guid);
     }
 
     function _pull(address from, uint256 amount) internal returns (uint256 got) {
@@ -169,9 +216,10 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         innerToken.forceApprove(farm, got);
         (bool ok,) = farm.call(abi.encodeWithSelector(farmStakeSel, got, farmStakeArg));
         if (!ok || innerToken.balanceOf(address(this)) >= before) revert BadStake();
+        farmPrincipalOut = true;
     }
 
     function _principalReserved() internal view virtual returns (uint256) {
-        return farm == address(0) ? totalLocked : 0;
+        return farmPrincipalOut ? 0 : totalLocked;
     }
 }

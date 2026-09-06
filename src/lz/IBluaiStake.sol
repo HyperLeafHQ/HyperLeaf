@@ -6,4 +6,5 @@ pragma solidity ^0.8.24;
 interface IBluaiStake {
     function stake(uint256 amount, uint256 years_) external;
     function claimAll() external;
+    function unstake(uint256 amount) external;
 }

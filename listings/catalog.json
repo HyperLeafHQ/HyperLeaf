@@ -171,7 +171,7 @@
       "lockSeconds": 126144000,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1. LeafInboundLockbox.setFarm(stake, stake(uint256,uint256), 4, claimAll). Never unstake. Idle BLUAI after claimAll is yield (reserved=0). High user risk.",
+      "note": "C1 until the 4y farm lock ends. No auto-renew. Owner: farmUnstake → restakeIdle (no HyperEVM discount) or setShareExit + dest setRedeemEnabled (arb / buyback). Principal in farm ⇒ reserved 0; after unstake reserved = totalLocked.",
       "refs": {
         "stakeTx": "0x8983f3cc864a0052c9206ef4587684bc4c93ed42270b404fc286e981a4c21874",
         "claimTx": "0xdf677b0f708ae20cab9fbbb1d46ee7e8573e50a4b56fafe7c6576d5fb2e0c057"
@@ -293,9 +293,9 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "yield": { "inner": "keep-stkaave", "pullInner": false, "toHype": ["AAVE"] },
-      "note": "Aave Safety Module. Slashable. L returns stkAAVE; protocol never starts the 20d cooldown. pokeRewards for AAVE emissions. Ethereum gas.",
-      "status": "later",
-      "priority": 5
+      "note": "First research after Base L. Aave Safety Module. Slashable. Wrap stkAAVE (not raw AAVE). L returns stkAAVE; protocol never starts the 20d cooldown. Claim AAVE emissions via pokeRewards. Ethereum gas.",
+      "status": "research-next",
+      "priority": 4
     },
     {
       "id": "hswbera",
@@ -355,6 +355,104 @@
       "note": "Jupiter LST (rate). If you meant vote-locked JUP instead, that is a different listing. Solana lockbox required.",
       "status": "later",
       "priority": 9
+    },
+    {
+      "id": "hstdrv",
+      "kind": "C2",
+      "symbol": "hstDRV",
+      "name": "Hyperleaf stDRV",
+      "innerSymbol": "stDRV",
+      "source": "ethereum",
+      "exit": "queued-unstake",
+      "redeemDelay": 2419200,
+      "redeemDelayLabel": "28d",
+      "infra": "evm",
+      "note": "Derive stDRV. Instant unstake takes a 20% haircut — we never do that. 28d queue instead. DRV already trades on HyperEVM, so this is low priority (spot exists).",
+      "status": "later",
+      "priority": 25
+    },
+    {
+      "id": "hlssky",
+      "kind": "C1",
+      "symbol": "hLSSKY",
+      "name": "Hyperleaf Sky LockStake",
+      "innerSymbol": "SKY",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "note": "Sky LockStake Engine: SKY → urn/vault → LSSKY. LSSKY is not a user-transferable ERC-20; the urn cannot be transferred. Needs a dedicated urn lockbox (not OFT adapter). Research before build.",
+      "status": "research",
+      "priority": 11
+    },
+    {
+      "id": "hethfi",
+      "kind": "L",
+      "symbol": "hETHFI",
+      "name": "Hyperleaf sETHFI",
+      "innerSymbol": "sETHFI",
+      "innerToken": "0x86B5780b606940Eb59A062aA85a07959518c0161",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "ether.fi BoringVault sETHFI. Wrap the receipt, never the raw ETHFI. DelayedWithdraw exists — confirm we never call it (L) vs C2.",
+      "status": "later",
+      "priority": 12
+    },
+    {
+      "id": "hsnx",
+      "kind": "L",
+      "symbol": "hSNX",
+      "name": "Hyperleaf SNX",
+      "innerSymbol": "SNX",
+      "innerToken": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "Legacy 420 staking retired Jun 2026 (SIP-423). No live SNX yield to wrap. This would only be a HyperEVM spot proxy. Weak listing unless a new stake appears.",
+      "status": "watchlist",
+      "priority": 22
+    },
+    {
+      "id": "hdydx",
+      "kind": "L",
+      "symbol": "hDYDX",
+      "name": "Hyperleaf DYDX",
+      "innerSymbol": "DYDX",
+      "source": "dydx",
+      "exit": "instant-receipt",
+      "infra": "pending",
+      "note": "Watchlist. Confirm which receipt (eth DYDX vs dYdX chain stake) before a Kind.",
+      "status": "watchlist",
+      "priority": 23
+    },
+    {
+      "id": "hvecrv",
+      "kind": "ve-nft",
+      "symbol": "hveCRV",
+      "name": "Hyperleaf veCRV",
+      "innerSymbol": "veCRV",
+      "source": "ethereum",
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "note": "Same class as veAERO (vote-escrow NFT). Low priority. Do after hveAERO lockbox exists so we reuse it.",
+      "status": "later",
+      "priority": 24
+    },
+    {
+      "id": "hsyrup",
+      "kind": "L",
+      "symbol": "hSYRUP",
+      "name": "Hyperleaf SYRUP",
+      "innerSymbol": "SYRUP",
+      "source": "ethereum",
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "Maple MIP-019 sunset staking. stSYRUP unstake-only. Lowest priority; yield story is gone.",
+      "status": "watchlist",
+      "priority": 40
     }
   ]
 }

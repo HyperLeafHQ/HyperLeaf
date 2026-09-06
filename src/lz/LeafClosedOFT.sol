@@ -9,8 +9,12 @@ import {LeafOFT} from "./LeafOFT.sol";
 contract LeafClosedOFT is LeafOFT {
     /// @notice Advertised lock length. Not enforced on-chain; the source stake is.
     uint32 public immutable lockSeconds;
+    /// @notice Owner may open protocol redeem after the source lock ends (BLUAI).
+    bool public redeemEnabled;
 
     error ExitViaMarketOnly();
+
+    event RedeemEnabled(bool on);
 
     constructor(
         string memory name_,
@@ -23,7 +27,18 @@ contract LeafClosedOFT is LeafOFT {
         lockSeconds = lockSeconds_;
     }
 
-    function send(uint32, bytes32, uint256, address) public payable override returns (bytes32) {
-        revert ExitViaMarketOnly();
+    function setRedeemEnabled(bool on) external onlyOwner {
+        redeemEnabled = on;
+        emit RedeemEnabled(on);
+    }
+
+    function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
+        public
+        payable
+        override
+        returns (bytes32)
+    {
+        if (!redeemEnabled) revert ExitViaMarketOnly();
+        return super.send(dstEid, to, amount, refund);
     }
 }

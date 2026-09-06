@@ -41,6 +41,12 @@ contract MockBluaiStake is IBluaiStake {
         pending = 0;
         if (a > 0) token.transfer(msg.sender, a);
     }
+
+    function unstake(uint256 amount) external override {
+        uint256 a = amount > staked[msg.sender] ? staked[msg.sender] : amount;
+        staked[msg.sender] -= a;
+        token.transfer(msg.sender, a);
+    }
 }
 
 contract MockEndpoint is ILayerZeroEndpointV2 {
@@ -84,6 +90,7 @@ contract LeafBluaiLockboxTest is Test {
         box = new LeafInboundLockbox(address(bluai), address(ep), owner, guardian, feeTo, 1_000 ether);
         vm.startPrank(owner);
         box.setFarm(address(stake), IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector);
+        box.setFarmExit(IBluaiStake.unstake.selector);
         box.setPeer(40362, address(1));
         box.setHarvester(owner);
         box.setConverter(converter);
@@ -124,5 +131,22 @@ contract LeafBluaiLockboxTest is Test {
         vm.prank(owner);
         vm.expectRevert(LeafYieldFee.BadClaimTarget.selector);
         box.setClaimTarget(address(stake), true);
+    }
+
+    function testUnstakeThenRestake() public {
+        vm.startPrank(user);
+        bluai.approve(address(box), 40 ether);
+        box.sendTo{value: 0.01 ether}(40362, user, 40 ether);
+        vm.stopPrank();
+        vm.prank(owner);
+        box.farmUnstake(40 ether);
+        assertEq(bluai.balanceOf(address(box)), 40 ether);
+        assertEq(stake.staked(address(box)), 0);
+        assertFalse(box.farmPrincipalOut());
+        vm.prank(owner);
+        box.restakeIdle();
+        assertEq(stake.staked(address(box)), 40 ether);
+        assertTrue(box.farmPrincipalOut());
+        assertEq(bluai.balanceOf(address(box)), 0);
     }
 }
