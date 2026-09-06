@@ -8,7 +8,7 @@ import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 
 /// @title LeafOFT
 /// @notice HyperEVM-side receipt. Mint on verified LZ message, burn to send back.
-///         Executor (LayerZero) delivers; this contract never talks to a VPS.
+///         C1 closed listings override send() so the only exit is the market.
 contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     error ZeroAmount();
 
@@ -24,6 +24,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
         public
         payable
+        virtual
         whenNotPaused
         returns (bytes32 guid)
     {
@@ -41,11 +42,13 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         return send(dstEid, bytes32(uint256(uint160(to))), amount, msg.sender);
     }
 
-    function _lzReceive(ILayerZeroEndpointV2.Origin calldata origin, bytes32 guid, bytes calldata message, address, bytes calldata)
-        internal
-        override
-        whenNotPaused
-    {
+    function _lzReceive(
+        ILayerZeroEndpointV2.Origin calldata origin,
+        bytes32 guid,
+        bytes calldata message,
+        address,
+        bytes calldata
+    ) internal override whenNotPaused {
         (bytes32 toB, uint256 amount) = abi.decode(message, (bytes32, uint256));
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();

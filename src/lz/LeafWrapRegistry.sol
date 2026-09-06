@@ -4,18 +4,26 @@ pragma solidity ^0.8.24;
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 contract LeafWrapRegistry is Ownable2Step {
+    enum Kind {
+        Liquid,
+        Closed,
+        Queued
+    }
+
     struct Asset {
         address innerToken;
         uint32 sourceEid;
         address adapter;
         address oft;
+        Kind kind;
         bool active;
+        string symbol;
     }
 
     mapping(bytes32 id => Asset) public assets;
     bytes32[] public assetIds;
 
-    event Registered(bytes32 indexed id, address innerToken, address adapter, address oft);
+    event Registered(bytes32 indexed id, address innerToken, address adapter, address oft, Kind kind, string symbol);
     event ActiveSet(bytes32 indexed id, bool active);
 
     error ZeroAddress();
@@ -24,15 +32,20 @@ contract LeafWrapRegistry is Ownable2Step {
 
     constructor(address owner_) Ownable(owner_) {}
 
-    function register(bytes32 id, address innerToken, uint32 sourceEid, address adapter, address oft)
-        external
-        onlyOwner
-    {
+    function register(
+        bytes32 id,
+        address innerToken,
+        uint32 sourceEid,
+        address adapter,
+        address oft,
+        Kind kind,
+        string calldata symbol
+    ) external onlyOwner {
         if (innerToken == address(0) || adapter == address(0) || oft == address(0)) revert ZeroAddress();
         if (assets[id].adapter != address(0)) revert AlreadyRegistered();
-        assets[id] = Asset(innerToken, sourceEid, adapter, oft, true);
+        assets[id] = Asset(innerToken, sourceEid, adapter, oft, kind, true, symbol);
         assetIds.push(id);
-        emit Registered(id, innerToken, adapter, oft);
+        emit Registered(id, innerToken, adapter, oft, kind, symbol);
     }
 
     function setActive(bytes32 id, bool active) external onlyOwner {
