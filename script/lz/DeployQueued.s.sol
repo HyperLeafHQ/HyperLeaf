@@ -6,11 +6,11 @@ import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
-/// @notice C2 deploy. Source: LeafRedeemQueue. HyperEVM: LeafOFT (send opens a ticket).
 contract DeployQueued is Script {
     function run() external {
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
+        address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
         uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(1_000e18));
         uint64 delay = uint64(vm.envOr("REDEEM_DELAY", uint256(7 days)));
         uint256 chainId = block.chainid;
@@ -25,7 +25,8 @@ contract DeployQueued is Script {
         } else {
             address inner = vm.envAddress("INNER_TOKEN");
             address endpoint = chainId == 56 ? A.ENDPOINT_BSC : A.ENDPOINT_BASE;
-            LeafRedeemQueue q = new LeafRedeemQueue(inner, endpoint, owner, guardian, cap, delay);
+            LeafRedeemQueue q =
+                new LeafRedeemQueue(inner, endpoint, owner, guardian, feeRecipient, cap, delay);
             console2.log("LeafRedeemQueue", address(q));
         }
         vm.stopBroadcast();
