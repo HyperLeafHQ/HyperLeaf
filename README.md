@@ -218,7 +218,7 @@ Catalog: [`listings/catalog.json`](listings/catalog.json) · kinds: [`docs/wrap-
 ## Roadmap
 
 **Phase A — testnet, one L end-to-end**
-Deploy mock **hxSQUID** on Base testnet + HyperEVM testnet. Deposit, mint, redeem, `pokeRewards` / `pullYield`, `notify`, claim HYPE. Then one C1 mock and one C2 mock so the three exits are not confused.
+Grok bot: mock **hxSQUID** then **hcbETH** on Base Sepolia + HyperEVM 998. See `docs/GROK_BOT_TESTNET.md`. Then mock **BLUAI4Y** so C1 exit is not confused with L.
 
 **Phase B — mainnet hxSQUID only**
 Tiny cap. `claimRewards(lockbox, max)` → QUID → WHYPE. Watch LZ peers.
