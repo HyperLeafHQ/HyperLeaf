@@ -29,8 +29,8 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 
 1. **hxSQUID** (L, Base)
 2. **hcbETH** (L, Base)
-3. **hveAERO** (ve-NFT, Base — new lockbox)
-4. **hLSSKY** (C1, Ethereum — urn lockbox; research-next)
+3. **hSKY** (C1, Ethereum — Lockstake V2 urn; PoC next)
+4. **hveAERO** (ve-NFT, Base — later)
 5. **hsWBERA** (L, Berachain — LZ)
 6. **hAEVO** (C1, Ethereum)
 7. **hGMX** (C1, Arbitrum)

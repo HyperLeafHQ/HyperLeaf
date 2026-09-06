@@ -276,9 +276,9 @@
       "exit": "market-or-custom",
       "infra": "evm",
       "yield": { "inner": "aero-rebase-and-bribes", "pullInner": false, "toHype": ["bribe-erc20s"] },
-      "note": "VotingEscrow ERC-721, not ERC-20. Cannot use LeafOFTAdapter. Needs a Nest-style veNFT lockbox (createLock / merge). Bribes and rebase are on Base — no extra-chain claim. Do not ship until the NFT lockbox exists.",
-      "status": "needs-venft-lockbox",
-      "priority": 3
+      "note": "Later. VotingEscrow ERC-721. After hSKY urn lockbox exists we can reuse NFT/position custody patterns. Not next.",
+      "status": "later",
+      "priority": 15
     },
     {
       "id": "hstkaave",
@@ -372,18 +372,23 @@
       "priority": 25
     },
     {
-      "id": "hlssky",
+      "id": "hsky",
       "kind": "C1",
-      "symbol": "hLSSKY",
-      "name": "Hyperleaf Sky LockStake",
+      "symbol": "hSKY",
+      "name": "Hyperleaf SKY LockStake",
       "innerSymbol": "SKY",
+      "innerToken": "0x56072C95FAA701256059aa122697B133aDEd9279",
+      "engine": "0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3",
+      "farm": "0x38E4254bD82ED5Ee97CD1C4278FAae748d998865",
       "source": "ethereum",
       "sourceChainId": 1,
-      "exit": "market-or-custom",
+      "sourceEid": 30101,
+      "exit": "market-only",
       "infra": "evm",
-      "note": "Next Ethereum research after Base L+veAERO. Sky LockStake Engine: SKY → non-transferable urn → LSSKY. HyperLeaf's job is the missing liquid ticket. Cleaner than Aave: one current mechanism, no SM→Umbrella sunset. Needs an urn lockbox (not OFT adapter). Do not wrap raw SKY.",
-      "status": "research-next",
-      "priority": 4
+      "yield": { "inner": "sky-farm-claim", "pullInner": true, "toHype": ["SKY"] },
+      "note": "Flagship financialization listing. Lockstake V2 SKY-only (not MKR). HyperLeaf opens urn 0, lock(), selectFarm(SKY-USDS rewards). V1 never draw/wipe USDS. Vote power stays on a protocol delegate. Ticker is hSKY (claim on the position, not 1:1 SKY). free() burns Sky exit fee — do not advertise 1:1 redeem. No fixed APY. Do not wrap stUSDS. Interface: src/lz/ISkyLockstake.sol. Dedicated OApp next; cannot inherit LeafInboundLockbox (IR stack).",
+      "status": "poc",
+      "priority": 3
     },
     {
       "id": "hethfi",

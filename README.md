@@ -197,8 +197,8 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
 | 1 | **hxSQUID** | L | Base | xSQUID | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
 | 2 | **hcbETH** | L | Base | cbETH | Base ETH LST. PoS in the rate. |
-| 3 | **hveAERO** | ve-NFT | Base | veAERO 721 | After L. Needs a Nest-style NFT lockbox. Bribes on Base. |
-| 4 | **hLSSKY** | C1 | Ethereum | SKY LockStake urn | Next Ethereum research. LSSKY is not transferable — we create the market. |
+| 3 | **hSKY** | C1 | Ethereum | Lockstake urn | Flagship financialization. No USDS borrow. Vote stays protocol-delegated. `free` has an exit fee. |
+| later | **hveAERO** | ve-NFT | Base | veAERO 721 | After Sky urn pattern. |
 | hold | **hstkAAVE** | L | Ethereum | stkAAVE | Legacy Safety Module. Umbrella is the new backstop. Do not ship until SM fate + voting delegate + HyperEVM spot gap are clear. |
 | watch | **Umbrella** | risk | Ethereum | aUSDC / GHO … | Not “support AAVE”. Separate product if we ever tokenize a specific cover pool. |
 | later | **hETHFI** | L | Ethereum | sETHFI | Wrap receipt, not raw ETHFI. |
@@ -231,11 +231,11 @@ Tiny cap. `claimRewards(lockbox, max)` → QUID → WHYPE. Watch LZ peers.
 **Phase C — hcbETH**
 Copy the proven Base L path onto Coinbase cbETH.
 
-**Phase D — hveAERO**
-Only after an NFT lockbox (not OFT adapter). Base bribes, no extra-chain claims.
+**Phase D — hSKY (Ethereum Lockstake V2)**
+PoC: open urn → lock SKY → getReward → never `draw`. Ticker hSKY. No stUSDS. No MKR.
 
-**Phase E — Ethereum: Sky LockStake first, not stkAAVE**
-hLSSKY needs an urn lockbox. stkAAVE stays on hold through the Umbrella migration. Umbrella itself is a different product (cover aUSDC/GHO, not wrap AAVE).
+**Phase E — hveAERO / remaining Ethereum**
+veAERO after the urn/NFT custody pattern is proven on Sky. stkAAVE remains hold.
 
 **Phase F — sWBERA / AEVO / GMX / JupSOL / ANSEM**
 One kind at a time. Solana listings wait on a non-EVM lockbox.

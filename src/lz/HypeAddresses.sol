@@ -24,6 +24,12 @@ library HypeAddresses {
 
     /// @dev BLUAI 4-year stake (BSC). stake(amount, 4) / claimAll().
     address internal constant BLUAI_STAKE_BSC = 0x94b9865Ef26166fEBB7775d12d6dF23B51465040;
+
+    /// @dev SKY (Ethereum). Not MKR. Lockstake V2 is SKY-only.
+    address internal constant SKY_ETH = 0x56072C95FAA701256059aa122697B133aDEd9279;
+    address internal constant LOCKSTAKE_ENGINE = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3;
+    address internal constant SKY_USDS_REWARDS = 0x38E4254bD82ED5Ee97CD1C4278FAae748d998865;
+
     uint256 internal constant BASE_CHAIN_ID = 8453;
     uint256 internal constant BSC_CHAIN_ID = 56;
 }
