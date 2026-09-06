@@ -89,6 +89,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (totalLocked + got > depositCap) revert CapExceeded();
         totalLocked += got;
         _accountDeposit(got);
+        _afterDeposit(got);
 
         bytes memory payload = abi.encode(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
@@ -115,4 +116,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         got = innerToken.balanceOf(address(this)) - before;
         if (got == 0) revert ZeroAmount();
     }
+
+    /// @dev C1 default: tokens stay in this box. hVIRTUALMAX stakes into Virtuals.
+    function _afterDeposit(uint256) internal virtual {}
 }

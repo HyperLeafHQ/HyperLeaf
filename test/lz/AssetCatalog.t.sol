@@ -92,7 +92,9 @@ contract AssetCatalogTest is Test {
         assertTrue(AssetCatalog.get("hxsquid").innerMainnet != address(0));
         assertTrue(AssetCatalog.get("hwsteth").innerMainnet != address(0));
         assertTrue(AssetCatalog.get("hsavax").innerMainnet != address(0));
-        assertTrue(AssetCatalog.get("virtual4y").innerMainnet != address(0));
+        assertTrue(AssetCatalog.get("hvirtualmax").innerMainnet != address(0));
+        assertEq(AssetCatalog.get("virtual4y").id, "hvirtualmax");
+        assertEq(AssetCatalog.get("hvirtualmax").symbol, "hVIRTUALMAX");
         assertTrue(AssetCatalog.get("bluai4y").innerMainnet != address(0));
         assertEq(AssetCatalog.get("bonk12m").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hmet").innerMainnet, address(0));

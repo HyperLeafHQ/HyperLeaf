@@ -19,6 +19,9 @@ library HypeAddresses {
     /// @dev QUID on Base. hxSQUID side-yield; never pull xSQUID.
     address internal constant QUID_BASE = 0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53;
 
+    /// @dev Virtuals Protocol Stake (Base). hVIRTUALMAX Auto Max-lock.
+    address internal constant VIRTUALS_STAKE_BASE = 0x60a203ddcDE45fbfb325bdeEA93824B5726b4dF8;
+
     uint256 internal constant HYPEREVM_CHAIN_ID = 999;
     uint256 internal constant BASE_CHAIN_ID = 8453;
     uint256 internal constant BSC_CHAIN_ID = 56;

@@ -19,7 +19,7 @@ Harvester-only `pullYield`. Then swap + bridge + `LeafHypeRewarder.notify`.
 | **hKAITO** | L, return sKAITO | Eco airdrop ERC-20s (allowlisted) | **sKAITO** — PoS is already in the ERC-4626 rate |
 | **hxSQUID** | L, return xSQUID | **QUID** | **xSQUID** |
 | **BLUAI4Y** | C1, market only | Extra **BLUAI** (`pullInnerEnabled = true`, surplus only) | Principal (`totalLocked`) |
-| **VIRTUAL4Y** | C1 | Side rewards if any | Locked VIRTUAL |
+| **hVIRTUALMAX** | C1 | Agent airdrops | Staked VIRTUAL (Auto Max-lock) |
 
 `pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner`. C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked`.
 

@@ -99,17 +99,17 @@ library AssetCatalog {
                 true
             );
         }
-        if (k == keccak256("virtual4y")) {
+        if (k == keccak256("hvirtualmax") || k == keccak256("virtual4y")) {
             return Listing(
                 Kind.Closed,
-                "virtual4y",
-                "Hyperliquid VIRTUAL 4Year",
-                "VIRTUAL4Y",
+                "hvirtualmax",
+                "Hyperleaf VIRTUAL MAX",
+                "hVIRTUALMAX",
                 "VIRTUAL",
                 8453,
                 30184,
                 40245,
-                uint32(4 * 365 days),
+                uint32(104 weeks),
                 0,
                 0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b,
                 1_000 ether,
@@ -193,7 +193,7 @@ library AssetCatalog {
             string("hxsquid"),
             string("hwsteth"),
             string("hsavax"),
-            string("virtual4y"),
+            string("hvirtualmax"),
             string("bluai4y"),
             string("bonk12m"),
             string("hmet"),
