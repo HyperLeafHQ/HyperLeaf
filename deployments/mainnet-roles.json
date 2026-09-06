@@ -1,0 +1,29 @@
+{
+  "chainId": 999,
+  "network": "HyperEVM mainnet",
+  "updatedAt": "2026-09-06T08:00:00+08:00",
+  "roles": {
+    "owner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
+    "guardian": "0x12dF4528E7Cc3db07A509c966c6405b69A25Ef2e",
+    "keeper": "0xc321DD8826a30D8a6D973821a3dB7b8090955887",
+    "feeRecipient": "0x76c8c4586F0a3d335CF7192eBbB4FE6Ed5Af3804",
+    "deployerHotWallet": "0xc321DD8826a30D8a6D973821a3dB7b8090955887"
+  },
+  "idle": {
+    "idleDepositBps": 100,
+    "minIdleNest": "50000000000000000000",
+    "minIdleNestHuman": "50 NEST",
+    "notes": "1% deposit skim; 50 NEST absolute floor. topUpIdle >= 50 before setMinIdleNest."
+  },
+  "policy": {
+    "depositsEnabledDefault": false,
+    "recordCompound": "disabled",
+    "hypeSpring": "not wired — do not market liquid HYPE claims",
+    "exitAssumption": "Most exits via secondary market; protocol redeem is backstop"
+  },
+  "contracts": {
+    "NestVault": null,
+    "HNest": null,
+    "HevAdapter": null
+  }
+}

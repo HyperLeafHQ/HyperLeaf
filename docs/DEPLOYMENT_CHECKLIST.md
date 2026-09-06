@@ -1,59 +1,68 @@
 # NestVault / hNEST — Mainnet Deployment Checklist
 
-**Status:** Mandatory before opening deposits. Internal audit HL-001 / HL-007.
+**Status:** Mandatory before opening deposits. Internal audit HL-001 / HL-007.  
+**Updated:** 2026-09-06 (Asia/Shanghai) — roles + idle values confirmed by operator.
 
-## Confirmed production roles (do not collapse)
+## Confirmed production roles (four-way split)
 
-| Role | Who | Notes |
-|------|-----|--------|
-| **Owner** | **User EOA** (operator / protocol owner) | Ownable2Step: deploy with temp key → `transferOwnership` → user `acceptOwnership`. **Never leave Hyperleaf deployer as Owner.** |
-| **Guardian** | **User's OTHER EOA** (≠ Owner) | **Pause only.** Cannot unpause, cannot change idle / dettach buffer / fees / adapter / depositsEnabled. |
-| **Keeper** | Hyperleaf hot wallet `0xc321…5887` | harvest / process / dettachForLiquidity / topUpIdle only. **Never Owner or Guardian.** |
-| **feeRecipient** | Separate address (treasury / fee sink) | ≠ Owner, ≠ Guardian, ≠ Keeper preferred. |
-| **Deployer** | CI / deploy key | Deploy only. Transfer Owner to user via Ownable2Step, then stop using for privileged ops. **NEVER set deployer as Owner or Guardian on mainnet.** |
+| Role | Address | Notes |
+|------|---------|--------|
+| **Owner** | `0x24458f0bC44C4607172d1151Cd938012Be33156e` | User-controlled EOA. Ownable2Step: deploy → `transferOwnership` → Owner `acceptOwnership`. |
+| **Guardian** | `0x12dF4528E7Cc3db07A509c966c6405b69A25Ef2e` | User's **other** EOA (**≠ Owner**). **Pause only** (cannot unpause / idle / adapter / depositsEnabled). |
+| **Keeper** | `0xc321DD8826a30D8a6D973821a3dB7b8090955887` | Hyperleaf hot wallet. harvest / process / dettachForLiquidity / topUpIdle only. **Never Owner or Guardian.** |
+| **feeRecipient** | `0x76c8c4586F0a3d335CF7192eBbB4FE6Ed5Af3804` | Protocol fee sink (performance fee cut). Separate from Keeper. |
+| **Deployer** | same hot wallet as Keeper for deploy txs only | Deploy + initial config, then hand Owner to user. **NEVER leave deployer as Owner/Guardian.** |
 
-Testnet may use one EOA for drills. **Copying testnet role collapse to mainnet is forbidden.**
+Testnet may collapse roles for drills. **Copying testnet role collapse to mainnet is forbidden.**
 
-## Pre-deposit configuration (HL-007)
+## Confirmed idle parameters (HL-007)
 
-1. Complete Ownable2Step ownership handoff to **user Owner**.
-2. `setGuardian` → user's other EOA.
-3. `setKeeper` → `0xc321…5887` (or rotated Hyperleaf hot wallet documented in runbook).
-4. `setFeeRecipient` → separate fee address.
-5. `setHevAdapter` → production HevAdapter (**rejects address(0)**).
-6. Set idle before open:
-   - `setIdleDepositBps` (owner) — non-zero skim recommended for queue liquidity
-   - `setMinIdleNest` (owner) — floor for fulfillments
-   - Document keeper `topUpIdle` funding source
-7. Optional: `setDettachBufferBps` (owner) — overshoot allowance when capping dettach principal to queue gap.
-8. Confirm `recordCompound` is disabled (`CompoundDisabled`) — no unbacked share-price inflate.
-9. Confirm `depositsEnabled == false` until step 10.
-10. Owner calls `setDepositsEnabled(true)` only after steps 1–9 and smoke checks.
+| Param | Value | Meaning |
+|-------|-------|---------|
+| `idleDepositBps` | **100** | 1% of each deposit stays liquid idle; 99% locks into veNEST/HEV. Example: deposit 100 NEST → 1 idle + 99 HEV. |
+| `minIdleNest` | **50 NEST** (`50e18`) | Absolute floor; queue fulfillments only spend `balance - minIdleNest`. |
+
+**Product assumption:** most exits via secondary market (sell hNEST); protocol redeem is minority backstop → lean idle is intentional.
+
+**Set order (important):**
+1. Deploy with `depositsEnabled = false`.
+2. Configure roles (Guardian / Keeper / feeRecipient) while deployer still Owner, **or** after user `acceptOwnership`.
+3. `setIdleDepositBps(100)`.
+4. `topUpIdle` ≥ 50 NEST (cannot `setMinIdleNest(50e18)` if vault NEST balance &lt; 50).
+5. `setMinIdleNest(50e18)`.
+6. Owner `acceptOwnership` if not done.
+7. Smoke checks → only then Owner `setDepositsEnabled(true)`.
+
+## Pre-deposit configuration checklist
+
+1. [ ] Ownable2Step handoff to Owner `0x24458f0b…156e` complete (`acceptOwnership`).
+2. [ ] `setGuardian` → `0x12dF4528…Ef2e`.
+3. [ ] `setKeeper` → `0xc321DD88…5887`.
+4. [ ] `setFeeRecipient` → `0x76c8c458…3804`.
+5. [ ] `setHevAdapter` → production HevAdapter (**rejects address(0)**).
+6. [ ] `setIdleDepositBps(100)` + `topUpIdle` ≥ 50 + `setMinIdleNest(50e18)`.
+7. [ ] Optional: `setDettachBufferBps` documented.
+8. [ ] Confirm `recordCompound` disabled (`CompoundDisabled`).
+9. [ ] Confirm `depositsEnabled == false` until step 10.
+10. [ ] Owner `setDepositsEnabled(true)` only after 1–9 + smoke.
 
 ## Compound policy (HL-002)
 
 - `recordCompound` **always reverts** (`CompoundDisabled`).
-- Share-price uplift from locked NEST compound must not be recorded without verifiable on-chain assets.
-- Future re-enable requires a new design (owner+timelock + readable increase), not flipping a flag in this MVP.
+- Do not market liquid Nest HYPE / HYPE Spring / MEGAHYPE until claim ABI is wired.
 
 ## Security gates already in code
 
 | Gate | Behavior |
 |------|----------|
 | HL-002 | `recordCompound` → `CompoundDisabled()` |
-| HL-003 | `dettachForLiquidity` caps cumulative `nestPrincipal` to queue gap + `dettachBufferBps` |
+| HL-003 | `dettachForLiquidity` caps principal to queue gap + `dettachBufferBps` |
 | HL-008 | `setHevAdapter(0)` reverts; dettach clears `inHev` only after `withdrawVeNFT` |
 | HL-009 | Idle params `onlyOwner`; guardian pause-only |
 | HL-007 | `depositsEnabled` default `false` |
-
-## Do not claim
-
-- Do **not** market liquid Nest HYPE / “HYPE Spring” / MEGAHYPE user claims.
-- Adapter `sweepResidualHype` = stray ERC20 sweep (usually 0).
-- Adapter `pendingLockedNestShare` = NEST-denominated locked reward share.
 
 ## Post-deploy monitors
 
 - `DettachForLiquidity`, `HevAdapterUpdated`, `Paused` / `Unpaused`, `DepositsEnabledUpdated`
 - `pendingWithdrawNest` vs `availableIdleNest`
-- Role addresses remain split as in the table above
+- Role addresses remain the four-way split above
