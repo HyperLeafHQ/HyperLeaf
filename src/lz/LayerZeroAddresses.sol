@@ -15,8 +15,8 @@ library LayerZeroAddresses {
 
     address internal constant ENDPOINT_BASE = 0x1a44076050125825900e736c501f859c50fE728c;
     address internal constant SEND_ULN_BASE = 0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2;
-    address internal constant RECEIVE_ULN_BASE = 0xc70AB6F32772F59fBFc23889CAF4ba3376C84baf;
-    address internal constant EXECUTOR_BASE = 0x2CCA08ae69E0C44b18a57Ab2A87644234dAEbaE4;
+    address internal constant RECEIVE_ULN_BASE = 0xc70AB6f32772f59fBfc23889Caf4Ba3376C84bAf;
+    address internal constant EXECUTOR_BASE = 0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4;
 
     address internal constant ENDPOINT_HYPEREVM = 0x3A73033C0b1407574C76BdBAc67f126f6b4a9AA9;
     address internal constant SEND_ULN_HYPEREVM = 0xfd76d9CB0Bac839725aB79127E7411fe71b1e3CA;
@@ -30,12 +30,12 @@ library LayerZeroAddresses {
     address internal constant ENDPOINT_HYPEREVM_TESTNET = 0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1;
 
     address internal constant DVN_LZ_LABS_BASE = 0x9e059a54699a285714207b43B055483E78FAac25;
-    address internal constant DVN_HORIZEN_BASE = 0xa7b5189bCA84cd304D8553977c7C614329750d99;
+    address internal constant DVN_HORIZEN_BASE = 0xa7b5189bcA84Cd304D8553977c7C614329750d99;
     address internal constant DVN_NETHERMIND_BASE = 0xcd37CA043f8479064e10635020c65FfC005d36f6;
 
-    address internal constant DVN_NETHERMIND_HYPEREVM = 0x8e49eF1dFAe17E547cA0E7526FfDa81FbACA810A;
-    address internal constant DVN_HORIZEN_HYPEREVM = 0xbB83ecf372cBB6Daa629eA9A9A53bEC6d601F229;
-    address internal constant DVN_LZ_LABS_HYPEREVM = 0xC097ab8CD7b053326Dfe9fB3E3a31a0cCe3B526f;
+    address internal constant DVN_NETHERMIND_HYPEREVM = 0x8E49eF1DfAe17e547CA0E7526FfDA81FbaCA810A;
+    address internal constant DVN_HORIZEN_HYPEREVM = 0xBB83Ecf372CbB6daa629ea9A9A53BEC6d601F229;
+    address internal constant DVN_LZ_LABS_HYPEREVM = 0xc097ab8CD7b053326DFe9fB3E3a31a0CCe3B526f;
 
     uint32 internal constant CONFIG_TYPE_EXECUTOR = 1;
     uint32 internal constant CONFIG_TYPE_ULN = 2;
