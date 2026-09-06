@@ -87,6 +87,26 @@ Security stack (Base <-> HyperEVM): optional 2-of-3 DVNs (LayerZero Labs + Nethe
 
 ---
 
+## Fees
+
+Protocol revenue is **1% of staking yield only**. Lock, unlock, and queued claim take **no** protocol fee. Users still pay LayerZero messaging + gas.
+
+| Surface | Charged | Not charged |
+| ------- | ------- | ----------- |
+| **Wrap L / C2** | 1% of *newly accrued* inner yield (`YIELD_FEE_BPS = 100`). 99% to holders via pro-rata redeem / ticket. | Deposit, redeem, claim |
+| **Wrap C1** | Same 1% harvest. Remaining 99% stays as extra backing (no protocol redeem). | — |
+| **hNEST (live)** | 1% of residual HYPE swept on `harvest` (`feeBps = 100`) | NEST deposit / withdraw |
+
+`harvest()` / `harvestToken()` can be called by anyone on wrap lockboxes. A second harvest with no new yield is a no-op — it does not skim the 99%.
+
+Side rewards that are a different token (e.g. QUID claimed onto an xSQUID lockbox): 1% to the protocol, 99% stays in the lockbox until a dedicated rewarder exists. Do not promise those 99% to hToken holders yet.
+
+Deploy wrap with `FEE_RECIPIENT` (defaults to `OWNER`). Owner can rotate it.
+
+Live NestVault `MAX_FEE_BPS` is 500. Current fee is 1%. Raising it would be an owner call, not a redeploy. This work does **not** redeploy NestVault.
+
+---
+
 ## Native: hNEST
 
 First HyperEVM-native vault. Deposits NEST, attaches Nest HEV, issues **hNEST**.
@@ -117,6 +137,7 @@ A **deposit EpochGate** (this-week lockers wait one epoch before hNEST is transf
 src/
   NestVault.sol / HNest.sol / HevAdapter.sol   # native hNEST
   lz/                                          # multi-asset wrap
+    LeafYieldFee.sol                           # 1% of new yield only
     LeafOFTAdapter.sol                         # L lockbox
     LeafOFT.sol                                # L / C2 HyperEVM token
     LeafInboundLockbox.sol                     # C1 lockbox
@@ -151,7 +172,7 @@ forge test
 
 Wrap tests: `test/lz/`. Native tests: `test/NestVault.t.sol`. Deploy scripts: `script/lz/` (`DeployAdapter`, `DeployOFT`, `DeployClosed`, `DeployQueued`, `WirePeers`, `SetSecurityStack`).
 
-Set `OWNER` / `GUARDIAN` to **your** wallets before any mainnet broadcast. Do not leave a bot as owner.
+Set `OWNER` / `GUARDIAN` to **your** wallets before any mainnet broadcast. Do not leave a bot as owner. Set `FEE_RECIPIENT` for wrap lockboxes (defaults to `OWNER`).
 
 ---
 
