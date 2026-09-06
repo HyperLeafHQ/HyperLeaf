@@ -15,8 +15,6 @@ contract LeafVirtualsLockbox is LeafInboundLockbox {
     IVirtualsStake public immutable virtuals;
     uint8 public constant MAX_WEEKS = 104;
 
-    error BadStake();
-
     constructor(
         address token_,
         address virtuals_,

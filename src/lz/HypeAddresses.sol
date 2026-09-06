@@ -22,7 +22,8 @@ library HypeAddresses {
     /// @dev Virtuals Protocol Stake (Base). hVIRTUALMAX Auto Max-lock.
     address internal constant VIRTUALS_STAKE_BASE = 0x60a203ddcDE45fbfb325bdeEA93824B5726b4dF8;
 
-    uint256 internal constant HYPEREVM_CHAIN_ID = 999;
+    /// @dev BLUAI 4-year stake (BSC). stake(amount, 4) / claimAll().
+    address internal constant BLUAI_STAKE_BSC = 0x94b9865Ef26166fEBB7775d12d6dF23B51465040;
     uint256 internal constant BASE_CHAIN_ID = 8453;
     uint256 internal constant BSC_CHAIN_ID = 56;
 }

@@ -1,0 +1,128 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
+import {IBluaiStake} from "src/lz/IBluaiStake.sol";
+import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
+import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
+
+contract MockBluai is ERC20 {
+    constructor() ERC20("BLUAI", "BLUAI") {}
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
+    }
+}
+
+contract MockBluaiStake is IBluaiStake {
+    IERC20 public immutable token;
+    mapping(address => uint256) public staked;
+    uint256 public pending;
+
+    constructor(IERC20 t) {
+        token = t;
+    }
+
+    function seed(uint256 a) external {
+        pending += a;
+        MockBluai(address(token)).mint(address(this), a);
+    }
+
+    function stake(uint256 amount, uint256 years_) external override {
+        require(years_ == 4, "years");
+        token.transferFrom(msg.sender, address(this), amount);
+        staked[msg.sender] += amount;
+    }
+
+    function claimAll() external override {
+        uint256 a = pending;
+        pending = 0;
+        if (a > 0) token.transfer(msg.sender, a);
+    }
+}
+
+contract MockEndpoint is ILayerZeroEndpointV2 {
+    function eid() external pure returns (uint32) {
+        return 30102;
+    }
+
+    function send(MessagingParams calldata, address) external payable returns (MessagingReceipt memory r) {
+        r.guid = bytes32(uint256(1));
+        r.fee = MessagingFee(msg.value, 0);
+    }
+
+    function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
+        return MessagingFee(0.01 ether, 0);
+    }
+
+    function setDelegate(address) external {}
+    function setConfig(address, address, SetConfigParam[] calldata) external {}
+    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) {
+        return "";
+    }
+    function skip(address, uint32, bytes32, uint64) external {}
+}
+
+contract LeafBluaiLockboxTest is Test {
+    MockEndpoint ep;
+    MockBluai bluai;
+    MockBluaiStake stake;
+    LeafInboundLockbox box;
+    address owner = address(0xA11CE);
+    address guardian = address(0xB0B);
+    address feeTo = address(0xFEE);
+    address user = address(0xBEEF);
+    address converter = address(0xC0);
+
+    function setUp() public {
+        ep = new MockEndpoint();
+        bluai = new MockBluai();
+        stake = new MockBluaiStake(bluai);
+        vm.prank(owner);
+        box = new LeafInboundLockbox(address(bluai), address(ep), owner, guardian, feeTo, 1_000 ether);
+        vm.startPrank(owner);
+        box.setFarm(address(stake), IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector);
+        box.setPeer(40362, address(1));
+        box.setHarvester(owner);
+        box.setConverter(converter);
+        box.setConvertYieldToHype(true);
+        vm.stopPrank();
+        bluai.mint(user, 100 ether);
+        vm.deal(user, 1 ether);
+    }
+
+    function testStakeFourYearsOnDeposit() public {
+        vm.startPrank(user);
+        bluai.approve(address(box), 40 ether);
+        box.sendTo{value: 0.01 ether}(40362, user, 40 ether);
+        vm.stopPrank();
+        assertEq(stake.staked(address(box)), 40 ether);
+        assertEq(bluai.balanceOf(address(box)), 0);
+        assertEq(box.totalLocked(), 40 ether);
+    }
+
+    function testClaimAllThenPullIdleBluai() public {
+        vm.startPrank(user);
+        bluai.approve(address(box), 40 ether);
+        box.sendTo{value: 0.01 ether}(40362, user, 40 ether);
+        vm.stopPrank();
+
+        stake.seed(5 ether);
+        box.pokeRewards();
+        assertEq(bluai.balanceOf(address(box)), 5 ether);
+
+        vm.prank(owner);
+        box.pullYield(bluai, converter);
+        assertEq(bluai.balanceOf(converter), 5 ether);
+        assertEq(bluai.balanceOf(address(box)), 0);
+        assertEq(stake.staked(address(box)), 40 ether);
+    }
+
+    function testCannotAllowlistStakeAsClaimTarget() public {
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.BadClaimTarget.selector);
+        box.setClaimTarget(address(stake), true);
+    }
+}

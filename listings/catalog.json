@@ -154,6 +154,10 @@
       "name": "Hyperliquid BLUAI 4Year",
       "innerSymbol": "BLUAI",
       "innerToken": "0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD",
+      "stake": "0x94b9865Ef26166fEBB7775d12d6dF23B51465040",
+      "stakeCall": "stake(uint256,uint256)",
+      "stakeArgs": { "years": 4 },
+      "claim": "pokeRewards → claimAll() on stake (0xd1058e59). Idle BLUAI in the box is yield; principal stays in stake.",
       "yield": {
         "inner": "surplus-bluai",
         "pullInner": true,
@@ -167,7 +171,11 @@
       "lockSeconds": 126144000,
       "exit": "market-only",
       "infra": "evm",
-      "risk": "high",
+      "note": "C1. LeafInboundLockbox.setFarm(stake, stake(uint256,uint256), 4, claimAll). Never unstake. Idle BLUAI after claimAll is yield (reserved=0). High user risk.",
+      "refs": {
+        "stakeTx": "0x8983f3cc864a0052c9206ef4587684bc4c93ed42270b404fc286e981a4c21874",
+        "claimTx": "0xdf677b0f708ae20cab9fbbb1d46ee7e8573e50a4b56fafe7c6576d5fb2e0c057"
+      },
       "testnet": { "sourceChain": "bsc-testnet", "mockInner": true },
       "status": "testnet-ready",
       "priority": 8

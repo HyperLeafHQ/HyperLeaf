@@ -6,6 +6,7 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
+import {IBluaiStake} from "src/lz/IBluaiStake.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
@@ -48,6 +49,13 @@ contract DeployTestnetSource is Script {
             } else {
                 source = address(new LeafInboundLockbox(inner, endpoint, owner, guardian, feeRecipient, cap));
                 console2.log("LeafInboundLockbox", source);
+                if (keccak256(bytes(a.id)) == keccak256("bluai4y") && block.chainid == 56) {
+                    address stake = vm.envOr("BLUAI_STAKE", HypeAddresses.BLUAI_STAKE_BSC);
+                    LeafInboundLockbox(source).setFarm(
+                        stake, IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector
+                    );
+                    console2.log("bluaiStake", stake);
+                }
             }
         } else {
             source = address(new LeafRedeemQueue(inner, endpoint, owner, guardian, feeRecipient, cap, a.redeemDelay));

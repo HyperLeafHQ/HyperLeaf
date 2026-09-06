@@ -17,12 +17,20 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     uint256 public depositCap;
     uint256 public totalLocked;
 
+    /// @dev Optional external stake (BLUAI 4y). Principal leaves this box.
+    address public farm;
+    bytes4 public farmStakeSel;
+    bytes4 public farmClaimSel;
+    uint256 public farmStakeArg;
+
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
+    event FarmSet(address farm, bytes4 stakeSel, uint256 arg, bytes4 claimSel);
 
     error ZeroAmount();
     error CapExceeded();
     error InboundOnly();
+    error BadStake();
 
     constructor(
         address token_,
@@ -60,7 +68,17 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function setClaimTarget(address t, bool allowed) public virtual onlyOwner {
+        if (farm != address(0) && t == farm) revert BadClaimTarget();
         _setClaimTarget(address(innerToken), t, allowed);
+    }
+
+    function setFarm(address farm_, bytes4 stakeSel, uint256 arg, bytes4 claimSel) external onlyOwner {
+        if (farm_ == address(innerToken)) revert BadClaimTarget();
+        farm = farm_;
+        farmStakeSel = stakeSel;
+        farmStakeArg = arg;
+        farmClaimSel = claimSel;
+        emit FarmSet(farm_, stakeSel, arg, claimSel);
     }
 
     function pokeClaim(address t, bytes calldata data) external payable {
@@ -71,14 +89,21 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRewardsSelector(s);
     }
 
-    function pokeRewards() external payable {
-        _pokeRewards(address(innerToken));
+    function pokeRewards() external payable virtual {
+        _afterPokeRewards();
+        if (rewardsSelector != bytes4(0)) _pokeRewards(address(innerToken));
+    }
+
+    function _afterPokeRewards() internal virtual {
+        if (farm == address(0) || farmClaimSel == bytes4(0)) return;
+        (bool ok,) = farm.call(abi.encodeWithSelector(farmClaimSel));
+        if (!ok) revert ClaimFailed();
     }
 
     function pullYield(IERC20 token, address to) external nonReentrant {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
         _requireConverter(to);
-        _pullYield(token, innerToken, totalLocked, to);
+        _pullYield(token, innerToken, _principalReserved(), to);
     }
 
     function harvest() external nonReentrant {
@@ -137,6 +162,16 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (got == 0) revert ZeroAmount();
     }
 
-    /// @dev C1 default: tokens stay in this box. hVIRTUALMAX stakes into Virtuals.
-    function _afterDeposit(uint256) internal virtual {}
+    /// @dev Idle box: no-op. BLUAI: stake(amount, years) into `farm`.
+    function _afterDeposit(uint256 got) internal virtual {
+        if (farm == address(0) || got == 0) return;
+        uint256 before = innerToken.balanceOf(address(this));
+        innerToken.forceApprove(farm, got);
+        (bool ok,) = farm.call(abi.encodeWithSelector(farmStakeSel, got, farmStakeArg));
+        if (!ok || innerToken.balanceOf(address(this)) >= before) revert BadStake();
+    }
+
+    function _principalReserved() internal view virtual returns (uint256) {
+        return farm == address(0) ? totalLocked : 0;
+    }
 }
