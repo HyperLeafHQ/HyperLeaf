@@ -67,6 +67,20 @@ RAM / HYBR official LSTs are **out of scope**. ENA / sENA is **out of scope** (a
 
 ---
 
+## Fees
+
+Protocol revenue is **1% of staking yield only**. Deposits, withdrawals, and wrap lock/unlock/claim take **no** protocol fee. Users still pay LayerZero messaging + gas.
+
+| Surface | Charged | Not charged |
+| ------- | ------- | ----------- |
+| **Wrap L / C2** | 1% of newly accrued inner yield. 99% to holders on redeem. | Lock / unlock / claim |
+| **Wrap C1** | Same 1%. Remaining 99% stays as extra backing. | No protocol redeem |
+| **hNEST (live)** | 1% of residual HYPE on `harvest` (`feeBps = 100`) | NEST deposit / withdraw |
+
+Live NestVault is not redeployed for this. Wrap fee code lives on `feat/lz-oft-wrap`.
+
+---
+
 ## Native: hNEST (live)
 
 | Contract | Address (HyperEVM 999) |
