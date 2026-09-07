@@ -600,7 +600,7 @@
       "sourceEid": 30110,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1. Staked ORDER on Orderly ledger, keyed by lockbox EVM address. Do not freeze OP — receive ORDER OFT on Arb or Base (same 0x4E200fE2). Default source Arb (VALOR pin 0x7a9676a6 type 17). Base is the other receive chain; CREATE2 same lockbox if both. Proxy 0xC8A8Ce0A stakeOrder 0x413aaa60; VALOR sendUserRequest(amount,17) 0xcec09c0d. +7d esORDER claim not pinned. Do not vest esORDER. Unstake 7d types 2/3/4. OP 0x09494257/0x76ea3caf are EOA stakes only. ETH canonical 0xABD4C63d.",
+      "note": "C1. Staked ORDER on Orderly ledger, keyed by lockbox address. Receive ORDER OFT on Arb or Base (0x4E200fE2). You already did OP-stake → Base-withdraw: type 2 0x447d97ac then type 4 0x5aa28832, 1196 ORDER to Base 0xdd65ff33 (2025-09-28). Legacy interest: type 9 0xd64c6995 → type 10 0x8bb2dcc0 → 1.156239 USDC Base 0x93ec1d61. New VALOR type 17 Arb 0x7a9676a6 (esORDER, +7d claim open). Proxy 0xC8A8 sendUserRequest 0xcec09c0d / stakeOrder 0x413aaa60. Do not vest esORDER.",
       "status": "research",
       "priority": 10
     },
