@@ -155,8 +155,10 @@
       "innerSymbol": "BLUAI",
       "innerToken": "0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD",
       "stake": "0x94b9865Ef26166fEBB7775d12d6dF23B51465040",
+      "stakeImpl": "0x9885b2cDf835b5c2b4d9F4d5D930B2A62E25ECe8",
       "stakeCall": "stake(uint256,uint256)",
       "stakeArgs": { "years": 4 },
+      "farmExitSel": "0x2e17de78",
       "claim": "pokeRewards → claimAll() on stake (0xd1058e59). Idle BLUAI in the box is yield; principal stays in stake.",
       "yield": {
         "inner": "surplus-bluai",
@@ -171,7 +173,7 @@
       "lockSeconds": 126144000,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1 until the 4y farm lock ends. No auto-renew. Owner: farmUnstake → restakeIdle (no HyperEVM discount) or setShareExit + dest setRedeemEnabled (arb / buyback). Principal in farm ⇒ reserved 0; after unstake reserved = totalLocked.",
+      "note": "C1 until the 4y farm lock ends. No auto-renew. Proxy 0x94b9865E → impl 0x9885b2cD includes unstake(uint256) 0x2e17de78. No public unstake txs found (4y not matured; do not wait on a live example). Owner after expiry: farmUnstake → restakeIdle or setShareExit.",
       "refs": {
         "stakeTx": "0x8983f3cc864a0052c9206ef4587684bc4c93ed42270b404fc286e981a4c21874",
         "claimTx": "0xdf677b0f708ae20cab9fbbb1d46ee7e8573e50a4b56fafe7c6576d5fb2e0c057"
@@ -404,12 +406,16 @@
       "name": "Hyperleaf sETHFI",
       "innerSymbol": "sETHFI",
       "innerToken": "0x86B5780b606940Eb59A062aA85a07959518c0161",
+      "teller": "0x35dD2463fA7a335b721400C5Ad8Ba40bD85c179b",
+      "delayedWithdraw": "0x1509b1fdD01cAF9697aff514b9574B4A27173Dd2",
       "source": "ethereum",
       "sourceChainId": 1,
+      "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
-      "note": "ether.fi BoringVault sETHFI. Wrap the receipt, never the raw ETHFI. DelayedWithdraw exists — confirm we never call it (L) vs C2.",
-      "status": "later",
+      "yield": { "inner": "keep-sethfi", "pullInner": false, "toHype": ["airdrop-erc20s"] },
+      "note": "L wrap of transferable sETHFI (BoringGovernance share), not raw ETHFI. Same address on ETH/Arb/Base/OP/Scroll — deposit on Ethereum (most ETHFI in the vault). Redeem sETHFI 1:1; never call DelayedWithdraw / requestOnChainWithdraw (~10d to ETHFI). NAV sits in sETHFI (vault holds more ETHFI than share supply). Points (ether.fi / Karak / Symbiotic) accrue to the lockbox — same eco-claim class as KAITO, do not block L. ETHFI is not a Unit native. Alias hsETHFI.",
+      "status": "research",
       "priority": 12
     },
     {

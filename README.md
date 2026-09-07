@@ -220,7 +220,7 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | later | **hveAERO** | ve-NFT | Base | veAERO 721 | After Sky urn pattern. |
 | hold | **hstkAAVE** | L | Ethereum | stkAAVE | Legacy Safety Module. Umbrella is the new backstop. Do not ship until SM fate + voting delegate + HyperEVM spot gap are clear. |
 | watch | **Umbrella** | risk | Ethereum | aUSDC / GHO … | Not “support AAVE”. Separate product if we ever tokenize a specific cover pool. |
-| later | **hETHFI** | L | Ethereum | sETHFI | Wrap receipt, not raw ETHFI. |
+| later | **hETHFI** | L | Ethereum | sETHFI | Wrap receipt. Never 10d DelayedWithdraw. NAV in sETHFI. |
 | later | **hstDRV** | C2 | Ethereum | stDRV 28d | DRV already on HyperEVM. |
 | watch | **hSNX / hDYDX / hveCRV / hSYRUP** | | | | SNX stake retired; SYRUP stake sunset; veCRV after veAERO. |
 | 5 | **hsWBERA** | L | Berachain | sWBERA | Official PoL 4626. Wait LZ. |
@@ -264,6 +264,9 @@ Blocked until CREATE2 omnichain holder. Extra-chain eco/agent claims.
 
 **Phase H — NestVault v2 (optional redeploy)**
 Verified compound 1% + EpochGate mint delay (PR #5). Live 10k test NEST can stay; do not migrate user funds until v2 is tested.
+
+**Later — HyperEVM strategy vaults (not Leaf listings)**
+ERC-4626 + CoreWriter + L1Read can tokenize a HyperCore *strategy* (funding basis, HIP-3 book, spot basket). That *creates* trading risk. Crowded product. Do not put it on the Leaf ticker list. Revisit only after hxSQUID / hcbETH are live and used as collateral.
 
 ---
 
