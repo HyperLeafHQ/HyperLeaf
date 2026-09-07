@@ -155,6 +155,14 @@ SLVR `0x791229E3…C29aD9` is a 1-minute grid lottery. Token has **2% buy/sell t
 
 Twofold DualPool on Robinhood. TWO `0x2A4a33A2…88d5` (fixed 1B, no tax, ~$1.2M). **vTWO** `0x5c02401e…5950` is 1:1 vote wrap, unwrap anytime — occupancy. **StakingVaultV2** `0x06E463fD…B3A9` 1h unstake, TWO rewards. **TwoStakingUSDG** `0x9CF18bB1…E9e3` 7d unstake, USDG rewards. LP is ERC-1155. No L adapter. C2 only after a receipt exists.
 
+### hSNX (parked)
+
+420 Pool closed **2026-06-19**. SNX without debt returned. SIP-423 Phase 4 staking reform is **CONTRACT BUILD DEFERRED**. Official docs: previous SNX staking is not active. No inner. Do not wrap SNX.
+
+### hstDYDX (later — Cosmos)
+
+Do not wrap ethDYDX. Yield is validator stake on **dYdX Chain** (USDC fees, ~21–30d unbond, address-keyed). Liquid receipt is **Stride stDYDX**. Same class as hJupSOL: non-EVM lockbox first. Never undelegate from the lockbox.
+
 ### hsWBERA (research — wrap sWBERA only, never the 7d queue)
 
 Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.72e7.
