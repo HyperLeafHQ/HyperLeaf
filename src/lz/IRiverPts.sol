@@ -6,10 +6,10 @@ pragma solidity ^0.8.24;
 ///         Calldata layout: (uint256 ptsIn, uint256 p1=1, uint256 epochIndex, uint256 minRiverOut).
 ///         Epoch 7 = max season date (this fill unlocked 2028-10-01).
 library RiverPtsAddresses {
-    address internal constant PTS = 0xfc6BE825925B7A83d131e33b46EfeF9084F0e014;
+    address internal constant PTS = 0xfc6be825925B7A83d131E33b46EFeF9084f0E014;
     address internal constant RIVER = 0xdA7AD9dea9397cffdDAE2F8a052B82f1484252B3;
     address internal constant CONVERT = 0xFdC8AeCF0Dd49b12583253809A9f188AF19c83DA;
-    address internal constant SRIVER_V2 = 0xd1D5E7Fa0D57d1F9fd3c876497006e8CaBE24e1A;
+    address internal constant SRIVER_V2 = 0xD1d5E7fa0d57d1F9FD3c876497006E8CaBe24e1A;
     bytes4 internal constant CONVERT_SELECTOR = 0x03063b98;
     uint256 internal constant EPOCH_MAX = 7;
 }
