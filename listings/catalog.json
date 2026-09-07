@@ -402,7 +402,7 @@
     {
       "id": "hethfi",
       "kind": "L",
-      "symbol": "hETHFI",
+      "symbol": "hsETHFI",
       "name": "Hyperleaf sETHFI",
       "innerSymbol": "sETHFI",
       "innerToken": "0x86B5780b606940Eb59A062aA85a07959518c0161",
