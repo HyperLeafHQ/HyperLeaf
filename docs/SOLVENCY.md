@@ -90,9 +90,19 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Worst-case loss | min(cap, maxPerDay) on principal. KING/ETHFI/EIGEN are yield, not backing |
 | Test | L suite. Deposit 0x24a993c9. Do not treat empty ETHFI/EIGEN distributors as current yield |
 
-### hgSOON (research — row incomplete)
+### hgSOON (research — address pinned, user unstake tx not found)
 
-gSOON is a transferable LST (rate vs SOON, 7d unstake we never call). Arkham: ~199M SOON in “GSOON” vs ~187M on Solana — Ethereum/BSC first. **Canonical address not pinned.** `0xcC4…` on Arkham is truncated. Do not write an adapter until a gSOON transfer or stake tx gives the full token + vault.
+| | |
+| --- | --- |
+| Canonical backing | gSOON pulled (`0xcC48B55F…e0F7` on **BSC**, ERC-4626) |
+| Accounting unit | 1 hgSOON = 1 gSOON. Rate vs SOON lives in gSOON (~1.744) |
+| Core invariant | L: `supply ≤ totalLocked gSOON` + gSOON/SOON vault ceiling |
+| Proof source | `totalLocked` + `previewRedeem` / inner supply. **Never** 7d unstake |
+| Yield | in the gSOON/SOON rate. Do not pull gSOON as harvest |
+| Failure | vault upgrade; 7d queue if someone calls redeem on our lockbox |
+| Auto-pause | ceiling / health |
+| Worst-case loss | min(cap, maxPerDay) |
+| Test | L suite. **2025-09-23 0x113561… on BSC: no Transfer/Withdraw/cooldown on this vault.** Need a redeem tx for the 7d selector |
 
 ### hAVNT (research → L wrap of stkAVNT, not raw AVNT)
 

@@ -10,7 +10,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | 1 | hxSQUID | L | Base | First wrap. claimRewards → QUID → HYPE |
 | 2 | hcbETH | L | Base | PoS in the rate |
 | later | **hsETHFI** | L | Ethereum | Receipt only. Never 10d DelayedWithdraw |
-| later | **hgSOON** | L | Ethereum first | Need full gSOON address + stake tx |
+| later | **hgSOON** | L | **BSC** `0xcC48…` | ERC-4626. Never 7d unstake. User 2025-09-23 tx not on this wallet |
 | later | **hAVNT** | L | Base | Wrap **stkAVNT** `0xd546…d9e9`, never cooldown. 20% slash is the yield cost |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
