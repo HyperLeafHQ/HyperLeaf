@@ -122,6 +122,10 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Worst-case loss | 20% slash of locked stack + daily cap on residual |
 | Test | L suite + “we never call cooldown”. Your pin: Base `0x7aaf51e8` (2025-10-02 17:59 UTC / 10-03 01:59 HKT) `stake(self, 6.1e18)` — 6.1 AVNT in, 6.1 stkAVNT minted to `0x113561…`. 400 AVNT stake not in ±3d of this tx |
 
+### hveUP (watch — not L, no adapter)
+
+up. is Velodrome-line ve(3,3) on **Robinhood Chain 4663**. Liquid **UP** `0x57C0E45c…B4F1` is the emission token. Yield sits on **veUP** escrow NFT `0x5d321dE3…B7B6` (fees + votes). Wrapping UP would be wrapping spot. Wrapping veUP needs the same NFT lockbox as hveAERO. LZ exists (eid **30416**, EndpointV2 `0x6F475642…`). Do not write LeafOFTAdapter for this ticker.
+
 ### hsWBERA (research — wrap sWBERA only, never the 7d queue)
 
 Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.72e7.

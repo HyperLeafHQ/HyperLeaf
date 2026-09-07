@@ -14,6 +14,7 @@ library LayerZeroAddresses {
     uint32 internal constant EID_OP = 30111;
     uint32 internal constant EID_ORDERLY = 30213;
     uint32 internal constant EID_BERA = 30362;
+    uint32 internal constant EID_ROBINHOOD = 30416;
     uint32 internal constant EID_BERA_TESTNET = 40371;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
@@ -56,6 +57,7 @@ library LayerZeroAddresses {
         if (chainId == 97) return ENDPOINT_BSC_TESTNET;
         if (chainId == 42161 || chainId == 10) return ENDPOINT_BSC; // canonical V2, same as Base
         if (chainId == 80094) return ENDPOINT_BERA;
+        if (chainId == 4663) return ENDPOINT_BERA; // Robinhood mainnet: same CREATE2 as Bera (LZ docs)
         if (chainId == 80069) revert("lz: Bepolia EndpointV2 not deployed");
         if (chainId == 999) return ENDPOINT_HYPEREVM;
         if (chainId == 998) return ENDPOINT_HYPEREVM_TESTNET;

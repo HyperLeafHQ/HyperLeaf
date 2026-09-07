@@ -16,6 +16,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
 | later | **hORDER** | C1 | Arb/Base OFT CREATE2 | Address-keyed lockbox in code. esORDER claim +7d |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
+| later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |
 | later | **hsWBERA** | L | Berachain | Wrap sWBERA. Never 4626 withdraw/redeem (7d NFT queue) |
 | later | hAEVO | C1 | Ethereum | No transferable receipt |
 | later | hJupSOL / hANSEM | L | Solana | Needs Solana lockbox |

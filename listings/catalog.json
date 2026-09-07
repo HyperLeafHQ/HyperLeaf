@@ -283,6 +283,24 @@
       "priority": 15
     },
     {
+      "id": "hveup",
+      "kind": "ve-nft",
+      "symbol": "hveUP",
+      "name": "Hyperleaf veUP",
+      "innerSymbol": "veUP",
+      "innerToken": "0x5d321dE36F0bf98D92b291280514F3878582B7B6",
+      "underlying": "0x57C0E45cB534413D1C20A4240955d6bB250BB4F1",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "yield": { "inner": "pool-fees-and-incentives", "pullInner": false, "toHype": ["fee-erc20s"] },
+      "note": "up. (@uponrh) ve(3,3) DEX on Robinhood Chain. Do not wrap liquid UP — no yield in the ERC-20. Productive form is veUP NFT (1w–4y or permanent). Same blocker as hveAERO: NFT lockbox. LZ live eid 30416 EndpointV2 0x6F475642… (same CREATE2 as Bera). Fees to voters in pool tokens, not a single harvest token. After ve-NFT custody, C1 market-only.",
+      "status": "later-nft-lockbox",
+      "priority": 16
+    },
+    {
       "id": "hstkaave",
       "kind": "L",
       "symbol": "hstkAAVE",
