@@ -13,12 +13,16 @@ import {ILeafHypeRewarder} from "./ILeafHypeRewarder.sol";
 contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     error ZeroAmount();
 
+    error SupplyCapExceeded();
+
     ILeafHypeRewarder public hypeRewarder;
     bytes32 public listingId;
+    uint256 public supplyCap;
 
     event HypeRewarderSet(address indexed rewarder, bytes32 listingId);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
+    event SupplyCapSet(uint256 cap);
 
     constructor(string memory name_, string memory symbol_, address endpoint_, address owner_, address guardian_)
         LeafOApp(endpoint_, owner_, guardian_)
@@ -32,6 +36,17 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         emit HypeRewarderSet(rewarder, listingId_);
     }
 
+    function setSupplyCap(uint256 cap) public onlyOwner {
+        if (cap == 0) revert LimitsUnset();
+        supplyCap = cap;
+        emit SupplyCapSet(cap);
+    }
+
+    function openBridge() public override onlyOwner {
+        if (supplyCap == 0) revert LimitsUnset();
+        super.openBridge();
+    }
+
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
         public
         payable
@@ -41,8 +56,9 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
+        _takeQuota(amount);
         _burn(msg.sender, amount);
-        bytes memory payload = abi.encode(to, amount);
+        bytes memory payload = encodeBridge(to, amount);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
             _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, amount, receipt.guid);
@@ -60,9 +76,11 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         address,
         bytes calldata
     ) internal override whenNotPaused {
-        (bytes32 toB, uint256 amount) = abi.decode(message, (bytes32, uint256));
+        (bytes32 toB, uint256 amount) = _decodeBridge(message);
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();
+        _takeQuota(amount);
+        if (totalSupply() + amount > supplyCap) revert SupplyCapExceeded();
         _mint(to, amount);
         emit BridgedIn(to, origin.srcEid, amount, guid);
     }

@@ -14,7 +14,17 @@ Not for users. README is the public product. This file is for whoever broadcasts
 
 Set these to **your** wallets before any mainnet broadcast. Do not leave a grok bot as owner. Four different EOAs.
 
-Testnet copy-paste: [`GROK_BOT_TESTNET.md`](GROK_BOT_TESTNET.md). Do not set `INNER_TOKEN` to live xSQUID / cbETH / BLUAI. Skip `SetSecurityStack` on HyperEVM testnet.
+## Peg (do this before mint)
+
+See [`PEG.md`](PEG.md). Liquid 7 Sep 2026: unbacked receipts took a real peg-out.
+
+1. `setListingTag` (frozen). Same tag on source and OFT.
+2. `setLimits(maxPerTx, maxPerDay)` and OFT `setSupplyCap` = source `depositCap`.
+3. Wire peers. Mainnet: `SetSecurityStack` (2-of-3 + HyperLeaf required DVN).
+4. Read the live config on-chain. Then `openBridge` on **both** sides.
+5. Guardian is a different key. `closeBridge` pauses and keeps mint closed after unpause.
+
+Do not `openBridge` from a bot. A merged PR is not an open bridge.
 
 ## Invariant (merge gate)
 

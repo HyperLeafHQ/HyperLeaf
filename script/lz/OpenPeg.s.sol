@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Script, console2} from "forge-std/Script.sol";
+import {LeafOApp} from "src/lz/LeafOApp.sol";
+import {LeafOFT} from "src/lz/LeafOFT.sol";
+import {AssetCatalog} from "src/lz/AssetCatalog.sol";
+
+/// @notice Set listingTag + per-tx/day caps. OFT also gets supplyCap.
+///         Set OPEN_BRIDGE=true only after peers and DVN are verified on-chain.
+contract OpenPeg is Script {
+    function run() external {
+        address oapp = vm.envAddress("OAPP");
+        string memory id = vm.envOr("ASSET", string("hxsquid"));
+        AssetCatalog.Listing memory a = AssetCatalog.get(id);
+        bytes32 tag = keccak256(bytes(a.id));
+        uint256 cap = vm.envOr("PEG_CAP", a.defaultCap);
+        bool open = vm.envOr("OPEN_BRIDGE", false);
+
+        vm.startBroadcast();
+        LeafOApp app = LeafOApp(oapp);
+        app.setListingTag(tag);
+        app.setLimits(cap, cap);
+        try LeafOFT(oapp).setSupplyCap(cap) {} catch {}
+        if (open) app.openBridge();
+        vm.stopBroadcast();
+
+        console2.log("peg tag", vm.toString(tag));
+        console2.log("cap", cap);
+        console2.log("opened", open);
+    }
+}

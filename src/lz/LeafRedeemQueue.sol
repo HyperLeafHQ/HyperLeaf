@@ -142,7 +142,9 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         totalLocked += got;
         _accountDeposit(got);
 
-        bytes memory payload = abi.encode(to, got);
+        _takeQuota(got);
+
+        bytes memory payload = encodeBridge(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
             _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, got, receipt.guid);
@@ -161,6 +163,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (block.timestamp < t.eta) revert NotMature();
         t.claimed = true;
         pendingTicketAssets -= t.amount;
+        _requireCash(innerToken, t.amount, pendingTicketAssets);
         innerToken.safeTransfer(t.to, t.amount);
         emit RedeemClaimed(id, t.to, t.amount);
     }
@@ -172,13 +175,16 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         address,
         bytes calldata
     ) internal override nonReentrant whenNotPaused {
-        (bytes32 toB, uint256 amount) = abi.decode(message, (bytes32, uint256));
+        (bytes32 toB, uint256 amount) = _decodeBridge(message);
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();
         if (amount > totalLocked) revert InsufficientLocked();
+        _takeQuota(amount);
+        if (innerToken.balanceOf(address(this)) < totalLocked + pendingTicketAssets) revert Underbacked();
 
         _harvestInner(innerToken, pendingTicketAssets);
         uint256 assetsOut = _assetsForShares(innerToken, amount, totalLocked, pendingTicketAssets);
+        _requireCash(innerToken, assetsOut, pendingTicketAssets);
         totalLocked -= amount;
         pendingTicketAssets += assetsOut;
         uint256 id = nextTicketId++;

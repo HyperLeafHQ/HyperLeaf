@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {LeafClosedOFT} from "src/lz/LeafClosedOFT.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
@@ -53,7 +54,7 @@ contract MockEndpoint is ILayerZeroEndpointV2 {
     }
 }
 
-contract LeafClosedTest is Test {
+contract LeafClosedTest is PegReady {
     MockEndpoint epSrc;
     MockEndpoint epDst;
     MockToken token;
@@ -83,6 +84,8 @@ contract LeafClosedTest is Test {
         queue.setPeer(DST_EID, address(queuedOft));
         queuedOft.setPeer(SRC_EID, address(queue));
         vm.stopPrank();
+        _openPair(box, oft, owner, 1_000e18);
+        _openPair(queue, queuedOft, owner, 1_000e18);
         token.mint(user, 100e18);
         vm.deal(user, 1 ether);
     }
@@ -99,7 +102,7 @@ contract LeafClosedTest is Test {
         box.sendTo{value: 0.01 ether}(DST_EID, user, 10e18);
         vm.stopPrank();
 
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(10e18));
+        bytes memory payload = _msg(oft, user, 10e18);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: SRC_EID, sender: bytes32(uint256(uint160(address(box)))), nonce: 1
         });
@@ -135,7 +138,7 @@ contract LeafClosedTest is Test {
         token.approve(address(queue), 8e18);
         queue.sendTo{value: 0.01 ether}(DST_EID, user, 8e18);
         vm.stopPrank();
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(8e18));
+        bytes memory payload = _msg(queuedOft, user, 8e18);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: SRC_EID, sender: bytes32(uint256(uint160(address(queue)))), nonce: 1
         });
@@ -144,7 +147,7 @@ contract LeafClosedTest is Test {
 
         vm.prank(user);
         queuedOft.sendTo{value: 0.01 ether}(SRC_EID, user, 3e18);
-        bytes memory back = abi.encode(bytes32(uint256(uint160(user))), uint256(3e18));
+        bytes memory back = _msg(queue, user, 3e18);
         ILayerZeroEndpointV2.Origin memory o2 = ILayerZeroEndpointV2.Origin({
             srcEid: DST_EID, sender: bytes32(uint256(uint160(address(queuedOft)))), nonce: 1
         });
@@ -170,7 +173,7 @@ contract LeafClosedTest is Test {
         token.approve(address(queue), 8e18);
         queue.sendTo{value: 0.01 ether}(DST_EID, user, 8e18);
         vm.stopPrank();
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(8e18));
+        bytes memory payload = _msg(queuedOft, user, 8e18);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: SRC_EID, sender: bytes32(uint256(uint160(address(queue)))), nonce: 1
         });
@@ -182,7 +185,7 @@ contract LeafClosedTest is Test {
 
         vm.prank(user);
         queuedOft.sendTo{value: 0.01 ether}(SRC_EID, user, 8e18);
-        bytes memory back = abi.encode(bytes32(uint256(uint160(user))), uint256(8e18));
+        bytes memory back = _msg(queue, user, 8e18);
         ILayerZeroEndpointV2.Origin memory o2 = ILayerZeroEndpointV2.Origin({
             srcEid: DST_EID, sender: bytes32(uint256(uint160(address(queuedOft)))), nonce: 1
         });
@@ -201,7 +204,7 @@ contract LeafClosedTest is Test {
         token.approve(address(queue), 8e18);
         queue.sendTo{value: 0.01 ether}(DST_EID, user, 8e18);
         vm.stopPrank();
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(8e18));
+        bytes memory payload = _msg(queuedOft, user, 8e18);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: SRC_EID, sender: bytes32(uint256(uint160(address(queue)))), nonce: 1
         });
@@ -209,7 +212,7 @@ contract LeafClosedTest is Test {
 
         vm.prank(user);
         queuedOft.sendTo{value: 0.01 ether}(SRC_EID, user, 3e18);
-        bytes memory back = abi.encode(bytes32(uint256(uint160(user))), uint256(3e18));
+        bytes memory back = _msg(queue, user, 3e18);
         ILayerZeroEndpointV2.Origin memory o2 = ILayerZeroEndpointV2.Origin({
             srcEid: DST_EID, sender: bytes32(uint256(uint160(address(queuedOft)))), nonce: 1
         });

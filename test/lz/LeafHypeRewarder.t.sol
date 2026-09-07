@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
@@ -36,7 +37,7 @@ contract MockEndpoint is ILayerZeroEndpointV2 {
     function skip(address, uint32, bytes32, uint64) external {}
 }
 
-contract LeafHypeRewarderTest is Test {
+contract LeafHypeRewarderTest is PegReady {
     MockEndpoint epSrc;
     MockEndpoint epDst;
     MockToken inner;
@@ -71,6 +72,7 @@ contract LeafHypeRewarderTest is Test {
         adapter.setPeer(DST, address(oft));
         oft.setPeer(SRC, address(adapter));
         vm.stopPrank();
+        _openPair(adapter, oft, owner, 10_000e18);
         inner.mint(alice, 100e18);
         vm.deal(alice, 1 ether);
     }
@@ -145,7 +147,7 @@ contract LeafHypeRewarderTest is Test {
         adapter.sendTo{value: 0.01 ether}(DST, alice, 50e18);
         vm.stopPrank();
         inner.mint(address(adapter), 10e18);
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(alice))), uint256(50e18));
+        bytes memory payload = _msg(adapter, alice, 50e18);
         ILayerZeroEndpointV2.Origin memory origin =
             ILayerZeroEndpointV2.Origin({srcEid: DST, sender: bytes32(uint256(uint160(address(oft)))), nonce: 1});
         vm.prank(address(epSrc));
@@ -159,7 +161,7 @@ contract LeafHypeRewarderTest is Test {
     }
 
     function _deliverTo(address to, uint256 amount) internal {
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(to))), amount);
+        bytes memory payload = _msg(oft, to, amount);
         ILayerZeroEndpointV2.Origin memory origin =
             ILayerZeroEndpointV2.Origin({srcEid: SRC, sender: bytes32(uint256(uint160(address(adapter)))), nonce: 1});
         vm.prank(address(epDst));

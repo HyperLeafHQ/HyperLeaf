@@ -64,6 +64,20 @@ forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
 
 Sets `convertYieldToHype`, harvester, converter. hxSQUID also sets `rewardsSelector` `0x9a99b4f0`.
 
+## 4b. Peg (both sides) — required before smoke
+
+```
+ASSET=hxsquid OAPP=$SOURCE \
+forge script script/lz/OpenPeg.s.sol:OpenPeg \
+  --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
+
+ASSET=hxsquid OAPP=$OFT \
+forge script script/lz/OpenPeg.s.sol:OpenPeg \
+  --rpc-url hyperevm_testnet --broadcast --private-key $PRIVATE_KEY
+```
+
+Read `listingTag`, `maxPerTx`, peers on-chain. Then rerun with `OPEN_BRIDGE=true`. Mint is closed until that flag.
+
 ## 5. Smoke deposit (Base → 998)
 
 ```

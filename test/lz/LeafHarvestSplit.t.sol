@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
@@ -68,7 +69,7 @@ contract MockQuidFarm is ILeafRewardSource {
     }
 }
 
-contract LeafHarvestSplitTest is Test {
+contract LeafHarvestSplitTest is PegReady {
     MockEndpoint ep;
     MockToken xsquid;
     MockToken quid;
@@ -101,6 +102,8 @@ contract LeafHarvestSplitTest is Test {
         lockbox.setConvertYieldToHype(true);
         lockbox.setPeer(30367, address(1));
         vm.stopPrank();
+        _openSrc(adapter, owner, 10_000e18);
+        _openSrc(lockbox, owner, 10_000e18);
         xsquid.mint(alice, 100e18);
         bluai.mint(alice, 100e18);
         vm.deal(alice, 1 ether);

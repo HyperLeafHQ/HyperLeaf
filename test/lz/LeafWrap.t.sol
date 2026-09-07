@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
@@ -42,7 +43,7 @@ contract MockEndpoint is ILayerZeroEndpointV2 {
     }
 }
 
-contract LeafWrapTest is Test {
+contract LeafWrapTest is PegReady {
     MockEndpoint epSrc;
     MockEndpoint epDst;
     MockToken token;
@@ -67,6 +68,7 @@ contract LeafWrapTest is Test {
         adapter.setPeer(DST_EID, address(oft));
         oft.setPeer(SRC_EID, address(adapter));
         vm.stopPrank();
+        _openPair(adapter, oft, owner, 1_000e18);
         token.mint(user, 100e18);
         vm.deal(user, 1 ether);
     }
@@ -76,7 +78,7 @@ contract LeafWrapTest is Test {
         token.approve(address(adapter), 10e18);
         adapter.sendTo{value: 0.01 ether}(DST_EID, user, 10e18);
         vm.stopPrank();
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(10e18));
+        bytes memory payload = _msg(oft, user, 10e18);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: SRC_EID, sender: bytes32(uint256(uint160(address(adapter)))), nonce: 1
         });
@@ -90,7 +92,7 @@ contract LeafWrapTest is Test {
         testLockMintsOnDeliver();
         vm.prank(user);
         oft.sendTo{value: 0.01 ether}(SRC_EID, user, 4e18);
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(4e18));
+        bytes memory payload = _msg(adapter, user, 4e18);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: DST_EID, sender: bytes32(uint256(uint160(address(oft)))), nonce: 1
         });
@@ -109,7 +111,7 @@ contract LeafWrapTest is Test {
         assertEq(token.balanceOf(feeTo), 1e18);
         vm.prank(user);
         oft.sendTo{value: 0.01 ether}(SRC_EID, user, 10e18);
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(user))), uint256(10e18));
+        bytes memory payload = _msg(oft, user, 10e18);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: DST_EID, sender: bytes32(uint256(uint160(address(oft)))), nonce: 1
         });

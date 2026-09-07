@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
@@ -71,7 +72,7 @@ contract MockEndpoint is ILayerZeroEndpointV2 {
     function skip(address, uint32, bytes32, uint64) external {}
 }
 
-contract LeafBluaiLockboxTest is Test {
+contract LeafBluaiLockboxTest is PegReady {
     MockEndpoint ep;
     MockBluai bluai;
     MockBluaiStake stake;
@@ -96,6 +97,7 @@ contract LeafBluaiLockboxTest is Test {
         box.setConverter(converter);
         box.setConvertYieldToHype(true);
         vm.stopPrank();
+        _openSrc(box, owner, 1_000 ether);
         bluai.mint(user, 100 ether);
         vm.deal(user, 1 ether);
     }

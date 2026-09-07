@@ -68,7 +68,7 @@ HyperEVM Leaf ticker
         └── C2: burn → wait → claim on source
 ```
 
-HyperLeaf does not run a 24h mint relayer. Listings do not share backing.
+HyperLeaf does not run a 24h mint relayer. Listings do not share backing. The bridge starts **closed**. Caps, a listing tag on every message, and a cash check on redeem are in the contracts — see [`docs/PEG.md`](docs/PEG.md).
 
 **Yield, in HYPE.** Surplus on the source (claimed QUID, extra farm tokens, airdrop ERC-20s) is converted to WHYPE. 99% is claimable by Leaf holders. 1% is protocol revenue. The inner receipt that backs the ticker is never pulled as “yield.”
 

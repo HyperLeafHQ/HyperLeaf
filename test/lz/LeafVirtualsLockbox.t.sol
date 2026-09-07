@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
@@ -54,7 +55,7 @@ contract MockEndpoint is ILayerZeroEndpointV2 {
     function skip(address, uint32, bytes32, uint64) external {}
 }
 
-contract LeafVirtualsLockboxTest is Test {
+contract LeafVirtualsLockboxTest is PegReady {
     MockEndpoint ep;
     MockToken virtual_;
     MockVirtualsStake stake;
@@ -76,6 +77,7 @@ contract LeafVirtualsLockboxTest is Test {
         oft = new LeafClosedOFT("Hyperleaf VIRTUAL MAX", "hVIRTUALMAX", uint32(104 weeks), address(ep), owner, guardian);
         box.setPeer(30367, address(uint160(uint256(uint160(address(oft))))));
         vm.stopPrank();
+        _openPair(box, oft, owner, 10_000e18);
         virtual_.mint(alice, 100e18);
         vm.deal(alice, 1 ether);
     }

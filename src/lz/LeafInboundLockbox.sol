@@ -173,7 +173,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _accountDeposit(got);
         _afterDeposit(got);
 
-        bytes memory payload = abi.encode(to, got);
+        _takeQuota(got);
+
+        bytes memory payload = encodeBridge(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
             _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, got, receipt.guid);
@@ -192,11 +194,13 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         bytes calldata
     ) internal override nonReentrant whenNotPaused {
         if (!shareExitEnabled) revert InboundOnly();
-        (bytes32 toB, uint256 amount) = abi.decode(message, (bytes32, uint256));
+        (bytes32 toB, uint256 amount) = _decodeBridge(message);
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();
         if (amount > totalLocked) revert InsufficientLocked();
         if (farmPrincipalOut) revert BadStake();
+        _takeQuota(amount);
+        _requireCash(innerToken, amount, 0);
         totalLocked -= amount;
         innerToken.safeTransfer(to, amount);
         emit BridgedIn(to, origin.srcEid, amount, guid);
