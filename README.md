@@ -49,6 +49,7 @@ A Leaf ticker is a normal ERC-20 on HyperEVM. Integrations should:
 1. Read the listing **kind** (L / C1 / C2) before treating it as instant collateral.
 2. Price C1 against the book, not against a 1:1 oracle to the inner token.
 3. Isolate listings. A pause on hxSQUID must not touch hNEST or hcbETH.
+4. Treat [`docs/SOLVENCY.md`](docs/SOLVENCY.md) as the reason the ticker exists — not the catalog.
 
 When a ticker has a real book, it can be **linked as a Core spot** so lending and HIP-3 read HyperCore prices. That is the path from “wrapper” to default collateral. HyperLeaf does not run a trading vault and does not take directional risk in HyperCore.
 

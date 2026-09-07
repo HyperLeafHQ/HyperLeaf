@@ -27,6 +27,10 @@ See [`PEG.md`](PEG.md). Liquid 7 Sep 2026: unbacked receipts took a real peg-out
 
 Do not `openBridge` from a bot. A merged PR is not an open bridge.
 
+## New listing
+
+Do not open a Solidity adapter until [`SOLVENCY.md`](SOLVENCY.md) has a filled row: core invariant, proof source, failure, pause, max loss, test file. `catalog.json` is not that row. L/C1/C2 is not that row.
+
 ## Invariant (merge gate)
 
 ```
