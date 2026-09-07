@@ -132,7 +132,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function pullYield(IERC20 token, address to) external nonReentrant {
-        if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
+        if (msg.sender != harvester) revert NotHarvester();
         _requireConverter(to);
         if (address(token) == address(innerToken)) revert CannotPullInner();
         _requireConvertOn();

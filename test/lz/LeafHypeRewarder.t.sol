@@ -7,6 +7,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafHypeRewarder} from "src/lz/LeafHypeRewarder.sol";
+import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockToken is ERC20 {
@@ -264,6 +265,13 @@ contract LeafHypeRewarderTest is PegReady {
         vm.prank(alice);
         vm.expectRevert();
         adapter.pullYield(inner, alice);
+    }
+
+    function testOwnerCannotPull() public {
+        inner.mint(address(adapter), 1e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NotHarvester.selector);
+        adapter.pullYield(inner, harvester);
     }
 
     function testConvertRedeemIsOneToOne() public {

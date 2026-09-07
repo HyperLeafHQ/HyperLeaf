@@ -31,6 +31,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error CapExceeded();
     error InsufficientLocked();
     error CannotPullInner();
+    error ConfigFrozen();
 
     constructor(
         address token_,
@@ -103,10 +104,12 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function setRateKind(RateKind kind) external onlyOwner {
+        if (totalLocked > 0) revert ConfigFrozen();
         _setRateKind(innerToken, kind);
     }
 
     function setRetainRateYield(bool retain) external onlyOwner {
+        if (totalLocked > 0) revert ConfigFrozen();
         _setRetainRateYield(retain);
     }
 
@@ -122,7 +125,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
     /// @notice Pull side-token surplus, or rate-implied inner surplus, to converter.
     function pullYield(IERC20 token, address to) external nonReentrant {
-        if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
+        if (msg.sender != harvester) revert NotHarvester();
         _requireConverter(to);
         if (address(token) == address(innerToken)) {
             if (rateKind == RateKind.None) revert CannotPullInner();

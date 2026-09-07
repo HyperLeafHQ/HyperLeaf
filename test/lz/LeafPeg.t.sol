@@ -318,6 +318,17 @@ contract LeafPegTest is PegReady {
         oft.lzReceive(origin, bytes32(uint256(1)), payload, address(0), "");
     }
 
+    function testPeerFrozenAfterOpen() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.PeerFrozen.selector);
+        adapter.setPeer(DST, address(0xBEEF));
+        vm.prank(owner);
+        adapter.setPeer(30102, address(0xBEEF));
+        assertEq(adapter.peers(30102), bytes32(uint256(uint160(address(0xBEEF)))));
+        assertEq(adapter.peers(DST), bytes32(uint256(uint160(address(oft)))));
+    }
+
     function testCrossListingTagDoesNotMintOther() public {
         _openPair(adapter, oft, owner, 1_000e18);
         vm.startPrank(owner);

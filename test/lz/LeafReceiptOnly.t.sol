@@ -152,6 +152,7 @@ contract LeafReceiptOnlyTest is PegReady {
         _noUnbond();
         vm.startPrank(owner);
         adapter.setConverter(owner);
+        adapter.setHarvester(owner);
         vm.expectRevert(LeafOFTAdapter.CannotPullInner.selector);
         adapter.pullYield(inner, owner);
         vm.stopPrank();

@@ -65,3 +65,19 @@ upstream bug → fake inner → HyperLeaf send() → real hToken → normal rede
 ```
 
 Keys can be perfect. Pause mint first. Do not keep minting while you “look into it.”
+
+## Production keys (split; do not delete the functions)
+
+Luna: operational security is the weak score, not “delete owner.” Owner is a **multisig**, not a hot wallet. Four roles, four keys. Constructor already rejects keeper == owner on the converter.
+
+| Role | Holds | Can | Cannot |
+| ---- | ----- | --- | ------ |
+| **Owner** (multisig) | LZ delegate, restore, unpause, caps, DVN config, `abortCredit`, rotate harvester/converter | Resume after halt. Rotate a burned keeper. Skip a stuck LZ nonce. | Replace an existing peer after `openBridge`. Change rate/retain after first deposit. `pullYield`. Worsen health (guardian). |
+| **Guardian** | pause, `closeBridge`, `setHealth` worse, `reportLedgerPrincipal` | Halt mint in minutes | Unpause, restore Normal, skip LZ, pull yield, change peers |
+| **Harvester / keeper** | `pullYield`, converter `execute` / `notify` / `returnToLockbox` | Move surplus that is already yield | Point `to` anywhere but the converter. Change peers. Unpause |
+| **Converter** | the contract, never an EOA | Hold inventory, minOut hops, halt pulls | Receive principal. Be the owner |
+
+Do **not** remove: `abortCredit`, `setEndpointConfig`, `restoreHealth`, `farmUnstake`, `setRedeemEnabled`. Those are incident tools. Bind them to the multisig. `restoreHealth(Normal)` already re-checks the ceiling and hORDER `ledgerPrincipal` — it is not a bare declaration.
+
+Do **not** put owner, guardian, harvester on one EOA. Scripts already revert `split keys`.
+

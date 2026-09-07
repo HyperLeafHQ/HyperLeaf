@@ -221,6 +221,16 @@ contract LeafRateYieldTest is PegReady {
         assertEq(adapter.lastAccounted() + fee, 100e18);
     }
 
+    function testYieldConfigFrozenAfterDeposit() public {
+        _mintLeaf(1e18);
+        vm.startPrank(owner);
+        vm.expectRevert(LeafOFTAdapter.ConfigFrozen.selector);
+        adapter.setRetainRateYield(false);
+        vm.expectRevert(LeafOFTAdapter.ConfigFrozen.selector);
+        adapter.setRateKind(LeafYieldFee.RateKind.None);
+        vm.stopPrank();
+    }
+
     function testSellAllStillWorksWhenRetainOff() public {
         vm.prank(owner);
         adapter.setRetainRateYield(false);

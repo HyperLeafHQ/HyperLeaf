@@ -228,7 +228,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function pullYield(IERC20 token, address to) external nonReentrant {
-        if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
+        if (msg.sender != harvester) revert NotHarvester();
         _requireConvertOn();
         _requireConverter(to);
         _pullYield(token, innerToken, _principalReserved(), to);

@@ -68,6 +68,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     error NotSolvent();
     error HealthUpgrade();
     error InnerSupplyBreach();
+    error PeerFrozen();
 
     modifier onlyGuardian() {
         if (msg.sender != guardian && msg.sender != owner()) revert NotGuardian();
@@ -88,6 +89,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     }
 
     function setPeer(uint32 eid, bytes32 peer) public onlyOwner {
+        if (bridgeOpen && peers[eid] != bytes32(0) && peers[eid] != peer) revert PeerFrozen();
         peers[eid] = peer;
         emit PeerSet(eid, peer);
     }
