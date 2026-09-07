@@ -130,6 +130,7 @@ abstract contract LeafYieldFee {
         uint256 free = bal - reserved;
         if (free <= lastAccounted) return 0;
         uint256 y = free - lastAccounted;
+        // 1% of y. y < 100 ⇒ fee 0, dust stays with holders (not the protocol).
         fee = (y * YIELD_FEE_BPS) / BPS_DENOMINATOR;
         if (fee > 0) {
             token.safeTransfer(feeRecipient, fee);

@@ -12,12 +12,20 @@ import {ILeafHypeRewarder} from "./ILeafHypeRewarder.sol";
 ///         C1 closed listings override send() so the only exit is the market.
 contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     error ZeroAmount();
-
     error SupplyCapExceeded();
+    error Reentrant();
 
     ILeafHypeRewarder public hypeRewarder;
     bytes32 public listingId;
     uint256 public supplyCap;
+    uint256 private _gate;
+
+    modifier oftLock() {
+        if (_gate != 0) revert Reentrant();
+        _gate = 1;
+        _;
+        _gate = 0;
+    }
 
     event HypeRewarderSet(address indexed rewarder, bytes32 listingId);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
@@ -51,6 +59,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         public
         payable
         virtual
+        oftLock
         whenNotPaused
         returns (bytes32 guid)
     {
@@ -76,7 +85,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         bytes calldata message,
         address,
         bytes calldata
-    ) internal override whenNotPaused {
+    ) internal override oftLock whenNotPaused {
         (bytes32 toB, uint256 amount) = _decodeBridge(message);
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();

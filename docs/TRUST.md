@@ -41,6 +41,10 @@ Address-keyed externals (hORDER): CREATE2 same lockbox on Arb and Base is **iden
 
 Anyone may `reportInnerSupply`. If `inner.totalSupply()` exceeds the ceiling, health becomes Degraded. Guardian can only worsen. Owner restores Degraded/Halted. Insolvent needs `recoverInsolvent`.
 
+Stuck LZ: owner is the LZ delegate and calls `Endpoint.skip` on the OApp (we cannot wrap `skip` on the lockbox — IR stack). That does **not** return tokens. Then Halted/Insolvent + owner `abortCredit`. Convert-to-HYPE swap failures stay in the converter — turn `convertYieldToHype` off. Do not unpause to “retry” a skip.
+
+1% fee is `y/100`. Sub-100 wei yield pays 0 fee (holders keep dust). `notify` reverts `DustNotify` if WHYPE would not move `accHypePerShare`, so 1 wei cannot jam the rewarder.
+
 This is how HyperLeaf **stops amplifying** an upstream print. It cannot make a broken sKAITO real.
 
 ## Types

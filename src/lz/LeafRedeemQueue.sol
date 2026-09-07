@@ -36,6 +36,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event RedeemQueued(uint256 indexed id, address indexed to, uint256 amount, uint64 eta, bytes32 guid);
     event RedeemClaimed(uint256 indexed id, address indexed to, uint256 amount);
     event RedeemDelayUpdated(uint64 delay);
+    event CreditAborted(address indexed to, uint256 amount);
 
     error ZeroAmount();
     error CapExceeded();
@@ -70,6 +71,17 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
+    }
+
+    function abortCredit(address to, uint256 amount) external onlyOwner nonReentrant {
+        if (to == address(0) || amount == 0) revert ZeroAmount();
+        if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
+        if (amount > totalLocked) revert InsufficientLocked();
+        _requireCash(innerToken, amount, pendingTicketAssets);
+        totalLocked -= amount;
+        innerToken.safeTransfer(to, amount);
+        _syncAccounted(innerToken, pendingTicketAssets);
+        emit CreditAborted(to, amount);
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {

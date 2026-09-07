@@ -45,6 +45,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
+    event CreditAborted(address indexed to, uint256 amount);
     event FarmSet(address farm, bytes4 stakeSel, uint256 arg, bytes4 claimSel);
     event FarmExitSel(bytes4 sel);
     event FarmUnstaked(uint256 amount);
@@ -83,6 +84,18 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
+    }
+
+    /// @notice Same as adapter. Reverts if principal is still in the farm.
+    function abortCredit(address to, uint256 amount) external onlyOwner nonReentrant {
+        if (to == address(0) || amount == 0) revert ZeroAmount();
+        if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
+        if (farmPrincipalOut) revert BadStake();
+        if (amount > totalLocked) revert InsufficientLocked();
+        _requireCash(innerToken, amount, 0);
+        totalLocked -= amount;
+        innerToken.safeTransfer(to, amount);
+        emit CreditAborted(to, amount);
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {

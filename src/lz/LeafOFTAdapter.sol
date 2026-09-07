@@ -21,6 +21,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
+    event CreditAborted(address indexed to, uint256 amount);
 
     error ZeroAmount();
     error CapExceeded();
@@ -49,6 +50,18 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
+    }
+
+    /// @notice After dest `skipInbound`, return inner that never minted. Halt first.
+    function abortCredit(address to, uint256 amount) external onlyOwner nonReentrant {
+        if (to == address(0) || amount == 0) revert ZeroAmount();
+        if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
+        if (amount > totalLocked) revert InsufficientLocked();
+        _requireCash(innerToken, amount, 0);
+        totalLocked -= amount;
+        innerToken.safeTransfer(to, amount);
+        _syncAccounted(innerToken, 0);
+        emit CreditAborted(to, amount);
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {

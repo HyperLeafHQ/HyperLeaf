@@ -327,4 +327,35 @@ contract LeafPegTest is PegReady {
         other.lzReceive(origin, bytes32(uint256(1)), payload, address(0), "");
         assertEq(other.totalSupply(), 0);
     }
+
+    function testAbortCreditOnlyAfterHalt() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.startPrank(user);
+        token.approve(address(adapter), 10e18);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 10e18);
+        vm.stopPrank();
+        uint256 userBal = token.balanceOf(user);
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.NotSolvent.selector);
+        adapter.abortCredit(user, 10e18);
+        vm.prank(guardian);
+        adapter.setHealth(LeafOApp.Health.Halted);
+        vm.prank(owner);
+        adapter.abortCredit(user, 10e18);
+        assertEq(adapter.totalLocked(), 0);
+        assertEq(token.balanceOf(user), userBal + 10e18);
+    }
+
+    function testTinyYieldFeeRoundsToZeroNotTrap() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.startPrank(user);
+        token.approve(address(adapter), 10e18);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 10e18);
+        vm.stopPrank();
+        token.mint(address(adapter), 50);
+        uint256 feeBefore = token.balanceOf(feeTo);
+        adapter.harvest();
+        assertEq(token.balanceOf(feeTo), feeBefore);
+        assertEq(adapter.lastAccounted(), 10e18 + 50);
+    }
 }

@@ -119,6 +119,15 @@ contract LeafHypeRewarderTest is PegReady {
         assertEq(whype.balanceOf(address(this)), 10e18);
     }
 
+    function testNotifyDustDoesNotTrapHype() public {
+        _mintAlice(100e18);
+        whype.mint(address(this), 1);
+        whype.approve(address(rewarder), 1);
+        vm.expectRevert(LeafHypeRewarder.DustNotify.selector);
+        rewarder.notify(ID, 1);
+        assertEq(whype.balanceOf(address(this)), 1);
+    }
+
     function testPullYieldRejectsNonConverter() public {
         vm.startPrank(alice);
         inner.approve(address(adapter), 50e18);
