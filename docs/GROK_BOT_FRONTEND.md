@@ -10,7 +10,7 @@ HyperLeaf is infrastructure. It is responsible for:
 
 1. **Ingress** — lock a transferable receipt (or an address-keyed position), message it, mint one Leaf ticker per listing.
 2. **Availability** — bridge starts closed; caps; pause; health; listing isolation. A halt on hxSQUID must not touch hNEST.
-3. **Yield split** — extra staking income (not the inner receipt) → WHYPE. **99% is allocated across current `totalSupply`**, 1% protocol. No lock/unlock fee. Allocation is not the same as “wallet holders received 99%”: AMM / lending / CEX addresses take a denominator slice they usually never claim. Do not show wallet APR = 99% × harvested ÷ supply. Details: `docs/HYPE_COMPOSABILITY.md`.
+3. **Yield split** — depends on the listing (`docs/YIELD_OWNERSHIP.md`). Share-price tickers (hcbETH): 99% stays in the receipt, protocol skims 1%. Side-token tickers (hxSQUID): extra income → WHYPE, 99% allocated across `totalSupply`, 1% protocol. Do not show wallet APR = 99% × harvested ÷ supply on Rewarder tickers.
 
 It is **not** a market maker, not a DEX, not an AMM, not a lending pool.
 
@@ -21,10 +21,15 @@ Do not write, imply, or let a tooltip say any of these:
 - HyperLeaf guarantees someone will buy the ticker
 - HyperLeaf guarantees exit at NAV
 - HyperLeaf guarantees a book, spread, or Core spot listing
+- HyperLeaf treasury will buy your Leaf if nobody else does
+- A claim-board discount is a loan or a HyperLeaf debt
 - “Liquid” means the protocol pays 1:1
 - A discount to NAV is a HyperLeaf depeg
 
 A discount on a **sell-only** ticker is a **liquidity price**, unless `docs/SOLVENCY.md` backing is gone. Then it is insolvency, and you say that.
+
+Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf** (peer bid/ask on the existing token or C2 ticket). Copy: 没人出价就不成交。协议不接盘。 Not 债务, not 借贷, not 官方收单. Face value comes from that ticker’s SOLVENCY row. Instant-receipt tickers already have 烧掉就能拿回 — a fat discount there is usually an arb, not a feature. Details: `docs/CLAIM_MARKET.md`.
+
 
 **One line that must survive every rewrite:**
 
@@ -146,6 +151,7 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Always | 跨链你付 LayerZero。送达不是协议能保证的即时到账。 |
 | Caps / pause live | 有上限，可暂停。 |
 | Sell-only ticker | 可以长期低于账面价。那是流动性价格，除非底仓没了。 |
+| Claim board (if it exists) | 转让，不是现货。没人买就不成交。协议不接盘。 |
 | Instant-receipt ticker | 赎回的是收据，不是现货。官方解押要你自己去点。 |
 | Window ticker (hNEST, queued) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
 | Redeem confirm (every listing that burns) | 赎回会烧掉这份 Leaf，不能取消。 |

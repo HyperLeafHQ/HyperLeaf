@@ -28,5 +28,11 @@ A wstETH-style `whAsset` wrapper (vault that holds Leaf + claims HYPE into
 share price) is the DeFi face for Rewarder listings. Not built yet. Do not
 ship it until a listing that actually needs LP of a side-token yield is live.
 
+**LP is optional.** Share-price Leaf keeps intrinsic yield in the token, so
+an AMM pair would capture it. Rewarder Leaf does not pay HYPE to the pair;
+we are not adding gauges to paper over that. Early liquidity, if any, is a
+peer claim board (`docs/CLAIM_MARKET.md`), not a subsidised spot pool.
+
+
 Source of truth for copy: `GROK_BOT_FRONTEND.md`. Solvency rows must name
 which column they are.
