@@ -10,6 +10,12 @@ ffi = false
 # Public HyperEVM RPC rate-limits forge fork storage; run FOUNDRY_PROFILE=fork for HevForkTest.
 no_match_path = "test/HevFork.t.sol"
 
+[profile.default.invariant]
+runs = 64
+depth = 12
+fail_on_revert = false
+
+
 [rpc_endpoints]
 hyperevm = "${HYPEREVM_RPC_URL}"
 hyperevm_testnet = "https://rpc.hyperliquid-testnet.xyz/evm"

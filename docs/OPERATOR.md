@@ -38,6 +38,10 @@ outstanding Leaf claims  ≤  economically realizable underlying
                            (principal + booked yield − pending redemptions − fees)
 ```
 
+Stateful fuzz: `test/lz/LeafInvariant.t.sol` (`invariant_supplyLeLocked`, `invariant_queueCashCoversTickets`). CI runs it.
+
+HyperEVM: one key ≤ 8 queued nonces; keep keeper gas under 3M. Wrap poke/harvest is already anyone.
+
 Not `balanceOf(lockbox)`. Principal is never harvested as yield. A burn drops liabilities before assets leave. Fill [`SOLVENCY.md`](SOLVENCY.md) for that ticker. A PR that cannot show this still holds does not merge.
 
 ## Branches

@@ -28,6 +28,14 @@ Burning a Leaf does not move inner tokens by itself. The source `_lzReceive` / `
 
 One inner token per contract. Payload is `(listingTag, to, amount)`. A message for hxSQUID cannot credit hcbETH. Pause one OApp; the others keep running.
 
+## 7. Not LZ OFT shared-decimals
+
+Wrap messages carry a full `uint256` amount. We do **not** use LayerZero OFT `sharedDecimals = 6`. Do not add that truncation — it would create the dust-arb this rule exists to avoid. Local rounding that *does* exist is protocol-favorable: redeem `_assetsForShares` floors; `notify` reverts `DustNotify` instead of trapping WHYPE.
+
+## 8. Circuit breaker is Health, not an oracle
+
+Guardian `setHealth(Degraded)` stops mint. `innerSupplyCeiling` + `reportInnerSupply` stops an upstream print. `maxPerTx` / `maxPerDay` / caps bound a dump. There is **no** EMA/price feed on the adapter — a feed would be a new mint authority. If the inner goes to zero, halt that listing; do not auto-pause from a USD oracle we do not have.
+
 ---
 
 See also [`TRUST.md`](TRUST.md): authorization ≠ accounting ≠ solvency. `Health` + inner supply ceiling sit on top of these six rules.
