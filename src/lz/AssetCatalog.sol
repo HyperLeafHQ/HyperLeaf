@@ -255,9 +255,12 @@ library AssetCatalog {
         revert UnknownAsset();
     }
 
-    /// @dev Source ledger keys by EVM address. CREATE2 the lockbox on every
-    ///      OFT chain you will receive on (Arb/Base). Do not deploy two addresses.
+    /// @dev Source ledger keys by EVM address. CREATE2 the same lockbox address
+    ///      on every OFT chain you *might* receive on. Identity ≠ shared balance.
+    ///      OpenBridge on **one** source eid at a time. Two live lockboxes minting
+    ///      into one dest OFT double-count `ledgerPrincipal`.
     function addressKeyed(string memory id) internal pure returns (bool) {
+
         return keccak256(bytes(id)) == keccak256("horder");
     }
 

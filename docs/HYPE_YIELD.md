@@ -24,19 +24,23 @@ Harvester-only `pullYield`. Then swap + bridge + `LeafHypeRewarder.notify`.
 | **BLUAI4Y** | C1, market only | Extra **BLUAI** (`pullInnerEnabled = true`, surplus only) | Principal (`totalLocked`) |
 | **hVIRTUALMAX** | C1 | Agent airdrops | Staked VIRTUAL (Auto Max-lock) |
 
-`pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner` unless a **rate feed** is set. Then only the rate-implied surplus may leave (`setRateKind(ExchangeRate)` for cbETH, `ConvertToAssets` for 4626). C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked` (C1) or `free * (rate - lastRate) / rate` (rate L).
+`pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner` unless a **rate feed** is set. Then only the rate-implied surplus may leave (`setRateKind(ExchangeRate)` for cbETH; `ConvertToAssets` only if that listing's SOLVENCY row opts in). C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked` (C1) or `(lastAccounted * (rate - lastRate)) / rate` (rate L, floor, principal only). Donations are not surplus.
 
-1% protocol / 99% holders happens on HyperEVM at `notify`, not on the source swap. Rate surplus is sold to WHYPE first; `notify` then splits. Redeem after harvest is pro-rata remaining inner, not 1 token = 1 token.
+1% protocol / 99% holders happens on HyperEVM at `notify`, not on the source swap. Rate surplus is sold to WHYPE first; `notify` then splits. Redeem after harvest is pro-rata remaining inner, not 1 token = 1 token. Wrap/redeem accrue the watermark; they do **not** transfer to the converter. `pullYield` is the only inner outflow for yield.
+
 
 ## Rate-bearing (hcbETH) — where the 1% comes from
 
 cbETH does not mint extra tokens. ETH PoS lives in Coinbase `exchangeRate()`. There is no airdrop to claim. The only honest take of depositor yield is to sell the **rate-implied surplus**:
 
 ```
-surplus = free − free × lastRate / rate
+surplus = (lastAccounted × (rate − lastRate)) / rate     // floor; dust stays principal
 ```
 
+`lastAccounted` is pulled principal, not `balanceOf`. A donation into the lockbox does not raise it.
+
 Example: deposit 100 cbETH at rate 1.00. Later rate 1.10.
+
 
 | | cbETH | ETH value |
 | --- | ---: | ---: |

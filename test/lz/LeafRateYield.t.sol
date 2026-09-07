@@ -78,6 +78,11 @@ contract LeafRateYieldTest is PegReady {
 
     uint64 nonce;
 
+    function _surplus(uint256 accounted, uint256 last, uint256 rate) internal pure returns (uint256) {
+        if (rate <= last || accounted == 0) return 0;
+        return (accounted * (rate - last)) / rate;
+    }
+
     function _mintLeaf(uint256 assets) internal returns (uint256 shares) {
         uint256 before = adapter.totalLocked();
         vm.startPrank(user);
@@ -112,8 +117,7 @@ contract LeafRateYieldTest is PegReady {
         inner.setRate(11e17);
         vm.prank(owner);
         adapter.pullYield(inner, converter);
-        // 100% of surplus leaves. The 1% protocol take is WHYPE at notify, not here.
-        uint256 surplus = 100e18 - (100e18 * uint256(1e18)) / uint256(11e17);
+        uint256 surplus = _surplus(100e18, 1e18, 11e17);
         assertEq(inner.balanceOf(converter), surplus);
         assertEq(inner.balanceOf(address(adapter)), 100e18 - surplus);
         assertEq(adapter.totalLocked(), 100e18);
@@ -159,5 +163,93 @@ contract LeafRateYieldTest is PegReady {
         vm.prank(owner);
         vm.expectRevert(LeafOFTAdapter.CannotPullInner.selector);
         adapter.pullYield(inner, converter);
+    }
+
+    function testWrapDoesNotPullToConverter() public {
+        _mintLeaf(100e18);
+        inner.setRate(11e17);
+        uint256 shares2 = _mintLeaf(10e18);
+        assertEq(inner.balanceOf(converter), 0);
+        uint256 expect = _surplus(100e18, 1e18, 11e17);
+        assertEq(adapter.accruedRateYield(), expect);
+        // New deposit at current rate: same NAV as if we had harvested first.
+        uint256 remainingPrincipal = 100e18 - expect;
+        assertEq(shares2, (10e18 * 100e18) / remainingPrincipal);
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        assertEq(inner.balanceOf(converter), expect);
+    }
+
+    function testDonationIsNotYield() public {
+        _mintLeaf(100e18);
+        inner.mint(address(adapter), 100e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        adapter.pullYield(inner, converter);
+        assertEq(inner.balanceOf(converter), 0);
+        assertEq(adapter.lastAccounted(), 100e18);
+
+        inner.setRate(11e17);
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        uint256 surplus = _surplus(100e18, 1e18, 11e17);
+        assertEq(inner.balanceOf(converter), surplus);
+        // Donation remains as extra backing, not converted.
+        assertEq(inner.balanceOf(address(adapter)), 200e18 - surplus);
+        assertEq(adapter.lastAccounted(), 100e18 - surplus);
+    }
+
+    function testRoundingFloorsSurplus() public {
+        _mintLeaf(100e18);
+        inner.setRate(11e17);
+        uint256 accounted = adapter.lastAccounted();
+        uint256 add = _surplus(accounted, 1e18, 11e17);
+        assertGe(add, 0);
+        // surplus * rate <= accounted * (rate - lastRate)  (floor)
+        assertLe(add * uint256(11e17), accounted * (uint256(11e17) - uint256(1e18)));
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        assertEq(inner.balanceOf(converter), add);
+        // Dust stays principal.
+        assertEq(adapter.lastAccounted() + add, 100e18);
+    }
+
+    function testRateFuzzHighWaterMark(uint256 r1, uint256 r2, uint256 r3, uint256 r4) public {
+        r1 = bound(r1, 5e17, 10e18);
+        r2 = bound(r2, 5e17, 10e18);
+        r3 = bound(r3, 5e17, 10e18);
+        r4 = bound(r4, 5e17, 10e18);
+        _mintLeaf(100e18);
+        uint256 accounted = 100e18;
+        uint256 last = 1e18;
+        uint256 harvested;
+        uint256[4] memory rates = [r1, r2, r3, r4];
+        for (uint256 i; i < 4; i++) {
+            inner.setRate(rates[i]);
+            if (rates[i] < last) {
+                vm.prank(owner);
+                adapter.pullYield(inner, converter);
+                last = rates[i];
+                continue;
+            }
+            uint256 add = _surplus(accounted, last, rates[i]);
+            vm.prank(owner);
+            if (add == 0 && rates[i] == last) {
+                vm.expectRevert(LeafYieldFee.NoYield.selector);
+                adapter.pullYield(inner, converter);
+            } else {
+                adapter.pullYield(inner, converter);
+                harvested += add;
+                accounted -= add;
+                last = rates[i];
+            }
+        }
+        assertEq(adapter.lastAccounted(), accounted);
+        assertEq(inner.balanceOf(converter), harvested);
+        assertEq(inner.balanceOf(address(adapter)), 100e18 - harvested);
+        // Remaining principal in ETH terms never exceeds the high-water ETH of the
+        // surviving principal after slashes. Harvested cbETH is never more than deposited.
+        assertLe(harvested, 100e18);
+        assertLe(accounted, 100e18);
     }
 }

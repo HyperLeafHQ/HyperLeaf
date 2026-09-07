@@ -12,7 +12,9 @@ import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 /// @notice Source-chain lockbox for an existing ERC20 (e.g. sKAITO / xSQUID / cbETH).
 ///         Convert-off: 1% of newly accrued inner yield to feeRecipient.
 ///         Convert-on: surplus → converter → WHYPE `notify` 99/1. Rate-bearing
-///         listings pull only `exchangeRate` surplus. No fee on in/out.
+///         listings accrue `exchangeRate` surplus on lastAccounted only; pullYield
+///         (harvester) is the only transfer to converter. Wrap/redeem never swap.
+///         No fee on in/out.
 contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     using SafeERC20 for IERC20;
 
@@ -63,11 +65,13 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (to == address(0) || amount == 0) revert ZeroAmount();
         if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
         if (amount > totalLocked) revert InsufficientLocked();
-        _requireCash(innerToken, amount, 0);
+        _accrueRateYield(innerToken);
+        uint256 assetsOut = _assetsForShares(innerToken, amount, totalLocked, 0);
+        _requireCash(innerToken, assetsOut, 0);
+        _reducePrincipal(amount, totalLocked);
         totalLocked -= amount;
-        innerToken.safeTransfer(to, amount);
-        _syncAccounted(innerToken, 0);
-        emit CreditAborted(to, amount);
+        innerToken.safeTransfer(to, assetsOut);
+        emit CreditAborted(to, assetsOut);
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {
@@ -154,12 +158,17 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _requireInnerSupplyOk(innerToken);
 
         _harvestInner(innerToken, 0);
-        _tryPullRateYield(innerToken, 0, converter);
+        // Accrue only. Do not transfer to converter — wrap must not depend on swap liveness.
+        _accrueRateYield(innerToken);
 
         uint256 got = _pull(msg.sender, amount);
         uint256 shares = _sharesForAssets(innerToken, got, totalLocked, 0);
         if (shares == 0) revert ZeroAmount();
-        if (totalLocked + shares > depositCap) revert CapExceeded();
+        if (rateKind != RateKind.None) {
+            if (lastAccounted + got > depositCap) revert CapExceeded();
+        } else if (totalLocked + shares > depositCap) {
+            revert CapExceeded();
+        }
         totalLocked += shares;
         _accountDeposit(got);
 
@@ -168,7 +177,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         bytes memory payload = encodeBridge(to, shares);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
             _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
-        emit BridgedOut(msg.sender, dstEid, to, got, receipt.guid);
+        emit BridgedOut(msg.sender, dstEid, to, shares, receipt.guid);
         return receipt.guid;
     }
 
@@ -192,12 +201,12 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (rateKind == RateKind.None && innerToken.balanceOf(address(this)) < totalLocked) revert Underbacked();
 
         _harvestInner(innerToken, 0);
-        _tryPullRateYield(innerToken, 0, converter);
+        _accrueRateYield(innerToken);
         uint256 assetsOut = _assetsForShares(innerToken, amount, totalLocked, 0);
         _requireCash(innerToken, assetsOut, 0);
+        _reducePrincipal(amount, totalLocked);
         totalLocked -= amount;
         innerToken.safeTransfer(to, assetsOut);
-        _syncAccounted(innerToken, 0);
         emit BridgedIn(to, origin.srcEid, assetsOut, guid);
     }
 

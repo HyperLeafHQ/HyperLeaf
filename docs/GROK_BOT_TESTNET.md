@@ -63,7 +63,8 @@ forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
 ```
 
 Sets `convertYieldToHype`, harvester, converter. hxSQUID also sets `rewardsSelector` `0x9a99b4f0`.
-hcbETH: script also `setRateKind(ExchangeRate)`. Mock inner is `MockRateERC20` with `exchangeRate()`. To smoke harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield(inner, converter)` — only surplus leaves.
+hcbETH: script also `setRateKind(ExchangeRate)`. Mock inner is `MockRateERC20` with `exchangeRate()`. To smoke harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield(inner, converter)` — wrap itself must **not** move surplus; only `pullYield` does. Surplus is from `lastAccounted`, not a donation.
+
 
 ## 4b. Peg (both sides) — required before smoke
 

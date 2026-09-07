@@ -79,9 +79,10 @@ Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty.
 | ------ | -- |
 | hxSQUID | 领取 WHYPE. Does not burn the Leaf. Extra QUID, not the xSQUID. |
 | hcbETH | 领取 WHYPE. PoS is **sold as rate surplus**. Redeem is 金库按份额能付的 cbETH, **not** 1:1 after harvest. Copy: 质押收益按官方汇率卖掉，99% 打成 HYPE 给你领，1% 归协议。赎回拿回的是剩下的收据，不是当初那一枚。 |
-| hgSOON, hsWBERA, Morpho shares | Same as hcbETH once `rateKind` is on. Until then, no claim button. |
+| hgSOON, hsWBERA, Morpho shares | **No claim button** unless that listing's SOLVENCY row sets `rateKind` and `toHype`. Default is yield-in-the-share: wrap 1 share, unwrap 1 share. Do not copy hcbETH's surplus-sale UI onto them. |
 
 Do not invent “偶发空投” for cbETH. Do not say 1 hcbETH always unwraps 1 cbETH after a harvest.
+
 
 ## Risk labels (required on the surface)
 

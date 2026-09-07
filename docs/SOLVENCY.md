@@ -65,7 +65,28 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 
 ### hcbETH (next L)
 
-Same L invariant on **shares**, not 1 hcbETH = 1 cbETH after harvest. Ceiling = Coinbase cbETH supply headroom. Yield is ETH PoS inside `exchangeRate()`. Harvest pulls only `free * (rate - lastRate) / rate` inner to the converter → WHYPE → `notify` 99/1. Slash lowers `lastRate`, pulls nothing. Redeem pays remaining cbETH pro-rata (`_assetsForShares`). Later deposits mint at NAV. Never Coinbase unwrap. Never pull more than surplus.
+| | |
+| --- | --- |
+| Canonical backing | cbETH **pulled** into the lockbox. After harvest, remaining cbETH + WHYPE already notified |
+| Accounting unit | hcbETH **shares**, not 1 hcbETH = 1 cbETH after a rate harvest |
+| Core invariant | `oft.totalSupply() ≤ adapter.totalLocked()` (shares). Remaining inner ≥ lastAccounted. `lastAccounted + accruedRateYield ≤ inner.balanceOf(lockbox)` |
+| Rate source | Coinbase cbETH `exchangeRate()`. This is a solvency oracle, not a price feed we control |
+| Rate trust | upstream contract implementation / upgrade. Anomalous jump, drop, stale return, or malicious upgrade |
+| Rate anomaly | jump → surplus floors and caps at lastAccounted (cannot sell donations). drop → watermark down, pull 0. Never harvest a donated balance |
+| Maximum harvest | `(lastAccounted * (rate - lastRate)) / rate` (floor). Dust stays in `lastAccounted` (holders / principal), not protocol |
+| Proof source | `lastAccounted` + `accruedRateYield` + `exchangeRate()` + cash on redeem |
+| Mint / redeem | wrap/unwrap cbETH. Later deposits mint at NAV. Last exit pays remaining inner in kind, including unharvested surplus. **Never** Coinbase unwrap |
+| Yield | ETH PoS inside `exchangeRate()`. Harvester `pullYield` sells only accrued surplus → WHYPE → `notify` 99/1. Wrap/redeem **do not** transfer to converter |
+| Donation | extra `transfer` into the lockbox is **not** yield. It is extra backing. It must not mint HYPE or pay the 1% |
+| Failure | Coinbase rate lie / upgrade; converter swap (yield loss, not principal); inner print (`innerSupplyCeiling`) |
+| Auto-pause | `reportInnerSupply` → Degraded. Guardian close |
+| Worst-case loss | min(depositCap, maxPerDay) on principal. Yield path loss is converter execution, separate from backing |
+| Test | `test/lz/LeafRateYield.t.sol` — surplus, slash, NAV mint, donation invariance, floor rounding, rate fuzz |
+
+Do **not** enable `rateKind` on hgSOON / hsWBERA / Morpho shares unless that listing's row says pull rate surplus. Default for those is yield-in-the-share, 1 share = 1 wrapped share.
+
+Converter min-output (WHYPE received ≥ quoted) is a keeper invariant, not a lockbox invariant. Not in this contract.
+
 
 ### hKAITO (blocked on omnichain holder)
 
@@ -214,7 +235,8 @@ Canonical economic owner is **the Orderly ledger account = CREATE2 lockbox addre
 | Accounting unit | ORDER principal on the ledger. 1 hORDER ≤ 1 verified ledger ORDER |
 | Core invariant | HyperEVM hORDER supply ≤ `ledgerPrincipal` for this identity. `farmPrincipalOut` is a location flag only |
 | Proof source | Guardian `reportLedgerPrincipal(observed)` after Orderly compose (eid 30213). CREATE2 predict matches on Arb/Base. After `stakeOrder`, `inner.balanceOf` is **0** and is not the proof |
-| Mint / redeem | C1, market-only. Further mints halt until `ledgerPrincipal >= totalLocked`. Unstake 2/3/4 owner-only, no dest chain. Harvest 10/17 public |
+| Mint / redeem | C1, market-only. Further mints halt until `ledgerPrincipal >= totalLocked`. Unstake 2/3/4 owner-only, no dest chain. Harvest 10/17 public. **One source eid `openBridge` at a time** — two CREATE2 twins minting into one dest OFT double-count the same Orderly identity |
+
 | Yield | USDC (legacy 9→10) → HYPE. Occupancy: VALOR / esORDER (type 17). Do not vest |
 | Failure | LZ to Orderly not credited; wrong-chain withdrawal; user inflating ledger report; CREATE2 twin with different code |
 | Auto-pause | `reportLedgerPrincipal < totalLocked` → Degraded, mint stops. Guardian `closeBridge` |
