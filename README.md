@@ -108,7 +108,8 @@ Out of scope: another HYPE LST, wrapping official RAM/HYBR receipts, ENA (alread
 HyperLeaf **markets** lock and staking risk. It does not delete it.
 
 - Contracts are **not externally audited**. Architecture is specified by a human. Implementation is written by AI developers. Read it as unaudited generated code on a human design — not as a substitute for review.
-- C1 names can sit below NAV for a long time
+- C1 names can sit below NAV for a long time. That is a liquidity price, not a HyperLeaf peg, unless backing is gone. **The protocol does not guarantee a buyer or a book.**
+- HyperLeaf is infrastructure, availability, and yield split (99/1 of staking surplus). It does not make markets.
 - Source points and airdrops accrue to the vault until harvested
 - LayerZero delivery and thin HYPE books on source chains
 - Underlying protocols (Nest, Squid, Coinbase cbETH, …) can change
@@ -121,6 +122,7 @@ HyperLeaf **markets** lock and staking risk. It does not delete it.
 | | |
 | --- | --- |
 | Kinds and exits | [`docs/wrap-kinds.md`](docs/wrap-kinds.md) |
+| Frontend bot (no L/C1/C2 on UI) | [`docs/GROK_BOT_FRONTEND.md`](docs/GROK_BOT_FRONTEND.md) |
 | Yield → HYPE | [`docs/HYPE_YIELD.md`](docs/HYPE_YIELD.md) |
 | Listing catalog | [`listings/catalog.json`](listings/catalog.json) |
 | Internal order | [`docs/ROADMAP.md`](docs/ROADMAP.md) |

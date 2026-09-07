@@ -12,5 +12,6 @@
 - 自动复合份额导致 NAV 上升 / auto-compound into share value（在 `recordCompound` 禁用期间）
 - HyperLeaf 内「随时领取 HYPE」
 - “audited / 已审计 / audit reports published”（仅可说内部审查）
+- 保证有人买 / 保证盘口 / 保证按账面价退出（协议只做基建、可用性、收益分配）
 
 Updated: 2026-09-06

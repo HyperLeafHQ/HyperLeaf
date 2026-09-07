@@ -2,6 +2,8 @@
 
 Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
 
+**Frontend bot:** these kind letters are GitHub-only. User UI copy, risk labels, and “we do not guarantee a book” are in [`GROK_BOT_FRONTEND.md`](GROK_BOT_FRONTEND.md). Do not print `L` / `C1` / `C2` on hyperleaf.finance.
+
 HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset, keep the extra income of the source position.
 
 | Kind | Source | HyperEVM | Exit | Ticker |
