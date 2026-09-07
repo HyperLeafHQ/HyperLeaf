@@ -65,6 +65,20 @@ forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
 Sets `convertYieldToHype`, harvester, converter. hxSQUID also sets `rewardsSelector` `0x9a99b4f0`.
 hcbETH: script also `setRateKind(ExchangeRate)`. Mock inner is `MockRateERC20` with `exchangeRate()`. To smoke harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield(inner, converter)` — wrap itself must **not** move surplus; only `pullYield` does. Surplus is from `lastAccounted`, not a donation.
 
+## 4c. Rewarder bind (HyperEVM 998) — order is the test
+
+```
+OFT.setHypeRewarder(REWARDER, listingId)   # listingId one-shot; do this first
+REWARDER.register(listingId, OFT)          # reverts ListingMismatch if reversed
+```
+
+`listingId` must be the catalog id for that ticker, not another listing’s.
+Do not `register` before `setHypeRewarder`. Dust: `minNotify(listingId)` on
+the rewarder; `notify` below that reverts `DustNotify` and WHYPE stays with
+the keeper. Transfer of the OFT must still succeed if you point
+`setHypeRewarder` at a broken contract (`RewardsHookFailed`).
+
+
 
 ## 4b. Peg (both sides) — required before smoke
 

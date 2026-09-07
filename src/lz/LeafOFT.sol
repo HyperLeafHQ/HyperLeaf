@@ -14,6 +14,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     error ZeroAmount();
     error SupplyCapExceeded();
     error Reentrant();
+    error ListingIdFrozen();
 
     ILeafHypeRewarder public hypeRewarder;
     bytes32 public listingId;
@@ -31,6 +32,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
     event SupplyCapSet(uint256 cap);
+    event RewardsHookFailed(bytes32 indexed listingId, address indexed user, bytes4 sel);
 
     constructor(string memory name_, string memory symbol_, address endpoint_, address owner_, address guardian_)
         LeafOApp(endpoint_, owner_, guardian_)
@@ -38,9 +40,14 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         ERC20Permit(name_)
     {}
 
+    /// @notice Bind this OFT to one listing id (one-shot) and a rewarder (replaceable).
+    ///         `rewarder` may be zero to unhook: transfers must stay live if the
+    ///         distributor is bricked. Register on the rewarder after this, not before.
     function setHypeRewarder(address rewarder, bytes32 listingId_) external onlyOwner {
-        hypeRewarder = ILeafHypeRewarder(rewarder);
+        if (listingId_ == bytes32(0)) revert ZeroAddress();
+        if (listingId != bytes32(0) && listingId != listingId_) revert ListingIdFrozen();
         listingId = listingId_;
+        hypeRewarder = ILeafHypeRewarder(rewarder);
         emit HypeRewarderSet(rewarder, listingId_);
     }
 
@@ -97,18 +104,34 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     }
 
     function _update(address from, address to, uint256 value) internal override {
-        if (address(hypeRewarder) != address(0)) {
+        // Rewards must not brick ERC20 liveness. Failed settle/debt is skipped.
+        // Do not auto-disable the hook: a tight gas stipend would grief every holder.
+        if (address(hypeRewarder) != address(0) && listingId != bytes32(0)) {
             if (from != address(0) && to != address(0)) {
-                hypeRewarder.settle(listingId, from);
-                hypeRewarder.settle(listingId, to);
+                _trySettle(from);
+                _trySettle(to);
             } else if (from != address(0)) {
-                hypeRewarder.settle(listingId, from);
+                _trySettle(from);
             }
         }
         super._update(from, to, value);
-        if (address(hypeRewarder) != address(0)) {
-            if (from != address(0)) hypeRewarder.updateDebt(listingId, from);
-            if (to != address(0)) hypeRewarder.updateDebt(listingId, to);
+        if (address(hypeRewarder) != address(0) && listingId != bytes32(0)) {
+            if (from != address(0)) _tryUpdateDebt(from);
+            if (to != address(0)) _tryUpdateDebt(to);
+        }
+    }
+
+    function _trySettle(address user) private {
+        try hypeRewarder.settle(listingId, user) {}
+        catch {
+            emit RewardsHookFailed(listingId, user, ILeafHypeRewarder.settle.selector);
+        }
+    }
+
+    function _tryUpdateDebt(address user) private {
+        try hypeRewarder.updateDebt(listingId, user) {}
+        catch {
+            emit RewardsHookFailed(listingId, user, ILeafHypeRewarder.updateDebt.selector);
         }
     }
 }

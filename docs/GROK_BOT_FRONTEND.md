@@ -10,7 +10,7 @@ HyperLeaf is infrastructure. It is responsible for:
 
 1. **Ingress** — lock a transferable receipt (or an address-keyed position), message it, mint one Leaf ticker per listing.
 2. **Availability** — bridge starts closed; caps; pause; health; listing isolation. A halt on hxSQUID must not touch hNEST.
-3. **Yield split** — extra staking income (not the inner receipt) → WHYPE. 99% to holders, 1% protocol. No lock/unlock fee.
+3. **Yield split** — extra staking income (not the inner receipt) → WHYPE. **99% is allocated across current `totalSupply`**, 1% protocol. No lock/unlock fee. Allocation is not the same as “wallet holders received 99%”: AMM / lending / CEX addresses take a denominator slice they usually never claim. Do not show wallet APR = 99% × harvested ÷ supply. Details: `docs/HYPE_COMPOSABILITY.md`.
 
 It is **not** a market maker, not a DEX, not an AMM, not a lending pool.
 
@@ -171,7 +171,7 @@ Do not say audited. Do not say auto-compound NAV while `recordCompound` is disab
 Order and “never wrap”: `docs/ROADMAP.md`, `listings/catalog.json`.
 Why a ticker may exist: `docs/SOLVENCY.md`.
 Yield wording: `docs/PRODUCT_COPY_YIELD.md`, `docs/HYPE_YIELD.md`.
-Who earns HYPE after transfer / LP / lend: this file, **Who gets HYPE**. On-chain: `src/lz/LeafHypeRewarder.sol`, `LeafOFT._update`, `testTransferSettlesSellerKeepsHype`.
+Who earns HYPE after transfer / LP / lend: this file, **Who gets HYPE**. On-chain: `src/lz/LeafHypeRewarder.sol`, `LeafOFT._update`, `testTransferSettlesSellerKeepsHype`, `testPairShareStaysUnclaimed`. Why LP dilutes APR and what we will **not** ship without a product call: `docs/HYPE_COMPOSABILITY.md`.
 
 If GitHub and the UI disagree on an exit, GitHub wins and the UI is a bug.
 

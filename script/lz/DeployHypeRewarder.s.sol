@@ -5,7 +5,10 @@ import {Script, console2} from "forge-std/Script.sol";
 import {LeafHypeRewarder} from "src/lz/LeafHypeRewarder.sol";
 import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
-/// @notice HyperEVM 999 / 998. Then: OFT.setHypeRewarder + source.setConvertYieldToHype(true).
+/// @notice HyperEVM 999 / 998. Then **in this order**:
+///         OFT.setHypeRewarder(rewarder, listingId) — listingId one-shot
+///         Rewarder.register(listingId, OFT) — reverts unless OFT already points here
+///         source.setConvertYieldToHype(true)
 contract DeployHypeRewarder is Script {
     function run() external {
         address owner = vm.envAddress("OWNER");

@@ -51,7 +51,9 @@ Example: deposit 100 cbETH at rate 1.00. Later rate 1.10.
 Converter sells 9.0909 cbETH → WHYPE. `LeafHypeRewarder.notify`:
 
 - protocol **1%** of that WHYPE
-- holders **99%**, claimable, does not burn the Leaf
+- holders **99% allocated** across `totalSupply` (claimable, does not burn the Leaf). Addresses that never `claim` (pairs, pools, hot wallets) leave their slice in the rewarder. Wallet APR is therefore **below** 99% × yield / supply whenever Leaf is in DeFi. See `docs/HYPE_COMPOSABILITY.md`.
+
+`notify` reverts `DustNotify` when the batch cannot bump `accHypePerShare`. Keeper: read `minNotify(listingId)` and wait until harvested WHYPE ≥ that. Do not retry dust.
 
 Redeem 100 hcbETH → **90.9091 cbETH** (still ~100 ETH) plus the HYPE they claimed. 1 hcbETH ≠ 1 cbETH after harvest. The 1% is of **yield**, never of the deposit.
 
