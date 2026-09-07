@@ -83,6 +83,56 @@ Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty.
 
 Do not invent “偶发空投” for cbETH. Do not say 1 hcbETH always unwraps 1 cbETH after a harvest.
 
+Who can actually receive that button’s money is **not** “anyone who ever wrapped”. See **Who gets HYPE** below.
+
+## Who gets HYPE (wallet vs transfer vs LP)
+
+This is how `LeafHypeRewarder` actually books. Copy that disagrees is a bug.
+
+HYPE is **not** inside the Leaf. Leaf does **not** rebase. Pending WHYPE is **per address**, settled on every mint / burn / transfer (`LeafOFT._update` → `settle` then `updateDebt`). Already-notified yield stays with the address that held the Leaf at settle time. The token that leaves does **not** carry that yield.
+
+`notify` splits 99% by **current `totalSupply()`**. Every Leaf counts in the denominator: wallets, AMM pairs, lending pools, CEX hot wallets, dead addresses. The 99% slice for an address that never calls `claim` stays in the rewarder as that address’s `accrued`. Uniswap pairs never claim. That is expected, not a depeg.
+
+### State → claim (user language)
+
+| 用户在做什么 | 已经 notify 过的 HYPE | 之后再 notify 的 HYPE | UI |
+| ------------ | --------------------- | --------------------- | -- |
+| 钱包里拿着 Leaf | 他自己的，随时领，不烧 Leaf | 按当时余额摊 | 显示 领取 HYPE（仅 `toHype` 非空的 ticker） |
+| 转给别人 / 链上成交 | **卖方留下**。买方这笔为 0 | 买方从拿到之后才开始摊 | 成交后卖方仍可领已发生的；不要写「收益跟币走」 |
+| 加进 AMM 做 LP | 加池那一刻结算给钱包，仍可领 | **摊给交易对合约**，不是 LP 凭证 | **不要**在做市页写「做 LP 也能领 HYPE」 |
+| 存进借贷 / 金库 | 存入时结算给钱包 | **摊给那个池子地址** | 同上：仓位凭证领不到 HyperLeaf 这笔 |
+| CEX / 桥 / 托管 | 转入时结算给提币地址 | 摊给热钱包 | 不要承诺「充进交易所还能领」 |
+| 烧掉赎回 | 烧掉前结算，仍可领已发生的 | 没币了，不再摊 | 领取和赎回是两件事；赎回确认不代替领取 |
+
+hNEST does **not** use this rewarder. Do not put 领取 HYPE on hNEST.
+
+Tickers whose yield stays in the share (`hgSOON`, `hsWBERA`, Morpho unless `rateKind`+`toHype`) have **no** HYPE claim in any of the rows above.
+
+### Copy that must appear
+
+On every 领取 HYPE surface (wallet / vault / ticker detail):
+
+> 只有 Leaf 还在你钱包里的时候，之后的 HYPE 才算你的。转走、卖掉、拿去做市或借贷，已经发生的归你，后面的归新地址。
+
+English:
+
+> Later HYPE accrues only while the Leaf sits in your wallet. Transfer, sell, LP, or lend: already-notified yield stays with you; future yield follows the new holder address.
+
+On LP / lending / “utility” pages, if you mention this ticker at all:
+
+> 做市和借贷拿的是盘口费或利息，不是 HyperLeaf 这笔 HYPE。那份记在池子地址上，池子不会来领。
+
+Do **not** ship:
+
+- 「只要持有就能领」 without saying **钱包持有**
+- 「做成 LP 也能挖 HYPE」
+- 「收益跟币走 / 买方吃到卖方没领的」
+- 「存进 HyperLend 自动复利 HYPE」
+- a claim button bound to an LP token, receipt NFT, or vault share that is not the Leaf
+
+There is **no** gauge, bribe, or Chef stake in this protocol. If product later wants “stake Leaf / vote-lock to earn”, that is a new contract. Until then the UI must not pretend LP is a staking position.
+
+Claim is `msg.sender`’s own `accrued`. A pair or pool cannot be claimed on behalf of LPs. Do not add “claim for the pool”.
 
 ## Risk labels (required on the surface)
 
@@ -99,6 +149,7 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Window ticker (hNEST, queued) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
 | Redeem confirm (every listing that burns) | 赎回会烧掉这份 Leaf，不能取消。 |
 | Airdrops / points | 记在金库地址上，要等收获。不是随时可领的 HYPE。 |
+| Any ticker with 领取 HYPE | 只有钱包持有才继续摊 HYPE。做 LP、去借贷、放进交易所，后面的归那个地址，通常领不出来。 |
 | Every listing | 底层协议可以改规则。HyperLeaf 不替它们偿付。 |
 
 Do not say audited. Do not say auto-compound NAV while `recordCompound` is disabled (`PRODUCT_COPY_YIELD.md`).
@@ -111,6 +162,7 @@ Do not say audited. Do not say auto-compound NAV while `recordCompound` is disab
 | 能赎回 | 烧掉之后有一条回家的路 | 盘口一定很深 |
 | 有人买 | HyperEVM 上有人出价 | 协议保证 1:1 |
 | 一张票 | 同一个 ticker 是同一种债权 | 每条资产退出方式都一样 |
+| 能领 HYPE | 这笔 ticker 会把额外收益打成 WHYPE，且 Leaf 此刻在该钱包 | 做 LP / 借贷 / 放交易所也能领；也不是所有 ticker 都有领取按钮 |
 
 `Backed` / `Redeemable` / `Liquid` / `Fungible` stay in README. Do not put those four English words on the product.
 
@@ -119,5 +171,8 @@ Do not say audited. Do not say auto-compound NAV while `recordCompound` is disab
 Order and “never wrap”: `docs/ROADMAP.md`, `listings/catalog.json`.
 Why a ticker may exist: `docs/SOLVENCY.md`.
 Yield wording: `docs/PRODUCT_COPY_YIELD.md`, `docs/HYPE_YIELD.md`.
+Who earns HYPE after transfer / LP / lend: this file, **Who gets HYPE**. On-chain: `src/lz/LeafHypeRewarder.sol`, `LeafOFT._update`, `testTransferSettlesSellerKeepsHype`.
 
 If GitHub and the UI disagree on an exit, GitHub wins and the UI is a bug.
+
+**Preview:** do not chase this file with UI edits unless the human asks. Copy here is the source of truth for the frontend bot; the in-sandbox preview is updated only on request.
