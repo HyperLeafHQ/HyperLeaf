@@ -99,7 +99,8 @@ cast send $ADAPTER "setHarvester(address)" $KEEPER
 cast send $ADAPTER "setConverter(address)" $CONVERTER
 # owner: converter.setLockbox(adapter, true); setToken(QUID); setOutput(NTT HYPE / USDC / WHYPE)
 #        setRoute(aerodrome); setRoute(debridge); setRoute(mayan); setRoute(relay)
-# hop:   converter.execute(tokenIn, amt, tokenOut, minOut, route, data)
+# hop:   converter.execute(tokenIn, amt, tokenOut, minOut, route, data, deadline)
+#        minOut >= converter.requiredMinOut(tokenIn, tokenOut, amt)
 # fail:  converter.halt([adapter])  then try the next route after unhalt
 # home:  converter.returnToLockbox(adapter, token, amt)
 ```
