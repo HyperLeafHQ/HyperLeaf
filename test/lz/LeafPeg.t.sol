@@ -130,8 +130,18 @@ contract LeafPegTest is PegReady {
         vm.expectRevert(LeafOApp.InnerSupplyBreach.selector);
         adapter.sendTo{value: 0.01 ether}(DST, user, 1e18);
         vm.stopPrank();
-        adapter.reportInnerSupply(address(token));
+        adapter.reportInnerSupply();
         assertEq(uint8(adapter.health()), uint8(LeafOApp.Health.Degraded));
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.InnerSupplyBreach.selector);
+        adapter.restoreHealth(LeafOApp.Health.Normal);
+    }
+
+    function testReportInnerSupplyIgnoresForeignToken() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        adapter.reportInnerSupply();
+        assertEq(uint8(adapter.health()), uint8(LeafOApp.Health.Normal));
+        assertEq(adapter.canonicalInner(), address(token));
     }
 
     function testInsolventBlocksRedeem() public {

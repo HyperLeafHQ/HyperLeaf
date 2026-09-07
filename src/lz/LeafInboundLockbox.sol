@@ -81,6 +81,17 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         super.openBridge();
     }
 
+    function canonicalInner() public view override returns (address) {
+        return address(innerToken);
+    }
+
+    function _requireRestoreProof() internal view override {
+        super._requireRestoreProof();
+        if (farmStyle == FarmStyle.AmountNative && farmPrincipalOut && ledgerPrincipal < totalLocked) {
+            revert NotHealthy();
+        }
+    }
+
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);

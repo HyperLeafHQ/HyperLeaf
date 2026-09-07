@@ -124,6 +124,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     function restoreHealth(Health next) external onlyOwner {
         if (health == Health.Insolvent) revert NotSolvent();
         if (uint8(next) >= uint8(health)) revert HealthUpgrade();
+        if (next == Health.Normal) _requireRestoreProof();
         health = next;
         emit HealthSet(next, msg.sender);
     }
@@ -134,14 +135,26 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         emit HealthSet(Health.Halted, msg.sender);
     }
 
-    /// @notice Anyone. If inner totalSupply blew past the ceiling, mint stops.
-    function reportInnerSupply(address token) external {
+    /// @dev Source lockboxes override. Dest OFT has none — ceiling DoS does not apply.
+    function canonicalInner() public view virtual returns (address) {
+        return address(0);
+    }
+
+    /// @notice Anyone. Canonical inner only — not an arbitrary ERC20.
+    function reportInnerSupply() external {
+        address token = canonicalInner();
         if (innerSupplyCeiling == 0 || token == address(0)) return;
         if (IERC20(token).totalSupply() <= innerSupplyCeiling) return;
         if (uint8(health) < uint8(Health.Degraded)) {
             health = Health.Degraded;
             emit HealthSet(Health.Degraded, msg.sender);
         }
+    }
+
+    function _requireRestoreProof() internal view virtual {
+        address token = canonicalInner();
+        if (token == address(0) || innerSupplyCeiling == 0) return;
+        if (IERC20(token).totalSupply() > innerSupplyCeiling) revert InnerSupplyBreach();
     }
 
     /// @notice Call after peers, DVN, caps, and listingTag are on-chain. Not a git merge.

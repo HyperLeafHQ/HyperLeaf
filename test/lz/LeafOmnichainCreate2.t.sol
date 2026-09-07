@@ -209,6 +209,14 @@ contract LeafOmnichainCreate2Test is PegReady {
         box.pokeFarmRequest(1, 10);
         vm.stopPrank();
         assertEq(proxy.lastType(), 10);
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.NotHealthy.selector);
+        box.restoreHealth(LeafOApp.Health.Normal);
+        vm.prank(guardian);
+        box.reportLedgerPrincipal(10e18);
+        vm.prank(owner);
+        box.restoreHealth(LeafOApp.Health.Normal);
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Normal));
     }
 
     function testUserCannotInflateLedger() public {

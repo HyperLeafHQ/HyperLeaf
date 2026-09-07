@@ -47,6 +47,10 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         super.openBridge();
     }
 
+    function canonicalInner() public view override returns (address) {
+        return address(innerToken);
+    }
+
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
