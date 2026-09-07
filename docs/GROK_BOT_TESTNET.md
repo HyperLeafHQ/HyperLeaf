@@ -76,7 +76,7 @@ forge script script/lz/OpenPeg.s.sol:OpenPeg \
   --rpc-url hyperevm_testnet --broadcast --private-key $PRIVATE_KEY
 ```
 
-Read `listingTag`, `maxPerTx`, peers on-chain. Then rerun with `OPEN_BRIDGE=true`. Mint is closed until that flag.
+Read `listingTag`, `maxPerTx`, peers on-chain. Source also needs `INNER_SUPPLY_CEILING` (above mock totalSupply). Then rerun with `OPEN_BRIDGE=true`. Mint is closed until that flag.
 
 ## 5. Smoke deposit (Base → 998)
 

@@ -56,6 +56,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
+        _requireRedeem();
         _takeQuota(amount);
         _burn(msg.sender, amount);
         bytes memory payload = encodeBridge(to, amount);
@@ -79,6 +80,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         (bytes32 toB, uint256 amount) = _decodeBridge(message);
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();
+        _requireMint();
         _takeQuota(amount);
         if (totalSupply() + amount > supplyCap) revert SupplyCapExceeded();
         _mint(to, amount);

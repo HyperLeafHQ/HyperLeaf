@@ -55,6 +55,11 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _initFee(feeRecipient_);
     }
 
+    function openBridge() public override onlyOwner {
+        if (innerSupplyCeiling == 0) revert LimitsUnset();
+        super.openBridge();
+    }
+
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
@@ -144,11 +149,13 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function harvest() external nonReentrant {
+        _requireInnerSupplyOk(innerToken);
         _harvestInner(innerToken, 0);
     }
 
     function harvestToken(IERC20 token) external nonReentrant {
         if (address(token) == address(innerToken)) {
+            _requireInnerSupplyOk(innerToken);
             _harvestInner(innerToken, 0);
         } else {
             _harvestOther(token);
@@ -164,6 +171,8 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
+        _requireMint();
+        _requireInnerSupplyOk(innerToken);
 
         _harvestInner(innerToken, 0);
 
@@ -199,6 +208,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (to == address(0) || amount == 0) revert ZeroAmount();
         if (amount > totalLocked) revert InsufficientLocked();
         if (farmPrincipalOut) revert BadStake();
+        _requireRedeem();
         _takeQuota(amount);
         _requireCash(innerToken, amount, 0);
         totalLocked -= amount;

@@ -12,6 +12,7 @@ abstract contract PegReady is Test {
         vm.startPrank(owner_);
         src.setListingTag(TAG);
         src.setLimits(cap, cap);
+        src.setInnerSupplyCeiling(type(uint256).max);
         src.openBridge();
         vm.stopPrank();
     }
@@ -20,6 +21,7 @@ abstract contract PegReady is Test {
         vm.startPrank(owner_);
         src.setListingTag(TAG);
         src.setLimits(cap, cap);
+        src.setInnerSupplyCeiling(type(uint256).max);
         dst.setListingTag(TAG);
         dst.setLimits(cap, cap);
         dst.setSupplyCap(cap);

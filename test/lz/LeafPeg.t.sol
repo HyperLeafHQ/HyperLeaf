@@ -76,9 +76,12 @@ contract LeafPegTest is PegReady {
 
     function testOpenRequiresTagAndLimits() public {
         vm.prank(owner);
-        vm.expectRevert(LeafOApp.NoListingTag.selector);
+        vm.expectRevert(LeafOApp.LimitsUnset.selector);
         adapter.openBridge();
         vm.startPrank(owner);
+        adapter.setInnerSupplyCeiling(type(uint256).max);
+        vm.expectRevert(LeafOApp.NoListingTag.selector);
+        adapter.openBridge();
         adapter.setListingTag(TAG);
         vm.expectRevert(LeafOApp.LimitsUnset.selector);
         adapter.openBridge();
@@ -86,6 +89,66 @@ contract LeafPegTest is PegReady {
         adapter.openBridge();
         vm.stopPrank();
         assertTrue(adapter.bridgeOpen());
+    }
+
+    function testDegradedStopsMintAllowsRedeemPath() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.startPrank(user);
+        token.approve(address(adapter), 10e18);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 10e18);
+        vm.stopPrank();
+        vm.prank(guardian);
+        adapter.setHealth(LeafOApp.Health.Degraded);
+        vm.startPrank(user);
+        token.approve(address(adapter), 1e18);
+        vm.expectRevert(LeafOApp.NotHealthy.selector);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 1e18);
+        vm.stopPrank();
+        bytes memory payload = _msg(adapter, user, 4e18);
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: DST, sender: bytes32(uint256(uint160(address(oft)))), nonce: 1
+        });
+        vm.prank(address(epSrc));
+        adapter.lzReceive(origin, bytes32(uint256(2)), payload, address(0), "");
+        assertEq(token.balanceOf(user), 494e18);
+    }
+
+    function testInnerSupplyCeilingRejectsMint() public {
+        vm.startPrank(owner);
+        adapter.setListingTag(TAG);
+        adapter.setLimits(100e18, 100e18);
+        adapter.setInnerSupplyCeiling(token.totalSupply());
+        oft.setListingTag(TAG);
+        oft.setLimits(100e18, 100e18);
+        oft.setSupplyCap(1_000e18);
+        adapter.openBridge();
+        oft.openBridge();
+        vm.stopPrank();
+        token.mint(user, 1);
+        vm.startPrank(user);
+        token.approve(address(adapter), 1e18);
+        vm.expectRevert(LeafOApp.InnerSupplyBreach.selector);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 1e18);
+        vm.stopPrank();
+        adapter.reportInnerSupply(address(token));
+        assertEq(uint8(adapter.health()), uint8(LeafOApp.Health.Degraded));
+    }
+
+    function testInsolventBlocksRedeem() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.startPrank(user);
+        token.approve(address(adapter), 10e18);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 10e18);
+        vm.stopPrank();
+        vm.prank(guardian);
+        adapter.setHealth(LeafOApp.Health.Insolvent);
+        bytes memory payload = _msg(adapter, user, 1e18);
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: DST, sender: bytes32(uint256(uint160(address(oft)))), nonce: 1
+        });
+        vm.prank(address(epSrc));
+        vm.expectRevert(LeafOApp.NotSolvent.selector);
+        adapter.lzReceive(origin, bytes32(uint256(2)), payload, address(0), "");
     }
 
     function testWrongListingTagRejected() public {
@@ -103,6 +166,7 @@ contract LeafPegTest is PegReady {
         vm.startPrank(owner);
         adapter.setListingTag(TAG);
         adapter.setLimits(5e18, 100e18);
+        adapter.setInnerSupplyCeiling(type(uint256).max);
         oft.setListingTag(TAG);
         oft.setLimits(5e18, 100e18);
         oft.setSupplyCap(1_000e18);
@@ -121,6 +185,7 @@ contract LeafPegTest is PegReady {
         vm.startPrank(owner);
         adapter.setListingTag(TAG);
         adapter.setLimits(10e18, 10e18);
+        adapter.setInnerSupplyCeiling(type(uint256).max);
         oft.setListingTag(TAG);
         oft.setLimits(10e18, 10e18);
         oft.setSupplyCap(1_000e18);

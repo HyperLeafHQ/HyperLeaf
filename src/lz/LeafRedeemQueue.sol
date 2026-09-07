@@ -62,6 +62,11 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _initFee(feeRecipient_);
     }
 
+    function openBridge() public override onlyOwner {
+        if (innerSupplyCeiling == 0) revert LimitsUnset();
+        super.openBridge();
+    }
+
     function setDepositCap(uint256 cap) external onlyOwner {
         depositCap = cap;
         emit CapUpdated(cap);
@@ -114,11 +119,13 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function harvest() external nonReentrant {
+        _requireInnerSupplyOk(innerToken);
         _harvestInner(innerToken, pendingTicketAssets);
     }
 
     function harvestToken(IERC20 token) external nonReentrant {
         if (address(token) == address(innerToken)) {
+            _requireInnerSupplyOk(innerToken);
             _harvestInner(innerToken, pendingTicketAssets);
         } else {
             _harvestOther(token);
@@ -134,6 +141,8 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
+        _requireMint();
+        _requireInnerSupplyOk(innerToken);
 
         _harvestInner(innerToken, pendingTicketAssets);
 
@@ -161,6 +170,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (t.to == address(0)) revert UnknownTicket();
         if (t.claimed) revert AlreadyClaimed();
         if (block.timestamp < t.eta) revert NotMature();
+        if (health == Health.Insolvent) revert NotSolvent();
         t.claimed = true;
         pendingTicketAssets -= t.amount;
         _requireCash(innerToken, t.amount, pendingTicketAssets);
@@ -179,6 +189,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         address to = address(uint160(uint256(toB)));
         if (to == address(0) || amount == 0) revert ZeroAmount();
         if (amount > totalLocked) revert InsufficientLocked();
+        _requireRedeem();
         _takeQuota(amount);
         if (innerToken.balanceOf(address(this)) < totalLocked + pendingTicketAssets) revert Underbacked();
 

@@ -20,6 +20,7 @@ See [`PEG.md`](PEG.md). Liquid 7 Sep 2026: unbacked receipts took a real peg-out
 
 1. `setListingTag` (frozen). Same tag on source and OFT.
 2. `setLimits(maxPerTx, maxPerDay)` and OFT `setSupplyCap` = source `depositCap`.
+2b. Source `setInnerSupplyCeiling` to a number **above** today's `inner.totalSupply()` with headroom for honest mint, not a flash print.
 3. Wire peers. Mainnet: `SetSecurityStack` (2-of-3 + HyperLeaf required DVN).
 4. Read the live config on-chain. Then `openBridge` on **both** sides.
 5. Guardian is a different key. `closeBridge` pauses and keeps mint closed after unpause.

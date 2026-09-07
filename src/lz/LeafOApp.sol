@@ -33,6 +33,23 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     event LimitsSet(uint256 maxPerTx, uint256 maxPerDay);
     event BridgeOpened();
     event BridgeClosed();
+    event HealthSet(Health indexed health, address indexed caller);
+    event InnerSupplyCeilingSet(uint256 cap);
+
+    enum Health {
+        Normal,
+        Degraded,
+        Halted,
+        Insolvent
+    }
+
+    /// @dev Normal: mint+redeem. Degraded: redeem only (upstream suspect).
+    ///      Halted/Insolvent: neither. Guardian may only worsen. Owner restores
+    ///      Degraded/Halted. Insolvent needs recoverInsolvent().
+    Health public health;
+    /// @dev If inner.totalSupply() exceeds this, mint stops (upstream print).
+    ///      0 = unset (do not skip: openBridge requires it on lockboxes).
+    uint256 public innerSupplyCeiling;
 
     error ZeroAddress();
     error OnlyEndpoint();
@@ -47,6 +64,10 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     error TxCapExceeded();
     error DayCapExceeded();
     error Underbacked();
+    error NotHealthy();
+    error NotSolvent();
+    error HealthUpgrade();
+    error InnerSupplyBreach();
 
     modifier onlyGuardian() {
         if (msg.sender != guardian && msg.sender != owner()) revert NotGuardian();
@@ -87,6 +108,40 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         maxPerTx = maxTx;
         maxPerDay = maxDay;
         emit LimitsSet(maxTx, maxDay);
+    }
+
+    function setInnerSupplyCeiling(uint256 cap) public onlyOwner {
+        innerSupplyCeiling = cap;
+        emit InnerSupplyCeilingSet(cap);
+    }
+
+    function setHealth(Health next) public onlyGuardian {
+        if (uint8(next) <= uint8(health)) revert HealthUpgrade();
+        health = next;
+        emit HealthSet(next, msg.sender);
+    }
+
+    function restoreHealth(Health next) external onlyOwner {
+        if (health == Health.Insolvent) revert NotSolvent();
+        if (uint8(next) >= uint8(health)) revert HealthUpgrade();
+        health = next;
+        emit HealthSet(next, msg.sender);
+    }
+
+    function recoverInsolvent() external onlyOwner {
+        if (health != Health.Insolvent) revert HealthUpgrade();
+        health = Health.Halted;
+        emit HealthSet(Health.Halted, msg.sender);
+    }
+
+    /// @notice Anyone. If inner totalSupply blew past the ceiling, mint stops.
+    function reportInnerSupply(address token) external {
+        if (innerSupplyCeiling == 0 || token == address(0)) return;
+        if (IERC20(token).totalSupply() <= innerSupplyCeiling) return;
+        if (uint8(health) < uint8(Health.Degraded)) {
+            health = Health.Degraded;
+            emit HealthSet(Health.Degraded, msg.sender);
+        }
     }
 
     /// @notice Call after peers, DVN, caps, and listingTag are on-chain. Not a git merge.
@@ -175,6 +230,19 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         }
         windowVolume += amount;
         if (windowVolume > maxPerDay) revert DayCapExceeded();
+    }
+
+    function _requireMint() internal view {
+        if (health != Health.Normal) revert NotHealthy();
+    }
+
+    function _requireRedeem() internal view {
+        if (uint8(health) >= uint8(Health.Halted)) revert NotSolvent();
+    }
+
+    function _requireInnerSupplyOk(IERC20 inner) internal view {
+        if (innerSupplyCeiling == 0) return;
+        if (inner.totalSupply() > innerSupplyCeiling) revert InnerSupplyBreach();
     }
 
     function _decodeBridge(bytes calldata message) internal view returns (bytes32 to, uint256 amount) {

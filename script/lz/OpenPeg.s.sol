@@ -15,12 +15,14 @@ contract OpenPeg is Script {
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
         bytes32 tag = keccak256(bytes(a.id));
         uint256 cap = vm.envOr("PEG_CAP", a.defaultCap);
+        uint256 ceiling = vm.envOr("INNER_SUPPLY_CEILING", uint256(0));
         bool open = vm.envOr("OPEN_BRIDGE", false);
 
         vm.startBroadcast();
         LeafOApp app = LeafOApp(oapp);
         app.setListingTag(tag);
         app.setLimits(cap, cap);
+        if (ceiling != 0) app.setInnerSupplyCeiling(ceiling);
         try LeafOFT(oapp).setSupplyCap(cap) {} catch {}
         if (open) app.openBridge();
         vm.stopBroadcast();

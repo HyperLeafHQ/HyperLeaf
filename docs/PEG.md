@@ -30,4 +30,4 @@ One inner token per contract. Payload is `(listingTag, to, amount)`. A message f
 
 ---
 
-Testnet: `script/lz/OpenPeg.s.sol` (`OPEN_BRIDGE=true` after WirePeers). Mainnet: same, plus `SetSecurityStack`, then open.
+See also [`TRUST.md`](TRUST.md): authorization ≠ accounting ≠ solvency. `Health` + inner supply ceiling sit on top of these six rules.
