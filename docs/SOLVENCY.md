@@ -83,12 +83,12 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Accounting unit | 1 hsETHFI = 1 sETHFI |
 | Core invariant | same L: `supply ≤ totalLocked ≤ cap` + sETHFI supply ceiling |
 | Proof source | lockbox `totalLocked` + ether.fi vault share supply |
-| Mint / redeem | `send` / burn → sETHFI. **Never** `DelayedWithdraw` (~10d to ETHFI) |
+| Mint / redeem | `send` / burn → sETHFI. **Never** `DelayedWithdraw` (~10d to ETHFI) or the teller `deposit` |
 | Yield | NAV in sETHFI rate; ether.fi / Karak / Symbiotic points = eco-claim class |
 | Failure | vault upgrade, points paid to EOA not lockbox |
 | Auto-pause | ceiling / health |
 | Worst-case loss | min(cap, maxPerDay) |
-| Test | reuse `LeafSolvency.t.sol` L suite. Need one deposit tx to pin teller `0x35dD2463…` |
+| Test | reuse `LeafSolvency.t.sol` L suite. Live deposit path: 0x24a993c9 → teller `0xe2acf9` `deposit(ETHFI,amt,min)` still unpaused |
 
 ### hgSOON (research — row incomplete)
 

@@ -406,15 +406,20 @@
       "name": "Hyperleaf sETHFI",
       "innerSymbol": "sETHFI",
       "innerToken": "0x86B5780b606940Eb59A062aA85a07959518c0161",
-      "teller": "0x35dD2463fA7a335b721400C5Ad8Ba40bD85c179b",
+      "teller": "0xe2acf9f80a2756E51D1e53F9f41583C84279Fb1f",
+      "tellerAlt": "0x35dD2463fA7a335b721400C5Ad8Ba40bD85c179b",
       "delayedWithdraw": "0x1509b1fdD01cAF9697aff514b9574B4A27173Dd2",
+      "depositSelector": "0x0efe6a8b",
       "source": "ethereum",
       "sourceChainId": 1,
       "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
       "yield": { "inner": "keep-sethfi", "pullInner": false, "toHype": ["airdrop-erc20s"] },
-      "note": "L wrap of transferable sETHFI (BoringGovernance share), not raw ETHFI. Same address on ETH/Arb/Base/OP/Scroll — deposit on Ethereum (most ETHFI in the vault). Redeem sETHFI 1:1; never call DelayedWithdraw / requestOnChainWithdraw (~10d to ETHFI). NAV sits in sETHFI (vault holds more ETHFI than share supply). Points (ether.fi / Karak / Symbiotic) accrue to the lockbox — same eco-claim class as KAITO, do not block L. ETHFI is not a Unit native. Alias hsETHFI.",
+      "refs": {
+        "depositTx": "0x24a993c959ce6eaa9bb2406670e042013ce64ac5aa3b48232d92a081fea1f67c"
+      },
+      "note": "L wrap of transferable sETHFI, not ETHFI. Your 2024-07-18 tx 0x24a993c9 is still the live path: deposit(ETHFI, amount, minMint) 0x0efe6a8b on Teller 0xe2acf9 (vault()=sETHFI, isPaused=false, shareLockPeriod=0). Same teller still used Nov 2025 on Arb. Catalog's 0x35dD2463 is a second teller for the same vault, also unpaused — do not mix. 2024 mint was 1:1; later deposits mint fewer shares (NAV grew). HyperLeaf never calls this deposit or DelayedWithdraw; we pull sETHFI. sETHFI supply ~90.4M. Alias hsETHFI.",
       "status": "research",
       "priority": 12
     },
