@@ -71,6 +71,25 @@ HyperEVM is a trading network, not a general-purpose L1 full of every asset. Hyp
 
 What we are **not**: a Kinetiq competitor, a points farm, a generic LayerZero wrapper, or a protocol whose north star is APY.
 
+**Do not strip rights.** If wrapping an asset means the holder loses a real option they had at the source (borrow, vote, extra-chain airdrop, unlock), we either keep that option or we do not list. Parked **hSKY** is this rule: LockStake without USDS borrow is a worse product than the original urn.
+
+---
+
+## HyperEVM tokenized vaults vs Leaf receipts
+
+Hyperliquid’s native format for a vault on HyperEVM is: **ERC-4626 share + CoreWriter (`0x3333…3333`) + L1Read precompiles (`0x0800+`)**. The contract’s HyperCore account can trade spot/HIP-3, and `totalAssets()` can read **vault equity / oraclePx / spot balances from HyperCore at the same block** — no Chainlink.
+
+That helps HyperLeaf in one place, and not in another:
+
+| Use | Help? |
+| --- | --- |
+| After a Leaf ticker has a HyperEVM book, **link a Core spot** so lending / HIP-3 can price it from HyperCore | **Yes** — this is how Leaf becomes default collateral |
+| NAV for HYPE conversion / WHYPE | **Yes** — `oraclePx` is the clean HYPE print |
+| Custody SKY / xSQUID / cbETH (those live on Ethereum/Base) | **No** — CoreWriter cannot touch an Ethereum urn |
+| Turn the lockbox into an HLP-style trading vault | **No** — that *creates* risk. Leaf does not trade |
+
+Do **not** change Leaf OFTs to 4626 just to match the vault spec. Dest tokens stay OFT receipts. If a listing later needs a Core-priced share, that is a **second** wrapper on HyperEVM that reads the Leaf book or linked Core spot — after the book exists.
+
 ---
 
 ## Two product lines
@@ -197,7 +216,7 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
 | 1 | **hxSQUID** | L | Base | xSQUID | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
 | 2 | **hcbETH** | L | Base | cbETH | Base ETH LST. PoS in the rate. |
-| 3 | **hSKY** | C1 | Ethereum | Lockstake urn | fee()=0 on this engine. Farm pays **USDS**, not SKY. Never borrow. |
+| later | **hSKY** | C1 | Ethereum | Lockstake urn | PARKED. Stake-only castrates borrow. Min 1.44M SKY / 30k USDS. If revived: only-in. |
 | later | **hveAERO** | ve-NFT | Base | veAERO 721 | After Sky urn pattern. |
 | hold | **hstkAAVE** | L | Ethereum | stkAAVE | Legacy Safety Module. Umbrella is the new backstop. Do not ship until SM fate + voting delegate + HyperEVM spot gap are clear. |
 | watch | **Umbrella** | risk | Ethereum | aUSDC / GHO … | Not “support AAVE”. Separate product if we ever tokenize a specific cover pool. |
@@ -231,11 +250,11 @@ Tiny cap. `claimRewards(lockbox, max)` → QUID → WHYPE. Watch LZ peers.
 **Phase C — hcbETH**
 Copy the proven Base L path onto Coinbase cbETH.
 
-**Phase D — hSKY (Ethereum Lockstake V2)**
-PoC: open urn → lock SKY → selectFarm(USDS) → getReward(USDS) → never `draw`. Live `fee()` is 0. Ticker hSKY. No stUSDS. No MKR.
+**Phase D — skip hSKY**
+Parked. Full LockStake includes USDS borrow; min size is too large. Stake-only would strip rights. If revived: C1 only-in.
 
-**Phase E — hveAERO / remaining Ethereum**
-veAERO after the urn/NFT custody pattern is proven on Sky. stkAAVE remains hold.
+**Phase E — later Ethereum / Base ve**
+veAERO still needs an NFT lockbox. Independent of SKY. stkAAVE remains hold.
 
 **Phase F — sWBERA / AEVO / GMX / JupSOL / ANSEM**
 One kind at a time. Solana listings wait on a non-EVM lockbox.

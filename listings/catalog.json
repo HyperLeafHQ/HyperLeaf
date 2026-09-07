@@ -385,15 +385,17 @@
       "usds": "0xdC035D45d973E3EC169d2276DDab16f1e407384F",
       "spkFarm": "0x99cBC0e4E6427F6939536eD24d1275B95ff77404",
       "exitFeeWad": 0,
+      "minBorrowUsds": 30000,
+      "minCollateralSky": 1440000,
       "source": "ethereum",
       "sourceChainId": 1,
       "sourceEid": 30101,
       "exit": "market-only",
       "infra": "evm",
       "yield": { "inner": "keep-sky-in-urn", "pullInner": false, "toHype": ["USDS"] },
-      "note": "Live engine fee()=0 (immutable). lsSKY sits in the urn and is not transferable. One farm per urn — V1 selectFarm USDS (0x38E4254b), not SPK. getReward pays USDS into the lockbox, then toHype. Never draw USDS debt (would add liquidation). Vote stays protocol-delegated. Ticker hSKY is a claim on the urn, not 1 SKY, even though this engine currently burns 0 on free. Do not wrap stUSDS or MKR. Interface ISkyLockstake.sol.",
-      "status": "poc",
-      "priority": 3
+      "note": "PARKED. Do not strip rights: stake-only (~4% USDS farm, no borrow) castrates LockStake. Full product needs draw, but min borrow is 30,000 USDS / ~1.44M SKY — too big for cold start. If revived: C1 only-in; HyperLeaf drawing USDS is liquidation risk and must be disclosed. fee()=0. Never wrap stUSDS/MKR.",
+      "status": "parked",
+      "priority": 40
     },
     {
       "id": "hethfi",
