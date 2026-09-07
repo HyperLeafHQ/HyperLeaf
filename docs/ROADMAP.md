@@ -19,6 +19,13 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | last | BONK12M / hMET | C1/C2 | Solana | |
 | parked | hSKY | C1 | Ethereum | Stake-only strips LockStake borrow. Min 1.44M SKY / 30k USDS |
 | hold | hstkAAVE | | Ethereum | Safety Module → Umbrella |
+| watch | hLIT | C2? | Ethereum | Lighter 3d unstake. LLP cap sits on the lockbox — rights strip until designed |
+| watch | hRIVER | C1 | BSC | Spot already on Hyperliquid. Product is epoch-locked stake, not free RIVER |
+| watch | hgSOON | L | Solana/BSC/Base | Wrap gSOON, never 7d unstake. Canonical chain TBD |
+| watch | hB3 | C1? | Base | Need stake tx; B3+ receipt vs account |
+| watch | hORDER | C1 | Ethereum | VALOR non-transferable; lockbox must keep it |
+| watch | hSEED | C1 | Arbitrum | Garden. Rewards in Base cbBTC — extra-chain claim |
+| watch | hAVNT | C1 | Base | SM slash + trader discounts. AVNT perp already on HL |
 | blocked | hKAITO / hVIRTUALMAX | | Base | Extra-chain claims until CREATE2 holder |
 
 Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
