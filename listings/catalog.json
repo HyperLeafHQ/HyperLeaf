@@ -373,6 +373,24 @@
       "priority": 19
     },
     {
+      "id": "hstonkbroker",
+      "kind": "ve-nft",
+      "symbol": "hSB",
+      "name": "Hyperleaf StonkBroker",
+      "innerSymbol": "StonkBroker NFT",
+      "innerToken": "0x539cdd042c2f3d93ebc5be7dfff0c79f3b4fabf0",
+      "underlying": "0xe934e36a439c94017b64a3fece66af12099abf50",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "yield": { "inner": "stock-token-drops-to-tba", "pullInner": false, "toHype": [] },
+      "note": "Do not wrap $STONKBROKER 0xe934e36a (spot, no yield in the ERC-20). Stock-token drops go to activated ERC-6551 NFT TBAs only. Activation fee burns STONKBROKER and clears on transfer. Geo attestation + 'work for payouts' (not passive). Same NFT-lockbox blocker as hveAERO, plus TBA and legal. Exchange is up. ve(3,3).",
+      "status": "watch",
+      "priority": 20
+    },
+    {
       "id": "hstkaave",
       "kind": "L",
       "symbol": "hstkAAVE",

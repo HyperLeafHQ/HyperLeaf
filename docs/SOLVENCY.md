@@ -155,6 +155,10 @@ SLVR `0x791229E3…C29aD9` is a 1-minute grid lottery. Token has **2% buy/sell t
 
 Twofold DualPool on Robinhood. TWO `0x2A4a33A2…88d5` (fixed 1B, no tax, ~$1.2M). **vTWO** `0x5c02401e…5950` is 1:1 vote wrap, unwrap anytime — occupancy. **StakingVaultV2** `0x06E463fD…B3A9` 1h unstake, TWO rewards. **TwoStakingUSDG** `0x9CF18bB1…E9e3` 7d unstake, USDG rewards. LP is ERC-1155. No L adapter. C2 only after a receipt exists.
 
+### hSB (watch — NFT, not the ERC-20)
+
+StonkBrokers on Robinhood 4663. **$STONKBROKER** `0xe934e36a…bf50` is a collection token: no yield, no tax, no on-contract staking. Stock-token drops go to **activated ERC-6551 broker NFTs** `0x539cdd04…abf0`. Activation burns STONKBROKER and resets on transfer. Geo attestation; project terms treat payouts as work, not yield. Do not wrap the ERC-20. NFT lockbox would also need TBA custody. No adapter.
+
 ### hSNX (parked)
 
 420 Pool closed **2026-06-19**. SNX without debt returned. SIP-423 Phase 4 staking reform is **CONTRACT BUILD DEFERRED**. Official docs: previous SNX staking is not active. No inner. Do not wrap SNX.

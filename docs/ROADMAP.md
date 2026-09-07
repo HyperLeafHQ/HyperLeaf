@@ -21,6 +21,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | later | **hsteakUSDG** | L | Robinhood Morpho | steakUSDG `0xBeEf…09dd`. Never deposit/redeem USDG |
 | watch | **hliSLVR** | L | Robinhood | Wrap **liSLVR only**. Never taxed SLVR. Lottery rake. Confirm tax-free share |
 | watch | **hTWO** | C2 | Robinhood | Twofold. No receipt; 1h/7d stake vaults. Do not wrap TWO or vTWO |
+| watch | **hSB** | ve-NFT | Robinhood | StonkBrokers. Wrap **activated NFT**, never $STONKBROKER. TBA + geo. Skip until NFT lockbox |
 | later | **hsWBERA** | L | Berachain | Wrap sWBERA. Never 4626 withdraw/redeem (7d NFT queue) |
 | later | hAEVO | C1 | Ethereum | No transferable receipt |
 | later | hJupSOL / hANSEM | L | Solana | Needs Solana lockbox |
