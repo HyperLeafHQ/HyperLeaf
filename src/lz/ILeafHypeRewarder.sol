@@ -10,4 +10,5 @@ interface ILeafOFTRewardBind {
 interface ILeafHypeRewarder {
     function settle(bytes32 id, address user) external;
     function updateDebt(bytes32 id, address user) external;
+    function notify(bytes32 id, uint256 amount) external;
 }

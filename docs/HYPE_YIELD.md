@@ -14,7 +14,18 @@ HyperEVM mempool: **8 pending txs per sender**. Harvest / `poke` / `notify` are 
 
 ## 2. Weekly (or size-gated) keeper — not 24/7
 
-Harvester-only `pullYield`. Then swap + bridge + `LeafHypeRewarder.notify`.
+Harvester-only `pullYield` **into `LeafYieldConverter`**, never an EOA. Then swap + bridge + `notify` on that contract.
+
+Converter rules:
+
+1. Inventory sits in the converter contract.
+2. Each hop is an allowlisted `route` (Aerodrome / 1inch / Relay / Portal / **deBridge** / **Mayan** / …) with `minOut`. Below quote → revert, inventory stays, try the next route.
+3. `notify(id, amount, minAmount)` cannot credit more WHYPE than the contract holds, and cannot go below the keeper quote.
+4. If no route fills: `converter.halt([lockbox])` → `lockbox.haltConvert()` → further `pullYield` reverts `ConvertHalted`. Wrap/redeem stay live. Owner turns convert back on after a route works.
+5. Unsold tokens `returnToLockbox` only. Never to an EOA.
+
+Same converter bytecode on source (swap/bridge) and HyperEVM (`setRewarder` + `notify`).
+
 
 | Listing | Unlock | What you may pull | What you must not pull |
 | --- | --- | --- | --- |
@@ -63,9 +74,9 @@ xSQUID is the other class: QUID is a different ERC-20, so redeem stays 1 xSQUID 
 
 | Source | Harvest into | Bridge |
 | --- | --- | --- |
-| Base (QUID, KAITO airdrops) | Wormhole NTT HYPE `0x15D0…f68d` | Portal / Relay → WHYPE |
-| BSC (BLUAI surplus) | USDC — never fake BSC HYPE | **Relay** dest=WHYPE; deBridge USDC fallback |
-| Solana | Wormhole HYPE `98sMhv…Mh5g` | Portal |
+| Base (QUID, KAITO airdrops) | Wormhole NTT HYPE `0x15D0…f68d` | Portal / Relay → WHYPE. **Fallback: deBridge, Mayan** (allowlist the router, same `execute`) |
+| BSC (BLUAI surplus) | USDC — never fake BSC HYPE | **Relay** dest=WHYPE; deBridge / Mayan USDC fallback |
+| Solana | Wormhole HYPE `98sMhv…Mh5g` | Portal; Mayan fallback |
 
 Not cbHYPE. Not BSC ticker-HYPE.
 
@@ -74,13 +85,19 @@ Run when surplus clears Relay min and gas < ~1% of the batch. Weekly is enough. 
 ## Deploy
 
 ```
-# after wrap + rewarder
+# LeafYieldConverter (source + HyperEVM). Never setConverter to an EOA.
+OWNER=$OWNER KEEPER=$KEEPER GUARDIAN=$GUARDIAN \
+forge script script/lz/DeployYieldConverter.s.sol:DeployYieldConverter \
+  --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
+# HyperEVM: same + REWARDER=... (script calls setRewarder)
+
 cast send $ADAPTER "setConvertYieldToHype(bool)" true
 cast send $ADAPTER "setHarvester(address)" $KEEPER
 cast send $ADAPTER "setConverter(address)" $CONVERTER
-# poke: LeafCallRewardSource.harvest(lockbox) — anyone
-# pullYield only to $CONVERTER. notify reverts if hToken supply is 0.
-
-# poke: harvestRewards(LEAF_CALL_SOURCE) — anyone
-# BLUAI4Y C1 pullYield(BLUAI) is extra inner only
+# owner: converter.setLockbox(adapter, true); setToken(QUID); setOutput(NTT HYPE / USDC / WHYPE)
+#        setRoute(aerodrome); setRoute(debridge); setRoute(mayan); setRoute(relay)
+# hop:   converter.execute(tokenIn, amt, tokenOut, minOut, route, data)
+# fail:  converter.halt([adapter])  then try the next route after unhalt
+# home:  converter.returnToLockbox(adapter, token, amt)
 ```
+

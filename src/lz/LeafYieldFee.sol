@@ -64,6 +64,7 @@ abstract contract LeafYieldFee {
     error ForbiddenRewardsSelector();
     error BadRateFeed();
     error FeeRecipientZero();
+    error ConvertHalted();
 
     function _initFee(address recipient) internal {
         if (recipient == address(0)) revert FeeRecipientZero();
@@ -103,6 +104,16 @@ abstract contract LeafYieldFee {
 
     function _requireConverter(address to) internal view {
         if (converter == address(0) || to != converter) revert BadConverter();
+    }
+
+    function _requireConvertOn() internal view {
+        if (!convertYieldToHype) revert ConvertHalted();
+    }
+
+    /// @notice Only the converter contract. Owner uses `setConvertYieldToHype(false)`.
+    function haltConvert() external {
+        if (msg.sender != converter) revert BadConverter();
+        _setConvertYieldToHype(false);
     }
 
     function _setClaimTarget(address inner, address t, bool allowed) internal {
@@ -325,7 +336,7 @@ abstract contract LeafYieldFee {
     /// @dev retain: pull 1% of surplus (protocol). 99% stays, so LP/lend keep the yield.
     ///      sell-all: pull 100% of surplus to converter; 99/1 is WHYPE at notify.
     function _tryPullRateYield(IERC20 token, uint256 reserved, address to) internal returns (uint256 surplus) {
-        if (rateKind == RateKind.None || to == address(0)) return 0;
+        if (rateKind == RateKind.None || to == address(0) || !convertYieldToHype) return 0;
         if (retainRateYield) {
             uint256 rate = _readRate(token);
             if (lastRate == 0) {

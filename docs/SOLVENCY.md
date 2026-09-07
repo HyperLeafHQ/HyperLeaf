@@ -85,7 +85,8 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 
 Do **not** enable `rateKind` on hgSOON / hsWBERA / Morpho shares unless that listing's row says pull rate surplus. Default for those is yield-in-the-share, 1 share = 1 wrapped share.
 
-Converter min-output (WHYPE received ≥ quoted) is a keeper invariant, not a lockbox invariant. Not in this contract.
+Converter `minOut` is enforced on `LeafYieldConverter.execute` (balance delta) and `notify(amount, minAmount)`. It is **not** a lockbox invariant — wrap/redeem never talk to the converter. A dead hop: `halt` + `returnToLockbox`. Next hop can be a different allowlisted bridge (deBridge / Mayan / Relay).
+
 
 
 ### hKAITO (blocked on omnichain holder)

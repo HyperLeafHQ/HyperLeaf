@@ -62,7 +62,7 @@ forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
   --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
 ```
 
-Sets `convertYieldToHype`, harvester, converter. hxSQUID also sets `rewardsSelector` `0x9a99b4f0`.
+Sets `convertYieldToHype`, harvester, converter. **CONVERTER must be `LeafYieldConverter`, not an EOA.** Deploy with `DeployYieldConverter.s.sol` first, then allowlist lockbox / QUID / routes (include deBridge + Mayan as backups). hxSQUID also sets `rewardsSelector` `0x9a99b4f0`.
 hcbETH: script also `setRateKind(ExchangeRate)` + `setRetainRateYield(true)`. Mock inner is `MockRateERC20` with `exchangeRate()`. To smoke harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield(inner, converter)` — converter receives **1% of surplus**, ~99.91% stays in the lockbox. Wrap itself must **not** move surplus. Donation is not yield. Redeem remaining cbETH, not 1:1 after the skim. No holder WHYPE claim on this ticker.
 
 

@@ -126,12 +126,14 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _requireConverter(to);
         if (address(token) == address(innerToken)) {
             if (rateKind == RateKind.None) revert CannotPullInner();
+            _requireConvertOn();
             uint256 before = lastRate;
             if (_tryPullRateYield(innerToken, 0, to) == 0) {
                 if (lastRate == before) revert NoYield();
             }
             return;
         }
+        _requireConvertOn();
         _pullYield(token, innerToken, totalLocked, to);
     }
 

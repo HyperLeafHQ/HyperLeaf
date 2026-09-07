@@ -8,6 +8,7 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 
 /// @notice Source-chain owner ops after DeployTestnetSource + WirePeers.
 ///         HARVESTER and CONVERTER must not be OWNER.
+///         CONVERTER is LeafYieldConverter, never an EOA.
 contract ConfigureTestnetListing is Script {
     bytes4 internal constant QUID_REWARDS = 0x9a99b4f0;
 

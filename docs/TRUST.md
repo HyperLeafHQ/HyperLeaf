@@ -41,7 +41,8 @@ Address-keyed externals (hORDER): CREATE2 same lockbox on Arb and Base is **iden
 
 Anyone may `reportInnerSupply`. Only the listing's canonical inner counts. If `inner.totalSupply()` exceeds the ceiling, health becomes Degraded. Guardian can only worsen. Owner restores Degraded/Halted; `restoreHealth(Normal)` re-checks the ceiling (and hORDER `ledgerPrincipal`). Insolvent needs `recoverInsolvent`.
 
-Stuck LZ: owner is the LZ delegate and calls `Endpoint.skip` on the OApp (we cannot wrap `skip` on the lockbox — IR stack). That does **not** return tokens. Then Halted/Insolvent + owner `abortCredit`. Convert-to-HYPE swap failures stay in the converter — turn `convertYieldToHype` off. Do not unpause to “retry” a skip.
+Stuck LZ: owner is the LZ delegate and calls `Endpoint.skip` on the OApp (we cannot wrap `skip` on the lockbox — IR stack). That does **not** return tokens. Then Halted/Insolvent + owner `abortCredit`. Convert-to-HYPE hop failure stays in `LeafYieldConverter` — `halt([lockbox])` so `pullYield` stops, then try deBridge/Mayan or `returnToLockbox`. Do not unpause wrap to “retry” a skip.
+
 
 1% fee is `y/100`. Sub-100 wei yield pays 0 fee (holders keep dust). `notify` reverts `DustNotify` if WHYPE would not move `accHypePerShare`, so 1 wei cannot jam the rewarder.
 

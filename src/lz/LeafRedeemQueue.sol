@@ -135,6 +135,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (msg.sender != harvester && msg.sender != owner()) revert NotHarvester();
         _requireConverter(to);
         if (address(token) == address(innerToken)) revert CannotPullInner();
+        _requireConvertOn();
         _pullYield(token, innerToken, totalLocked + pendingTicketAssets, to);
     }
 
