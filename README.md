@@ -104,7 +104,7 @@ Out of scope: another HYPE LST, wrapping official RAM/HYBR receipts, ENA (alread
 
 HyperLeaf **markets** lock and staking risk. It does not delete it.
 
-- Contracts are **not externally audited**
+- Contracts are **not externally audited**. Architecture is specified by a human. Implementation is written by AI developers. Read it as unaudited generated code on a human design — not as a substitute for review.
 - C1 names can sit below NAV for a long time
 - Source points and airdrops accrue to the vault until harvested
 - LayerZero delivery and thin HYPE books on source chains
