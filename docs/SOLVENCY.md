@@ -122,6 +122,23 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Worst-case loss | 20% slash of locked stack + daily cap on residual |
 | Test | L suite + “we never call cooldown”. Your pin: Base `0x7aaf51e8` (2025-10-02 17:59 UTC / 10-03 01:59 HKT) `stake(self, 6.1e18)` — 6.1 AVNT in, 6.1 stkAVNT minted to `0x113561…`. 400 AVNT stake not in ±3d of this tx |
 
+### hsWBERA (research — wrap sWBERA only, never the 7d queue)
+
+Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.72e7.
+
+| | |
+| --- | --- |
+| Canonical backing | transferable **sWBERA** pulled (`0x118D2cEe…eC9a` on **Berachain 80094**). Vault **is** the ERC-20. Asset = WBERA `0x6969…6969` |
+| Accounting unit | 1 hsWBERA = 1 sWBERA. WBERA NAV lives in `convertToAssets` |
+| Core invariant | L: `supply ≤ totalLocked sWBERA` + sWBERA supply ceiling |
+| Proof source | lockbox `totalLocked` + `sWBERA.totalSupply` / `convertToAssets` |
+| Mint / redeem | wrap/unwrap **sWBERA** as ERC-20. Instant. **Never** native BERA / WBERA `deposit`/`mint`. **Never** the 7d unbond: standard ERC-4626 `withdraw` 0xb460af94 / `redeem` 0xba087652 **queue** here (burn shares, NFT, `reservedAssets`). Also `queueWithdraw` 0x50b3f984 / `queueRedeem` 0x9ad82aa0 / `completeWithdrawal(bool)` 0x38248a0c / `completeWithdrawal(bool,uint256)` 0x06866fdc / `cancelQueuedWithdrawal` 0x1b0aed2c. Cooldown `WITHDRAWAL_COOLDOWN()` = **604800**. NFT `0x30e47fd0…99DA` |
+| Yield | auto-compound in the sWBERA/WBERA rate (Incentive Auction WBERA). No claim. Do not pull sWBERA as harvest |
+| Failure | vault pause (`MANAGER_ROLE`); someone `redeem`s lockbox shares (principal in 7d NFT, no yield while queued); cancel remints at **current** rate |
+| Auto-pause | ceiling / health / inner paused |
+| Worst-case loss | min(cap, maxPerDay) on sWBERA. Unbond APY gap is not backing |
+| Test | L suite. Assert adapter never calls 0xb460af94 / 0xba087652 / 0x50b3f984 / 0x9ad82aa0. LZ eid 30362, EndpointV2 `0x6F475642…` (not `0x1a44…`) |
+
 
 
 ### hB3 (research — stake path live, yield incomplete)

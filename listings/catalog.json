@@ -312,7 +312,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "yield": { "inner": "erc4626-rate", "pullInner": false, "toHype": [] },
-      "note": "Official PoL vault, rate in WBERA. Wrap sWBERA 0x118D… only. Never 7d unbond. LZ is live: eid 30362, EndpointV2 0x6F475642… (not the 0x1a44… CREATE2). SOLVENCY row still empty.",
+      "note": "Wrap sWBERA only. ERC-4626 withdraw/redeem on this vault is the 7d unbond (not instant). Never deposit WBERA/BERA. Rate in convertToAssets (~1.458 WBERA/share 2026-09-07). LZ eid 30362 EndpointV2 0x6F475642. SOLVENCY filled.",
       "status": "research",
       "priority": 6
     },
