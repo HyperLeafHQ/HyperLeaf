@@ -9,6 +9,7 @@ import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
+import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockEndpoint is ILayerZeroEndpointV2 {
@@ -111,7 +112,16 @@ contract AssetCatalogTest is Test {
         assertEq(uint8(AssetCatalog.get("hswbera").kind), uint8(AssetCatalog.Kind.Liquid));
         assertEq(AssetCatalog.get("hswbera").innerMainnet, 0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a);
         assertEq(AssetCatalog.get("hswbera").sourceEidMain, 30362);
-        assertEq(AssetCatalog.get("hswbera").sourceEidTest, 40245);
+        assertEq(AssetCatalog.get("hswbera").sourceEidTest, 40371);
         assertEq(AssetCatalog.get("hswbera").lockSeconds, 0);
+    }
+
+    function testBepoliaHasNoLzEndpoint() public {
+        vm.expectRevert(bytes("lz: Bepolia EndpointV2 not deployed"));
+        this._endpoint(80069);
+    }
+
+    function _endpoint(uint256 chainId) external pure returns (address) {
+        return A.endpoint(chainId);
     }
 }

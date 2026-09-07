@@ -21,6 +21,7 @@ hyperevm = "${HYPEREVM_RPC_URL}"
 hyperevm_testnet = "https://rpc.hyperliquid-testnet.xyz/evm"
 base_sepolia = "https://sepolia.base.org"
 bsc_testnet = "https://bsc-testnet-rpc.publicnode.com"
+bepolia = "https://bepolia.rpc.berachain.com"
 
 [etherscan]
 hyperevm = { key = "${ETHERSCAN_API_KEY}", url = "${HYPEREVM_ETHERSCAN_API_URL}" }

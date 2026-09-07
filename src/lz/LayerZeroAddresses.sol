@@ -56,6 +56,7 @@ library LayerZeroAddresses {
         if (chainId == 97) return ENDPOINT_BSC_TESTNET;
         if (chainId == 42161 || chainId == 10) return ENDPOINT_BSC; // canonical V2, same as Base
         if (chainId == 80094) return ENDPOINT_BERA;
+        if (chainId == 80069) revert("lz: Bepolia EndpointV2 not deployed");
         if (chainId == 999) return ENDPOINT_HYPEREVM;
         if (chainId == 998) return ENDPOINT_HYPEREVM_TESTNET;
         revert("lz: no endpoint");

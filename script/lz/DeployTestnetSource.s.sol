@@ -34,7 +34,7 @@ contract DeployTestnetSource is Script {
             require(block.chainid == 97, "hgsoon/bluai4y source is BSC testnet 97");
         }
         if (keccak256(bytes(id)) == keccak256("hswbera")) {
-            require(block.chainid == 84532, "hswbera testnet source is Base Sepolia mock (Bepolia LZ empty)");
+            require(block.chainid == 80069, "hswbera testnet source is Bepolia 80069, not Base Sepolia");
         }
 
         vm.startBroadcast();
@@ -98,6 +98,7 @@ contract DeployTestnetSource is Script {
     }
 
     function _isTestnet(uint256 chainId) internal pure returns (bool) {
-        return chainId == 84532 || chainId == 998 || chainId == 97 || chainId == 40161 || chainId == 43113;
+        return chainId == 84532 || chainId == 998 || chainId == 97 || chainId == 40161 || chainId == 43113
+            || chainId == 80069;
     }
 }

@@ -2,18 +2,18 @@
 
 Copy-paste after you have read `docs/SOLVENCY.md` (hgSOON, hsWBERA) and `test/lz/LeafReceiptOnly.t.sol`. **Do not deploy mainnet.** **Do not set `INNER_TOKEN`.** Scripts revert if the inner is the live gSOON / sWBERA.
 
-Branch: `feat/lz-oft-wrap`. Same four keys as `docs/GROK_BOT_TESTNET.md`. Skip `SetSecurityStack` on testnet.
+Source testnet is the **same family as mainnet**. Do not put Bera or BSC assets on Base Sepolia.
 
-Yield is **in the share rate**. No QUID poke. `pullYield(inner)` must revert `CannotPullInner`.
+| ASSET | Mainnet source | Testnet source | Dest |
+| --- | --- | --- | --- |
+| `hgsoon` | BSC 56 | **BSC testnet 97** (LZ eid 40102) | HyperEVM 998 |
+| `hswbera` | Berachain 80094 | **Bepolia 80069** (eid 40371 reserved) | HyperEVM 998 |
 
-Never call on the inner (even on mock, do not add these to smoke):
+**hsWBERA is blocked on testnet until LayerZero deploys EndpointV2 on Bepolia.** On 2026-09-08, `0x6EDC…` / `0x6F47…` / `0x1a44…` all have **empty code** on 80069. `A.endpoint(80069)` reverts. Unit tests still run. Do **not** substitute Base Sepolia.
 
-| Listing | Forbidden |
-| --- | --- |
-| hgSOON | `cooldownShares` 0x9343d9e1, `cooldownAssets` 0xcdac52ed, `claim(address)` 0x1e83409a, `deposit` SOON |
-| hsWBERA | ERC-4626 `withdraw` 0xb460af94, `redeem` 0xba087652, `queueWithdraw`/`queueRedeem`, `completeWithdrawal`, `deposit`/`depositNative` |
+Skip `SetSecurityStack` on testnet. Same four keys as `docs/GROK_BOT_TESTNET.md`.
 
-Users exit via HyperEVM/source market or **their own** official unbond after unwrap. The lockbox only `transfer`s the receipt.
+Yield is **in the share rate**. `pullYield(inner)` must revert `CannotPullInner`. Never call vault unbond/cooldown on the inner.
 
 ---
 
@@ -93,19 +93,19 @@ forge script script/lz/SmokeTestnetRedeem.s.sol:SmokeTestnetRedeem \
 
 ---
 
-## B. hsWBERA — Base Sepolia mock → 998
+## B. hsWBERA — Bepolia 80069 → 998 (blocked)
 
-Bepolia (80069) LZ endpoint list is empty. Testnet source is **Base Sepolia mock sWBERA**, not live `0x118D…`. Mainnet source is Berachain 80094.
-
-Same steps as hxSQUID, swap `ASSET=hswbera`. Peers: source `REMOTE_EID=40362`, dest `REMOTE_EID=40245`.
+Do not run until `eth_getCode` of the Bepolia EndpointV2 is non-empty. Then add `ENDPOINT_BEPOLIA` to `LayerZeroAddresses` and:
 
 ```
 ASSET=hswbera OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
 forge script script/lz/DeployTestnetSource.s.sol:DeployTestnetSource \
-  --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
+  --rpc-url https://bepolia.rpc.berachain.com --broadcast --private-key $PRIVATE_KEY
 ```
 
-Then dest / wire / configure / openPeg / smoke — identical to `docs/GROK_BOT_TESTNET.md` steps 2–6 with `ASSET=hswbera` and dest `REMOTE_EID=40245`.
+Dest / wire: source `REMOTE_EID=40362`, dest `REMOTE_EID=40371`. Mock inner only — never live `0x118D…`.
+
+Until that ships: `forge test --match-contract LeafReceiptOnlyTest`.
 
 ---
 
