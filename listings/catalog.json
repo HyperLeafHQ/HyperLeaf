@@ -340,9 +340,9 @@
       "sourceEid": 30110,
       "exit": "market-only",
       "infra": "evm",
-      "note": "RewardRouter / esGMX / multiplier points are account-based, not a single receipt. C1 until we map harvest. Arb only for v1.",
-      "status": "later",
-      "priority": 8
+      "note": "PARKED. GMX stake rewards frozen until GMX=$90 (buybacks sit in treasury). GLP (V1) retired 2025-07-16 after the exploit — mint disabled Arb+Avax, V1 fees ~0. Do not wrap GLP. V2 GM/GLV is a different listing (isolated market LP, transferable, 63% fees auto-compound) — not this ticker. Not ORDER-style CREATE2 (Arb GMX ≠ Avax GMX).",
+      "status": "parked",
+      "priority": 90
     },
     {
       "id": "hjupsol",

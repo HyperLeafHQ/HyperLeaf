@@ -17,12 +17,13 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | later | **hORDER** | C1 | Arb/Base OFT CREATE2 | Address-keyed lockbox in code. esORDER claim +7d |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
 | later | hsWBERA | L | Berachain | Wait LZ |
-| later | hAEVO / hGMX | C1 | ETH / Arb | No transferable receipt |
+| later | hAEVO | C1 | Ethereum | No transferable receipt |
 | later | hJupSOL / hANSEM | L | Solana | Needs Solana lockbox |
 | later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |
 | later | BLUAI4Y | C1 | BSC | High user risk. unstake 0x2e17de78 |
 | last | BONK12M / hMET | C1/C2 | Solana | |
 | parked | hSKY | C1 | Ethereum | Stake-only strips LockStake borrow. Min 1.44M SKY / 30k USDS |
+| parked | hGMX | C1 | Arbitrum | Stake yield frozen until $90. GLP V1 retired 2025-07-16 |
 | hold | hstkAAVE | | Ethereum | Safety Module → Umbrella |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
 | watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
@@ -37,7 +38,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 **C** — hcbETH.
 **D** — skip hSKY.
 **E** — veAERO / remaining Ethereum (not SKY).
-**F** — sWBERA / AEVO / GMX / JupSOL / ANSEM.
+**F** — sWBERA / AEVO / JupSOL / ANSEM.
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
 **Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.

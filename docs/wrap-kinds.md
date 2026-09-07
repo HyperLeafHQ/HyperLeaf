@@ -32,12 +32,11 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 3. **hveAERO** (ve-NFT, Base — later)
 4. **hsWBERA** (L, Berachain — LZ)
 5. **hAEVO** (C1, Ethereum)
-6. **hGMX** (C1, Arbitrum)
-7. **hJupSOL** (L, Solana)
-8. **hANSEM** (L, Solana, ansem.io)
-9. **hwstETH** (L, Ethereum) — later, own ticker
+6. **hJupSOL** (L, Solana)
+7. **hANSEM** (L, Solana, ansem.io)
+8. **hwstETH** (L, Ethereum) — later, own ticker
 
-**Parked:** **hSKY** — stake-only (~4%) strips LockStake borrow. Min 30k USDS / ~1.44M SKY. If revived: C1 only-in, disclose liquidation.
+**Parked:** **hSKY** — stake-only (~4%) strips LockStake borrow. Min 30k USDS / ~1.44M SKY. If revived: C1 only-in, disclose liquidation. **hGMX** — stake yield frozen until $90; GLP V1 retired 2025-07-16.
 
 **Hold:** **hstkAAVE** — Safety Module is legacy; Umbrella is the live backstop. Do not tokenize AAVE governance until (1) stkAAVE still exists after Umbrella is mature, (2) voting power is a protocol delegate not the hToken, (3) HyperEVM has a real AAVE spot gap. **aave-umbrella** is a different listing (risk tranche), not hAAVE.
 
