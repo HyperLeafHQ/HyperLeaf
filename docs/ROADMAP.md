@@ -13,7 +13,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | later | **hgSOON** | L | Ethereum first | Need full gSOON address + stake tx |
 | later | **hAVNT** | L | Base | Wrap **stkAVNT** `0xd546…d9e9`, never cooldown. 20% slash is the yield cost |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
-| later | **hB3** | C1 | Base | Stake B3, harvest WIN. Need stake tx |
+| later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
 | later | **hORDER** | C1 | OFT / ETH first | VALOR stays in lockbox. Need stake tx |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
 | later | hsWBERA | L | Berachain | Wait LZ |

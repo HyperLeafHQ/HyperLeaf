@@ -110,9 +110,21 @@ gSOON is a transferable LST (rate vs SOON, 7d unstake we never call). Arkham: ~1
 
 Public sample (not yours): Base `0x9fbb56ba99…` `stake(address,uint256)` 0xadc9772e.
 
-### hB3 / hORDER (research — incomplete)
+### hB3 (research — stake path live, yield incomplete)
 
-Need a **stake tx**. B3: WIN harvest vs 45d unstake (we skip unstake). ORDER: which chain has most stake; VALOR is not transferable — C1, harvest VALOR→esORDER after 7d is optional yield, not backing.
+| | |
+| --- | --- |
+| Canonical backing | B3 staked via `stakeFor(lockbox, amt)` on `0x18541`. **Principal then sits in EOA `0x8D06` (no code)** |
+| Accounting unit | C1 ticker. No receipt token |
+| Core invariant | HyperEVM hB3 ≤ inbound B3 we staked. We cannot prove EOA still holds it |
+| Proof source | `Staked` event on 0x18541. **Not** `balanceOf(stake)` — tokens leave |
+| Yield | WIN — **not in the stake tx**. Need a claim tx |
+| Failure | EOA moves B3; WIN paid to EOA not lockbox; games/spins on the stake account |
+| Auto-pause | health. Do not mint if team wallet drained |
+| Worst-case loss | all TVL (custodial). C1: no protocol peg-out |
+| Test | do not ship until WIN claim is pinned. A row that says `hB3 ≤ B3.balanceOf(0x18541)` is **rejected** |
+
+### hORDER (research — incomplete)
 
 ### PTSMAX
 

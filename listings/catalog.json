@@ -554,13 +554,20 @@
       "name": "Hyperleaf staked B3",
       "innerSymbol": "B3",
       "innerToken": "0xB3B32F9f8827D4634fE7d973Fa1034Ec9fdDB3B3",
+      "stake": "0x18541C6D032d48E8cE735939a6147A6A5949216B",
+      "stakeImpl": "0x393b0c48ef44ffd6c22470bc96c6f382c89d682f",
+      "stakeSelector": "0x2ee40908",
+      "custody": "0x8D06628251489963f9603Da96BaF987Dd08f5097",
       "source": "base",
       "sourceChainId": 8453,
       "sourceEid": 30184,
       "exit": "market-only",
       "infra": "evm",
       "yield": { "inner": "win-then-b3", "pullInner": false, "toHype": ["WIN"] },
-      "note": "Base. Stake B3 → WIN (play, or wait and convert WIN back to B3). Principal unstake has a 45-day cooldown — we do not unstake. Harvest is WIN → (optional convert) → HYPE. Need a stake tx and the WIN token address. Games/spins on the staking account are not a HyperLeaf claim.",
+      "refs": {
+        "stakeTx": "0x7ebe5e08df256dd06fe356e9470deaa85ec9e86a2b43a8f4bba136f80d72e340"
+      },
+      "note": "Live path 2026-08-31: stakeFor(user, amount) 0x2ee40908 on proxy 0x18541 (stakingToken=B3, totalStaked~20.7M). No receipt NFT/ERC-20. B3 then leaves the stake contract to EOA 0x8D06 (no bytecode) — principal is team custody, not a contract lock. Must stakeFor(lockbox, amt) so the Staked event user is the lockbox. WIN not in this tx — still need a harvest/claim tx. 45d unstake unused (C1).",
       "status": "research",
       "priority": 9
     },
