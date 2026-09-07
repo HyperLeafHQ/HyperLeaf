@@ -14,6 +14,7 @@ library LayerZeroAddresses {
     uint32 internal constant EID_OP = 30111;
     uint32 internal constant EID_ORDERLY = 30213;
     uint32 internal constant EID_BERA = 30362;
+    uint32 internal constant EID_BERA_TESTNET = 40371;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
     uint32 internal constant EID_BSC_TESTNET = 40102;

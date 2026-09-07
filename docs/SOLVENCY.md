@@ -103,7 +103,7 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Failure | vault upgrade; someone calls cooldown on our lockbox (principal in silo 7d) |
 | Auto-pause | ceiling / health |
 | Worst-case loss | min(cap, maxPerDay) on gSOON principal. 90d lock APY is not backing |
-| Test | L suite. Your path: deposit `0x246a12a4` (2025-05-29, 4998.4994 SOON → 4454.03 gSOON) is the official mint we will not call; lock `0xcaa3905e` / withdraw `0x37d70161` is occupancy we will not enter; cooldownShares `0x5a3c5441` (2025-09-22 21:37 UTC = 09-23 HKT) is the 7d selector. Dust gSOON left on `0x113561…`. Claim after +7d not pinned; selector is still `claim(address)` |
+| Test | `test/lz/LeafReceiptOnly.t.sol` — adapter never hits cooldownShares/claim. Pins: deposit `0x246a12a4`; cooldownShares `0x5a3c5441`. Dust on `0x113561…` |
 
 
 
@@ -137,7 +137,7 @@ Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.7
 | Failure | vault pause (`MANAGER_ROLE`); someone `redeem`s lockbox shares (principal in 7d NFT, no yield while queued); cancel remints at **current** rate |
 | Auto-pause | ceiling / health / inner paused |
 | Worst-case loss | min(cap, maxPerDay) on sWBERA. Unbond APY gap is not backing |
-| Test | L suite. Assert adapter never calls 0xb460af94 / 0xba087652 / 0x50b3f984 / 0x9ad82aa0. LZ eid 30362, EndpointV2 `0x6F475642…` (not `0x1a44…`) |
+| Test | `test/lz/LeafReceiptOnly.t.sol`. Adapter never calls 0xb460af94 / 0xba087652 / 0x50b3f984 / 0x9ad82aa0. LZ eid 30362, EndpointV2 `0x6F475642…` |
 
 
 
