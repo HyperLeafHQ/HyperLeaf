@@ -105,10 +105,48 @@ contract LeafHypeRewarderTest is PegReady {
         whype.mint(address(this), 100e18);
         whype.approve(address(rewarder), 100e18);
         rewarder.notify(ID, 100e18);
+        uint256 before = rewarder.pending(ID, alice);
         vm.prank(alice);
         oft.transfer(bob, 100e18);
+        assertEq(before, 99e18);
+        assertEq(rewarder.pending(ID, alice), before);
+        assertEq(rewarder.pending(ID, bob), 0);
+    }
+
+    function testPartialTransferKeepsSellerHype() public {
+        _mintAlice(100e18);
+        _notify(100e18);
+        vm.prank(alice);
+        oft.transfer(bob, 40e18);
         assertEq(rewarder.pending(ID, alice), 99e18);
         assertEq(rewarder.pending(ID, bob), 0);
+        _notify(100e18);
+        // next harvest: 60/40 split of 99. seller still has the old 99.
+        assertEq(rewarder.pending(ID, alice), 99e18 + 59.4e18);
+        assertEq(rewarder.pending(ID, bob), 39.6e18);
+    }
+
+    /// @dev Claim-market / AMM escrow is just another address. Historical HYPE
+    ///      stays with the seller. The board must not mint a second claim token.
+    function testEscrowHopDoesNotMovePendingHype() public {
+        address market = address(0xCAFE);
+        _mintAlice(100e18);
+        _notify(100e18);
+        uint256 sellerDue = rewarder.pending(ID, alice);
+        vm.prank(alice);
+        oft.transfer(market, 100e18);
+        assertEq(rewarder.pending(ID, alice), sellerDue);
+        assertEq(rewarder.pending(ID, market), 0);
+        vm.prank(market);
+        oft.transfer(bob, 100e18);
+        assertEq(rewarder.pending(ID, alice), sellerDue);
+        assertEq(rewarder.pending(ID, market), 0);
+        assertEq(rewarder.pending(ID, bob), 0);
+        vm.prank(alice);
+        rewarder.claim(ID, alice);
+        assertEq(whype.balanceOf(alice), sellerDue);
+        assertEq(whype.balanceOf(bob), 0);
+        assertEq(whype.balanceOf(market), 0);
     }
 
     function testNotifyZeroSupplyReverts() public {

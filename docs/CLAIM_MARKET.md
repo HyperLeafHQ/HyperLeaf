@@ -51,10 +51,24 @@ is this file plus the existing `exit` / yield columns. A later listing
 that cannot redeem (C1) should be able to sit on a board without new
 Solidity on the wrap path.
 
-Frontend copy, if the board exists:
+## Hard constraints before any board Solidity
 
-> 这是转让，不是现货。没人出价就卖不掉。协议不接盘。折价是流动性价格，不是底仓没了。
+Do **not** ship a marketplace contract until these are tests, not just prose
+(Luna `239ce2f` review):
 
-English: a transfer of the claim. No bid, no fill. The protocol does
-not take the other side. A discount is a liquidity price unless
-`SOLVENCY.md` backing is gone.
+1. **Rewarder HYPE stays with the seller address.** After `transfer`,
+   `pending(seller)` equals `pending(seller)` from before the transfer.
+   Buyer / escrow / AMM start at 0 for already-notified HYPE.
+   `testEscrowHopDoesNotMovePendingHype`.
+2. **No second claim token.** Escrow that holds a Leaf is an ordinary holder.
+   It does not mint a “claim receipt”. Total Leaf supply must not increase
+   because the token sat in a market contract.
+3. **Face is the listing’s SOLVENCY unit**, typed, never a USD oracle and
+   never `balanceOf(hORDER)` when the row is `ledgerPrincipal`.
+4. **Discount copy follows health.** `Normal` → 流动性价格. `Degraded` /
+   stale proof → 风险提示. `Insolvent` → 底仓有问题，不是普通折价.
+   Frontend: `GROK_BOT_FRONTEND.md`.
+
+The board is matching on the existing Leaf. HyperLeaf does not take the
+other side.
+

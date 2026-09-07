@@ -26,7 +26,16 @@ Do not write, imply, or let a tooltip say any of these:
 - “Liquid” means the protocol pays 1:1
 - A discount to NAV is a HyperLeaf depeg
 
-A discount on a **sell-only** ticker is a **liquidity price**, unless `docs/SOLVENCY.md` backing is gone. Then it is insolvency, and you say that.
+A discount on a **sell-only** ticker is a **liquidity price** only while that listing’s health is Normal and the SOLVENCY row still holds. Map health to copy:
+
+| Health (GitHub, never show the enum) | What the user sees on a discount |
+| ----------------------------------- | -------------------------------- |
+| Normal | 这是有人接盘的价格，不是底仓没了。 |
+| Degraded / proof stale | 底仓证明不新鲜或上游异常。折价里可能有风险，不要写成普通流动性折价。 |
+| Halted / Insolvent | 不要标「折价买」。说底仓或桥出了问题，暂停买入建议。 |
+
+Face value for any 转让 board is that ticker’s SOLVENCY accounting unit (remaining cbETH, 1:1 xSQUID, ORDER `ledgerPrincipal`, …), never a USD print we invent.
+
 
 Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf** (peer bid/ask on the existing token or C2 ticket). Copy: 没人出价就不成交。协议不接盘。 Not 债务, not 借贷, not 官方收单. Face value comes from that ticker’s SOLVENCY row. Instant-receipt tickers already have 烧掉就能拿回 — a fat discount there is usually an arb, not a feature. Details: `docs/CLAIM_MARKET.md`.
 
