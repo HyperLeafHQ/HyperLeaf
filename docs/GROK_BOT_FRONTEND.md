@@ -37,7 +37,7 @@ A discount on a **sell-only** ticker is a **liquidity price** only while that li
 Face value for any 转让 board is that ticker’s SOLVENCY accounting unit (remaining cbETH, 1:1 xSQUID, ORDER `ledgerPrincipal`, …), never a USD print we invent.
 
 
-Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf** (peer bid/ask on the existing token or C2 ticket). Copy: 没人出价就不成交。协议不接盘。 Not 债务, not 借贷, not 官方收单. Face value comes from that ticker’s SOLVENCY row. Instant-receipt tickers already have 烧掉就能拿回 — a fat discount there is usually an arb, not a feature. Details: `docs/CLAIM_MARKET.md`.
+Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf**：想退出的人把 Leaf 挂进板子，下一个本来要存入的人用底仓买走，协议不铸新的 Leaf。Copy: 没人出价就不成交。协议不接盘。买方市场：成交价里 1% 返给买方。挂单期间 Rewarder 的 HYPE 归协议（Leaf 已离开卖方地址）。自动复利（汇率升值）的票 v1 不上板，取消挂单协议收不到那部分。Not 债务, not 借贷, not 官方收单. Face value comes from that ticker’s SOLVENCY row. Instant-receipt tickers already have 烧掉就能拿回 — a fat discount there is usually an arb, not a feature. Details: `docs/CLAIM_MARKET.md`.
 
 
 **One line that must survive every rewrite:**
@@ -160,7 +160,7 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Always | 跨链你付 LayerZero。送达不是协议能保证的即时到账。 |
 | Caps / pause live | 有上限，可暂停。 |
 | Sell-only ticker | 可以长期低于账面价。那是流动性价格，除非底仓没了。 |
-| Claim board (if it exists) | 转让，不是现货。没人买就不成交。协议不接盘。 |
+| Claim board (if it exists) | 转让，不是现货，不是债。没人买就不成交。协议不接盘。挂单期间 HYPE 归协议。 |
 | Instant-receipt ticker | 赎回的是收据，不是现货。官方解押要你自己去点。 |
 | Window ticker (hNEST, queued) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
 | Redeem confirm (every listing that burns) | 赎回会烧掉这份 Leaf，不能取消。 |

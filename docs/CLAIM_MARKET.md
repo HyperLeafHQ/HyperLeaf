@@ -72,3 +72,95 @@ Do **not** ship a marketplace contract until these are tests, not just prose
 The board is matching on the existing Leaf. HyperLeaf does not take the
 other side.
 
+## Wrap-fill (the actual product)
+
+Early Leaf books will be thin. Do **not** seed an AMM. The board is a
+**wrap redirect**: someone who was going to deposit inner, instead buys a
+resting Leaf.
+
+Example, C1 `BLUAI4Y`:
+
+```
+Seller holds 100 hBLUAI4Y, wants out at 70 BLUAI.
+Seller transfers 100 Leaf into the board contract. Ask = 70 BLUAI.
+
+Buyer was about to wrap 70 BLUAI → mint 70 new Leaf.
+Instead they fill:
+  70 BLUAI  →  seller (source chain)
+  100 hBLUAI4Y (already minted) → buyer (HyperEVM)
+```
+
+No new Leaf. Lockbox `totalLocked` does not move. The 100 Leaf is still
+backed by whatever was locked when the seller originally wrapped. The 70
+BLUAI never becomes extra backing — it is the purchase price.
+
+That is a sale of the claim, **not a loan**. HyperLeaf does not sit on
+either side. Names: 转让 / wrap-fill. Never 债务, never 不良资产包,
+never “HyperLeaf 接盘”.
+
+### Who has the edge
+
+Seller sets the ask (pricing power). Buyer has the scarce thing (inner
+that can wrap). Treat it as a **buyer’s market**:
+
+- Buyer rebate: **1% of the ask**, paid in the inner they just spent.
+  Seller listed 70 → seller receives 69.3 BLUAI, buyer gets 0.7 BLUAI
+  back. Effective 69.3 inner for 100 Leaf.
+- Protocol does **not** take that 1%. Protocol take is occupancy (below).
+
+If nobody fills, nothing happens. Cancel returns the Leaf. No treasury bid.
+
+### Protocol revenue = occupancy, not the spread
+
+Leaf that sits in the board is just another address.
+
+| Yield type | While listed | On cancel (took it back) | On fill |
+| ---------- | ------------ | ------------------------ | ------- |
+| **Rewarder** (`hxSQUID`, BLUAI extra inner → HYPE, hORDER harvest) | Notify HYPE accrues to the **board address**. Board `claim()` → protocol. Seller already-notified HYPE stays on the seller (invariant). | Protocol keeps what notified while listed. Seller walks with Leaf, no extra cut. | Same occupancy HYPE already claimed or sitting on the board. |
+| **Share-price** (`hcbETH`, `hsWBERA`, Morpho) | NAV stays **in the token**. Cancel = seller takes the richer receipt. Protocol gets **zero**. | This is the hole. | Spread is seller’s; protocol still zero unless we add a bond. |
+
+So: as long as Leaf has left the seller’s wallet, they do not get Rewarder
+HYPE. That match the rest of the protocol. Share-price does not work that
+way — the receipt is the yield.
+
+**v1 lists C1 only** (`BLUAI4Y`, `hVIRTUALMAX`, `hORDER`, …). Those cannot
+unwrap; the board is the product. Instant-receipt share-price already has
+烧掉就能拿回 — a 30% ask there is usually an arb, and cancel earns the
+seller the NAV for free.
+
+If a share-price ticker is listed later, occupancy must be a **maker bond**
+in WHYPE (posted on list, returned on fill, protocol keeps a slice on
+cancel). Do not skim the receipt itself. Do not pretend hanging hcbETH in
+the board is a protocol fee.
+
+### Fill path (when we write it)
+
+Source adapter, not a second OFT:
+
+1. Seller: `list(amountLeaf, askInner, sourceRecipient, deadline)` — Leaf
+   moves to the board on HyperEVM. Face = SOLVENCY unit of that listing.
+2. Buyer on source: `fill(orderId)` with `askInner` of the **canonical
+   inner**, not USDC, not another ticker.
+3. Source pays inner to `sourceRecipient` minus 1% rebate to buyer.
+4. LZ message to dest: release Leaf from board to buyer. **Do not mint.**
+5. Failure: inner stays escrowed on source until dest ack, or the fill
+   reverts both legs. No half-state. No extra Leaf.
+
+Caps / health / listingTag of a wrap still apply to a fill (same blast
+radius). `Degraded` fill is allowed for C1 (it is the only exit) but UI
+must not call the discount ordinary liquidity.
+
+### Still not this commit
+
+No board Solidity. The wrap path must not grow a `fill` hook until the
+tests below exist, including `totalSupply` unchanged across a fill.
+
+Additional tests before code:
+
+5. Fill does not mint and does not change `totalLocked`.
+6. Occupancy HYPE on a Rewarder ticker is claimable by the board, not the
+   seller.
+7. Cancel on a share-price ticker returns the same Leaf amount (NAV stays
+   in the token) — which is why it is not v1.
+
+
