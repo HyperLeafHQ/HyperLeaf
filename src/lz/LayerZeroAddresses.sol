@@ -10,6 +10,9 @@ library LayerZeroAddresses {
     uint32 internal constant EID_HYPEREVM = 30367;
     uint32 internal constant EID_BSC = 30102;
     uint32 internal constant EID_AVALANCHE = 30106;
+    uint32 internal constant EID_ARB = 30110;
+    uint32 internal constant EID_OP = 30111;
+    uint32 internal constant EID_ORDERLY = 30213;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
     uint32 internal constant EID_BSC_TESTNET = 40102;
@@ -41,6 +44,7 @@ library LayerZeroAddresses {
         if (chainId == 84532) return ENDPOINT_BASE_SEPOLIA;
         if (chainId == 56) return ENDPOINT_BSC;
         if (chainId == 97) return ENDPOINT_BSC_TESTNET;
+        if (chainId == 42161 || chainId == 10) return ENDPOINT_BSC; // canonical V2, same as Base
         if (chainId == 999) return ENDPOINT_HYPEREVM;
         if (chainId == 998) return ENDPOINT_HYPEREVM_TESTNET;
         revert("lz: no endpoint");

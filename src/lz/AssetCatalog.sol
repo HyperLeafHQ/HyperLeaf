@@ -201,10 +201,33 @@ library AssetCatalog {
                 false
             );
         }
+        if (k == keccak256("horder")) {
+            return Listing(
+                Kind.Closed,
+                "horder",
+                "Hyperleaf staked ORDER",
+                "hORDER",
+                "ORDER",
+                42161,
+                30110,
+                40231,
+                0,
+                0,
+                0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8,
+                1_000 ether,
+                true
+            );
+        }
         revert UnknownAsset();
     }
 
-    function allIds() internal pure returns (string[10] memory ids) {
+    /// @dev Source ledger keys by EVM address. CREATE2 the lockbox on every
+    ///      OFT chain you will receive on (Arb/Base). Do not deploy two addresses.
+    function addressKeyed(string memory id) internal pure returns (bool) {
+        return keccak256(bytes(id)) == keccak256("horder");
+    }
+
+    function allIds() internal pure returns (string[11] memory ids) {
         ids = [
             string("hkaito"),
             string("hxsquid"),
@@ -215,7 +238,8 @@ library AssetCatalog {
             string("bonk12m"),
             string("hmet"),
             string("hshmon"),
-            string("hwsteth")
+            string("hwsteth"),
+            string("horder")
         ];
     }
 }

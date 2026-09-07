@@ -26,6 +26,19 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     bool public farmPrincipalOut;
     bool public shareExitEnabled;
 
+    /// @dev AmountYears = BLUAI `stake(amount, years)`. AmountNative = payable
+    ///      one-arg stake (Orderly `stakeOrder(uint256)`). Dest chain is always
+    ///      this chain — callers cannot pick Arb vs Base vs OP.
+    enum FarmStyle {
+        AmountYears,
+        AmountNative
+    }
+
+    FarmStyle public farmStyle;
+    uint256 public farmNativeFee;
+    bytes4 public farmRequestSel;
+    mapping(uint8 => bool) public publicRequestType;
+
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
@@ -34,6 +47,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event FarmUnstaked(uint256 amount);
     event RestakedIdle(uint256 amount);
     event ShareExitSet(bool on);
+    event FarmStyleSet(FarmStyle style, uint256 nativeFee);
+    event FarmRequestSel(bytes4 sel);
+    event FarmRequest(uint256 amount, uint8 payloadType, address indexed caller);
 
     error ZeroAmount();
     error CapExceeded();
@@ -108,6 +124,31 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function setShareExit(bool on) external onlyOwner {
         shareExitEnabled = on;
         emit ShareExitSet(on);
+    }
+
+    function setFarmStyle(FarmStyle style, uint256 nativeFee) external onlyOwner {
+        farmStyle = style;
+        farmNativeFee = nativeFee;
+        emit FarmStyleSet(style, nativeFee);
+    }
+
+    function setFarmRequest(bytes4 sel) external onlyOwner {
+        farmRequestSel = sel;
+        emit FarmRequestSel(sel);
+    }
+
+    /// @dev Harvest types (Orderly 9/10/17) may be public. Unstake 2/3/4 stays owner.
+    function setPublicRequestType(uint8 payloadType, bool ok) external onlyOwner {
+        publicRequestType[payloadType] = ok;
+    }
+
+    /// @notice Ledger request as this lockbox. Calldata is (amount, type) only.
+    function pokeFarmRequest(uint256 amount, uint8 payloadType) external payable nonReentrant {
+        if (farm == address(0) || farmRequestSel == bytes4(0) || amount == 0) revert BadStake();
+        if (!publicRequestType[payloadType] && msg.sender != owner()) revert BadStake();
+        (bool ok,) = farm.call{value: msg.value}(abi.encodeWithSelector(farmRequestSel, amount, payloadType));
+        if (!ok) revert BadStake();
+        emit FarmRequest(amount, payloadType, msg.sender);
     }
 
     /// @notice After the 4y lock: pull principal back. Then restakeIdle or setShareExit.
@@ -228,12 +269,17 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (got == 0) revert ZeroAmount();
     }
 
-    /// @dev Idle box: no-op. BLUAI: stake(amount, years) into `farm`.
+    /// @dev Idle box: no-op. BLUAI: stake(amount, years). ORDER: payable stakeOrder(amount).
     function _afterDeposit(uint256 got) internal virtual {
         if (farm == address(0) || got == 0) return;
         uint256 before = innerToken.balanceOf(address(this));
         innerToken.forceApprove(farm, got);
-        (bool ok,) = farm.call(abi.encodeWithSelector(farmStakeSel, got, farmStakeArg));
+        bool ok;
+        if (farmStyle == FarmStyle.AmountNative) {
+            (ok,) = farm.call{value: farmNativeFee}(abi.encodeWithSelector(farmStakeSel, got));
+        } else {
+            (ok,) = farm.call(abi.encodeWithSelector(farmStakeSel, got, farmStakeArg));
+        }
         if (!ok || innerToken.balanceOf(address(this)) >= before) revert BadStake();
         farmPrincipalOut = true;
     }

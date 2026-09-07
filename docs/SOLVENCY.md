@@ -151,7 +151,7 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Failure | LZ message not credited; stake from user EOA so VALOR is not on the lockbox; type 17 / unstake claim from a chain with no lockbox so OFT lands on an empty address; 7d unstake from lockbox |
 | Auto-pause | health. Do not mint if ledger stake of lockbox is below hORDER |
 | Worst-case loss | all TVL (C1, no protocol peg-out). LZ / ledger failure |
-| Test | OP stake `0x09494257`/`0x76ea3caf` (1196). Base unstake type 2 `0x447d97ac` (09-21) then withdraw type 4 `0x5aa28832` (09-28) — **1196 ORDER OFT arrived on Base** `0xdd65ff33`. Interest: 1.156 USDC Base `0x93ec1d61`. New VALOR type 17 Arb `0x7a9676a6`. Protocol can receive on Base/Arb. New-path esORDER claim still +7d from today |
+| Test | `test/lz/LeafOmnichainCreate2.t.sol`. OP stake `0x09494257`/`0x76ea3caf` (1196). Base unstake type 2 `0x447d97ac` then withdraw type 4 `0x5aa28832` — **1196 ORDER OFT arrived on Base** `0xdd65ff33`. Interest: 1.156 USDC Base `0x93ec1d61`. New VALOR type 17 Arb `0x7a9676a6`. CREATE2 same lockbox on Arb/Base. New-path esORDER claim still +7d |
 
 
 ### PTSMAX

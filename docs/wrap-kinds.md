@@ -7,7 +7,7 @@ HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset,
 | Kind | Source | HyperEVM | Exit | Ticker |
 | ---- | ------ | -------- | ---- | ------ |
 | L | `LeafOFTAdapter` | `LeafOFT` | Instant inner receipt | `hKAITO`, `hxSQUID`, `hcbETH`, `hwstETH`, `hsAVAX`, `hshMON` |
-| C1 | `LeafInboundLockbox` / `LeafVirtualsLockbox` | `LeafClosedOFT` | Sell on HyperEVM only | `hVIRTUALMAX`, `BONK12M`, `BLUAI4Y` |
+| C1 | `LeafInboundLockbox` / `LeafVirtualsLockbox` | `LeafClosedOFT` | Sell on HyperEVM only | `hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`, `hORDER` |
 | C2 | `LeafRedeemQueue` | `LeafOFT` | Burn, wait, `claim` | `hMET` |
 
 Deploy: `docs/testnet-deploy.md`. Ids: `src/lz/AssetCatalog.sol`.

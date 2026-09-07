@@ -600,7 +600,7 @@
       "sourceEid": 30110,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1. Staked ORDER on Orderly ledger, keyed by lockbox address. Receive ORDER OFT on Arb or Base (0x4E200fE2). You already did OP-stake → Base-withdraw: type 2 0x447d97ac then type 4 0x5aa28832, 1196 ORDER to Base 0xdd65ff33 (2025-09-28). Legacy interest: type 9 0xd64c6995 → type 10 0x8bb2dcc0 → 1.156239 USDC Base 0x93ec1d61. New VALOR type 17 Arb 0x7a9676a6 (esORDER, +7d claim open). Proxy 0xC8A8 sendUserRequest 0xcec09c0d / stakeOrder 0x413aaa60. Do not vest esORDER.",
+      "note": "C1 address-keyed. CREATE2 LeafInboundLockbox on Arb and Base (same addr). FarmStyle AmountNative = stakeOrder(uint256) 0x413aaa60 as the lockbox; pokeFarmRequest(amount,type) 0xcec09c0d with no dest chain. Public types 10/17 harvest; unstake 2/3/4 owner. Principal = Orderly ledger, harvest = USDC, occupancy = VALOR/esORDER. Pins: OP-stake→Base-withdraw 1196 0xdd65ff33; USDC 1.156 0x93ec1d61; type 17 0x7a9676a6.",
       "status": "research",
       "priority": 10
     },

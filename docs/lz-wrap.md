@@ -33,4 +33,6 @@ See `script/lz/`. L: `DeployAdapter` + `DeployOFT`. C1: `DeployClosed`. C2: `Dep
 
 Env: `OWNER`, `GUARDIAN`, `FEE_RECIPIENT` (optional, defaults to owner), `INNER_TOKEN`, `DEPOSIT_CAP`, `REDEEM_DELAY` (C2).
 
-One lockbox per inner token. Never two lockboxes for the same token. Never enable reverse send on a C1 pair.
+One lockbox **address** per inner token. Never two lockboxes for the same token. Never enable reverse send on a C1 pair.
+
+If the source ledger keys by EVM address (Orderly ORDER/VALOR), CREATE2 that same lockbox on every OFT chain you will receive on (`script/lz/DeployOmnichainLockbox.s.sol`). Users do not pick Arb vs Base — the lockbox on this chain is the identity. Principal (staked), occupancy (VALOR/esORDER), and harvest (USDC → HYPE) stay separate.

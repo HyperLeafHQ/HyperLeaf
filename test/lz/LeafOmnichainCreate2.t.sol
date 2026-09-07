@@ -1,0 +1,168 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {PegReady} from "test/lz/PegReady.sol";
+import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
+import {LeafCreate2} from "src/lz/LeafCreate2.sol";
+import {AssetCatalog} from "src/lz/AssetCatalog.sol";
+import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
+import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
+
+contract MockOft is ERC20 {
+    constructor() ERC20("ORDER", "ORDER") {}
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
+    }
+}
+
+contract MockUsdc is ERC20 {
+    constructor() ERC20("USDC", "USDC") {}
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
+    }
+}
+
+/// @dev Orderly proxy shape: stakeOrder(amount) payable, sendUserRequest(amount, type).
+contract MockOrderProxy {
+    IERC20 public immutable oft;
+    mapping(address => uint256) public staked;
+    uint256 public lastAmount;
+    uint8 public lastType;
+    address public lastCaller;
+
+    constructor(IERC20 t) {
+        oft = t;
+    }
+
+    function stakeOrder(uint256 amount) external payable {
+        oft.transferFrom(msg.sender, address(this), amount);
+        staked[msg.sender] += amount;
+        lastCaller = msg.sender;
+        lastAmount = amount;
+    }
+
+    function sendUserRequest(uint256 amount, uint8 payloadType) external payable {
+        lastCaller = msg.sender;
+        lastAmount = amount;
+        lastType = payloadType;
+    }
+}
+
+contract MockEndpoint is ILayerZeroEndpointV2 {
+    function eid() external pure returns (uint32) {
+        return 30110;
+    }
+    function send(MessagingParams calldata, address) external payable returns (MessagingReceipt memory r) {
+        r.guid = bytes32(uint256(1));
+        r.fee = MessagingFee(msg.value, 0);
+    }
+    function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
+        return MessagingFee(0.01 ether, 0);
+    }
+    function setDelegate(address) external {}
+    function setConfig(address, address, SetConfigParam[] calldata) external {}
+    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) {
+        return "";
+    }
+    function skip(address, uint32, bytes32, uint64) external {}
+}
+
+contract LeafOmnichainCreate2Test is PegReady {
+    MockEndpoint ep;
+    MockOft inner;
+    MockUsdc usdc;
+    MockOrderProxy proxy;
+    LeafInboundLockbox box;
+    address owner = address(0xA11CE);
+    address guardian = address(0xB0B);
+    address feeTo = address(0xFEE);
+    address user = address(0xCAFE);
+
+    bytes4 constant STAKE_ORDER = bytes4(keccak256("stakeOrder(uint256)"));
+    bytes4 constant SEND_REQ = bytes4(keccak256("sendUserRequest(uint256,uint8)"));
+
+    function setUp() public {
+        ep = new MockEndpoint();
+        inner = new MockOft();
+        usdc = new MockUsdc();
+        proxy = new MockOrderProxy(inner);
+        vm.startPrank(owner);
+        box = new LeafInboundLockbox(address(inner), address(ep), owner, guardian, feeTo, 1_000e18);
+        box.setFarm(address(proxy), STAKE_ORDER, 0, bytes4(0));
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0);
+        box.setFarmRequest(SEND_REQ);
+        box.setPublicRequestType(10, true);
+        box.setPublicRequestType(17, true);
+        box.setConverter(address(0xC0));
+        box.setPeer(30367, address(1));
+        vm.stopPrank();
+        _openSrc(box, owner, 1_000e18);
+        inner.mint(user, 100e18);
+        vm.deal(user, 1 ether);
+        vm.deal(address(box), 1 ether);
+    }
+
+    function testHorderIsAddressKeyed() public pure {
+        assertTrue(AssetCatalog.addressKeyed("horder"));
+        assertFalse(AssetCatalog.addressKeyed("bluai4y"));
+        AssetCatalog.Listing memory a = AssetCatalog.get("horder");
+        assertEq(uint8(a.kind), uint8(AssetCatalog.Kind.Closed));
+        assertEq(a.innerMainnet, 0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8);
+        assertEq(a.sourceChainIdMain, 42161);
+        assertEq(a.sourceEidMain, 30110);
+    }
+
+    function testCreate2AddressIgnoresChainId() public view {
+        bytes memory init = abi.encodePacked(
+            type(LeafInboundLockbox).creationCode,
+            abi.encode(address(inner), A.ENDPOINT_BSC, owner, guardian, feeTo, uint256(1_000e18))
+        );
+        address p = LeafCreate2.predict(LeafCreate2.LOCKBOX_SALT, init);
+        assertEq(p, LeafCreate2.predict(LeafCreate2.LOCKBOX_SALT, init));
+        assertTrue(p != address(0));
+        // Canonical V2 endpoint is the same on Arb and Base, so the lockbox is too.
+        assertEq(A.endpoint(42161), A.endpoint(8453));
+        assertEq(A.endpoint(10), A.endpoint(8453));
+    }
+
+    function testStakeIsFromLockboxNoDestChain() public {
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+        assertEq(proxy.staked(address(box)), 10e18);
+        assertEq(proxy.lastCaller(), address(box));
+        assertEq(box.totalLocked(), 10e18);
+        assertTrue(box.farmPrincipalOut());
+        assertEq(inner.balanceOf(address(box)), 0);
+    }
+
+    function testPublicHarvestTypeAnyoneUnstakeOwnerOnly() public {
+        vm.prank(user);
+        box.pokeFarmRequest{value: 0}(1.156239e18, 10);
+        assertEq(proxy.lastType(), 10);
+        assertEq(proxy.lastCaller(), address(box));
+
+        vm.prank(user);
+        vm.expectRevert();
+        box.pokeFarmRequest(1196e18, 2);
+
+        vm.prank(owner);
+        box.pokeFarmRequest(1196e18, 2);
+        assertEq(proxy.lastType(), 2);
+        assertEq(proxy.lastAmount(), 1196e18);
+    }
+
+    function testUsdcYieldIsNotPrincipal() public {
+        usdc.mint(address(box), 1e18);
+        uint256 locked = box.totalLocked();
+        vm.prank(user);
+        box.harvestToken(usdc);
+        assertEq(box.totalLocked(), locked);
+        assertGt(usdc.balanceOf(feeTo), 0);
+        assertEq(usdc.balanceOf(address(box)) + usdc.balanceOf(feeTo), 1e18);
+    }
+}
