@@ -46,6 +46,31 @@ English:
 
 Filters, nav, cards, toasts: the left column never appears. “同一套 L 适配器” is also forbidden.
 
+## Redeem is a burn. There is no cancel.
+
+Protocol exit **burns the Leaf first**. This is intentional (no half-state, no “undo queue” that still looks like a Leaf).
+
+Do **not** ship Cancel / 撤销赎回 / “I changed my mind”. That button does not exist in the contracts.
+
+| If they already… | What is true | UI |
+| ---------------- | ------------ | -- |
+| Burned an instant-receipt ticker | Leaf is gone. Receipt is in flight or already back on source. | Confirm copy before send: 烧掉之后不能撤回。 |
+| Burned a queued ticker (C2 / hNEST `requestWithdraw`) | Leaf is gone **and** they do not have the inner yet. Ticket waits `eta`. | 排队中不能取消。到期去源链领取。期间既没有 Leaf，也还没有收据。 |
+| Want Leaf again after they hold the receipt | That is a **new wrap**. New LZ fee. New mint. | Label it 再次存入 / wrap again. Never 取消赎回 or 恢复铸造. |
+| Hold a sell-only ticker | There is no protocol redeem to cancel. | Only 卖掉. |
+
+`abortCredit` is owner/guardian after halt — not a user cancel. Do not surface it.
+
+**Copy that must sit on every redeem confirm:**
+
+> 赎回会烧掉这份 Leaf，不能取消。想再拿 Leaf，要拿回收据之后重新存入。
+
+English:
+
+> Redeem burns this Leaf. It cannot be cancelled. To hold a Leaf again, wrap the receipt in a new deposit.
+
+Add the same line to the queued-state screen, or users will think they can abort the wait.
+
 ## Risk labels (required on the surface)
 
 Show these where a holder can deposit or even just browse tickers. Do not bury them in GitHub.
@@ -58,7 +83,8 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Caps / pause live | 有上限，可暂停。 |
 | Sell-only ticker | 可以长期低于账面价。那是流动性价格，除非底仓没了。 |
 | Instant-receipt ticker | 赎回的是收据，不是现货。官方解押要你自己去点。 |
-| Window ticker (hNEST, queued) | 取出跟官方窗口走，不是随时 1:1。 |
+| Window ticker (hNEST, queued) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
+| Redeem confirm (every listing that burns) | 赎回会烧掉这份 Leaf，不能取消。 |
 | Airdrops / points | 记在金库地址上，要等收获。不是随时可领的 HYPE。 |
 | Every listing | 底层协议可以改规则。HyperLeaf 不替它们偿付。 |
 

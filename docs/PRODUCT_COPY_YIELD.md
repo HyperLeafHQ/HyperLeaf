@@ -13,5 +13,6 @@
 - HyperLeaf 内「随时领取 HYPE」
 - “audited / 已审计 / audit reports published”（仅可说内部审查）
 - 保证有人买 / 保证盘口 / 保证按账面价退出（协议只做基建、可用性、收益分配）
+- 取消赎回 / cancel redeem（烧掉即不可逆；再拿 Leaf = 新存入）
 
 Updated: 2026-09-06
