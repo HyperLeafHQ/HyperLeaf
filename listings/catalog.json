@@ -415,11 +415,24 @@
       "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
-      "yield": { "inner": "keep-sethfi", "pullInner": false, "toHype": ["airdrop-erc20s"] },
-      "refs": {
-        "depositTx": "0x24a993c959ce6eaa9bb2406670e042013ce64ac5aa3b48232d92a081fea1f67c"
+      "yield": {
+        "inner": "keep-sethfi",
+        "pullInner": false,
+        "toHype": ["KING", "ETHFI-seasons-ended", "EIGEN-seasons-ended"]
       },
-      "note": "L wrap of transferable sETHFI, not ETHFI. Your 2024-07-18 tx 0x24a993c9 is still the live path: deposit(ETHFI, amount, minMint) 0x0efe6a8b on Teller 0xe2acf9 (vault()=sETHFI, isPaused=false, shareLockPeriod=0). Same teller still used Nov 2025 on Arb. Catalog's 0x35dD2463 is a second teller for the same vault, also unpaused — do not mix. 2024 mint was 1:1; later deposits mint fewer shares (NAV grew). HyperLeaf never calls this deposit or DelayedWithdraw; we pull sETHFI. sETHFI supply ~90.4M. Alias hsETHFI.",
+      "claim": "owner setClaimCall each merkle distributor + selector; lockbox must be the leaf. Seasons change.",
+      "refs": {
+        "depositTx": "0x24a993c959ce6eaa9bb2406670e042013ce64ac5aa3b48232d92a081fea1f67c",
+        "ethfiMerkleTx": "0x9f6af98675bac1514e28f50a7e578269876484251d5312b12fcc2f4daa0a3601",
+        "eigenMerkleTx": "0x6f3ec0465621d5af797f2f9a49575213c4d705e4c4b8258d18b8384a07506fc7",
+        "kingMerkleTx": "0x50111ba1688d5c677d05005f85a02e2ae9dfbbfe40ff2165e0a19dfd20c36a81"
+      },
+      "distributors": [
+        {"token": "ETHFI", "address": "0xbd456973DFd5B00b07Ce5307110C77E3F228Ca3c", "selector": "0x2e7ba6ef", "status": "empty"},
+        {"token": "EIGEN", "address": "0x2Ec90ef34e312A855becf74762D198D8369eEcE1", "selector": "0x2e7ba6ef", "status": "empty"},
+        {"token": "KING", "tokenAddress": "0x8F08B70456eb22f6109F57b8fafE862ED28E6040", "address": "0x6Db24Ee656843E3fE03eb8762a54D86186bA6B64", "selector": "0x1d7d4ebc", "status": "live", "note": "King Protocol compound ERC-20; distributor still holds ~2461 KING"}
+      ],
+      "note": "L wrap of transferable sETHFI, not ETHFI. Deposit path: 0x24a993c9 on Teller 0xe2acf9. Yield is extra merkle ERC-20s, not sETHFI NAV (NAV stays in the share). 2024-10-12: ETHFI season 0xbd4569 claim() 0x2e7ba6ef (~21 ETHFI) and EIGEN season 0x2Ec90e same selector (~3.89 EIGEN) — both distributors now empty. 2025-03-16: replaced by King Protocol KING 0x8F08B704 via 0x6Db24 claim(address,uint256,bytes32,bytes32[]) 0x1d7d4ebc (~0.0067 KING that tx); distributor still funded. Same class as KAITO: per-campaign merkle, leaf = wallet. Lockbox must appear in the tree or this yield is stripped. Do not block L. Never DelayedWithdraw. Alias hsETHFI.",
       "status": "research",
       "priority": 12
     },

@@ -84,11 +84,11 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Core invariant | same L: `supply ≤ totalLocked ≤ cap` + sETHFI supply ceiling |
 | Proof source | lockbox `totalLocked` + ether.fi vault share supply |
 | Mint / redeem | `send` / burn → sETHFI. **Never** `DelayedWithdraw` (~10d to ETHFI) or the teller `deposit` |
-| Yield | NAV in sETHFI rate; ether.fi / Karak / Symbiotic points = eco-claim class |
-| Failure | vault upgrade, points paid to EOA not lockbox |
+| Yield | sETHFI NAV in the share (do not pull inner). Extra: merkle ERC-20s — ETHFI/EIGEN seasons empty; live is **KING** (`0x8F08B704`) via `0x6Db24` `claim` 0x1d7d4ebc. Leaf must be the lockbox |
+| Failure | vault upgrade; merkle paid to EOA; KING campaign replaced again |
 | Auto-pause | ceiling / health |
-| Worst-case loss | min(cap, maxPerDay) |
-| Test | reuse `LeafSolvency.t.sol` L suite. Live deposit path: 0x24a993c9 → teller `0xe2acf9` `deposit(ETHFI,amt,min)` still unpaused |
+| Worst-case loss | min(cap, maxPerDay) on principal. KING/ETHFI/EIGEN are yield, not backing |
+| Test | L suite. Deposit 0x24a993c9. Do not treat empty ETHFI/EIGEN distributors as current yield |
 
 ### hgSOON (research — row incomplete)
 
