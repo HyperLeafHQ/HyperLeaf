@@ -92,9 +92,8 @@ One listing at a time. Empty books and mixed exits do not help the ecosystem.
 | Live | **hNEST** | Native | HyperEVM | NEST / veNEST as a HyperEVM ERC-20 |
 | Next | **hxSQUID** | L | Base | Trade xSQUID here; QUID surplus → HYPE |
 | Then | **hcbETH** | L | Base | ETH PoS exposure on HyperEVM |
-| Later | **hsETHFI**, veAERO, sWBERA, JupSOL, … | | | Same pattern: keep the yield, name the lock |
-| Not now | hSKY, stkAAVE, extra-chain airdrop names | | | We will not ship a worse product than the source |
-| Watch | LIT, RIVER, gSOON, B3, ORDER, SEED, AVNT | | | In the catalog. Most still strip a right or already trade on Hyperliquid |
+| Later | **hgSOON**, **PTSMAX**, hB3, hORDER, hAVNT, hsETHFI, veAERO, … | | | Same pattern: keep the yield, name the lock |
+| Not now | hSKY, hLIT, stkAAVE, extra-chain airdrop names | | | LIT waits on Lighter LZ. SKY strips borrow |
 
 Out of scope: another HYPE LST, wrapping official RAM/HYBR receipts, ENA (already on HyperCore).
 

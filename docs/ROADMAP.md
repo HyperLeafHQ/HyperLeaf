@@ -10,6 +10,11 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | 1 | hxSQUID | L | Base | First wrap. claimRewards → QUID → HYPE |
 | 2 | hcbETH | L | Base | PoS in the rate |
 | later | hsETHFI | L | Ethereum | Receipt only. Never 10d DelayedWithdraw. Protocol delegate for Snapshot |
+| later | **hgSOON** | L | Ethereum (first) | Largest gSOON vault on EVM (~199M SOON). Wrap receipt, never 7d unstake |
+| later | **PTSMAX** | C1 | BSC | River Pts → RIVER on a fixed season date. Rate is market, not APY |
+| later | **hB3** | C1 | Base | Stake B3, harvest WIN (play or convert to B3). 45d cooldown unused |
+| later | **hORDER** | C1 | OFT / ETH first | VALOR stays in lockbox. Pick chain with most stake |
+| later | **hAVNT** | C2 | Base | Perp DEX staking ~15% AVNT. Slash is the cost of that yield |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
 | later | hsWBERA | L | Berachain | Wait LZ |
 | later | hAEVO / hGMX | C1 | ETH / Arb | No transferable receipt |
@@ -19,13 +24,8 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | last | BONK12M / hMET | C1/C2 | Solana | |
 | parked | hSKY | C1 | Ethereum | Stake-only strips LockStake borrow. Min 1.44M SKY / 30k USDS |
 | hold | hstkAAVE | | Ethereum | Safety Module → Umbrella |
-| watch | hLIT | C2? | Ethereum | Lighter 3d unstake. LLP cap sits on the lockbox — rights strip until designed |
-| watch | hRIVER | C1 | BSC | Spot already on Hyperliquid. Product is epoch-locked stake, not free RIVER |
-| watch | hgSOON | L | Solana/BSC/Base | Wrap gSOON, never 7d unstake. Canonical chain TBD |
-| watch | hB3 | C1? | Base | Need stake tx; B3+ receipt vs account |
-| watch | hORDER | C1 | Ethereum | VALOR non-transferable; lockbox must keep it |
-| watch | hSEED | C1 | Arbitrum | Garden. Rewards in Base cbBTC — extra-chain claim |
-| watch | hAVNT | C1 | Base | SM slash + trader discounts. AVNT perp already on HL |
+| parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
+| watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
 | blocked | hKAITO / hVIRTUALMAX | | Base | Extra-chain claims until CREATE2 holder |
 
 Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.

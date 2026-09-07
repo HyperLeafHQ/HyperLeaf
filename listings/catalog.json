@@ -493,27 +493,30 @@
       "name": "Hyperleaf staked LIT",
       "innerSymbol": "LIT",
       "innerToken": "0x232CE3bd40fCd6f80f3d55A522d03f25Df784Ee2",
-      "source": "ethereum",
-      "sourceChainId": 1,
+      "source": "lighter-l2",
+      "sourceChainId": 0,
       "exit": "queued",
-      "redeemDelayHint": "3d unstake",
-      "infra": "evm",
-      "note": "Lighter app staking, ~6% LIT, 3-day unstake. LIT already has Hyperliquid perps. LLP access is 10 USDC per staked LIT on the staking address — wrapping parks that cap on the lockbox, not on hLIT holders (rights strip). Do not wrap CEX staking. Need a live stake/unstake tx before Kind is final.",
-      "status": "watchlist",
-      "priority": 26
+      "infra": "lighter-zk",
+      "note": "LIT ERC-20 is on Ethereum; staking is on Lighter's own zk-rollup (appchain, like Hyperliquid). LayerZero has no Lighter endpoint (HyperEVM and ETH yes, Lighter no). LLP cap is extra liquidity occupancy, not a rights strip — not the blocker. Parked until Lighter is LZ-reachable or they expose an EVM stake we can lock.",
+      "status": "parked",
+      "priority": 45
     },
     {
-      "id": "hriver",
+      "id": "ptsmax",
       "kind": "C1",
-      "symbol": "hRIVER",
-      "name": "Hyperleaf staked RIVER",
-      "innerSymbol": "staked RIVER",
+      "symbol": "PTSMAX",
+      "name": "Hyperleaf River Pts max-date",
+      "innerSymbol": "River Pts",
+      "innerToken": "0xfc6be825925b7a83d131e33b46efef9084f0e014",
       "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
       "exit": "market-only",
       "infra": "evm",
-      "note": "RIVER spot already on Hyperliquid. Product is the epoch-locked stake (3–24m, vote multiplier), not the free token. Multiple epochs = do not mix on one ticker. satUSD+ is a different L listing if we ever wrap it. Low priority while spot exists.",
-      "status": "watchlist",
-      "priority": 27
+      "yield": { "inner": "convert-to-river-on-date", "pullInner": false, "toHype": ["weekly-staked-river-rewards"] },
+      "note": "BSC. Deposit River Pts, convert at the longest lock — epoch ends on a fixed calendar date (Jan/Apr/Jul/Oct 1), not a rolling 3–24 month term. One ticker: PTSMAX. Conversion rate is density/market, not a promised APY; book profit ≠ realized RIVER. Spot RIVER on Hyperliquid is thin — this listing is the points→RIVER duration trade. Need a convert tx on the max date. Do not mix shorter epochs on this ticker.",
+      "status": "research",
+      "priority": 8
     },
     {
       "id": "hgsoon",
@@ -521,12 +524,15 @@
       "symbol": "hgSOON",
       "name": "Hyperleaf gSOON",
       "innerSymbol": "gSOON",
-      "source": "solana",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
       "exit": "instant-receipt",
-      "infra": "solana",
-      "note": "SOON SVM LST. Yield in gSOON/SOON rate. Official unstake 7d — wrap gSOON, never call unstake. Also launched on BSC/Base; confirm which chain holds the canonical gSOON before picking a lockbox. Waits on Solana lockbox unless EVM gSOON is the real supply.",
-      "status": "watchlist",
-      "priority": 28
+      "infra": "evm",
+      "yield": { "inner": "keep-gsoon-rate", "pullInner": false, "toHype": [] },
+      "note": "Wrap transferable gSOON, never the 7d unstake. Arkham (Sep 2026): GSOON vault ~199M SOON (~20%) on EVM vs ~187M on a Solana wallet — pick Ethereum first (LZ exists). Base/BSC SOON copies are smaller. Confirm gSOON token address + a stake tx before deploy. Yield sits in the gSOON/SOON rate.",
+      "status": "research",
+      "priority": 7
     },
     {
       "id": "hb3",
@@ -540,9 +546,10 @@
       "sourceEid": 30184,
       "exit": "market-only",
       "infra": "evm",
-      "note": "Base Open Gaming. stake.b3.fun — confirm whether B3+ is a transferable receipt (then L) or account stake (C1). Stake-to-win / sweepstakes accrue to the staker address. Need a stake tx.",
-      "status": "watchlist",
-      "priority": 29
+      "yield": { "inner": "win-then-b3", "pullInner": false, "toHype": ["WIN"] },
+      "note": "Base. Stake B3 → WIN (play, or wait and convert WIN back to B3). Principal unstake has a 45-day cooldown — we do not unstake. Harvest is WIN → (optional convert) → HYPE. Need a stake tx and the WIN token address. Games/spins on the staking account are not a HyperLeaf claim.",
+      "status": "research",
+      "priority": 9
     },
     {
       "id": "horder",
@@ -556,9 +563,9 @@
       "sourceChainId": 1,
       "exit": "market-only",
       "infra": "evm",
-      "note": "Stake ORDER/esORDER for VALOR. VALOR is non-transferable and is the only claim on the treasury; redeem VALOR → esORDER after 7d. Wrapping ORDER without keeping VALOR in the lockbox strips the yield. If we list: lockbox holds VALOR, harvest redemptions to HYPE, hORDER is C1 or C2. ORDER is already LZ OFT.",
-      "status": "watchlist",
-      "priority": 30
+      "note": "ORDER is LZ OFT (ETH + BSC/Arb/OP/Polygon/Base/Avax/Solana). Stake on any of those; pick the chain with the most staked ORDER. VALOR stays in the lockbox (non-transferable); redeem VALOR → esORDER after 7d → HYPE. Need a stake tx.",
+      "status": "research",
+      "priority": 10
     },
     {
       "id": "hseed",
@@ -570,24 +577,25 @@
       "sourceChainId": 42161,
       "exit": "market-only",
       "infra": "evm",
-      "note": "Garden BTC bridge. Stake on Arbitrum (lots of 2100). Rewards historically SEED, now also cbBTC on Base — extra-chain claim like KAITO. Dune: large share perma-locked. Blocked as a harvest path until we can claim Base cbBTC from an Arb lockbox (or migrate). Need a stake tx.",
+      "note": "Official stake is still Arbitrum (lots of 2100). Rewards can be withdrawn as cbBTC on Base — that is a claim path, not a Base stake. Last Garden post: staking 'lives on Arbitrum for now', migrate later. Do not list a Base lockbox until the UI actually accepts a Base stake tx. If they migrate, this becomes a Base C1 with cbBTC → HYPE.",
       "status": "watchlist",
-      "priority": 31
+      "priority": 22
     },
     {
       "id": "havnt",
-      "kind": "C1",
+      "kind": "C2",
       "symbol": "hAVNT",
-      "name": "Hyperleaf Avantis SM",
+      "name": "Hyperleaf staked AVNT",
       "innerSymbol": "AVNT",
       "source": "base",
       "sourceChainId": 8453,
       "sourceEid": 30184,
-      "exit": "market-only",
+      "exit": "queued",
       "infra": "evm",
-      "note": "Avantis Security Module: ~15% AVNT, 20% max slash, trader fee discounts are account-based. AVNT already has a Hyperliquid perp. Wrapping socializes slash risk and strips fee tiers. Same caution as stkAAVE. Do not list until we decide HyperEVM needs AVNT spot vs the SM position.",
-      "status": "watchlist",
-      "priority": 32
+      "yield": { "inner": "avnt-staking-apr", "pullInner": false, "toHype": ["AVNT"] },
+      "note": "Avantis is a Base perp DEX. Staking pays ~15% in AVNT (live, per-block). The Security Module slash (up to 20%) is the cost of that yield, not a separate product. Trader fee discounts stay on the staking address (same class as LIT LLP — occupancy, not a strip). AVNT perp already on Hyperliquid; this listing is the staked yield, not the perp. Need a stake tx + cooldown. Harvest AVNT → HYPE.",
+      "status": "research",
+      "priority": 11
     }
   ]
 }
