@@ -126,9 +126,26 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 
 up. is Velodrome-line ve(3,3) on **Robinhood Chain 4663**. Liquid **UP** `0x57C0E45c…B4F1` is the emission token. Yield sits on **veUP** escrow NFT `0x5d321dE3…B7B6` (fees + votes). Wrapping UP would be wrapping spot. Wrapping veUP needs the same NFT lockbox as hveAERO. LZ exists (eid **30416**, EndpointV2 `0x6F475642…`). Do not write LeafOFTAdapter for this ticker.
 
-### hsteakUSDG (research — wrap Morpho share only)
+### Morpho vault shares (family — L, wrap the 4626 token)
 
-Steakhouse USDG vault `0xBeEff033…5409dd` on Robinhood 4663. Share **steakUSDG**, asset USDG `0x5fc5360D…d168`. Live ~$454M, share price ~1.006 USDG (2026-09-06). Docs: permissionless ERC-4626, instant redeem. **Wrap steakUSDG.** Never `deposit`/`mint` USDG. Never `withdraw`/`redeem` even if instant. Yield in the rate. Pause if USDG or vault share depegs. Not filled until a live `asset()` / `convertToAssets(1e18)` / `withdraw` selector check is logged.
+Morpho **Vault** (MetaMorpho / Vault V2) deposits mint a transferable ERC-4626 share. That share is the inner. Morpho **Blue market** supply is an address-keyed position — not an ERC-20. Do not wrap Blue. Do not wrap USDC/USDG. Do not wrap borrow.
+
+One vault = one listing. Backing does not cross curators or loan assets.
+
+| | |
+| --- | --- |
+| Canonical backing | vault share pulled on the source chain |
+| Accounting unit | 1 hToken = 1 share. Loan-asset NAV in `convertToAssets` |
+| Core invariant | L: `supply ≤ totalLocked shares` + share `totalSupply` ceiling |
+| Mint / redeem | wrap/unwrap **shares**. Instant. **Never** `deposit`/`mint`/`withdraw`/`redeem` on the vault (even if Morpho redeem is “instant”) |
+| Yield | in the share rate. Do not pull shares as harvest. Extra reward tokens (MORPHO etc.) may `pullYield` only if not the inner |
+| Failure | curator reallocation, market illiquidity (user sells hToken), USDC/USDG depeg, Morpho/adapter bug |
+| Auto-pause | share/loan-asset depeg vs oracle; inner supply ceiling |
+| Test | L suite + forbidden 4626 selectors. Per-vault `asset()` logged before adapter-ready |
+
+**hsteakUSDC** (Base): inner `0xBEEF010f…8183`, asset USDC. First Base Morpho candidate (same chain as hxSQUID).
+
+**hsteakUSDG** (Robinhood): inner `0xBeEff033…5409dd`, asset USDG. First Robinhood Morpho candidate. Need live `asset()` / `convertToAssets` / confirm withdraw is not a queue.
 
 ### hliSLVR (watch — wrap liSLVR only if tax-free)
 

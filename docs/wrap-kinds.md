@@ -31,6 +31,8 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 2. **hcbETH** (L, Base)
 3. **hveAERO** (ve-NFT, Base — later)
 4. **hsWBERA** (L, Berachain) — wrap sWBERA. Never 4626 `withdraw`/`redeem` (those queue 7d)
+
+**Morpho vault shares (L family):** wrap the **ERC-4626 vault token**, not USDC/USDG, not a Morpho Blue market position. Blue supply is address-keyed — that is ORDER-class, skip. Each vault is its own listing (curator + markets ≠ shared backing). Never `deposit`/`mint`/`withdraw`/`redeem` on the vault. Yield in `convertToAssets`. Base and Robinhood both have LZ. Do not auto-list every Morpho vault; each needs a SOLVENCY row.
 5. **hAEVO** (C1, Ethereum)
 6. **hJupSOL** (L, Solana)
 7. **hANSEM** (L, Solana, ansem.io)

@@ -319,6 +319,25 @@
       "priority": 14
     },
     {
+      "id": "hsteakusdc",
+      "kind": "L",
+      "symbol": "hsteakUSDC",
+      "name": "Hyperleaf steakUSDC",
+      "innerSymbol": "steakUSDC",
+      "innerToken": "0xBEEF010f9CB27031Ad51e3333f9aF9C6B1228183",
+      "underlying": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "sourceEidTest": 40245,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": { "inner": "erc4626-rate", "pullInner": false, "toHype": [] },
+      "note": "Morpho MetaMorpho Steakhouse USDC on Base. Wrap steakUSDC only. Never deposit USDC, never 4626 withdraw/redeem. Same L adapter as hsteakUSDG. One vault = one listing. Do not wrap Morpho Blue market positions (no ERC-20 receipt).",
+      "status": "research",
+      "priority": 13
+    },
+    {
       "id": "hlislvr",
       "kind": "L",
       "symbol": "hliSLVR",
