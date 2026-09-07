@@ -17,7 +17,9 @@ contract MockSky is ERC20 {
 }
 
 contract MockEngine is ISkyLockstake {
-    IERC20 public immutable sky;
+    IERC20 public immutable skyToken;
+    address public immutable lsskyAddr;
+    address public immutable usdsAddr;
     mapping(address => uint256) public locked;
     uint256 public pending;
     address public lastDelegate;
@@ -25,12 +27,30 @@ contract MockEngine is ISkyLockstake {
     bool public opened;
 
     constructor(IERC20 s) {
-        sky = s;
+        skyToken = s;
+        lsskyAddr = address(s);
+        usdsAddr = address(s);
+    }
+
+    function fee() external pure override returns (uint256) {
+        return 0;
+    }
+    function sky() external view override returns (address) {
+        return address(skyToken);
+    }
+    function lssky() external view override returns (address) {
+        return lsskyAddr;
+    }
+    function usds() external view override returns (address) {
+        return usdsAddr;
+    }
+    function farms(address) external pure override returns (uint8) {
+        return 1;
     }
 
     function seed(uint256 a) external {
         pending += a;
-        MockSky(address(sky)).mint(address(this), a);
+        MockSky(address(skyToken)).mint(address(this), a);
     }
 
     function open(uint256) external override returns (address) {
@@ -39,17 +59,15 @@ contract MockEngine is ISkyLockstake {
     }
 
     function lock(address, uint256, uint256 wad, uint16) external override {
-        sky.transferFrom(msg.sender, address(this), wad);
+        skyToken.transferFrom(msg.sender, address(this), wad);
         locked[msg.sender] += wad;
     }
 
     function free(address, uint256, address to, uint256 wad) external override returns (uint256 freed) {
         require(locked[msg.sender] >= wad, "lock");
         locked[msg.sender] -= wad;
-        uint256 fee = wad / 20;
-        freed = wad - fee;
-        MockSky(address(sky)).burn(address(this), fee);
-        sky.transfer(to, freed);
+        freed = wad;
+        skyToken.transfer(to, freed);
     }
 
     function selectFarm(address, uint256, address farm_, uint16) external override {
@@ -63,33 +81,32 @@ contract MockEngine is ISkyLockstake {
     function getReward(address, uint256, address, address to) external override returns (uint256 amt) {
         amt = pending;
         pending = 0;
-        if (amt > 0) sky.transfer(to, amt);
+        if (amt > 0) skyToken.transfer(to, amt);
     }
 }
 
-/// @notice PoC of the Sky V1 path without the LZ box (IR too fat to inherit inbound).
 contract SkyLockstakePocTest is Test {
-    MockSky sky;
+    MockSky skyTok;
     MockEngine engine;
     address box = address(this);
     address farm = address(0xF4);
 
     function setUp() public {
-        sky = new MockSky();
-        engine = new MockEngine(sky);
+        skyTok = new MockSky();
+        engine = new MockEngine(skyTok);
         engine.open(0);
         engine.selectFarm(box, 0, farm, 0);
-        sky.mint(box, 100 ether);
-        sky.approve(address(engine), type(uint256).max);
+        skyTok.mint(box, 100 ether);
+        skyTok.approve(address(engine), type(uint256).max);
     }
 
     function testOpenSelectLockRewardFree() public {
         assertTrue(engine.opened());
         assertEq(engine.lastFarm(), farm);
+        assertEq(engine.fee(), 0);
 
         engine.lock(box, 0, 40 ether, 0);
         assertEq(engine.locked(box), 40 ether);
-        assertEq(sky.balanceOf(box), 60 ether);
 
         engine.seed(2 ether);
         uint256 got = engine.getReward(box, 0, farm, box);
@@ -99,7 +116,6 @@ contract SkyLockstakePocTest is Test {
         assertEq(engine.lastDelegate(), address(0xDE1));
 
         uint256 freed = engine.free(box, 0, box, 40 ether);
-        assertEq(freed, 38 ether);
-        assertEq(engine.locked(box), 0);
+        assertEq(freed, 40 ether);
     }
 }

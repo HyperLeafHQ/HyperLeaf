@@ -197,7 +197,7 @@ Success for a listing is not “it compiled.” It is: small deposit and redeem 
 | 0 (live) | **hNEST** | Native | HyperEVM | NEST / veNEST+HEV | Already on mainnet, capped |
 | 1 | **hxSQUID** | L | Base | xSQUID | Same-chain `claimRewards` → QUID → HYPE. First wrap. |
 | 2 | **hcbETH** | L | Base | cbETH | Base ETH LST. PoS in the rate. |
-| 3 | **hSKY** | C1 | Ethereum | Lockstake urn | Flagship financialization. No USDS borrow. Vote stays protocol-delegated. `free` has an exit fee. |
+| 3 | **hSKY** | C1 | Ethereum | Lockstake urn | fee()=0 on this engine. Farm pays **USDS**, not SKY. Never borrow. |
 | later | **hveAERO** | ve-NFT | Base | veAERO 721 | After Sky urn pattern. |
 | hold | **hstkAAVE** | L | Ethereum | stkAAVE | Legacy Safety Module. Umbrella is the new backstop. Do not ship until SM fate + voting delegate + HyperEVM spot gap are clear. |
 | watch | **Umbrella** | risk | Ethereum | aUSDC / GHO … | Not “support AAVE”. Separate product if we ever tokenize a specific cover pool. |
@@ -232,7 +232,7 @@ Tiny cap. `claimRewards(lockbox, max)` → QUID → WHYPE. Watch LZ peers.
 Copy the proven Base L path onto Coinbase cbETH.
 
 **Phase D — hSKY (Ethereum Lockstake V2)**
-PoC: open urn → lock SKY → getReward → never `draw`. Ticker hSKY. No stUSDS. No MKR.
+PoC: open urn → lock SKY → selectFarm(USDS) → getReward(USDS) → never `draw`. Live `fee()` is 0. Ticker hSKY. No stUSDS. No MKR.
 
 **Phase E — hveAERO / remaining Ethereum**
 veAERO after the urn/NFT custody pattern is proven on Sky. stkAAVE remains hold.
