@@ -37,7 +37,13 @@ A discount on a **sell-only** ticker is a **liquidity price** only while that li
 Face value for any 转让 board is that ticker’s SOLVENCY accounting unit (remaining cbETH, 1:1 xSQUID, ORDER `ledgerPrincipal`, …), never a USD print we invent.
 
 
-Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf**：想退出的人把 Leaf 挂进板子，下一个本来要存入的人用底仓买走，协议不铸新的 Leaf。Copy: 没人出价就不成交。协议不接盘。买方市场：成交价里 1% 返给买方。挂单期间 Rewarder 的 HYPE 归协议（Leaf 已离开卖方地址）。自动复利（汇率升值）的票 v1 不上板，取消挂单协议收不到那部分。Not 债务, not 借贷, not 官方收单. Face value comes from that ticker’s SOLVENCY row. Instant-receipt tickers already have 烧掉就能拿回 — a fat discount there is usually an arb, not a feature. Details: `docs/CLAIM_MARKET.md`.
+Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf**：想退出的人把 Leaf 挂进托管，下一个本来要存入的人用底仓买走，协议不铸新的 Leaf、不成交对手方。
+
+挂单确认必须写：
+
+> 挂进转让板之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。折价是有人接盘的价格，不是底仓没了。成交价里 1% 是买方奖励，不是协议手续费。
+
+Copy: 没人出价就不成交。协议不接盘。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票 v1 不上板。Details: `docs/CLAIM_MARKET.md`.
 
 
 **One line that must survive every rewrite:**

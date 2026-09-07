@@ -1,0 +1,216 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {LeafClaimPeer} from "./LeafClaimPeer.sol";
+import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
+
+interface IClaimHype {
+    function claim(bytes32 id, address to) external;
+    function pending(bytes32 id, address user) external view returns (uint256);
+}
+
+/// @title LeafClaimEscrow
+/// @notice Dest-side C1 exit board. Seller deposits Leaf; buyer pays inner
+///         (locally or via `LeafClaimFill` on source). Protocol is never the
+///         counterparty. No mint. Execution fee is 0. 1% of ask is a **buyer
+///         reward**, not a protocol fee. Occupancy HYPE while listed is claimed
+///         here → `feeRecipient`. Cancel / expire returns Leaf; no cancel fee.
+contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
+    uint16 public constant BPS = 10_000;
+    uint16 public constant BUYER_REWARD_BPS = 100; // 1% of ask → buyer
+    uint8 public constant OP_FILL = 1;
+    uint8 public constant OP_ACK = 2;
+    uint8 public constant OP_REFUND = 3;
+
+    address public feeRecipient;
+    IClaimHype public rewarder;
+
+    enum Status {
+        None,
+        Open,
+        Filled,
+        Cancelled,
+        Expired
+    }
+
+    struct Order {
+        address seller;
+        address sourceRecipient;
+        address leaf;
+        address wantToken;
+        uint128 leafAmount;
+        uint128 wantAmount;
+        uint64 expiry;
+        Status status;
+    }
+
+    struct Market {
+        bool allowed;
+        bytes32 rewardId;
+    }
+
+    uint256 public nextId = 1;
+    mapping(uint256 id => Order) public orders;
+    /// @dev leaf → wantToken (source inner address) → market
+    mapping(address leaf => mapping(address wantToken => Market)) public markets;
+
+    event MarketSet(address indexed leaf, address indexed wantToken, bytes32 rewardId, bool allowed);
+    event Listed(uint256 indexed id, address indexed seller, address leaf, uint256 leafAmount, address wantToken, uint256 wantAmount);
+    event Cancelled(uint256 indexed id);
+    event Expired(uint256 indexed id);
+    event Filled(uint256 indexed id, address indexed buyer, uint256 toSeller, uint256 buyerReward);
+    event OccupancyClaimed(bytes32 indexed rewardId, uint256 amount);
+
+    error NotAllowed();
+    error BadOrder();
+    error NotSeller();
+    error NotOpen();
+    error NotExpired();
+    error SameParty();
+
+    constructor(address endpoint_, address owner_, address guardian_, address feeRecipient_)
+        LeafClaimPeer(endpoint_, owner_, guardian_)
+    {
+        if (feeRecipient_ == address(0)) revert ZeroAddress();
+        feeRecipient = feeRecipient_;
+    }
+
+    function setFeeRecipient(address to) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+        feeRecipient = to;
+    }
+
+    function setRewarder(address r) external onlyOwner {
+        rewarder = IClaimHype(r);
+    }
+
+    /// @notice Owner allowlists a C1 Leaf against its source inner. Do not
+    ///         allowlist share-price tickers in v1.
+    function setMarket(address leaf, address wantToken, bytes32 rewardId, bool allowed) external onlyOwner {
+        if (leaf == address(0) || wantToken == address(0)) revert ZeroAddress();
+        markets[leaf][wantToken] = Market(allowed, rewardId);
+        emit MarketSet(leaf, wantToken, rewardId, allowed);
+    }
+
+    function list(
+        address leaf,
+        uint256 leafAmount,
+        address wantToken,
+        uint256 wantAmount,
+        address sourceRecipient,
+        uint64 expiry
+    ) external whenNotPaused nonReentrant returns (uint256 id) {
+        Market memory m = markets[leaf][wantToken];
+        if (!m.allowed) revert NotAllowed();
+        if (leafAmount == 0 || wantAmount == 0) revert BadOrder();
+        if (sourceRecipient == address(0)) revert ZeroAddress();
+        if (expiry <= block.timestamp) revert BadOrder();
+
+        IERC20(leaf).safeTransferFrom(msg.sender, address(this), leafAmount);
+        id = nextId++;
+        orders[id] = Order({
+            seller: msg.sender,
+            sourceRecipient: sourceRecipient,
+            leaf: leaf,
+            wantToken: wantToken,
+            leafAmount: uint128(leafAmount),
+            wantAmount: uint128(wantAmount),
+            expiry: expiry,
+            status: Status.Open
+        });
+        emit Listed(id, msg.sender, leaf, leafAmount, wantToken, wantAmount);
+    }
+
+    /// @notice Seller rescue. No cancel fee. Occupancy HYPE already notified
+    ///         stays with this contract (protocol). Sends REFUND if a source fill is in flight.
+    function cancel(uint256 id, uint32 srcEid) external payable nonReentrant {
+        Order storage o = orders[id];
+        if (o.seller != msg.sender) revert NotSeller();
+        if (o.status != Status.Open) revert NotOpen();
+        o.status = Status.Cancelled;
+        IERC20(o.leaf).safeTransfer(o.seller, o.leafAmount);
+        emit Cancelled(id);
+        if (srcEid != 0 && peers[srcEid] != bytes32(0) && msg.value > 0) {
+            _lzSend(srcEid, abi.encode(OP_REFUND, id), msg.sender);
+        }
+    }
+
+    function expire(uint256 id, uint32 srcEid) external payable nonReentrant {
+        Order storage o = orders[id];
+        if (o.status != Status.Open) revert NotOpen();
+        if (block.timestamp < o.expiry) revert NotExpired();
+        o.status = Status.Expired;
+        IERC20(o.leaf).safeTransfer(o.seller, o.leafAmount);
+        emit Expired(id);
+        if (srcEid != 0 && peers[srcEid] != bytes32(0) && msg.value > 0) {
+            _lzSend(srcEid, abi.encode(OP_REFUND, id), msg.sender);
+        }
+    }
+
+    /// @notice Same-chain settlement (tests / inner already on dest). Atomic.
+    function fillLocal(uint256 id) external whenNotPaused nonReentrant {
+        Order storage o = orders[id];
+        if (o.status != Status.Open) revert NotOpen();
+        if (block.timestamp >= o.expiry) revert NotExpired();
+        if (msg.sender == o.seller) revert SameParty();
+        _payoutLeaf(o, msg.sender);
+        (uint256 toSeller, uint256 reward) = _split(o.wantAmount);
+        IERC20 want = IERC20(o.wantToken);
+        want.safeTransferFrom(msg.sender, address(this), o.wantAmount);
+        want.safeTransfer(o.sourceRecipient, toSeller);
+        if (reward > 0) want.safeTransfer(msg.sender, reward);
+        emit Filled(id, msg.sender, toSeller, reward);
+    }
+
+    /// @notice Occupancy HYPE while this contract holds Leaf. Permissionless.
+    function claimOccupancy(bytes32 rewardId) external nonReentrant {
+        if (address(rewarder) == address(0) || rewardId == bytes32(0)) revert BadOrder();
+        uint256 before = _pending(rewardId);
+        rewarder.claim(rewardId, feeRecipient);
+        emit OccupancyClaimed(rewardId, before);
+    }
+
+    function _lzReceive(ILayerZeroEndpointV2.Origin calldata origin, bytes32, bytes calldata message, address, bytes calldata)
+        internal
+        override
+    {
+        (uint8 op, uint256 id, address buyer, uint256 wantAmount, address payout) =
+            abi.decode(message, (uint8, uint256, address, uint256, address));
+        if (op != OP_FILL) revert BadOrder();
+        Order storage o = orders[id];
+        if (
+            o.status != Status.Open || block.timestamp >= o.expiry || buyer == address(0) || buyer == o.seller
+                || wantAmount != o.wantAmount || payout != o.sourceRecipient
+        ) {
+            _lzSend(origin.srcEid, abi.encode(OP_REFUND, id), address(this));
+            return;
+        }
+        _payoutLeaf(o, buyer);
+        (uint256 toSeller, uint256 reward) = _split(o.wantAmount);
+        emit Filled(id, buyer, toSeller, reward);
+        _lzSend(origin.srcEid, abi.encode(OP_ACK, id), address(this));
+    }
+
+    function _payoutLeaf(Order storage o, address buyer) private {
+        o.status = Status.Filled;
+        IERC20(o.leaf).safeTransfer(buyer, o.leafAmount);
+    }
+
+    function _split(uint256 wantAmount) internal pure returns (uint256 toSeller, uint256 reward) {
+        reward = (wantAmount * BUYER_REWARD_BPS) / BPS;
+        toSeller = wantAmount - reward;
+    }
+
+    function _pending(bytes32 rewardId) private view returns (uint256) {
+        return rewarder.pending(rewardId, address(this));
+    }
+
+    function split(uint256 wantAmount) external pure returns (uint256 toSeller, uint256 reward) {
+        return _split(wantAmount);
+    }
+}
