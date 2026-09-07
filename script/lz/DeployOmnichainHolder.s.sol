@@ -20,12 +20,12 @@ contract DeployOmnichainHolder is Script {
 
         vm.startBroadcast();
         (bool ok, bytes memory ret) = FACTORY.call(abi.encodePacked(SALT, initCode));
-        require(ok, "create2 failed — factory missing on this chain?");
+        require(ok, "create2 failed");
         address deployed;
         if (ret.length == 20) {
             deployed = address(uint160(bytes20(ret)));
         } else if (ret.length == 32) {
-            deployed = address(uint256(bytes32(ret)));
+            deployed = address(uint160(uint256(bytes32(ret))));
         } else {
             deployed = predicted;
         }

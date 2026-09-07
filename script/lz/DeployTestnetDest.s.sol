@@ -17,6 +17,7 @@ contract DeployTestnetDest is Script {
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
         require(block.chainid == 998, "run on HyperEVM testnet 998");
+        require(owner != guardian, "OWNER == GUARDIAN");
         address endpoint = A.ENDPOINT_HYPEREVM_TESTNET;
 
         vm.startBroadcast();

@@ -22,6 +22,8 @@ HYPEREVM_TESTNET_RPC_URL=https://rpc.hyperliquid-testnet.xyz/evm
 
 Need gas: Base Sepolia ETH, BSC testnet BNB, HyperEVM testnet HYPE.
 
+Grok bot: follow **`docs/GROK_BOT_TESTNET.md`** (hxSQUID then hcbETH, then bluai4y). That file is the copy-paste. This page is the generic catalog.
+
 ## Per asset
 
 | ASSET | Kind | Source testnet | Dest |

@@ -12,9 +12,9 @@ no_match_path = "test/HevFork.t.sol"
 
 [rpc_endpoints]
 hyperevm = "${HYPEREVM_RPC_URL}"
-hyperevm_testnet = "${HYPEREVM_TESTNET_RPC_URL}"
-base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
-bsc_testnet = "${BSC_TESTNET_RPC_URL}"
+hyperevm_testnet = "https://rpc.hyperliquid-testnet.xyz/evm"
+base_sepolia = "https://sepolia.base.org"
+bsc_testnet = "https://bsc-testnet-rpc.publicnode.com"
 
 [etherscan]
 hyperevm = { key = "${ETHERSCAN_API_KEY}", url = "${HYPEREVM_ETHERSCAN_API_URL}" }

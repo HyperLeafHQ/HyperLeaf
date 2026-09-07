@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
+import {MockClaimInner} from "test/mocks/MockClaimInner.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
@@ -21,16 +22,35 @@ contract DeployTestnetSource is Script {
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
+        require(owner != guardian, "OWNER == GUARDIAN");
+        require(_isTestnet(block.chainid), "not a testnet");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
         uint256 cap = vm.envOr("DEPOSIT_CAP", a.defaultCap);
         address endpoint = A.endpoint(block.chainid);
+        if (a.sourceEidTest == A.EID_BASE_SEPOLIA) {
+            require(block.chainid == 84532, "hxsquid/hcbeth source is Base Sepolia 84532");
+        }
+        if (keccak256(bytes(id)) == keccak256("bluai4y")) {
+            require(block.chainid == 97, "bluai4y source is BSC testnet 97");
+        }
 
         vm.startBroadcast();
         address inner = vm.envOr("INNER_TOKEN", address(0));
+        if (inner != address(0) && inner == a.innerMainnet) {
+            revert("do not point testnet at mainnet inner");
+        }
         if (inner == address(0)) {
-            MockERC20 mock = new MockERC20(a.innerSymbol, a.innerSymbol);
-            mock.mint(owner, 1_000_000 ether);
-            inner = address(mock);
+            if (keccak256(bytes(id)) == keccak256("hxsquid")) {
+                MockERC20 quid = new MockERC20("QUID", "QUID");
+                MockClaimInner mock = new MockClaimInner(a.innerSymbol, a.innerSymbol, address(quid));
+                mock.mint(owner, 1_000_000 ether);
+                inner = address(mock);
+                console2.log("MockQUID", address(quid));
+            } else {
+                MockERC20 mock = new MockERC20(a.innerSymbol, a.innerSymbol);
+                mock.mint(owner, 1_000_000 ether);
+                inner = address(mock);
+            }
             console2.log("MockInner", inner);
         }
 
@@ -38,6 +58,9 @@ contract DeployTestnetSource is Script {
         if (a.kind == AssetCatalog.Kind.Liquid) {
             source = address(new LeafOFTAdapter(inner, endpoint, owner, guardian, feeRecipient, cap));
             console2.log("LeafOFTAdapter", source);
+            if (keccak256(bytes(id)) == keccak256("hxsquid")) {
+                LeafOFTAdapter(source).setRewardsSelector(bytes4(0x9a99b4f0));
+            }
         } else if (a.kind == AssetCatalog.Kind.Closed) {
             if (keccak256(bytes(a.id)) == keccak256("hvirtualmax") && block.chainid == 8453) {
                 address stake = vm.envOr("VIRTUALS_STAKE", HypeAddresses.VIRTUALS_STAKE_BASE);
@@ -69,5 +92,9 @@ contract DeployTestnetSource is Script {
         console2.log("symbol", a.symbol);
         console2.log("sourceEidTest", a.sourceEidTest);
         console2.log("destEidTest", A.EID_HYPEREVM_TESTNET);
+    }
+
+    function _isTestnet(uint256 chainId) internal pure returns (bool) {
+        return chainId == 84532 || chainId == 998 || chainId == 97 || chainId == 40161 || chainId == 43113;
     }
 }

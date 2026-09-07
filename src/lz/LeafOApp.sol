@@ -73,6 +73,12 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         return (fee.nativeFee, fee.lzTokenFee);
     }
 
+    /// @notice Native fee for `sendTo(dstEid, to, amount)` with default lzReceive gas.
+    function quoteSend(uint32 dstEid, address to, uint256 amount) external view returns (uint256 nativeFee) {
+        bytes memory payload = abi.encode(bytes32(uint256(uint160(to))), amount);
+        (nativeFee,) = quote(dstEid, payload, _defaultOptions(), false);
+    }
+
     function lzReceive(
         ILayerZeroEndpointV2.Origin calldata origin,
         bytes32 guid,
