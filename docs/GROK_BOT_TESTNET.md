@@ -115,6 +115,35 @@ Log every address in the PR. Tiny caps. Then repeat 1–6 with `ASSET=hcbeth`.
 
 ---
 
+## 7. Attack simulation (after both L smokes)
+
+Not “did mint work”. Each listing: hxSQUID, hcbETH, then BLUAI4Y. After a **normal** deposit → LZ → mint → transfer (L: redeem), inject:
+
+```
+wrong listingTag
+wrong peer
+bridge closed (guardian)
+tx > maxPerTx
+day > maxPerDay
+supply cap
+cash insufficient (burn lockbox tokens)
+innerSupplyCeiling breach
+wrong claim selector
+zero-supply harvest
+```
+
+Each must: explicit revert, no partial state, **other listing untouched**.
+
+Then answer only:
+
+1. Worst-case loss (should be `maxPerTx` / remaining cap, not unbounded)
+2. Can guardian halt in time (`closeBridge` / `setHealth`)
+3. Does the broken listing contaminate another (`listingTag` / separate lockbox)
+
+Do **not** add more assets until this page has those three answers logged in the PR.
+
+---
+
 ## Still not this pass
 
 - Mainnet inners, `SetSecurityStack`, WHYPE converter fills

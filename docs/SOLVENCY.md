@@ -140,18 +140,21 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 
 ### hORDER (research — stake + VALOR redeem request pinned, esORDER claim not)
 
+Canonical economic owner is **the Orderly ledger account = CREATE2 lockbox address**. Same address on Arb and Base is identity equivalence, **not** shared ERC-20 state.
+
 | | |
 | --- | --- |
-| Canonical backing | ORDER staked on Orderly omnichain ledger, **keyed by lockbox EVM address**. Not OP `balanceOf`. Not VALOR |
-| Accounting unit | C1 ticker. VALOR is a non-transferable metric, not a token |
-| Core invariant | HyperEVM hORDER ≤ ORDER the lockbox staked on the ledger. Same EVM address on ETH/OP/Base/… sees one position |
-| Proof source | `stakeOrder` on proxy `0xC8A8Ce0A…` (CREATE2, all EVMs). ORDER OFT burns on the source chain, LZ eid **30213** (Orderly). **Not** `ORDER.balanceOf(proxy)` |
-| Mint / redeem | C1, market-only. Lockbox calls `stakeOrder(uint256)` 0x413aaa60. Unstake 7d then `sendUserRequest(amount, payloadType)` 0xcec09c0d (2 request, 3 cancel, 4 withdraw). **Receive chain is not OP.** ORDER OFT (`0x4E200fE2`, same addr) can land on Arb or Base — deploy the lockbox on the chain we want to receive. Ledger keys by **that** address. CREATE2 same address on Arb+Base if we want both. ETH claim is ERC-20, not OFT. VALOR type 17 also pins claim chain at submit. **Never** wrap VALOR |
-| Yield | VALOR on the staking address. Legacy: `sendUserRequest(valor, 9)` then `sendUserRequest(usdcAmt, 10)` — USDC lands on the dest chain. Your pin: Base `0x8bb2dcc0` type 10 + compose `0x93ec1d61` **1.156239 USDC** to `…16BA` (2025-09-28 02:14 HKT). Request was `0xd64c6995` type 9 (64.00 VALOR, 09-21). New: type **17** (Arb `0x7a9676a6` 0.001, 2026-09-07) → esORDER after wait. Do **not** vest esORDER. Harvest-to-HYPE for the old pool is USDC in the lockbox |
-| Failure | LZ message not credited; stake from user EOA so VALOR is not on the lockbox; type 17 / unstake claim from a chain with no lockbox so OFT lands on an empty address; 7d unstake from lockbox |
-| Auto-pause | health. Do not mint if ledger stake of lockbox is below hORDER |
-| Worst-case loss | all TVL (C1, no protocol peg-out). LZ / ledger failure |
-| Test | `test/lz/LeafOmnichainCreate2.t.sol`. OP stake `0x09494257`/`0x76ea3caf` (1196). Base unstake type 2 `0x447d97ac` then withdraw type 4 `0x5aa28832` — **1196 ORDER OFT arrived on Base** `0xdd65ff33`. Interest: 1.156 USDC Base `0x93ec1d61`. New VALOR type 17 Arb `0x7a9676a6`. CREATE2 same lockbox on Arb/Base. New-path esORDER claim still +7d |
+| Canonical backing | Orderly ledger **stake** keyed by that lockbox address. Physical custody is the farm/ledger. **Not** `ORDER.balanceOf(lockbox)`. **Not** VALOR. **Not** USDC |
+| Accounting unit | ORDER principal on the ledger. 1 hORDER ≤ 1 verified ledger ORDER |
+| Core invariant | HyperEVM hORDER supply ≤ `ledgerPrincipal` for this identity. `farmPrincipalOut` is a location flag only |
+| Proof source | Guardian `reportLedgerPrincipal(observed)` after Orderly compose (eid 30213). CREATE2 predict matches on Arb/Base. After `stakeOrder`, `inner.balanceOf` is **0** and is not the proof |
+| Mint / redeem | C1, market-only. Further mints halt until `ledgerPrincipal >= totalLocked`. Unstake 2/3/4 owner-only, no dest chain. Harvest 10/17 public |
+| Yield | USDC (legacy 9→10) → HYPE. Occupancy: VALOR / esORDER (type 17). Do not vest |
+| Failure | LZ to Orderly not credited; wrong-chain withdrawal; user inflating ledger report; CREATE2 twin with different code |
+| Auto-pause | `reportLedgerPrincipal < totalLocked` → Degraded, mint stops. Guardian `closeBridge` |
+| Worst-case loss | C1 TVL. First deposit after a gap is at-risk until the ledger report (bounded by `maxPerTx`) |
+| Test | `test/lz/LeafOmnichainCreate2.t.sol`. Pins: Base withdraw 1196 `0xdd65ff33`; USDC 1.156 `0x93ec1d61`; type 17 `0x7a9676a6` |
+
 
 
 ### PTSMAX

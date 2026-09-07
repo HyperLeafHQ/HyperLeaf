@@ -6,6 +6,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PegReady} from "test/lz/PegReady.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
+import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {LeafCreate2} from "src/lz/LeafCreate2.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
@@ -164,5 +165,55 @@ contract LeafOmnichainCreate2Test is PegReady {
         assertEq(box.totalLocked(), locked);
         assertGt(usdc.balanceOf(feeTo), 0);
         assertEq(usdc.balanceOf(address(box)) + usdc.balanceOf(feeTo), 1e18);
+    }
+
+    function testBalanceIsNotSolvencyProof() public {
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+        assertEq(inner.balanceOf(address(box)), 0);
+        assertEq(box.totalLocked(), 10e18);
+        assertTrue(box.farmPrincipalOut());
+        assertEq(box.ledgerPrincipal(), 0);
+    }
+
+    function testSecondMintNeedsLedgerReport() public {
+        vm.startPrank(user);
+        inner.approve(address(box), 20e18);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.expectRevert(LeafOApp.NotHealthy.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 5e18, user);
+        vm.stopPrank();
+
+        vm.prank(guardian);
+        box.reportLedgerPrincipal(10e18);
+        vm.startPrank(user);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 5e18, user);
+        vm.stopPrank();
+        assertEq(box.totalLocked(), 15e18);
+    }
+
+    function testLedgerShortfallDegrades() public {
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+        vm.prank(guardian);
+        box.reportLedgerPrincipal(1e18);
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Degraded));
+        vm.startPrank(user);
+        inner.approve(address(box), 1e18);
+        vm.expectRevert(LeafOApp.NotHealthy.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 1e18, user);
+        box.pokeFarmRequest(1, 10);
+        vm.stopPrank();
+        assertEq(proxy.lastType(), 10);
+    }
+
+    function testUserCannotInflateLedger() public {
+        vm.prank(user);
+        vm.expectRevert();
+        box.reportLedgerPrincipal(1_000e18);
     }
 }

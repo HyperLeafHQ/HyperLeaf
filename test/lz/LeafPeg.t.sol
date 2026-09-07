@@ -296,4 +296,35 @@ contract LeafPegTest is PegReady {
         vm.expectRevert(LeafOApp.DayCapExceeded.selector);
         adapter.lzReceive(origin, bytes32(uint256(2)), first, address(0), "");
     }
+
+    function testWrongPeerRejected() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        bytes memory payload = _msg(oft, user, 1e18);
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: SRC, sender: bytes32(uint256(uint160(address(0xBEEF)))), nonce: 1
+        });
+        vm.prank(address(epDst));
+        vm.expectRevert(LeafOApp.OnlyPeer.selector);
+        oft.lzReceive(origin, bytes32(uint256(1)), payload, address(0), "");
+    }
+
+    function testCrossListingTagDoesNotMintOther() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.startPrank(owner);
+        LeafOFT other = new LeafOFT("hOTHER", "hOTHER", address(epDst), owner, guardian);
+        other.setPeer(SRC, address(adapter));
+        other.setListingTag(keccak256("other-listing"));
+        other.setLimits(1_000e18, 1_000e18);
+        other.setSupplyCap(1_000e18);
+        other.openBridge();
+        vm.stopPrank();
+        bytes memory payload = _msg(oft, user, 1e18);
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: SRC, sender: bytes32(uint256(uint160(address(adapter)))), nonce: 1
+        });
+        vm.prank(address(epDst));
+        vm.expectRevert(LeafOApp.WrongListing.selector);
+        other.lzReceive(origin, bytes32(uint256(1)), payload, address(0), "");
+        assertEq(other.totalSupply(), 0);
+    }
 }

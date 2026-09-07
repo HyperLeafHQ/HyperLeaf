@@ -28,6 +28,8 @@ hKAITO → totalLocked sKAITO in the lockbox → that ERC-20 → its issuer
 
 If any link is unknown, do not mint.
 
+Address-keyed externals (hORDER): CREATE2 same lockbox on Arb and Base is **identity**, not a shared balance. Solvency is the foreign ledger’s stake for that address (`ledgerPrincipal`), never `balanceOf(lockbox)` after the token has left.
+
 ## Health
 
 | State | Mint | Redeem |

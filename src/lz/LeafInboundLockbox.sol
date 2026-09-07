@@ -38,6 +38,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     uint256 public farmNativeFee;
     bytes4 public farmRequestSel;
     mapping(uint8 => bool) public publicRequestType;
+    /// @dev Observed external-ledger stake for this identity. Not ERC-20
+    ///      `balanceOf(this)` and not shared across CREATE2 twins on other chains.
+    uint256 public ledgerPrincipal;
 
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
@@ -50,6 +53,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event FarmStyleSet(FarmStyle style, uint256 nativeFee);
     event FarmRequestSel(bytes4 sel);
     event FarmRequest(uint256 amount, uint8 payloadType, address indexed caller);
+    event LedgerPrincipalReported(uint256 observed, address indexed caller);
 
     error ZeroAmount();
     error CapExceeded();
@@ -151,6 +155,17 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit FarmRequest(amount, payloadType, msg.sender);
     }
 
+    /// @notice Guardian/owner posts Orderly (or farm) stake for this address.
+    ///         `farmPrincipalOut` is a location flag, not a proof.
+    function reportLedgerPrincipal(uint256 observed) external onlyGuardian {
+        ledgerPrincipal = observed;
+        emit LedgerPrincipalReported(observed, msg.sender);
+        if (farmPrincipalOut && observed < totalLocked && uint8(health) < uint8(Health.Degraded)) {
+            health = Health.Degraded;
+            emit HealthSet(Health.Degraded, msg.sender);
+        }
+    }
+
     /// @notice After the 4y lock: pull principal back. Then restakeIdle or setShareExit.
     function farmUnstake(uint256 amount) external onlyOwner nonReentrant {
         if (farm == address(0) || farmExitSel == bytes4(0) || amount == 0) revert BadStake();
@@ -218,6 +233,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
         _requireMint();
+        if (farmStyle == FarmStyle.AmountNative && farmPrincipalOut && ledgerPrincipal < totalLocked) {
+            revert NotHealthy();
+        }
         _requireInnerSupplyOk(innerToken);
 
         _harvestInner(innerToken, 0);
@@ -281,6 +299,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
             (ok,) = farm.call(abi.encodeWithSelector(farmStakeSel, got, farmStakeArg));
         }
         if (!ok || innerToken.balanceOf(address(this)) >= before) revert BadStake();
+        // Token left this box. Ledger credit is async (Orderly LZ). Flag only.
         farmPrincipalOut = true;
     }
 

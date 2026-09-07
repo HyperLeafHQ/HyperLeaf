@@ -600,7 +600,7 @@
       "sourceEid": 30110,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1 address-keyed. CREATE2 LeafInboundLockbox on Arb and Base (same addr). FarmStyle AmountNative = stakeOrder(uint256) 0x413aaa60 as the lockbox; pokeFarmRequest(amount,type) 0xcec09c0d with no dest chain. Public types 10/17 harvest; unstake 2/3/4 owner. Principal = Orderly ledger, harvest = USDC, occupancy = VALOR/esORDER. Pins: OP-stake→Base-withdraw 1196 0xdd65ff33; USDC 1.156 0x93ec1d61; type 17 0x7a9676a6.",
+      "note": "C1 address-keyed. CREATE2 lockbox Arb+Base. farmPrincipalOut is location only; solvency is guardian reportLedgerPrincipal vs Orderly ledger, never balanceOf. Further mint halt until ledgerPrincipal >= totalLocked. stakeOrder 0x413aaa60; pokeFarmRequest no dest chain (10/17 public, 2/3/4 owner). USDC harvest ≠ principal.",
       "status": "research",
       "priority": 10
     },
