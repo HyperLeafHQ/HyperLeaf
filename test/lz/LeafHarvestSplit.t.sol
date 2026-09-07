@@ -7,6 +7,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
+import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {LeafCallRewardSource} from "src/lz/LeafCallRewardSource.sol";
 import {ILeafRewardSource} from "src/lz/ILeafRewardSource.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
@@ -209,6 +210,17 @@ contract LeafHarvestSplitTest is PegReady {
         vm.prank(harvester);
         vm.expectRevert();
         adapter.pullYield(xsquid, converter);
+    }
+
+    function testRewardsSelectorRejectsSquidRedeem() public {
+        bytes4 redeem = bytes4(keccak256("redeem(address,uint256)"));
+        assertEq(redeem, bytes4(0x1e9a6950));
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(redeem);
+        vm.prank(owner);
+        adapter.setRewardsSelector(bytes4(0x9a99b4f0));
+        assertEq(adapter.rewardsSelector(), bytes4(0x9a99b4f0));
     }
 }
 

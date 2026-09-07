@@ -53,7 +53,7 @@
         "pullInner": false,
         "toHype": ["QUID"]
       },
-      "claim": "pokeRewards → claimRewards(lockbox, max) selector 0x9a99b4f0 on inner (same address as xSQUID). Then pullYield QUID. Never allowlist inner as pokeClaim target (redeem has same arity).",
+      "claim": "pokeRewards → claimRewards(lockbox, max) selector 0x9a99b4f0 on inner (same address as xSQUID). Then pullYield QUID. Never allowlist inner as pokeClaim target. Never set rewardsSelector to redeem(address,uint256) 0x1e9a6950 (same arity; pin 0x9ffec4c8).",
       "note": "L returns xSQUID. Principal redeem is 1:1 QUID at Squid. Extra QUID is claimRewards, not share-price. Never pull xSQUID.",
       "refs": {
         "redeemTx": "0x9ffec4c8d3548ba544fc7fbd73e1c7187d13c9664c901e76e1a909222dfc0886",

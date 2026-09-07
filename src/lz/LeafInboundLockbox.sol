@@ -208,7 +208,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit RestakedIdle(idle);
     }
 
-    function pokeClaim(address t, bytes calldata data) external payable {
+    function pokeClaim(address t, bytes calldata data) external payable nonReentrant {
         _pokeClaim(address(innerToken), t, data);
     }
 
@@ -216,7 +216,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRewardsSelector(s);
     }
 
-    function pokeRewards() external payable virtual {
+    function pokeRewards() external payable virtual nonReentrant {
         _afterPokeRewards();
         if (rewardsSelector != bytes4(0)) _pokeRewards(address(innerToken));
     }

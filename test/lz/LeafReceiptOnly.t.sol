@@ -94,6 +94,7 @@ contract LeafReceiptOnlyTest is PegReady {
     bytes4 constant COOLDOWN_SHARES = 0x9343d9e1;
     bytes4 constant COOLDOWN_ASSETS = 0xcdac52ed;
     bytes4 constant CLAIM_ADDR = 0x1e83409a;
+    bytes4 constant SQUID_REDEEM = 0x1e9a6950;
 
     function setUp() public {
         epSrc = new MockEndpoint();
@@ -124,6 +125,7 @@ contract LeafReceiptOnlyTest is PegReady {
         assertEq(inner.hits(COOLDOWN_SHARES), 0);
         assertEq(inner.hits(COOLDOWN_ASSETS), 0);
         assertEq(inner.hits(CLAIM_ADDR), 0);
+        assertEq(inner.hits(SQUID_REDEEM), 0);
     }
 
     function testWrapAndUnwrapNeverTouchesVaultExit() public {

@@ -39,6 +39,7 @@ abstract contract LeafYieldFee {
     error BadClaimTarget();
     error BadClaimSelector();
     error ClaimFailed();
+    error ForbiddenRewardsSelector();
 
     error FeeRecipientZero();
 
@@ -107,15 +108,30 @@ abstract contract LeafYieldFee {
     }
 
     function _setRewardsSelector(bytes4 s) internal {
+        if (s != bytes4(0) && _forbiddenRewardsSelector(s)) revert ForbiddenRewardsSelector();
         rewardsSelector = s;
         emit RewardsSelectorSet(s);
     }
 
+    /// @dev xSQUID `redeem(address,uint256)` is 0x1e9a6950 — same arity as
+    ///      `claimRewards` 0x9a99b4f0. A wrong selector burns locked principal.
+    function _forbiddenRewardsSelector(bytes4 s) internal pure returns (bool) {
+        return s == bytes4(0x1e9a6950) // redeem(address,uint256) — Squid
+            || s == bytes4(0xb460af94) // withdraw(uint256,address,address)
+            || s == bytes4(0xba087652) // redeem(uint256,address,address)
+            || s == bytes4(0x9343d9e1) // cooldownShares(uint256)
+            || s == bytes4(0xcdac52ed) // cooldownAssets(uint256)
+            || s == bytes4(0x1e83409a) // claim(address)
+            || s == bytes4(0x9ad82aa0) // queueRedeem
+            || s == bytes4(0x50b3f984); // queueWithdraw
+    }
+
     /// @dev Claims as this lockbox. Selector must be rewards, not redeem — same
-    ///      arity as Squid redeem, different 4 bytes (0x9a99b4f0 vs redeem).
+    ///      arity as Squid redeem, different 4 bytes (0x9a99b4f0 vs 0x1e9a6950).
     function _pokeRewards(address inner) internal {
         bytes4 s = rewardsSelector;
         if (s == bytes4(0) || inner == address(0)) revert BadClaimTarget();
+        if (_forbiddenRewardsSelector(s)) revert ForbiddenRewardsSelector();
         (bool ok,) = inner.call{value: msg.value}(abi.encodeWithSelector(s, address(this), type(uint256).max));
         if (!ok) revert ClaimFailed();
     }

@@ -32,6 +32,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     error BadClaimSelector();
     error ClaimFailed();
     error Principal();
+    error ForbiddenRewardsSelector();
     error BadConverter();
 
     event AdapterSet(address indexed adapter, bool allowed);
@@ -83,6 +84,10 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     }
 
     function setRewardsSelector(bytes4 s) external onlyOwner {
+        // Keep in sync with LeafYieldFee._forbiddenRewardsSelector.
+        if (s != bytes4(0) && (s == bytes4(0x1e9a6950) || s == bytes4(0xb460af94) || s == bytes4(0xba087652)
+            || s == bytes4(0x9343d9e1) || s == bytes4(0xcdac52ed) || s == bytes4(0x1e83409a)
+            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984))) revert ForbiddenRewardsSelector();
         rewardsSelector = s;
         emit RewardsSelectorSet(s);
     }
@@ -93,7 +98,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
         emit Released(address(token), to, amount);
     }
 
-    function pokeClaim(address t, bytes calldata data) external payable {
+    function pokeClaim(address t, bytes calldata data) external payable nonReentrant {
         if (!claimTarget[t] || isPrincipal[t]) revert BadClaimTarget();
         if (data.length < 4) revert BadClaimSelector();
         if (claimSelector[t] == bytes4(0) || bytes4(data[0:4]) != claimSelector[t]) revert BadClaimSelector();
@@ -102,10 +107,13 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     }
 
     /// @notice Squid claimRewards(this, max). Selector is not redeem.
-    function pokeRewards() external payable {
+    function pokeRewards() external payable nonReentrant {
         address p = principal;
         bytes4 s = rewardsSelector;
         if (p == address(0) || s == bytes4(0)) revert BadClaimTarget();
+        if (s == bytes4(0x1e9a6950) || s == bytes4(0xb460af94) || s == bytes4(0xba087652)
+            || s == bytes4(0x9343d9e1) || s == bytes4(0xcdac52ed) || s == bytes4(0x1e83409a)
+            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984)) revert ForbiddenRewardsSelector();
         (bool ok,) = p.call{value: msg.value}(abi.encodeWithSelector(s, address(this), type(uint256).max));
         if (!ok) revert ClaimFailed();
     }

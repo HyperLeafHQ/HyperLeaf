@@ -112,7 +112,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setClaimCall(address(innerToken), t, selector);
     }
 
-    function pokeClaim(address t, bytes calldata data) external payable {
+    function pokeClaim(address t, bytes calldata data) external payable nonReentrant {
         _pokeClaim(address(innerToken), t, data);
     }
 
@@ -120,7 +120,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRewardsSelector(s);
     }
 
-    function pokeRewards() external payable {
+    function pokeRewards() external payable nonReentrant {
         _pokeRewards(address(innerToken));
     }
 

@@ -58,7 +58,7 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 | Core invariant | `oft.totalSupply() ≤ adapter.totalLocked() ≤ depositCap` and `inner.totalSupply() ≤ ceiling` |
 | Proof source | `totalLocked` + `innerSupplyCeiling` + cash on redeem |
 | Yield | QUID → HYPE. Never pull xSQUID as yield |
-| Failure | Squid print, `claimRewards` selector drift |
+| Failure | Squid print; `rewardsSelector` drift to `redeem(address,uint256)` `0x1e9a6950` (denied in `LeafYieldFee`) |
 | Auto-pause | `reportInnerSupply` → Degraded |
 | Worst-case loss | min(depositCap, source maxPerDay) |
 | Test | `test/lz/LeafSolvency.t.sol` |
