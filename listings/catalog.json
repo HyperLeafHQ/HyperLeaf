@@ -562,6 +562,21 @@
       "priority": 22
     },
     {
+      "id": "huncx",
+      "kind": "parked",
+      "symbol": "hUNCX",
+      "name": "Hyperleaf UNCX",
+      "innerSymbol": "UNCX",
+      "innerToken": "0xadb2437e6F65682B85F814FBc12FeC0508A7B1D0",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "none",
+      "infra": "evm",
+      "note": "PARKED with hGMX/hSNX. UNCX staking rewards and buybacks paused 2026-08-21. Locker business still runs (~$185M TVL, ~$180k annualized fees) but that revenue is not paid to stakers. Wrapping UNCX is wrapping spot. Revisit if emissions return to a transferable stake receipt.",
+      "status": "parked",
+      "priority": 91
+    },
+    {
       "id": "hdydx",
       "kind": "L",
       "symbol": "hstDYDX",

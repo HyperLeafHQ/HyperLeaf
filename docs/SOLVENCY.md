@@ -163,6 +163,10 @@ StonkBrokers on Robinhood 4663. **$STONKBROKER** `0xe934e36a…bf50` is a collec
 
 420 Pool closed **2026-06-19**. SNX without debt returned. SIP-423 Phase 4 staking reform is **CONTRACT BUILD DEFERRED**. Official docs: previous SNX staking is not active. No inner. Do not wrap SNX.
 
+### hUNCX (parked — same bucket as hGMX)
+
+Staking rewards and buybacks paused **2026-08-21**. UNCX lockers still take fees (~$185M TVL, ~$180k annualized) but that is protocol revenue, not staker yield. No transferable earning receipt. Do not wrap UNCX.
+
 ### hstDYDX (later — Cosmos)
 
 Do not wrap ethDYDX. Yield is validator stake on **dYdX Chain** (USDC fees, ~21–30d unbond, address-keyed). Liquid receipt is **Stride stDYDX**. Same class as hJupSOL: non-EVM lockbox first. Never undelegate from the lockbox.
