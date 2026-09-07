@@ -111,17 +111,18 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 
 | | |
 | --- | --- |
-| Canonical backing | stkAVNT from Avantis SM `0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9` (Base) |
+| Canonical backing | transferable stkAVNT from Avantis SM `0xd546040F…d9e9` (Base). **Never** raw AVNT |
 | Accounting unit | 1 hAVNT = 1 stkAVNT |
 | Core invariant | L: `hAVNT ≤ totalLocked stkAVNT`. Slash (max 20%) is **in** the yield, not stripped |
-| Proof source | `stake(to,amount)` mints stkAVNT; cooldown 5d + unstake window 3d **never called** |
+| Proof source | lockbox `totalLocked` + SM `balanceOf`. `stake(to,amount)` 0xadc9772e mints stkAVNT to `to` |
+| Mint / redeem | wrap/unwrap **stkAVNT**. Instant. **Never** `cooldown()` / unstake window. Live `COOLDOWN_SECONDS` = 64800 (18h); do not use the old 5d docs figure as a call we make |
 | Yield | extra AVNT emissions → HYPE. Fee discounts / XP stay on the lockbox (occupancy) |
 | Failure | SM slash, AVNT blacklist (`isBlackListed` on the token), emission stop |
 | Auto-pause | health after a slash event; ceiling on AVNT/stkAVNT supply |
 | Worst-case loss | 20% slash of locked stack + daily cap on residual |
-| Test | L suite + “we never call cooldown”. Need your stake tx to confirm transferable stkAVNT |
+| Test | L suite + “we never call cooldown”. Your pin: Base `0x7aaf51e8` (2025-10-02 17:59 UTC / 10-03 01:59 HKT) `stake(self, 6.1e18)` — 6.1 AVNT in, 6.1 stkAVNT minted to `0x113561…`. 400 AVNT stake not in ±3d of this tx |
 
-Public sample (not yours): Base `0x9fbb56ba99…` `stake(address,uint256)` 0xadc9772e.
+
 
 ### hB3 (research — stake path live, yield incomplete)
 

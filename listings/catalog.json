@@ -632,10 +632,10 @@
       "infra": "evm",
       "yield": { "inner": "keep-stkavnt", "pullInner": false, "toHype": ["AVNT"] },
       "stakeSelector": "0xadc9772e",
-      "cooldownSeconds": 432000,
+      "cooldownSeconds": 64800,
       "unstakeWindow": 259200,
       "maxSlashBps": 2000,
-      "note": "Wrap transferable stkAVNT from Avantis SM, not raw AVNT. stake(to,amount) 0xadc9772e. Never cooldown (5d) or unstake window (3d). Slash max 20% is the cost of the ~15% AVNT yield — marketed, not stripped. Fee discounts stay on the lockbox. AVNT token has isBlackListed. Public stake tx 0x9fbb56ba99eebfb1d59b682be64c47b4fb9651f87a60391c3ce55843c6ad2d5d — replace with ours.",
+      "note": "Accept transferable stkAVNT only — never deposit AVNT. SM 0xd546 stake(to,amount) 0xadc9772e. Never cooldown() (live COOLDOWN_SECONDS=64800, not the 5d docs figure) or unstake window. Slash max 20% is the cost of AVNT emissions — marketed, not stripped. Fee discounts stay on the lockbox. AVNT 0x696F9436 has isBlackListed. Your pin: 0x7aaf51e8 2025-10-02 6.1 AVNT → 6.1 stkAVNT to 0x113561. 400 AVNT stake not yet pinned.",
       "status": "research",
       "priority": 11
     }

@@ -11,7 +11,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | 2 | hcbETH | L | Base | PoS in the rate |
 | later | **hsETHFI** | L | Ethereum | Receipt only. Never 10d DelayedWithdraw |
 | later | **hgSOON** | L | **BSC** `0xcC48…` | ERC-4626. Never `cooldownShares` 0x9343d9e1 / `claim` 0x1e83409a. Never 90d lock `0x6601` |
-| later | **hAVNT** | L | Base | Wrap **stkAVNT** `0xd546…d9e9`, never cooldown. 20% slash is the yield cost |
+| later | **hAVNT** | L | Base | Wrap **stkAVNT**. Your `0x7aaf51e8`. Never `cooldown()` (live 18h). Slash ≤20% |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
 | later | **hORDER** | C1 | OFT / ETH first | VALOR stays in lockbox. Need stake tx |
