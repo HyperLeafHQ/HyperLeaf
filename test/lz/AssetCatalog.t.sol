@@ -111,6 +111,7 @@ contract AssetCatalogTest is Test {
         assertEq(uint8(AssetCatalog.get("hswbera").kind), uint8(AssetCatalog.Kind.Liquid));
         assertEq(AssetCatalog.get("hswbera").innerMainnet, 0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a);
         assertEq(AssetCatalog.get("hswbera").sourceEidMain, 30362);
+        assertEq(AssetCatalog.get("hswbera").sourceEidTest, 40245);
         assertEq(AssetCatalog.get("hswbera").lockSeconds, 0);
     }
 }

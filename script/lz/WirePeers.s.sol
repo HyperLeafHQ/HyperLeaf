@@ -26,6 +26,7 @@ contract WirePeers is Script {
         if (chainId == 84532) return A.EID_HYPEREVM_TESTNET;
         if (chainId == 998) return A.EID_BASE_SEPOLIA;
         if (chainId == 97) return A.EID_HYPEREVM_TESTNET;
+        if (chainId == 80094) return A.EID_HYPEREVM;
         revert("unsupported chain, set REMOTE_EID");
     }
 }

@@ -32,8 +32,14 @@ library LayerZeroAddresses {
 
     /// @dev Same canonical V2 endpoint as most EVMs including BSC.
     address internal constant ENDPOINT_BSC = 0x1a44076050125825900e736c501f859c50fE728c;
+    address internal constant SEND_ULN_BSC = 0x9F8C645f2D0b2159767Bd6E0839DE4BE49e823DE;
+    address internal constant RECEIVE_ULN_BSC = 0xB217266c3A98C8B2709Ee26836C98cf12f6cCEC1;
+    address internal constant EXECUTOR_BSC = 0x3ebD570ed38B1b3b4BC886999fcF507e9D584859;
     /// @dev Berachain is NOT the canonical 0x1a44… CREATE2. Confirmed bytecode on 80094.
     address internal constant ENDPOINT_BERA = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
+    address internal constant SEND_ULN_BERA = 0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7;
+    address internal constant RECEIVE_ULN_BERA = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
+    address internal constant EXECUTOR_BERA = 0x4208D6E27538189bB48E603D6123A94b8Abe0A0b;
 
     address internal constant ENDPOINT_BASE_SEPOLIA = 0x6EDCE65403992e310A62460808c4b910D972f10f;
     address internal constant ENDPOINT_HYPEREVM_TESTNET = 0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1;
@@ -70,6 +76,7 @@ library LayerZeroAddresses {
     uint64 internal constant CONFIRMATIONS_BASE = 12;
     uint64 internal constant CONFIRMATIONS_HYPEREVM = 5;
     uint64 internal constant CONFIRMATIONS_BSC = 15;
+    uint64 internal constant CONFIRMATIONS_BERA = 12;
 
     uint32 internal constant LOCK_4Y = 4 * 365 days;
 }

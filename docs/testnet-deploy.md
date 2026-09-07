@@ -37,6 +37,8 @@ Grok bot: follow **`docs/GROK_BOT_TESTNET.md`** (hxSQUID then hcbETH, then bluai
 | `bonk12m` | C1 | Base Sepolia mock | 998 |
 | `hmet` | C2 | Base Sepolia mock | 998 |
 | `hshmon` | L | Base Sepolia mock | 998 |
+| `hgsoon` | L | BSC testnet 97 | 998 |
+| `hswbera` | L | Base Sepolia mock (Bepolia LZ empty) | 998 |
 
 hNEST is **not** LZ. It stays on HyperEVM (`NestVault`).
 

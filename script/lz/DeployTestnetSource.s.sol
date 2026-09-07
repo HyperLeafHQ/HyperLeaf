@@ -14,7 +14,7 @@ import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
 /// @notice Source-chain half of a testnet wrap.
-///         ASSET=hkaito|hxsquid|hcbeth|hwsteth|hsavax|hvirtualmax|bluai4y|bonk12m|hmet|hshmon
+///         ASSET=hkaito|hxsquid|hcbeth|hwsteth|hsavax|hvirtualmax|bluai4y|bonk12m|hmet|hshmon|hgsoon|hswbera
 ///         INNER_TOKEN unset → deploys a mintable mock (always, on testnet).
 contract DeployTestnetSource is Script {
     function run() external {
@@ -30,8 +30,11 @@ contract DeployTestnetSource is Script {
         if (a.sourceEidTest == A.EID_BASE_SEPOLIA) {
             require(block.chainid == 84532, "hxsquid/hcbeth source is Base Sepolia 84532");
         }
-        if (keccak256(bytes(id)) == keccak256("bluai4y")) {
-            require(block.chainid == 97, "bluai4y source is BSC testnet 97");
+        if (keccak256(bytes(id)) == keccak256("bluai4y") || keccak256(bytes(id)) == keccak256("hgsoon")) {
+            require(block.chainid == 97, "hgsoon/bluai4y source is BSC testnet 97");
+        }
+        if (keccak256(bytes(id)) == keccak256("hswbera")) {
+            require(block.chainid == 84532, "hswbera testnet source is Base Sepolia mock (Bepolia LZ empty)");
         }
 
         vm.startBroadcast();

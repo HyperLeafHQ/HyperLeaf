@@ -149,3 +149,4 @@ Do **not** add more assets until this page has those three answers logged in the
 - Mainnet inners, `SetSecurityStack`, WHYPE converter fills
 - hKAITO / hVIRTUALMAX / hSKY
 - NestVault v2
+- hgSOON / hsWBERA testnet: **`docs/GROK_BOT_RECEIPTS.md`** (same scripts, different source RPC)

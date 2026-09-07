@@ -244,7 +244,7 @@ library AssetCatalog {
                 "sWBERA",
                 80094,
                 30362,
-                40371,
+                40245,
                 0,
                 0,
                 0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a,
