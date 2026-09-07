@@ -86,15 +86,18 @@ HyperLeaf does not run a 24h mint relayer. Listings do not share backing. The br
 
 ## What ships next
 
-One listing at a time. Empty books and mixed exits do not help the ecosystem.
+One listing at a time. Empty books and mixed exits do not help the ecosystem. Wrap a **transferable receipt**, never the spot token, never the protocol’s unstake.
 
 | | Ticker | Kind | Source | For users |
 | --- | --- | --- | --- | --- |
 | Live | **hNEST** | Native | HyperEVM | NEST / veNEST as a HyperEVM ERC-20 |
 | Next | **hxSQUID** | L | Base | Trade xSQUID here; QUID surplus → HYPE |
-| Then | **hcbETH** | L | Base | ETH PoS exposure on HyperEVM |
-| Later | **hgSOON**, **PTSMAX**, hB3, hORDER, hAVNT, hsETHFI, veAERO, … | | | Same pattern: keep the yield, name the lock |
-| Not now | hSKY, hLIT, stkAAVE, extra-chain airdrop names | | | LIT waits on Lighter LZ. SKY strips borrow |
+| Then | **hcbETH** | L | Base | ETH PoS in the cbETH rate. Do not pull inner |
+| Same L adapter | **hgSOON**, **hAVNT**, **hsWBERA**, **hsETHFI** | L | BSC / Base / Bera / Ethereum | gSOON, stkAVNT, sWBERA, sETHFI. Instant unwrap of the receipt. Never cooldown / DelayedWithdraw |
+| Morpho vaults | **hsteakUSDC**, **hsteakUSDG** | L | Base / Robinhood | Wrap the ERC-4626 **share**. Never deposit/redeem USDC/USDG. Never Morpho Blue positions |
+| Later C1 | **hORDER**, hB3, PTSMAX | C1 | Arb+Base / Base / BSC | Address-keyed farm or NFT. Market exit until `shareExit` |
+| Needs new lockbox | veAERO, veUP, JupSOL, stDYDX | ve-NFT / L | Base / Robinhood / Solana / Cosmos | NFT or IBC first. Never wrap liquid UP or ethDYDX |
+| Not now | hKAITO, hVIRTUALMAX, hSKY, hGMX, hSNX, hLIT, stkAAVE, SLVR, TWO, StonkBrokers | | | Omnichain claims, frozen/retired yield, tax/lottery, NFT TBA. Full order: [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 
 Out of scope: another HYPE LST, wrapping official RAM/HYBR receipts, ENA (already on HyperCore).
 
