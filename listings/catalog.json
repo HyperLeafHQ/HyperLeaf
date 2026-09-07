@@ -600,7 +600,7 @@
       "sourceEid": 30111,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1. Accept staked ORDER on the Orderly ledger, not a receipt. Proxy 0xC8A8Ce0A (same on all EVMs) stakeOrder(uint256) 0x413aaa60 burns OFT and LZs to Orderly eid 30213. Position is per EVM address across chains — lockbox must be msg.sender. VALOR is not a token; keep it on the lockbox. Unstake 7d via sendUserRequest(uint256,uint8) 0xcec09c0d. Your OP pins: 0x09494257 (998) + 0x76ea3caf (198). 0xdffa747a is an inbound transfer, not a stake. Harvest (VALOR→esORDER/USDC) not pinned. OFT on OP 0x4E200fE2; ETH canonical 0xABD4C63d.",
+      "note": "C1. Staked ORDER on Orderly ledger, keyed by lockbox EVM address. Proxy 0xC8A8Ce0A stakeOrder(uint256) 0x413aaa60. VALOR redeem request: sendUserRequest(amount, 17) 0xcec09c0d — your Arb 0x7a9676a6 (0.001 VALOR, 2026-09-07) LZ 30110→30213, no ERC-20 moved. Claim chain is locked at submit; lockbox must call type 17 from OP, not Arb/Base. +7d esORDER claim not pinned. Do not vest esORDER (15d 50% burn / 90d 100%). Unstake 7d sendUserRequest types 2/3/4. OP pins: 0x09494257 (998) + 0x76ea3caf (198). OFT 0x4E200fE2; ETH 0xABD4C63d.",
       "status": "research",
       "priority": 10
     },

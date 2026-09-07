@@ -14,7 +14,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | later | **hAVNT** | L | Base | Wrap **stkAVNT**. Your `0x7aaf51e8`. Never `cooldown()` (live 18h). Slash ≤20% |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
-| later | **hORDER** | C1 | OP OFT → Orderly 30213 | `stakeOrder` 0x413aaa60. VALOR on lockbox. Need VALOR redeem tx |
+| later | **hORDER** | C1 | OP OFT → Orderly 30213 | stakeOrder + VALOR `sendUserRequest(.,17)`. Need +7d esORDER claim |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
 | later | hsWBERA | L | Berachain | Wait LZ |
 | later | hAEVO / hGMX | C1 | ETH / Arb | No transferable receipt |
