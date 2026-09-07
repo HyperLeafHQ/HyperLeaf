@@ -92,6 +92,10 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setClaimTarget(address(innerToken), t, allowed);
     }
 
+    function setClaimCall(address t, bytes4 selector) external onlyOwner {
+        _setClaimCall(address(innerToken), t, selector);
+    }
+
     function pokeClaim(address t, bytes calldata data) external payable {
         _pokeClaim(address(innerToken), t, data);
     }

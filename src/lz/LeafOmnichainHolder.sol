@@ -21,6 +21,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     mapping(address => bool) public isAdapter;
     mapping(address => bool) public isPrincipal;
     mapping(address => bool) public claimTarget;
+    mapping(address => bytes4) public claimSelector;
     address public converter;
     address public principal;
     bytes4 public rewardsSelector;
@@ -28,6 +29,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     error ZeroAddress();
     error NotAdapter();
     error BadClaimTarget();
+    error BadClaimSelector();
     error ClaimFailed();
     error Principal();
     error BadConverter();
@@ -35,6 +37,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     event AdapterSet(address indexed adapter, bool allowed);
     event PrincipalSet(address indexed token, bool ok);
     event ClaimTargetSet(address indexed target, bool allowed);
+    event ClaimCallSet(address indexed target, bytes4 selector);
     event ConverterSet(address indexed converter);
     event RewardsSelectorSet(bytes4 selector);
     event Released(address indexed token, address indexed to, uint256 amount);
@@ -62,7 +65,15 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     function setClaimTarget(address t, bool ok) external onlyOwner {
         if (t == address(0) || isPrincipal[t]) revert BadClaimTarget();
         claimTarget[t] = ok;
+        if (!ok) claimSelector[t] = bytes4(0);
         emit ClaimTargetSet(t, ok);
+    }
+
+    function setClaimCall(address t, bytes4 selector) external onlyOwner {
+        if (t == address(0) || isPrincipal[t] || selector == bytes4(0)) revert BadClaimTarget();
+        claimTarget[t] = true;
+        claimSelector[t] = selector;
+        emit ClaimCallSet(t, selector);
     }
 
     function setConverter(address c) external onlyOwner {
@@ -84,6 +95,8 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
 
     function pokeClaim(address t, bytes calldata data) external payable {
         if (!claimTarget[t] || isPrincipal[t]) revert BadClaimTarget();
+        if (data.length < 4) revert BadClaimSelector();
+        if (claimSelector[t] == bytes4(0) || bytes4(data[0:4]) != claimSelector[t]) revert BadClaimSelector();
         (bool ok,) = t.call{value: msg.value}(data);
         if (!ok) revert ClaimFailed();
     }

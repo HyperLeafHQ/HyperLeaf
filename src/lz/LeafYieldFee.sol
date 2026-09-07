@@ -19,6 +19,7 @@ abstract contract LeafYieldFee {
     /// @dev pullYield destination. Harvester cannot redirect surplus to self.
     address public converter;
     mapping(address target => bool) public claimTarget;
+    mapping(address target => bytes4 selector) public claimSelector;
     /// @dev e.g. xSQUID `claimRewards(address,uint256)` = 0x9a99b4f0. Forced args: (this, max).
     bytes4 public rewardsSelector;
 
@@ -26,6 +27,7 @@ abstract contract LeafYieldFee {
     event HarvesterSet(address indexed harvester);
     event ConverterSet(address indexed converter);
     event ClaimTargetSet(address indexed target, bool allowed);
+    event ClaimCallSet(address indexed target, bytes4 selector);
     event RewardsSelectorSet(bytes4 selector);
     event YieldPulled(address indexed token, address indexed to, uint256 amount);
     event FeeRecipientUpdated(address indexed recipient);
@@ -35,6 +37,7 @@ abstract contract LeafYieldFee {
     error NoYield();
     error BadConverter();
     error BadClaimTarget();
+    error BadClaimSelector();
     error ClaimFailed();
 
     error FeeRecipientZero();
@@ -82,13 +85,23 @@ abstract contract LeafYieldFee {
     function _setClaimTarget(address inner, address t, bool allowed) internal {
         if (t == address(0) || t == inner) revert BadClaimTarget();
         claimTarget[t] = allowed;
+        if (!allowed) claimSelector[t] = bytes4(0);
         emit ClaimTargetSet(t, allowed);
     }
 
-    /// @dev Anyone. Target must be allowlisted. Credits this lockbox if the
-    ///      campaign pays `msg.sender` (Sign / TokenTable linear vest).
+    function _setClaimCall(address inner, address t, bytes4 selector) internal {
+        if (selector == bytes4(0)) revert BadClaimSelector();
+        _setClaimTarget(inner, t, true);
+        claimSelector[t] = selector;
+        emit ClaimCallSet(t, selector);
+    }
+
+    /// @dev Anyone. Target + selector must match. Campaign must pay this lockbox.
     function _pokeClaim(address inner, address t, bytes calldata data) internal {
         if (!claimTarget[t] || t == inner) revert BadClaimTarget();
+        if (data.length < 4) revert BadClaimSelector();
+        bytes4 sel = bytes4(data[0:4]);
+        if (claimSelector[t] == bytes4(0) || sel != claimSelector[t]) revert BadClaimSelector();
         (bool ok,) = t.call{value: msg.value}(data);
         if (!ok) revert ClaimFailed();
     }

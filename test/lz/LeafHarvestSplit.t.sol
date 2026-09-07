@@ -175,7 +175,7 @@ contract LeafHarvestSplitTest is PegReady {
         vm.expectRevert();
         adapter.pokeClaim(address(sign), abi.encodeWithSelector(MockSignClaim.claim.selector));
         vm.prank(owner);
-        adapter.setClaimTarget(address(sign), true);
+        adapter.setClaimCall(address(sign), MockSignClaim.claim.selector);
         vm.prank(owner);
         vm.expectRevert();
         adapter.setClaimTarget(address(xsquid), true);

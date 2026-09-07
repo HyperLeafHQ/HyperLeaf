@@ -34,7 +34,7 @@ outstanding Leaf claims  ≤  economically realizable underlying
                            (principal + booked yield − pending redemptions − fees)
 ```
 
-Not `balanceOf(lockbox)`. Principal is never harvested as yield. A burn drops liabilities before assets leave. A PR that cannot show this still holds does not merge.
+Not `balanceOf(lockbox)`. Principal is never harvested as yield. A burn drops liabilities before assets leave. Fill [`SOLVENCY.md`](SOLVENCY.md) for that ticker. A PR that cannot show this still holds does not merge.
 
 ## Branches
 

@@ -39,4 +39,9 @@ contract LeafVirtualsLockbox is LeafInboundLockbox {
         if (t == address(virtuals)) revert BadClaimTarget();
         _setClaimTarget(address(innerToken), t, allowed);
     }
+
+    function setClaimCall(address t, bytes4 selector) public override onlyOwner {
+        if (t == address(virtuals)) revert BadClaimTarget();
+        _setClaimCall(address(innerToken), t, selector);
+    }
 }

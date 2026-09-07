@@ -16,6 +16,8 @@ Outstanding Leaf claims ≤ **verified economically realizable** claims — not 
 
 A valid LayerZero message is **not** economic truth. Peer authenticity ≠ backing.
 
+`pokeClaim` is a **function template**: target + selector. Not “any calldata on an allowlisted contract.”
+
 ## Origin
 
 Mint only from `send()` → `transferFrom` of the **immutable inner token**. Donations do not raise `totalLocked` and do not mint. Every payload carries `listingTag`. Trace:

@@ -24,7 +24,7 @@
         "pullInner": false,
         "toHype": ["airdrop-erc20s"]
       },
-      "claim": "owner setClaimTarget each Sign/TokenTable campaign; anyone pokeClaim; then pullYield",
+      "claim": "owner setClaimCall(campaign, selector); anyone pokeClaim; then pullYield",
       "note": "L redeem returns sKAITO, not KAITO (official unstake is 7d cooldown — protocol never calls it). sKAITO is transferable; Base spot is thin. On HyperEVM hKAITO is also the KAITO spot proxy. BLACKLISTED_ROLE exists; team describes it as investor airdrop exclusion — if the lockbox is ever listed, L redeem can fail. Eco airdrops are per-campaign Sign contracts, often linear vest.",
       "refs": {
         "depositTx": "0x69c5660ffd3812b8ec45e5f306f67ab6cf46ac5a15a46231fb4403cfae39ee86",

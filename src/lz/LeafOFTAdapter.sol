@@ -71,6 +71,10 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setClaimTarget(address(innerToken), t, allowed);
     }
 
+    function setClaimCall(address t, bytes4 selector) external onlyOwner {
+        _setClaimCall(address(innerToken), t, selector);
+    }
+
     function setRewardsSelector(bytes4 s) external onlyOwner {
         _setRewardsSelector(s);
     }

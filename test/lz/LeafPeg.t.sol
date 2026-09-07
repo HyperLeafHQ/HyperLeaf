@@ -251,4 +251,49 @@ contract LeafPegTest is PegReady {
         vm.expectRevert(LeafOFT.SupplyCapExceeded.selector);
         oft.lzReceive(origin, bytes32(uint256(1)), payload, address(0), "");
     }
+
+    function testUnpauseDoesNotReopenBridge() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.prank(guardian);
+        adapter.closeBridge();
+        vm.prank(owner);
+        adapter.unpause();
+        assertFalse(adapter.bridgeOpen());
+        assertFalse(adapter.paused());
+        vm.startPrank(user);
+        token.approve(address(adapter), 1e18);
+        vm.expectRevert(LeafOApp.BridgeClosedErr.selector);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 1e18);
+        vm.stopPrank();
+        vm.prank(owner);
+        adapter.openBridge();
+        vm.startPrank(user);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 1e18);
+        vm.stopPrank();
+        assertEq(adapter.totalLocked(), 1e18);
+    }
+
+    function testSourceDayCapBoundsRealOutflow() public {
+        vm.startPrank(owner);
+        adapter.setListingTag(TAG);
+        adapter.setLimits(10e18, 10e18);
+        adapter.setInnerSupplyCeiling(type(uint256).max);
+        oft.setListingTag(TAG);
+        oft.setLimits(100e18, 100e18);
+        oft.setSupplyCap(1_000e18);
+        adapter.openBridge();
+        oft.openBridge();
+        vm.stopPrank();
+        vm.startPrank(user);
+        token.approve(address(adapter), 20e18);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 10e18);
+        vm.stopPrank();
+        bytes memory first = _msg(adapter, user, 10e18);
+        ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
+            srcEid: DST, sender: bytes32(uint256(uint160(address(oft)))), nonce: 1
+        });
+        vm.prank(address(epSrc));
+        vm.expectRevert(LeafOApp.DayCapExceeded.selector);
+        adapter.lzReceive(origin, bytes32(uint256(2)), first, address(0), "");
+    }
 }
