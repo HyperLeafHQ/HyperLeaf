@@ -147,7 +147,7 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Core invariant | HyperEVM hORDER ≤ ORDER the lockbox staked on the ledger. Same EVM address on ETH/OP/Base/… sees one position |
 | Proof source | `stakeOrder` on proxy `0xC8A8Ce0A…` (CREATE2, all EVMs). ORDER OFT burns on the source chain, LZ eid **30213** (Orderly). **Not** `ORDER.balanceOf(proxy)` |
 | Mint / redeem | C1, market-only. Lockbox calls `stakeOrder(uint256)` 0x413aaa60. Unstake 7d then `sendUserRequest(amount, payloadType)` 0xcec09c0d (2 request, 3 cancel, 4 withdraw). Claim unstaked ORDER on **the chain the lockbox is connected to** — OP → ORDER OFT; ETH → ERC-20. Docs allow staking on OP and claiming on Arb/Base; **we must not**. VALOR redeem also pins the claim chain at submit time. **Never** wrap VALOR |
-| Yield | VALOR accrues on the staking address. New system (Nov 2025): redeem VALOR → esORDER. Legacy: USDC. `claimReward(uint32,uint256,bytes32[])` 0xeb8a419f exists. Need a VALOR redeem tx to pin harvest |
+| Yield | VALOR on the staking address. New: redeem VALOR → wait 7d → **esORDER** (docs: auto-stakes, more VALOR). esORDER is escrowed: vest 15d = 50% ORDER (rest burned) to 90d = 100%. Do **not** vest for the lockbox. Harvest to HYPE is not instant — either leave esORDER staked (occupancy) or vest 90d then swap ORDER. Legacy VALOR → USDC still exists as a separate pool. Need a VALOR redeem tx |
 | Failure | LZ message not credited; stake from user EOA so VALOR is not on the lockbox; unstake/VALOR claim connected to Arb/Base so OFT lands off the OP lockbox; 7d unstake from lockbox |
 | Auto-pause | health. Do not mint if ledger stake of lockbox is below hORDER |
 | Worst-case loss | all TVL (C1, no protocol peg-out). LZ / ledger failure |
