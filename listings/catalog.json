@@ -520,7 +520,7 @@
       "infra": "evm",
       "yield": { "inner": "convert-to-river-on-date", "pullInner": false, "toHype": ["weekly-staked-river-rewards"] },
       "sampleTx": "0x209834790e07a62c8b24b517db450ce4f8911ad449bea6b3c39da4481f86a32b",
-      "note": "BSC. Live convert: 100,000 River Pts → 394.77 RIVER into sRIVER_V2 ERC-721 #22014, unlock 2028-10-01 14:00 UTC (season date, not a rolling term). Call convert(pts, 1, 7, minOut) on 0xFdC8… selector 0x03063b98. Rate is density/market (this fill ~0.00395 RIVER/Pt), not APY. Receipt is an NFT — needs an NFT lockbox (same class as veAERO), not LeafOFTAdapter. C1: sell PTSMAX, do not unwrap Pts. Weekly RIVER rewards stay on the NFT until harvested to HYPE. One ticker = epoch 7 only.",
+      "note": "BSC. Live convert: 100,000 River Pts → 394.77 RIVER into sRIVER_V2 ERC-721 #22014, unlock 2028-10-01 14:00 UTC (season date, not a rolling term). Call convert(pts, 1, 7, minOut) on 0xFdC8… selector 0x03063b98. Rate is density/market (this fill ~0.00395 RIVER/Pt), not APY. Receipt is an NFT — needs an NFT lockbox (same class as veAERO), not LeafOFTAdapter. C1: sell PTSMAX, do not unwrap Pts. Weekly RIVER rewards stay on the NFT until harvested to HYPE. One ticker = epoch 7 only. Tx 0x2143f4d9… is NOT harvest: it is V1 sRIVER unstake(uint256) 0x2e17de78 on 0xABbEB6…, burns NFT #16996, returns 255.85 RIVER principal. Do not call unstake on V2 before the season date. Still need a V2 weekly-claim tx that leaves the NFT in place.",
       "status": "research",
       "priority": 8
     },

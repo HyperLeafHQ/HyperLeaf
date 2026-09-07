@@ -10,6 +10,8 @@ library RiverPtsAddresses {
     address internal constant RIVER = 0xdA7AD9dea9397cffdDAE2F8a052B82f1484252B3;
     address internal constant CONVERT = 0xFdC8AeCF0Dd49b12583253809A9f188AF19c83DA;
     address internal constant SRIVER_V2 = 0xD1d5E7fa0d57d1F9FD3c876497006E8CaBe24e1A;
+    address internal constant SRIVER_V1 = 0xABbEB6E9b9C96A837c99fb9fAA908fC7A1DF2BC1;
     bytes4 internal constant CONVERT_SELECTOR = 0x03063b98;
+    bytes4 internal constant UNSTAKE_SELECTOR = 0x2e17de78;
     uint256 internal constant EPOCH_MAX = 7;
 }
