@@ -75,9 +75,48 @@ Same L invariant on **sKAITO**, not KAITO. Official 7d unstake is never called. 
 
 Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opened**. No protocol peg-out until `shareExit`. Accounting unit is the ticker, not a random ERC-20 balance. Max protocol loss on a fake inner is “we stop minting”; we do not pay BTC-style redeem.
 
+### hsETHFI (research → L, Ethereum)
+
+| | |
+| --- | --- |
+| Canonical backing | sETHFI **pulled** (BoringGovernance share `0x86B5780b…c0161`), not ETHFI |
+| Accounting unit | 1 hsETHFI = 1 sETHFI |
+| Core invariant | same L: `supply ≤ totalLocked ≤ cap` + sETHFI supply ceiling |
+| Proof source | lockbox `totalLocked` + ether.fi vault share supply |
+| Mint / redeem | `send` / burn → sETHFI. **Never** `DelayedWithdraw` (~10d to ETHFI) |
+| Yield | NAV in sETHFI rate; ether.fi / Karak / Symbiotic points = eco-claim class |
+| Failure | vault upgrade, points paid to EOA not lockbox |
+| Auto-pause | ceiling / health |
+| Worst-case loss | min(cap, maxPerDay) |
+| Test | reuse `LeafSolvency.t.sol` L suite. Need one deposit tx to pin teller `0x35dD2463…` |
+
+### hgSOON (research — row incomplete)
+
+gSOON is a transferable LST (rate vs SOON, 7d unstake we never call). Arkham: ~199M SOON in “GSOON” vs ~187M on Solana — Ethereum/BSC first. **Canonical address not pinned.** `0xcC4…` on Arkham is truncated. Do not write an adapter until a gSOON transfer or stake tx gives the full token + vault.
+
+### hAVNT (research → L wrap of stkAVNT, not raw AVNT)
+
+| | |
+| --- | --- |
+| Canonical backing | stkAVNT from Avantis SM `0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9` (Base) |
+| Accounting unit | 1 hAVNT = 1 stkAVNT |
+| Core invariant | L: `hAVNT ≤ totalLocked stkAVNT`. Slash (max 20%) is **in** the yield, not stripped |
+| Proof source | `stake(to,amount)` mints stkAVNT; cooldown 5d + unstake window 3d **never called** |
+| Yield | extra AVNT emissions → HYPE. Fee discounts / XP stay on the lockbox (occupancy) |
+| Failure | SM slash, AVNT blacklist (`isBlackListed` on the token), emission stop |
+| Auto-pause | health after a slash event; ceiling on AVNT/stkAVNT supply |
+| Worst-case loss | 20% slash of locked stack + daily cap on residual |
+| Test | L suite + “we never call cooldown”. Need your stake tx to confirm transferable stkAVNT |
+
+Public sample (not yours): Base `0x9fbb56ba99…` `stake(address,uint256)` 0xadc9772e.
+
+### hB3 / hORDER (research — incomplete)
+
+Need a **stake tx**. B3: WIN harvest vs 45d unstake (we skip unstake). ORDER: which chain has most stake; VALOR is not transferable — C1, harvest VALOR→esORDER after 7d is optional yield, not backing.
+
 ### PTSMAX
 
-Accounting unit is **sRIVER_V2 tokenId**, not `balanceOf(Pts)`. Do not ship on the ERC-20 adapter. Merkle weekly Pts is address-keyed, not NFT-keyed.
+Accounting unit is **sRIVER_V2 tokenId**, not `balanceOf(Pts)`. Do not ship on the ERC-20 adapter. Merkle weekly Pts is address-keyed, not NFT-keyed. Blocked on NFT lockbox + lockbox appearing in a weekly tree.
 
 ### hSKY / hAAVE
 

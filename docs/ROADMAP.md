@@ -9,12 +9,12 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | 0 | hNEST | Native | HyperEVM | Live, capped |
 | 1 | hxSQUID | L | Base | First wrap. claimRewards → QUID → HYPE |
 | 2 | hcbETH | L | Base | PoS in the rate |
-| later | hsETHFI | L | Ethereum | Receipt only. Never 10d DelayedWithdraw. Protocol delegate for Snapshot |
-| later | **hgSOON** | L | Ethereum (first) | Largest gSOON vault on EVM (~199M SOON). Wrap receipt, never 7d unstake |
-| later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT, unlock 2028-10-01 this fill. Needs NFT lockbox |
-| later | **hB3** | C1 | Base | Stake B3, harvest WIN (play or convert to B3). 45d cooldown unused |
-| later | **hORDER** | C1 | OFT / ETH first | VALOR stays in lockbox. Pick chain with most stake |
-| later | **hAVNT** | C2 | Base | Perp DEX staking ~15% AVNT. Slash is the cost of that yield |
+| later | **hsETHFI** | L | Ethereum | Receipt only. Never 10d DelayedWithdraw |
+| later | **hgSOON** | L | Ethereum first | Need full gSOON address + stake tx |
+| later | **hAVNT** | L | Base | Wrap **stkAVNT** `0xd546…d9e9`, never cooldown. 20% slash is the yield cost |
+| later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
+| later | **hB3** | C1 | Base | Stake B3, harvest WIN. Need stake tx |
+| later | **hORDER** | C1 | OFT / ETH first | VALOR stays in lockbox. Need stake tx |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
 | later | hsWBERA | L | Berachain | Wait LZ |
 | later | hAEVO / hGMX | C1 | ETH / Arb | No transferable receipt |
