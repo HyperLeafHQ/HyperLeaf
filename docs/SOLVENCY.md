@@ -90,19 +90,22 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Worst-case loss | min(cap, maxPerDay) on principal. KING/ETHFI/EIGEN are yield, not backing |
 | Test | L suite. Deposit 0x24a993c9. Do not treat empty ETHFI/EIGEN distributors as current yield |
 
-### hgSOON (research — address pinned, user unstake tx not found)
+### hgSOON (research — wrap gSOON only)
 
 | | |
 | --- | --- |
-| Canonical backing | gSOON pulled (`0xcC48B55F…e0F7` on **BSC**, ERC-4626) |
-| Accounting unit | 1 hgSOON = 1 gSOON. Rate vs SOON lives in gSOON (~1.744) |
+| Canonical backing | transferable gSOON pulled (`0xcC48B55F…e0F7` on **BSC**, ERC-4626, vault=token) |
+| Accounting unit | 1 hgSOON = 1 gSOON. Rate vs SOON lives in gSOON (your deposit 1.122 → cooldown 1.434 → live ~1.744) |
 | Core invariant | L: `supply ≤ totalLocked gSOON` + gSOON/SOON vault ceiling |
-| Proof source | `totalLocked` + `previewRedeem` / inner supply. **Never** 7d unstake |
-| Yield | in the gSOON/SOON rate. Do not pull gSOON as harvest |
-| Failure | vault upgrade; 7d queue if someone calls redeem on our lockbox |
+| Proof source | lockbox `totalLocked` + `previewRedeem` / inner supply |
+| Mint / redeem | wrap/unwrap **gSOON**. Instant. **Never** `deposit` SOON. **Never** 7d unstake: `cooldownShares(uint256)` 0x9343d9e1 / `cooldownAssets(uint256)` 0xcdac52ed / V2 variants, then `claim(address)` 0x1e83409a after `cooldownDuration` = 604800. Silo is `agingPool` `0x64512C59…` |
+| Yield | in the gSOON/SOON rate. Do not pull gSOON as harvest. 90d lock on `0x660102f6` (`lock` 0x1338736f / `withdraw` 0x2e1a7d4d) is extra occupancy — no receipt. Do not enter it |
+| Failure | vault upgrade; someone calls cooldown on our lockbox (principal in silo 7d) |
 | Auto-pause | ceiling / health |
-| Worst-case loss | min(cap, maxPerDay) |
-| Test | L suite. **2025-09-23 0x113561… on BSC: no Transfer/Withdraw/cooldown on this vault.** Need a redeem tx for the 7d selector |
+| Worst-case loss | min(cap, maxPerDay) on gSOON principal. 90d lock APY is not backing |
+| Test | L suite. Your path: deposit `0x246a12a4` (2025-05-29, 4998.4994 SOON → 4454.03 gSOON) is the official mint we will not call; lock `0xcaa3905e` / withdraw `0x37d70161` is occupancy we will not enter; cooldownShares `0x5a3c5441` (2025-09-22 21:37 UTC = 09-23 HKT) is the 7d selector. Dust gSOON left on `0x113561…`. Claim after +7d not pinned; selector is still `claim(address)` |
+
+
 
 ### hAVNT (research → L wrap of stkAVNT, not raw AVNT)
 

@@ -559,7 +559,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "yield": { "inner": "keep-gsoon-rate", "pullInner": false, "toHype": [] },
-      "note": "Wrap transferable gSOON (ERC-4626, vault=token). asset()=SOON 0xb9E1Fd5A. Live rate ~1.744 SOON per gSOON. Never call the 7d unstake. Arkham's ~199M SOON in GSOON is this BSC vault, not Ethereum. 2025-09-23: wallet 0x113561… had no gSOON/SOON Transfer or Withdraw on this vault (checked request and +7d claim window). Dust gSOON left on that address. Need an actual redeem/withdraw tx to pin the 7d function selector.",
+      "note": "Accept transferable gSOON only — never deposit SOON. ERC-4626 vault=token 0xcC48. asset()=SOON 0xb9E1Fd5A. Live rate ~1.744 SOON per gSOON. Never call 7d unstake: cooldownShares(uint256) 0x9343d9e1, cooldownAssets(uint256) 0xcdac52ed, V2 *(uint256,address), then claim(address) 0x1e83409a after cooldownDuration=604800. Silo agingPool 0x64512C59. Your pins: official mint 0x246a12a4 (2025-05-29, 4998.4994 SOON→4454.03 gSOON) we will not call; cooldownShares 0x5a3c5441 (2025-09-22 HKT 09-23) burned 7243.11 gSOON / 10390.25 SOON to silo. 90d occupancy lock 0x660102f6 lock 0x1338736f / withdraw 0x2e1a7d4d (0xcaa3905e / 0x37d70161) — do not enter. Arkham ~199M SOON in GSOON is this BSC vault, not Ethereum.",
       "status": "research",
       "priority": 7
     },
