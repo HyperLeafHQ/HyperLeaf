@@ -146,12 +146,12 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Accounting unit | C1 ticker. VALOR is a non-transferable metric, not a token |
 | Core invariant | HyperEVM hORDER ≤ ORDER the lockbox staked on the ledger. Same EVM address on ETH/OP/Base/… sees one position |
 | Proof source | `stakeOrder` on proxy `0xC8A8Ce0A…` (CREATE2, all EVMs). ORDER OFT burns on the source chain, LZ eid **30213** (Orderly). **Not** `ORDER.balanceOf(proxy)` |
-| Mint / redeem | C1, market-only. Lockbox calls `stakeOrder(uint256)` 0x413aaa60. Unstake 7d then `sendUserRequest(amount, payloadType)` 0xcec09c0d (2 request, 3 cancel, 4 withdraw). Claim unstaked ORDER on **the chain the lockbox is connected to** — OP → ORDER OFT; ETH → ERC-20. Docs allow staking on OP and claiming on Arb/Base; **we must not**. VALOR redeem also pins the claim chain at submit time. **Never** wrap VALOR |
+| Mint / redeem | C1, market-only. Lockbox calls `stakeOrder(uint256)` 0x413aaa60. Unstake 7d then `sendUserRequest(amount, payloadType)` 0xcec09c0d (2 request, 3 cancel, 4 withdraw). **Receive chain is not OP.** ORDER OFT (`0x4E200fE2`, same addr) can land on Arb or Base — deploy the lockbox on the chain we want to receive. Ledger keys by **that** address. CREATE2 same address on Arb+Base if we want both. ETH claim is ERC-20, not OFT. VALOR type 17 also pins claim chain at submit. **Never** wrap VALOR |
 | Yield | VALOR on the staking address. Redeem request is `sendUserRequest(amount, 17)` 0xcec09c0d on the same proxy. Your live pin: Arb `0x7a9676a6` (2026-09-07 20:47 HKT) 0.001 VALOR, LZ eid 30110 → Orderly 30213, ledger `0x7819704B` logged the user. **No ERC-20 moved** — VALOR is not a token. After 7d, esORDER is claimable on **the chain used at submit** (this one is Arb). esORDER auto-stakes; vest 15d=50% burn / 90d=100%. Do **not** vest. Harvest to HYPE is not this tx — still need the +7d claim. Legacy VALOR→USDC is a separate pool |
-| Failure | LZ message not credited; stake from user EOA so VALOR is not on the lockbox; unstake/VALOR claim connected to Arb/Base so OFT lands off the OP lockbox; 7d unstake from lockbox |
+| Failure | LZ message not credited; stake from user EOA so VALOR is not on the lockbox; type 17 / unstake claim from a chain with no lockbox so OFT lands on an empty address; 7d unstake from lockbox |
 | Auto-pause | health. Do not mint if ledger stake of lockbox is below hORDER |
 | Worst-case loss | all TVL (C1, no protocol peg-out). LZ / ledger failure |
-| Test | Stake pins OP `0x09494257` (998) + `0x76ea3caf` (198). VALOR redeem pin Arb `0x7a9676a6` type 17. Still need +7d esORDER claim. Do not ship harvest-to-HYPE until that claim is pinned. Lockbox must submit type 17 from **OP**, not Arb |
+| Test | Stake pins OP `0x09494257` (998) + `0x76ea3caf` (198) — personal EOA, not protocol source. VALOR redeem pin Arb `0x7a9676a6` type 17. Still need +7d esORDER claim. Protocol source = Arb or Base (OFT in). Do not freeze OP |
 
 
 ### PTSMAX
