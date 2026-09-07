@@ -64,7 +64,9 @@ A bricked or mis-registered rewarder emits `RewardsHookFailed` and the ERC20
 transfer still commits. Tests: `testBrokenRewarderDoesNotBrickTransfer`.
 
 Owner may `setHypeRewarder(address(0), listingId)` to unhook. `listingId`
-itself is frozen after first set.
+is frozen after first set. Replacing a live rewarder with another while
+`totalSupply() > 0` reverts `RewarderFrozen` (Luna: a second accounting domain).
+
 
 Do **not** auto-disable the hook on the first failure: a caller with a tight
 gas stipend could grief every holder.

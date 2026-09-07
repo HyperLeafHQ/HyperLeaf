@@ -15,6 +15,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     error SupplyCapExceeded();
     error Reentrant();
     error ListingIdFrozen();
+    error RewarderFrozen();
 
     ILeafHypeRewarder public hypeRewarder;
     bytes32 public listingId;
@@ -40,12 +41,15 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
         ERC20Permit(name_)
     {}
 
-    /// @notice Bind this OFT to one listing id (one-shot) and a rewarder (replaceable).
-    ///         `rewarder` may be zero to unhook: transfers must stay live if the
-    ///         distributor is bricked. Register on the rewarder after this, not before.
+    /// @notice Bind listing id (one-shot). Rewarder may unhook to `address(0)` so
+    ///         transfers stay live. Replacing a live rewarder while supply > 0 is frozen.
     function setHypeRewarder(address rewarder, bytes32 listingId_) external onlyOwner {
         if (listingId_ == bytes32(0)) revert ZeroAddress();
         if (listingId != bytes32(0) && listingId != listingId_) revert ListingIdFrozen();
+        if (
+            rewarder != address(0) && listingId != bytes32(0) && rewarder != address(hypeRewarder)
+                && totalSupply() > 0
+        ) revert RewarderFrozen();
         listingId = listingId_;
         hypeRewarder = ILeafHypeRewarder(rewarder);
         emit HypeRewarderSet(rewarder, listingId_);
@@ -53,6 +57,7 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
 
     function setSupplyCap(uint256 cap) public onlyOwner {
         if (cap == 0) revert LimitsUnset();
+        if (supplyCap != 0 && cap > supplyCap) revert CapIncrease();
         supplyCap = cap;
         emit SupplyCapSet(cap);
     }

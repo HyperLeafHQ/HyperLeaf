@@ -28,6 +28,11 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
     ILeafHypeRewarder public rewarder;
     IERC20 public hype;
     bool public halted;
+    uint16 public constant BPS = 10_000;
+    /// @dev Max worse-than-last-fill the keeper may quote. Default 3%.
+    uint16 public maxSlippageBps = 300;
+    mapping(address tokenIn => mapping(address tokenOut => uint256)) public minPriceX18;
+    mapping(address tokenIn => mapping(address tokenOut => uint256)) public lastPriceX18;
 
     mapping(address => bool) public isLockbox;
     mapping(address => bool) public isToken;
@@ -41,6 +46,8 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
     event TokenSet(address indexed token, bool allowed);
     event OutputSet(address indexed token, bool allowed);
     event RouteSet(address indexed route, bool allowed);
+    event MinPriceSet(address indexed tokenIn, address indexed tokenOut, uint256 priceX18);
+    event MaxSlippageSet(uint16 bps);
     event Halted(bool halted);
     event PullsHalted(address indexed lockbox);
     event Swapped(address indexed route, address indexed tokenIn, address indexed tokenOut, uint256 spent, uint256 got);
@@ -61,6 +68,7 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
     error RouteFailed();
     error NoRewarder();
     error SameToken();
+    error Expired();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -121,6 +129,34 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
         emit RouteSet(route, ok);
     }
 
+    function setMaxSlippageBps(uint16 bps) external onlyOwner {
+        if (bps == 0 || bps > 2_000) revert BelowMinOut(bps, 1);
+        maxSlippageBps = bps;
+        emit MaxSlippageSet(bps);
+    }
+
+    /// @notice Out-per-in × 1e18. Required before the first swap of a pair.
+    ///         Lowering is the only way to accept a real market dump.
+    function setMinPrice(address tokenIn, address tokenOut, uint256 priceX18) external onlyOwner {
+        if (!isToken[tokenIn] || !isOutput[tokenOut] || priceX18 == 0) revert BadToken();
+        minPriceX18[tokenIn][tokenOut] = priceX18;
+        emit MinPriceSet(tokenIn, tokenOut, priceX18);
+    }
+
+    /// @notice Lowest minOut execute will accept. Floor from `minPriceX18`, plus
+    ///         last fill × (1 − maxSlippageBps) so a 1-wei minOut cannot sandwich.
+    function requiredMinOut(address tokenIn, address tokenOut, uint256 amountIn) public view returns (uint256) {
+        uint256 floor = minPriceX18[tokenIn][tokenOut];
+        if (floor == 0 || amountIn == 0) revert BadToken();
+        uint256 fromFloor = (amountIn * floor) / 1e18;
+        uint256 last = lastPriceX18[tokenIn][tokenOut];
+        uint256 fromLast;
+        if (last > 0) {
+            fromLast = (amountIn * last / 1e18) * (BPS - maxSlippageBps) / BPS;
+        }
+        return fromFloor > fromLast ? fromFloor : fromLast;
+    }
+
     /// @notice Stop hops here and tell lockboxes to stop `pullYield`.
     function halt(address[] calldata boxes) external {
         if (msg.sender != owner() && msg.sender != keeper && msg.sender != guardian) revert NotGuardian();
@@ -150,8 +186,10 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
         IERC20 tokenOut,
         uint256 minOut,
         address route,
-        bytes calldata data
+        bytes calldata data,
+        uint256 deadline
     ) external payable onlyKeeper nonReentrant {
+        if (deadline < block.timestamp) revert Expired();
         if (halted) revert HaltedErr();
         if (!isRoute[route]) revert BadRoute();
         if (!isToken[address(tokenIn)] || amountIn == 0) revert BadToken();
@@ -160,7 +198,8 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
         if (!bridging) {
             if (address(tokenOut) == address(tokenIn)) revert SameToken();
             if (!isOutput[address(tokenOut)]) revert BadToken();
-            if (minOut == 0) revert BelowMinOut(0, 1);
+            uint256 req = requiredMinOut(address(tokenIn), address(tokenOut), amountIn);
+            if (minOut < req) revert BelowMinOut(minOut, req);
         }
 
         uint256 inBefore = tokenIn.balanceOf(address(this));
@@ -176,9 +215,9 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
         if (inAfter > inBefore) revert SpentTooMuch();
         uint256 spent = inBefore - inAfter;
         if (spent > amountIn) revert SpentTooMuch();
+        if (spent == 0) revert NothingSpent();
 
         if (bridging) {
-            if (spent == 0) revert NothingSpent();
             emit Bridged(route, address(tokenIn), spent);
             return;
         }
@@ -186,6 +225,7 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
         uint256 outAfter = tokenOut.balanceOf(address(this));
         uint256 got = outAfter > outBefore ? outAfter - outBefore : 0;
         if (got < minOut) revert BelowMinOut(got, minOut);
+        lastPriceX18[address(tokenIn)][address(tokenOut)] = (got * 1e18) / spent;
         emit Swapped(route, address(tokenIn), address(tokenOut), spent, got);
     }
 

@@ -127,6 +127,8 @@ contract LeafYieldConverterTest is PegReady {
         conv.setRoute(address(debridge), true);
         conv.setRoute(address(mayan), true);
         conv.setRewarder(address(rewarder), address(whype));
+        conv.setMinPrice(address(quid), address(whype), 8e17);
+        conv.setMinPrice(address(quid), address(usdc), 9e17);
         adapter.setHarvester(keeper);
         adapter.setConverter(address(conv));
         adapter.setConvertYieldToHype(true);
@@ -165,6 +167,11 @@ contract LeafYieldConverterTest is PegReady {
         adapter.pullYield(IERC20(address(quid)), address(conv));
     }
 
+    function _exec(IERC20 tin, uint256 amt, IERC20 tout, uint256 minOut, address route, uint256 routeAmt) internal {
+        vm.prank(keeper);
+        conv.execute(tin, amt, tout, minOut, route, abi.encodeCall(MockRoute.run, (routeAmt)), block.timestamp + 1);
+    }
+
     function testPullLandsInConverterNotEoa() public {
         _pullQuid(50e18);
         assertEq(quid.balanceOf(address(conv)), 50e18);
@@ -175,8 +182,7 @@ contract LeafYieldConverterTest is PegReady {
         _pullQuid(50e18);
         whype.mint(address(aero), 40e18);
         aero.setPay(40e18);
-        vm.prank(keeper);
-        conv.execute(IERC20(address(quid)), 50e18, IERC20(address(whype)), 40e18, address(aero), abi.encodeCall(MockRoute.run, (50e18)));
+        _exec(IERC20(address(quid)), 50e18, IERC20(address(whype)), 40e18, address(aero), 50e18);
         assertEq(whype.balanceOf(address(conv)), 40e18);
         assertEq(quid.balanceOf(address(conv)), 0);
     }
@@ -187,7 +193,9 @@ contract LeafYieldConverterTest is PegReady {
         aero.setPay(1e18);
         vm.prank(keeper);
         vm.expectRevert(abi.encodeWithSelector(LeafYieldConverter.BelowMinOut.selector, 1e18, 40e18));
-        conv.execute(IERC20(address(quid)), 50e18, IERC20(address(whype)), 40e18, address(aero), abi.encodeCall(MockRoute.run, (50e18)));
+        conv.execute(
+            IERC20(address(quid)), 50e18, IERC20(address(whype)), 40e18, address(aero), abi.encodeCall(MockRoute.run, (50e18)), block.timestamp + 1
+        );
         assertEq(quid.balanceOf(address(conv)), 50e18);
     }
 
@@ -196,17 +204,23 @@ contract LeafYieldConverterTest is PegReady {
         aero.setFail(true);
         vm.prank(keeper);
         vm.expectRevert(LeafYieldConverter.RouteFailed.selector);
-        conv.execute(IERC20(address(quid)), 50e18, IERC20(address(whype)), 1, address(aero), abi.encodeCall(MockRoute.run, (50e18)));
+        conv.execute(
+            IERC20(address(quid)),
+            50e18,
+            IERC20(address(whype)),
+            40e18,
+            address(aero),
+            abi.encodeCall(MockRoute.run, (50e18)),
+            block.timestamp + 1
+        );
         assertEq(quid.balanceOf(address(conv)), 50e18);
 
         usdc.mint(address(debridge), 45e18);
         debridge.setPay(45e18);
-        vm.prank(keeper);
-        conv.execute(IERC20(address(quid)), 50e18, IERC20(address(usdc)), 45e18, address(debridge), abi.encodeCall(MockRoute.run, (50e18)));
+        _exec(IERC20(address(quid)), 50e18, IERC20(address(usdc)), 45e18, address(debridge), 50e18);
         assertEq(usdc.balanceOf(address(conv)), 45e18);
 
-        vm.prank(keeper);
-        conv.execute(IERC20(address(usdc)), 45e18, IERC20(address(0)), 0, address(mayan), abi.encodeCall(MockRoute.run, (45e18)));
+        _exec(IERC20(address(usdc)), 45e18, IERC20(address(0)), 0, address(mayan), 45e18);
         assertEq(usdc.balanceOf(address(conv)), 0);
         assertEq(usdc.balanceOf(address(0xDEAD)), 45e18);
     }
@@ -226,7 +240,15 @@ contract LeafYieldConverterTest is PegReady {
 
         vm.prank(keeper);
         vm.expectRevert(LeafYieldConverter.HaltedErr.selector);
-        conv.execute(IERC20(address(quid)), 10e18, IERC20(address(whype)), 1, address(aero), abi.encodeCall(MockRoute.run, (10e18)));
+        conv.execute(
+            IERC20(address(quid)),
+            10e18,
+            IERC20(address(whype)),
+            8e18,
+            address(aero),
+            abi.encodeCall(MockRoute.run, (10e18)),
+            block.timestamp + 1
+        );
     }
 
     function testReturnOnlyToLockbox() public {
@@ -274,6 +296,27 @@ contract LeafYieldConverterTest is PegReady {
         _pullQuid(1e18);
         vm.prank(keeper);
         vm.expectRevert(LeafYieldConverter.BadRoute.selector);
-        conv.execute(IERC20(address(quid)), 1e18, IERC20(address(whype)), 1, address(0xBEEF), "");
+        conv.execute(IERC20(address(quid)), 1e18, IERC20(address(whype)), 1, address(0xBEEF), "", block.timestamp + 1);
+    }
+
+    function testDustMinOutCannotSandwich() public {
+        _pullQuid(50e18);
+        uint256 req = conv.requiredMinOut(address(quid), address(whype), 50e18);
+        assertEq(req, 40e18);
+        vm.prank(keeper);
+        vm.expectRevert(abi.encodeWithSelector(LeafYieldConverter.BelowMinOut.selector, 1, req));
+        conv.execute(
+            IERC20(address(quid)), 50e18, IERC20(address(whype)), 1, address(aero), abi.encodeCall(MockRoute.run, (50e18)), block.timestamp + 1
+        );
+        assertEq(quid.balanceOf(address(conv)), 50e18);
+    }
+
+    function testExpiredDeadlineReverts() public {
+        _pullQuid(1e18);
+        vm.prank(keeper);
+        vm.expectRevert(LeafYieldConverter.Expired.selector);
+        conv.execute(
+            IERC20(address(quid)), 1e18, IERC20(address(whype)), 8e17, address(aero), abi.encodeCall(MockRoute.run, (1e18)), block.timestamp - 1
+        );
     }
 }

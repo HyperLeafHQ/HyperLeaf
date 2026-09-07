@@ -19,10 +19,13 @@ Harvester-only `pullYield` **into `LeafYieldConverter`**, never an EOA. Then swa
 Converter rules:
 
 1. Inventory sits in the converter contract.
-2. Each hop is an allowlisted `route` (Aerodrome / 1inch / Relay / Portal / **deBridge** / **Mayan** / …) with `minOut`. Below quote → revert, inventory stays, try the next route.
+2. Each hop is an allowlisted `route` (Aerodrome / 1inch / Relay / Portal / **deBridge** / **Mayan** / …) with `minOut` **and** `deadline`. `minOut` cannot be 1 wei: it must be ≥ `requiredMinOut` = max(owner `minPriceX18`, last fill × (1 − maxSlippageBps)). Default slip 3%. That is the sandwich floor. Prefer Cow / Mayan / deBridge RFQ over a public AMM mempool.
 3. `notify(id, amount, minAmount)` cannot credit more WHYPE than the contract holds, and cannot go below the keeper quote.
 4. If no route fills: `converter.halt([lockbox])` → `lockbox.haltConvert()` → further `pullYield` reverts `ConvertHalted`. Wrap/redeem stay live. Owner turns convert back on after a route works.
 5. Unsold tokens `returnToLockbox` only. Never to an EOA.
+
+Owner must `setMinPrice(tokenIn, tokenOut, outPerIn×1e18)` before the first swap of that pair. A real dump: owner lowers the floor. Keeper must not use a public Uni v2 swap as the first hop.
+
 
 Same converter bytecode on source (swap/bridge) and HyperEVM (`setRewarder` + `notify`).
 

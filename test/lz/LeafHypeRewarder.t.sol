@@ -199,9 +199,12 @@ contract LeafHypeRewarderTest is PegReady {
         _mintAlice(10e18);
         RevertingRewarder bad = new RevertingRewarder();
         vm.prank(owner);
-        oft.setHypeRewarder(address(bad), ID);
+        oft.setHypeRewarder(address(0), ID);
         vm.prank(alice);
         oft.transfer(bob, 10e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafOFT.RewarderFrozen.selector);
+        oft.setHypeRewarder(address(bad), ID);
         assertEq(oft.balanceOf(bob), 10e18);
         assertEq(oft.balanceOf(alice), 0);
     }

@@ -69,6 +69,8 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     error HealthUpgrade();
     error InnerSupplyBreach();
     error PeerFrozen();
+    error CapIncrease();
+    error ConfigFrozen();
 
     modifier onlyGuardian() {
         if (msg.sender != guardian && msg.sender != owner()) revert NotGuardian();
@@ -89,7 +91,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     }
 
     function setPeer(uint32 eid, bytes32 peer) public onlyOwner {
-        if (bridgeOpen && peers[eid] != bytes32(0) && peers[eid] != peer) revert PeerFrozen();
+        if (peers[eid] != bytes32(0) && peers[eid] != peer) revert PeerFrozen();
         peers[eid] = peer;
         emit PeerSet(eid, peer);
     }
@@ -107,12 +109,15 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
 
     function setLimits(uint256 maxTx, uint256 maxDay) public onlyOwner {
         if (maxTx == 0 || maxDay == 0 || maxTx > maxDay) revert LimitsUnset();
+        if (maxPerTx != 0 && maxTx > maxPerTx) revert CapIncrease();
+        if (maxPerDay != 0 && maxDay > maxPerDay) revert CapIncrease();
         maxPerTx = maxTx;
         maxPerDay = maxDay;
         emit LimitsSet(maxTx, maxDay);
     }
 
     function setInnerSupplyCeiling(uint256 cap) public onlyOwner {
+        if (innerSupplyCeiling != 0 && cap > innerSupplyCeiling) revert CapIncrease();
         innerSupplyCeiling = cap;
         emit InnerSupplyCeilingSet(cap);
     }
@@ -183,6 +188,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     }
 
     function setEndpointConfig(address lib, SetConfigParam[] calldata params) external onlyOwner {
+        if (bridgeOpen && !paused()) revert ConfigFrozen();
         endpoint.setConfig(address(this), lib, params);
     }
 

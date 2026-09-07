@@ -323,10 +323,41 @@ contract LeafPegTest is PegReady {
         vm.prank(owner);
         vm.expectRevert(LeafOApp.PeerFrozen.selector);
         adapter.setPeer(DST, address(0xBEEF));
+        vm.prank(guardian);
+        adapter.closeBridge();
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.PeerFrozen.selector);
+        adapter.setPeer(DST, address(0xBEEF));
         vm.prank(owner);
         adapter.setPeer(30102, address(0xBEEF));
         assertEq(adapter.peers(30102), bytes32(uint256(uint160(address(0xBEEF)))));
         assertEq(adapter.peers(DST), bytes32(uint256(uint160(address(oft)))));
+    }
+
+    function testOwnerCannotIncreaseCaps() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        vm.startPrank(owner);
+        vm.expectRevert(LeafOApp.CapIncrease.selector);
+        adapter.setLimits(2_000e18, 2_000e18);
+        vm.expectRevert(LeafOApp.CapIncrease.selector);
+        adapter.setDepositCap(type(uint256).max);
+        vm.expectRevert(LeafOApp.CapIncrease.selector);
+        oft.setSupplyCap(2_000e18);
+        adapter.setLimits(1e18, 1_000e18);
+        oft.setSupplyCap(100e18);
+        vm.stopPrank();
+    }
+
+    function testEndpointConfigFrozenWhileLive() public {
+        _openPair(adapter, oft, owner, 1_000e18);
+        SetConfigParam[] memory p;
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
+        adapter.setEndpointConfig(address(1), p);
+        vm.prank(guardian);
+        adapter.closeBridge();
+        vm.prank(owner);
+        adapter.setEndpointConfig(address(1), p);
     }
 
     function testCrossListingTagDoesNotMintOther() public {

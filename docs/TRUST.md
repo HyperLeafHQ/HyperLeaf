@@ -72,7 +72,7 @@ Luna: operational security is the weak score, not “delete owner.” Owner is a
 
 | Role | Holds | Can | Cannot |
 | ---- | ----- | --- | ------ |
-| **Owner** (multisig) | LZ delegate, restore, unpause, caps, DVN config, `abortCredit`, rotate harvester/converter | Resume after halt. Rotate a burned keeper. Skip a stuck LZ nonce. | Replace an existing peer after `openBridge`. Change rate/retain after first deposit. `pullYield`. Worsen health (guardian). |
+| **Owner** (multisig) | LZ delegate, restore, unpause, **lower** caps, DVN config while closed, `abortCredit`, rotate harvester/converter | Resume after halt. Rotate a burned keeper. Skip a stuck LZ nonce. | Replace an existing peer (ever). Raise caps. Change rate/retain after first deposit. Replace a live Rewarder while supply > 0. `pullYield`. `setEndpointConfig` while the bridge is live. Worsen health (guardian). |
 | **Guardian** | pause, `closeBridge`, `setHealth` worse, `reportLedgerPrincipal` | Halt mint in minutes | Unpause, restore Normal, skip LZ, pull yield, change peers |
 | **Harvester / keeper** | `pullYield`, converter `execute` / `notify` / `returnToLockbox` | Move surplus that is already yield | Point `to` anywhere but the converter. Change peers. Unpause |
 | **Converter** | the contract, never an EOA | Hold inventory, minOut hops, halt pulls | Receive principal. Be the owner |

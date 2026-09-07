@@ -31,7 +31,6 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error CapExceeded();
     error InsufficientLocked();
     error CannotPullInner();
-    error ConfigFrozen();
 
     constructor(
         address token_,
@@ -57,6 +56,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function setDepositCap(uint256 cap) external onlyOwner {
+        if (depositCap != 0 && cap > depositCap) revert CapIncrease();
         depositCap = cap;
         emit CapUpdated(cap);
     }

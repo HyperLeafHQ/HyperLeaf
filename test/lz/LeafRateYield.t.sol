@@ -6,6 +6,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {PegReady} from "test/lz/PegReady.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
+import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -224,9 +225,9 @@ contract LeafRateYieldTest is PegReady {
     function testYieldConfigFrozenAfterDeposit() public {
         _mintLeaf(1e18);
         vm.startPrank(owner);
-        vm.expectRevert(LeafOFTAdapter.ConfigFrozen.selector);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
         adapter.setRetainRateYield(false);
-        vm.expectRevert(LeafOFTAdapter.ConfigFrozen.selector);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
         adapter.setRateKind(LeafYieldFee.RateKind.None);
         vm.stopPrank();
     }
