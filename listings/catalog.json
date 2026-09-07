@@ -79,7 +79,7 @@
       "yield": {
         "inner": "cbeth-rate",
         "pullInner": false,
-        "toHype": ["side-airdrops"]
+        "toHype": []
       },
       "source": "base",
       "sourceChainId": 8453,
@@ -88,7 +88,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Base Coinbase staked ETH. PoS sits in cbETH/ETH rate — never sell inner for HYPE. Redeem same cbETH. Ethereum-mainnet wstETH is a later separate listing.",
+      "note": "Base Coinbase staked ETH. Only ETH PoS, already in the cbETH/ETH rate. No side airdrops. Never sell inner for HYPE; no WHYPE claim in the common case. Redeem same cbETH. Ethereum-mainnet wstETH is a later separate listing.",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "testnet-ready",
       "priority": 2

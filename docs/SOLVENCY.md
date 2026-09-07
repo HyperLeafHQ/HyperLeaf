@@ -65,7 +65,7 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 
 ### hcbETH (next L)
 
-Same L invariant. Ceiling = Coinbase cbETH supply headroom. Yield stays in cbETH rate; do not pull inner as yield.
+Same L invariant. Ceiling = Coinbase cbETH supply headroom. Yield is **only** ETH PoS inside the cbETH/ETH rate. There are no side airdrops. Do not pull inner. Do not convert to WHYPE. Protocol 1% of extra = 0. Holders take PoS by redeeming the same cbETH.
 
 ### hKAITO (blocked on omnichain holder)
 

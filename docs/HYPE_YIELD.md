@@ -20,6 +20,7 @@ Harvester-only `pullYield`. Then swap + bridge + `LeafHypeRewarder.notify`.
 | --- | --- | --- | --- |
 | **hKAITO** | L, return sKAITO | Eco airdrop ERC-20s (allowlisted) | **sKAITO** — PoS is already in the ERC-4626 rate |
 | **hxSQUID** | L, return xSQUID | **QUID** | **xSQUID** |
+| **hcbETH** | L, return cbETH | **nothing** | **cbETH**. Only ETH PoS, already in the cbETH/ETH rate. No side airdrops. Do not `notify` WHYPE. Do not show 领取 HYPE. |
 | **BLUAI4Y** | C1, market only | Extra **BLUAI** (`pullInnerEnabled = true`, surplus only) | Principal (`totalLocked`) |
 | **hVIRTUALMAX** | C1 | Agent airdrops | Staked VIRTUAL (Auto Max-lock) |
 

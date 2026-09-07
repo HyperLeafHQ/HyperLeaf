@@ -71,6 +71,19 @@ English:
 
 Add the same line to the queued-state screen, or users will think they can abort the wait.
 
+## Claim HYPE is not on every ticker
+
+Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is a real extra token (QUID, residual HYPE). Empty `toHype` means the staking reward is **inside the receipt rate**.
+
+| Ticker | UI |
+| ------ | -- |
+| hxSQUID | 领取 WHYPE. Does not burn the Leaf. |
+| hcbETH, hgSOON, hsWBERA, Morpho shares | **No claim button.** Copy: 质押收益在收据汇率里。赎回同一份即带走。没有 HYPE 可领。协议抽不到这笔。 |
+
+Do not invent “偶发空投” for cbETH. Coinbase cbETH is ETH PoS in the rate, nothing else in the common case.
+
+If you show a disabled claim, the reason must be that sentence — not “暂无收益 / coming soon”.
+
 ## Risk labels (required on the surface)
 
 Show these where a holder can deposit or even just browse tickers. Do not bury them in GitHub.
