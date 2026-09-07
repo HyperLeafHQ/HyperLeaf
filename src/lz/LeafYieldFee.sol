@@ -23,12 +23,25 @@ abstract contract LeafYieldFee {
     /// @dev e.g. xSQUID `claimRewards(address,uint256)` = 0x9a99b4f0. Forced args: (this, max).
     bytes4 public rewardsSelector;
 
+    /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`).
+    ///      Surplus inner = free * (rate - lastRate) / rate. That slice is yield, not principal.
+    enum RateKind {
+        None,
+        ExchangeRate,
+        ConvertToAssets
+    }
+
+    RateKind public rateKind;
+    uint256 public lastRate;
+
     event ConvertModeSet(bool enabled);
     event HarvesterSet(address indexed harvester);
     event ConverterSet(address indexed converter);
     event ClaimTargetSet(address indexed target, bool allowed);
     event ClaimCallSet(address indexed target, bytes4 selector);
     event RewardsSelectorSet(bytes4 selector);
+    event RateFeedSet(RateKind kind, uint256 rate);
+    event RateYieldPulled(address indexed to, uint256 surplus, uint256 rate);
     event YieldPulled(address indexed token, address indexed to, uint256 amount);
     event FeeRecipientUpdated(address indexed recipient);
     event YieldHarvested(address indexed token, uint256 yieldAmount, uint256 fee);
@@ -40,7 +53,7 @@ abstract contract LeafYieldFee {
     error BadClaimSelector();
     error ClaimFailed();
     error ForbiddenRewardsSelector();
-
+    error BadRateFeed();
     error FeeRecipientZero();
 
     function _initFee(address recipient) internal {
@@ -174,10 +187,25 @@ abstract contract LeafYieldFee {
         returns (uint256)
     {
         if (shares == 0 || totalShares == 0) return 0;
-        if (convertYieldToHype) return shares;
+        if (convertYieldToHype && rateKind == RateKind.None) return shares;
         uint256 bal = token.balanceOf(address(this));
         uint256 free = bal > reserved ? bal - reserved : 0;
         return (shares * free) / totalShares;
+    }
+
+    /// @dev After a new deposit of `assets` is already in the box.
+    function _sharesForAssets(IERC20 token, uint256 assets, uint256 totalShares, uint256 reserved)
+        internal
+        view
+        returns (uint256)
+    {
+        if (assets == 0) return 0;
+        if (rateKind == RateKind.None || totalShares == 0) return assets;
+        uint256 bal = token.balanceOf(address(this));
+        uint256 free = bal > reserved ? bal - reserved : 0;
+        uint256 prev = free > assets ? free - assets : 0;
+        if (prev == 0) return assets;
+        return (assets * totalShares) / prev;
     }
 
     /// @dev Inner surplus = balance − reserved principal. Side tokens: full balance.
@@ -194,5 +222,64 @@ abstract contract LeafYieldFee {
         }
         token.safeTransfer(to, amt);
         emit YieldPulled(address(token), to, amt);
+    }
+
+    function _setRateKind(IERC20 token, RateKind kind) internal {
+        rateKind = kind;
+        if (kind == RateKind.None) {
+            lastRate = 0;
+            emit RateFeedSet(kind, 0);
+            return;
+        }
+        uint256 rate = _readRate(token);
+        lastRate = rate;
+        emit RateFeedSet(kind, rate);
+    }
+
+    function _readRate(IERC20 token) internal view returns (uint256 rate) {
+        if (rateKind == RateKind.ExchangeRate) {
+            (bool ok, bytes memory ret) = address(token).staticcall(abi.encodeWithSignature("exchangeRate()"));
+            if (!ok || ret.length < 32) revert BadRateFeed();
+            rate = abi.decode(ret, (uint256));
+        } else if (rateKind == RateKind.ConvertToAssets) {
+            (bool ok, bytes memory ret) =
+                address(token).staticcall(abi.encodeWithSignature("convertToAssets(uint256)", uint256(1e18)));
+            if (!ok || ret.length < 32) revert BadRateFeed();
+            rate = abi.decode(ret, (uint256));
+        }
+        if (rate == 0) revert BadRateFeed();
+    }
+
+    function _rateSurplus(IERC20 token, uint256 reserved) internal view returns (uint256 surplus, uint256 rate) {
+        if (rateKind == RateKind.None) return (0, 0);
+        rate = _readRate(token);
+        if (lastRate == 0 || rate <= lastRate) return (0, rate);
+        uint256 bal = token.balanceOf(address(this));
+        uint256 free = bal > reserved ? bal - reserved : 0;
+        surplus = free - (free * lastRate) / rate;
+    }
+
+    /// @dev Pull only the rate-implied surplus. Principal stays. Slash lowers the watermark.
+    ///      100% of surplus goes to `to` (converter). The 1% protocol take is WHYPE at notify.
+    function _tryPullRateYield(IERC20 token, uint256 reserved, address to) internal returns (uint256 surplus) {
+        if (rateKind == RateKind.None || !convertYieldToHype || to == address(0)) return 0;
+        uint256 rate = _readRate(token);
+        if (lastRate == 0) {
+            lastRate = rate;
+            return 0;
+        }
+        if (rate < lastRate) {
+            lastRate = rate;
+            return 0;
+        }
+        if (rate == lastRate) return 0;
+        uint256 bal = token.balanceOf(address(this));
+        uint256 free = bal > reserved ? bal - reserved : 0;
+        surplus = free - (free * lastRate) / rate;
+        lastRate = rate;
+        if (surplus == 0) return 0;
+        token.safeTransfer(to, surplus);
+        lastAccounted = free - surplus;
+        emit RateYieldPulled(to, surplus, rate);
     }
 }

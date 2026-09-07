@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Script, console2} from "forge-std/Script.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockClaimInner} from "test/mocks/MockClaimInner.sol";
+import {MockRateERC20} from "test/mocks/MockRateERC20.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
@@ -49,6 +50,10 @@ contract DeployTestnetSource is Script {
                 mock.mint(owner, 1_000_000 ether);
                 inner = address(mock);
                 console2.log("MockQUID", address(quid));
+            } else if (keccak256(bytes(id)) == keccak256("hcbeth")) {
+                MockRateERC20 mock = new MockRateERC20(a.innerSymbol, a.innerSymbol);
+                mock.mint(owner, 1_000_000 ether);
+                inner = address(mock);
             } else {
                 MockERC20 mock = new MockERC20(a.innerSymbol, a.innerSymbol);
                 mock.mint(owner, 1_000_000 ether);

@@ -20,13 +20,40 @@ Harvester-only `pullYield`. Then swap + bridge + `LeafHypeRewarder.notify`.
 | --- | --- | --- | --- |
 | **hKAITO** | L, return sKAITO | Eco airdrop ERC-20s (allowlisted) | **sKAITO** — PoS is already in the ERC-4626 rate |
 | **hxSQUID** | L, return xSQUID | **QUID** | **xSQUID** |
-| **hcbETH** | L, return cbETH | **nothing** | **cbETH**. Only ETH PoS, already in the cbETH/ETH rate. No side airdrops. Do not `notify` WHYPE. Do not show 领取 HYPE. |
+| **hcbETH** | L, shares of remaining cbETH | **Rate surplus only** (`exchangeRate` × dRate / rate) | Principal. Coinbase unwrap. More than surplus |
 | **BLUAI4Y** | C1, market only | Extra **BLUAI** (`pullInnerEnabled = true`, surplus only) | Principal (`totalLocked`) |
 | **hVIRTUALMAX** | C1 | Agent airdrops | Staked VIRTUAL (Auto Max-lock) |
 
-`pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner`. C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked`.
+`pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner` unless a **rate feed** is set. Then only the rate-implied surplus may leave (`setRateKind(ExchangeRate)` for cbETH, `ConvertToAssets` for 4626). C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked` (C1) or `free * (rate - lastRate) / rate` (rate L).
 
-1% protocol / 99% holders happens on HyperEVM at `notify`, not on the source swap.
+1% protocol / 99% holders happens on HyperEVM at `notify`, not on the source swap. Rate surplus is sold to WHYPE first; `notify` then splits. Redeem after harvest is pro-rata remaining inner, not 1 token = 1 token.
+
+## Rate-bearing (hcbETH) — where the 1% comes from
+
+cbETH does not mint extra tokens. ETH PoS lives in Coinbase `exchangeRate()`. There is no airdrop to claim. The only honest take of depositor yield is to sell the **rate-implied surplus**:
+
+```
+surplus = free − free × lastRate / rate
+```
+
+Example: deposit 100 cbETH at rate 1.00. Later rate 1.10.
+
+| | cbETH | ETH value |
+| --- | ---: | ---: |
+| Locked | 100 | 110 |
+| Surplus pulled (`100 − 100/1.10`) | 9.0909 | 10 (the yield) |
+| Stays in the box | 90.9091 | 100 (principal) |
+
+Converter sells 9.0909 cbETH → WHYPE. `LeafHypeRewarder.notify`:
+
+- protocol **1%** of that WHYPE
+- holders **99%**, claimable, does not burn the Leaf
+
+Redeem 100 hcbETH → **90.9091 cbETH** (still ~100 ETH) plus the HYPE they claimed. 1 hcbETH ≠ 1 cbETH after harvest. The 1% is of **yield**, never of the deposit.
+
+Slash (`rate < lastRate`): watermark drops, pull 0. Later deposits mint at NAV (`_sharesForAssets`).
+
+xSQUID is the other class: QUID is a different ERC-20, so redeem stays 1 xSQUID = 1 xSQUID. Same 99/1 after the QUID is sold.
 
 ## Routes (keeper)
 

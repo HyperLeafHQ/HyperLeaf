@@ -78,8 +78,9 @@
       "innerToken": "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
       "yield": {
         "inner": "cbeth-rate",
-        "pullInner": false,
-        "toHype": []
+        "pullInner": "rate-surplus",
+        "toHype": ["rate-surplus-cbETH"],
+        "rateKind": "exchangeRate"
       },
       "source": "base",
       "sourceChainId": 8453,
@@ -88,7 +89,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Base Coinbase staked ETH. Only ETH PoS, already in the cbETH/ETH rate. No side airdrops. Never sell inner for HYPE; no WHYPE claim in the common case. Redeem same cbETH. Ethereum-mainnet wstETH is a later separate listing.",
+      "note": "Base Coinbase staked ETH. Only ETH PoS, in exchangeRate(). Harvest sells the rate surplus (inner * dRate / rate) to WHYPE; 99% holders / 1% protocol. Principal stays. Redeem is pro-rata remaining cbETH, not 1:1 after harvest. Never Coinbase unwrap. Never pull more than surplus. Ethereum-mainnet wstETH is a later separate listing.",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "testnet-ready",
       "priority": 2

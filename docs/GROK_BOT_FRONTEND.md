@@ -73,16 +73,15 @@ Add the same line to the queued-state screen, or users will think they can abort
 
 ## Claim HYPE is not on every ticker
 
-Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is a real extra token (QUID, residual HYPE). Empty `toHype` means the staking reward is **inside the receipt rate**.
+Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty.
 
 | Ticker | UI |
 | ------ | -- |
-| hxSQUID | 领取 WHYPE. Does not burn the Leaf. |
-| hcbETH, hgSOON, hsWBERA, Morpho shares | **No claim button.** Copy: 质押收益在收据汇率里。赎回同一份即带走。没有 HYPE 可领。协议抽不到这笔。 |
+| hxSQUID | 领取 WHYPE. Does not burn the Leaf. Extra QUID, not the xSQUID. |
+| hcbETH | 领取 WHYPE. PoS is **sold as rate surplus**. Redeem is 金库按份额能付的 cbETH, **not** 1:1 after harvest. Copy: 质押收益按官方汇率卖掉，99% 打成 HYPE 给你领，1% 归协议。赎回拿回的是剩下的收据，不是当初那一枚。 |
+| hgSOON, hsWBERA, Morpho shares | Same as hcbETH once `rateKind` is on. Until then, no claim button. |
 
-Do not invent “偶发空投” for cbETH. Coinbase cbETH is ETH PoS in the rate, nothing else in the common case.
-
-If you show a disabled claim, the reason must be that sentence — not “暂无收益 / coming soon”.
+Do not invent “偶发空投” for cbETH. Do not say 1 hcbETH always unwraps 1 cbETH after a harvest.
 
 ## Risk labels (required on the surface)
 

@@ -1,8 +1,10 @@
 # Wrap kinds
 
+`L` / `C1` / `C2` stay on GitHub. Public UI copy: `docs/GROK_BOT_FRONTEND.md`.
+
 Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
 
-**Frontend bot:** these kind letters are GitHub-only. User UI copy, risk labels, and “we do not guarantee a book” are in [`GROK_BOT_FRONTEND.md`](GROK_BOT_FRONTEND.md). Do not print `L` / `C1` / `C2` on hyperleaf.finance.
+**Rate-bearing L (hcbETH, later 4626 receipts):** yield is not a side token. `setRateKind` + `pullYield(inner)` sells only `free * (rate - lastRate) / rate`. 99/1 at `notify`. Redeem is remaining inner / shares. Not 1:1 after harvest. xSQUID stays 1:1 because QUID is a different ERC-20.
 
 HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset, keep the extra income of the source position.
 
@@ -21,8 +23,8 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 **HYPE convert** (`docs/HYPE_YIELD.md`):
 
 1. Anyone: `LeafCallRewardSource.harvest(lockbox)` — claim into the lockbox, pay gas, no swap.
-2. Keeper weekly: `pullYield` QUID / extra BLUAI / airdrops → WHYPE → `notify` 1%/99%.
-3. L never `pullYield` sKAITO or xSQUID. C1 BLUAI4Y may pull extra inner BLUAI only.
+2. Keeper weekly: `pullYield` QUID / extra BLUAI / airdrops / **cbETH rate surplus** → WHYPE → `notify` 1%/99%.
+3. L never `pullYield` sKAITO or xSQUID. C1 BLUAI4Y may pull extra inner BLUAI only. Rate L may pull **only** the `exchangeRate` / `convertToAssets` surplus.
 
 
 

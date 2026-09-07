@@ -71,7 +71,7 @@ HyperEVM Leaf ticker
 
 HyperLeaf does not run a 24h mint relayer. Listings do not share backing. The bridge starts **closed**. Caps, a listing tag on every message, a cash check on redeem, and a **health / inner-supply ceiling** (do not mint because a token contract printed) are in the contracts — see [`docs/PEG.md`](docs/PEG.md), [`docs/TRUST.md`](docs/TRUST.md), [`docs/SOLVENCY.md`](docs/SOLVENCY.md).
 
-**Yield, in HYPE.** Surplus on the source (claimed QUID, extra farm tokens, airdrop ERC-20s) is converted to WHYPE. 99% is claimable by Leaf holders. 1% is protocol revenue. The inner receipt that backs the ticker is never pulled as “yield.”
+**Yield, in HYPE.** Side tokens (QUID, extra farm, airdrops) convert to WHYPE. Rate-bearing receipts (cbETH) sell only the official `exchangeRate` surplus — that slice is yield, not principal. 99% is claimable by Leaf holders. 1% is protocol revenue, taken at `notify` in WHYPE. Side-token listings stay 1:1 on redeem. After a rate harvest, redeem is remaining inner, not 1 token = 1 token.
 
 **hNEST** is native: NEST stays on HyperEVM, attaches Nest HEV, issues hNEST. It is capped. Compound of extra NEST is not live. Withdrawals follow Nest/HEV windows, not instant 1:1.
 
@@ -92,7 +92,7 @@ One listing at a time. Empty books and mixed exits do not help the ecosystem. Wr
 | --- | --- | --- | --- | --- |
 | Live | **hNEST** | Native | HyperEVM | NEST / veNEST as a HyperEVM ERC-20 |
 | Next | **hxSQUID** | L | Base | Trade xSQUID here; QUID surplus → HYPE |
-| Then | **hcbETH** | L | Base | ETH PoS in the cbETH rate only. No HYPE claim. Do not pull inner |
+| Then | **hcbETH** | L | Base | ETH PoS harvested as rate surplus → HYPE 99/1. Redeem remaining cbETH, not 1:1 after harvest |
 | Same L adapter | **hgSOON**, **hAVNT**, **hsWBERA**, **hsETHFI** | L | BSC / Base / Bera / Ethereum | gSOON, stkAVNT, sWBERA, sETHFI. Instant unwrap of the receipt. Never cooldown / DelayedWithdraw |
 | Morpho vaults | **hsteakUSDC**, **hsteakUSDG** | L | Base / Robinhood | Wrap the ERC-4626 **share**. Never deposit/redeem USDC/USDG. Never Morpho Blue positions |
 | Later C1 | **hORDER**, hB3, PTSMAX | C1 | Arb+Base / Base / BSC | Address-keyed farm or NFT. Market exit until `shareExit` |

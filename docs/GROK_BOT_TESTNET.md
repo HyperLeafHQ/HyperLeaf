@@ -63,6 +63,7 @@ forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
 ```
 
 Sets `convertYieldToHype`, harvester, converter. hxSQUID also sets `rewardsSelector` `0x9a99b4f0`.
+hcbETH: script also `setRateKind(ExchangeRate)`. Mock inner is `MockRateERC20` with `exchangeRate()`. To smoke harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield(inner, converter)` — only surplus leaves.
 
 ## 4b. Peg (both sides) — required before smoke
 
@@ -98,18 +99,20 @@ forge script script/lz/SmokeTestnetRedeem.s.sol:SmokeTestnetRedeem \
 
 Wait. `INNER.balanceOf(OWNER)` on Base should rise.
 
+hcbETH after a rate harvest: inner returned is **remaining**, not the minted amount. Do not assert 1:1.
+
 C1 (`bluai4y`) step 6 **must revert** `ExitViaMarketOnly`. Do bluai4y only after both L paths pass.
 
 ---
 
 ## Pass / fail
 
-| Check | hxsquid / hcbeth | bluai4y |
-| --- | --- | --- |
-| Deposit mints dest ticker | yes | yes |
-| Burn dest returns inner | yes | **no** |
-| `pullYield(inner)` | revert | surplus BLUAI ok |
-| pokeRewards on mock xSQUID | mints 1 mock QUID to lockbox | n/a |
+| Check | hxsquid | hcbeth | bluai4y |
+| --- | --- | --- | --- |
+| Deposit mints dest ticker | yes | yes | yes |
+| Burn dest returns inner | 1:1 xSQUID | remaining cbETH (not 1:1 after harvest) | **no** |
+| `pullYield(inner)` | revert `CannotPullInner` | rate surplus only | surplus BLUAI ok |
+| pokeRewards on mock xSQUID | mints 1 mock QUID to lockbox | n/a | n/a |
 
 Log every address in the PR. Tiny caps. Then repeat 1–6 with `ASSET=hcbeth`.
 

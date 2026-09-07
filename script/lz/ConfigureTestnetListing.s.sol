@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
+import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 
 /// @notice Source-chain owner ops after DeployTestnetSource + WirePeers.
@@ -27,6 +28,9 @@ contract ConfigureTestnetListing is Script {
         box.setConverter(converter);
         if (keccak256(bytes(a.id)) == keccak256("hxsquid")) {
             box.setRewardsSelector(QUID_REWARDS);
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hcbeth")) {
+            box.setRateKind(LeafYieldFee.RateKind.ExchangeRate);
         }
         vm.stopBroadcast();
 

@@ -65,7 +65,7 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 
 ### hcbETH (next L)
 
-Same L invariant. Ceiling = Coinbase cbETH supply headroom. Yield is **only** ETH PoS inside the cbETH/ETH rate. There are no side airdrops. Do not pull inner. Do not convert to WHYPE. Protocol 1% of extra = 0. Holders take PoS by redeeming the same cbETH.
+Same L invariant on **shares**, not 1 hcbETH = 1 cbETH after harvest. Ceiling = Coinbase cbETH supply headroom. Yield is ETH PoS inside `exchangeRate()`. Harvest pulls only `free * (rate - lastRate) / rate` inner to the converter → WHYPE → `notify` 99/1. Slash lowers `lastRate`, pulls nothing. Redeem pays remaining cbETH pro-rata (`_assetsForShares`). Later deposits mint at NAV. Never Coinbase unwrap. Never pull more than surplus.
 
 ### hKAITO (blocked on omnichain holder)
 
