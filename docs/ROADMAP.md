@@ -16,7 +16,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
 | later | **hORDER** | C1 | Arb/Base OFT CREATE2 | Address-keyed lockbox in code. esORDER claim +7d |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
-| later | hsWBERA | L | Berachain | Wait LZ |
+| later | hsWBERA | L | Berachain | LZ live eid 30362. SOLVENCY empty. Never 7d unbond |
 | later | hAEVO | C1 | Ethereum | No transferable receipt |
 | later | hJupSOL / hANSEM | L | Solana | Needs Solana lockbox |
 | later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |

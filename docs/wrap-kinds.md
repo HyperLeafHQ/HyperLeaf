@@ -30,7 +30,7 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 1. **hxSQUID** (L, Base)
 2. **hcbETH** (L, Base)
 3. **hveAERO** (ve-NFT, Base — later)
-4. **hsWBERA** (L, Berachain — LZ)
+4. **hsWBERA** (L, Berachain — LZ eid 30362 live, SOLVENCY empty)
 5. **hAEVO** (C1, Ethereum)
 6. **hJupSOL** (L, Solana)
 7. **hANSEM** (L, Solana, ansem.io)

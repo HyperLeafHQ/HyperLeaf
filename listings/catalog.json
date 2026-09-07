@@ -307,11 +307,13 @@
       "innerSymbol": "sWBERA",
       "innerToken": "0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a",
       "source": "berachain",
+      "sourceChainId": 80094,
+      "sourceEid": 30362,
       "exit": "instant-receipt",
-      "infra": "pending-lz",
+      "infra": "evm",
       "yield": { "inner": "erc4626-rate", "pullInner": false, "toHype": [] },
-      "note": "Official PoL vault, rate grows in WBERA. 7d unbond exists — we never call it; redeem sWBERA. Wait LayerZero Berachain.",
-      "status": "later",
+      "note": "Official PoL vault, rate in WBERA. Wrap sWBERA 0x118D… only. Never 7d unbond. LZ is live: eid 30362, EndpointV2 0x6F475642… (not the 0x1a44… CREATE2). SOLVENCY row still empty.",
+      "status": "research",
       "priority": 6
     },
     {

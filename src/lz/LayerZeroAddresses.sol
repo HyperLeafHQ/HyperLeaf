@@ -13,6 +13,7 @@ library LayerZeroAddresses {
     uint32 internal constant EID_ARB = 30110;
     uint32 internal constant EID_OP = 30111;
     uint32 internal constant EID_ORDERLY = 30213;
+    uint32 internal constant EID_BERA = 30362;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
     uint32 internal constant EID_BSC_TESTNET = 40102;
@@ -30,6 +31,8 @@ library LayerZeroAddresses {
 
     /// @dev Same canonical V2 endpoint as most EVMs including BSC.
     address internal constant ENDPOINT_BSC = 0x1a44076050125825900e736c501f859c50fE728c;
+    /// @dev Berachain is NOT the canonical 0x1a44… CREATE2. Confirmed bytecode on 80094.
+    address internal constant ENDPOINT_BERA = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
 
     address internal constant ENDPOINT_BASE_SEPOLIA = 0x6EDCE65403992e310A62460808c4b910D972f10f;
     address internal constant ENDPOINT_HYPEREVM_TESTNET = 0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1;
@@ -45,6 +48,7 @@ library LayerZeroAddresses {
         if (chainId == 56) return ENDPOINT_BSC;
         if (chainId == 97) return ENDPOINT_BSC_TESTNET;
         if (chainId == 42161 || chainId == 10) return ENDPOINT_BSC; // canonical V2, same as Base
+        if (chainId == 80094) return ENDPOINT_BERA;
         if (chainId == 999) return ENDPOINT_HYPEREVM;
         if (chainId == 998) return ENDPOINT_HYPEREVM_TESTNET;
         revert("lz: no endpoint");
