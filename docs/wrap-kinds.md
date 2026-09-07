@@ -4,7 +4,9 @@
 
 Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
 
-**Rate-bearing L (hcbETH; 4626 only if the SOLVENCY row opts in):** yield is not a side token. `setRateKind` + harvester `pullYield(inner)` sells only `(lastAccounted * (rate - lastRate)) / rate`. Donations are not yield. 99/1 at `notify`. Redeem is remaining inner / shares. Not 1:1 after harvest. Wrap/redeem do not talk to the converter. xSQUID stays 1:1 because QUID is a different ERC-20. hgSOON / hsWBERA / Morpho default to yield-in-share — do not set `rateKind` unless the row says so.
+**Rate-bearing L (hcbETH):** `setRateKind` + `setRetainRateYield(true)`. Harvest pulls **1% of** `(lastAccounted * (rate - lastRate)) / rate` to the converter (protocol fee → HYPE). **99% stays in the lockbox.** Redeem is remaining inner / shares. LP and lending keep the ETH-value of that remaining cbETH. Do not sell the whole surplus to WHYPE. Donations are not yield. Wrap/redeem do not talk to the converter.
+
+xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). hgSOON / hsWBERA / Morpho default to yield-in-share — do not set `rateKind` unless the row says so.
 
 
 HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset, keep the extra income of the source position.
@@ -24,7 +26,7 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 **HYPE convert** (`docs/HYPE_YIELD.md`):
 
 1. Anyone: `LeafCallRewardSource.harvest(lockbox)` — claim into the lockbox, pay gas, no swap.
-2. Keeper weekly: `pullYield` QUID / extra BLUAI / airdrops / **cbETH rate surplus** → WHYPE → `notify` 1%/99%.
+2. Keeper weekly: `pullYield` QUID / extra BLUAI / airdrops → WHYPE → `notify` 1%/99%. **cbETH:** pull **1% of rate surplus** only; 99% stays in the box.
 3. L never `pullYield` sKAITO or xSQUID. C1 BLUAI4Y may pull extra inner BLUAI only. Rate L may pull **only** the `exchangeRate` / `convertToAssets` surplus.
 
 

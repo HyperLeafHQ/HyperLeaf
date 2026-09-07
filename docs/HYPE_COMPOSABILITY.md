@@ -44,9 +44,15 @@ Three models:
   splits). Wallet UX becomes “wrap then stake” or auto-stake on mint with
   unstake-on-transfer — which is A again for people who don’t stake.
 
-Until D or a gauge ships: **say 99% is allocated, not received.** Do not
+Until D or a gauge ships for **side-token** listings: **say 99% is allocated, not received.** Do not
 print wallet APR = 99% × harvested / supply. Do not ship “做 LP 也能领
 HYPE”. Trap is `testPairShareStaysUnclaimed`.
+
+**Rate-bearing listings are not this problem.** `hcbETH` now uses
+`retainRateYield`: 99% stays in cbETH, so an AMM pair of hcbETH keeps the
+ETH value. That is the Lido/wstETH lesson (`docs/YIELD_OWNERSHIP.md`).
+Do not turn hxSQUID into that without buying xSQUID with QUID.
+
 
 Do **not** recover trapped WHYPE from `code.length > 0` addresses: that
 steals from Safes and from any pool that later integrates `claim`.

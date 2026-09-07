@@ -36,6 +36,10 @@ abstract contract LeafYieldFee {
     uint256 public lastRate;
     /// @dev Identified rate yield, not yet pulled. Not principal. Not a donation.
     uint256 public accruedRateYield;
+    /// @dev true = wstETH-style: 99% of rate surplus stays in the box (NAV in inner).
+    ///      Only 1% is pulled to the converter (protocol fee → HYPE).
+    ///      false = sell the whole surplus to WHYPE and split 99/1 at notify.
+    bool public retainRateYield;
 
     event ConvertModeSet(bool enabled);
     event HarvesterSet(address indexed harvester);
@@ -46,6 +50,7 @@ abstract contract LeafYieldFee {
     event RateFeedSet(RateKind kind, uint256 rate);
     event RateYieldAccrued(uint256 added, uint256 accrued, uint256 rate);
     event RateYieldPulled(address indexed to, uint256 surplus, uint256 rate);
+    event RetainRateYieldSet(bool retain);
     event YieldPulled(address indexed token, address indexed to, uint256 amount);
     event FeeRecipientUpdated(address indexed recipient);
     event YieldHarvested(address indexed token, uint256 yieldAmount, uint256 fee);
@@ -190,7 +195,7 @@ abstract contract LeafYieldFee {
     function _backingInner(IERC20 token, uint256 reserved) internal view returns (uint256) {
         uint256 bal = token.balanceOf(address(this));
         uint256 free = bal > reserved ? bal - reserved : 0;
-        if (rateKind == RateKind.None || !convertYieldToHype) return free;
+        if (rateKind == RateKind.None || !convertYieldToHype || retainRateYield) return free;
         if (accruedRateYield >= free) return 0;
         return free - accruedRateYield;
     }
@@ -204,7 +209,7 @@ abstract contract LeafYieldFee {
         uint256 bal = token.balanceOf(address(this));
         uint256 free = bal > reserved ? bal - reserved : 0;
         if (convertYieldToHype && rateKind == RateKind.None) return shares;
-        if (rateKind != RateKind.None && convertYieldToHype) {
+        if (rateKind != RateKind.None && convertYieldToHype && !retainRateYield) {
             // Last exit: pay everything left, including unharvested yield in kind.
             if (shares == totalShares) return free;
             uint256 backing = _backingInner(token, reserved);
@@ -241,6 +246,11 @@ abstract contract LeafYieldFee {
         }
         token.safeTransfer(to, amt);
         emit YieldPulled(address(token), to, amt);
+    }
+
+    function _setRetainRateYield(bool retain) internal {
+        retainRateYield = retain;
+        emit RetainRateYieldSet(retain);
     }
 
     function _setRateKind(IERC20 token, RateKind kind) internal {
@@ -287,7 +297,14 @@ abstract contract LeafYieldFee {
     /// @dev Move rate delta on `lastAccounted` into `accruedRateYield`. No transfer.
     ///      Slash lowers the watermark and pulls nothing. Donations never enter lastAccounted.
     function _accrueRateYield(IERC20 token) internal {
-        if (rateKind == RateKind.None || !convertYieldToHype) return;
+        if (rateKind == RateKind.None) return;
+        if (retainRateYield) {
+            // Yield stays in the receipt. Only slash the watermark here.
+            uint256 r = _readRate(token);
+            if (lastRate == 0 || r < lastRate) lastRate = r;
+            return;
+        }
+        if (!convertYieldToHype) return;
         uint256 rate = _readRate(token);
         if (lastRate == 0) {
             lastRate = rate;
@@ -305,10 +322,35 @@ abstract contract LeafYieldFee {
         emit RateYieldAccrued(add, accruedRateYield, rate);
     }
 
-    /// @dev Pull identified surplus only. Principal (`lastAccounted`) stays.
-    ///      100% of surplus goes to `to` (converter). The 1% is WHYPE at notify.
+    /// @dev retain: pull 1% of surplus (protocol). 99% stays, so LP/lend keep the yield.
+    ///      sell-all: pull 100% of surplus to converter; 99/1 is WHYPE at notify.
     function _tryPullRateYield(IERC20 token, uint256 reserved, address to) internal returns (uint256 surplus) {
-        if (rateKind == RateKind.None || !convertYieldToHype || to == address(0)) return 0;
+        if (rateKind == RateKind.None || to == address(0)) return 0;
+        if (retainRateYield) {
+            uint256 rate = _readRate(token);
+            if (lastRate == 0) {
+                lastRate = rate;
+                return 0;
+            }
+            if (rate < lastRate) {
+                lastRate = rate;
+                return 0;
+            }
+            uint256 add = (lastAccounted * (rate - lastRate)) / rate;
+            lastRate = rate;
+            uint256 fee = (add * YIELD_FEE_BPS) / BPS_DENOMINATOR;
+            if (fee == 0) return 0;
+            uint256 bal_ = token.balanceOf(address(this));
+            uint256 free_ = bal_ > reserved ? bal_ - reserved : 0;
+            if (fee > free_) fee = free_;
+            if (fee == 0) return 0;
+            if (fee > lastAccounted) fee = lastAccounted;
+            lastAccounted -= fee;
+            token.safeTransfer(to, fee);
+            emit RateYieldPulled(to, fee, lastRate);
+            return fee;
+        }
+        if (!convertYieldToHype) return 0;
         _accrueRateYield(token);
         surplus = accruedRateYield;
         if (surplus == 0) return 0;
@@ -321,6 +363,7 @@ abstract contract LeafYieldFee {
         token.safeTransfer(to, surplus);
         emit RateYieldPulled(to, surplus, lastRate);
     }
+
 
     function _reducePrincipal(uint256 shares, uint256 totalShares) internal {
         if (shares == 0 || totalShares == 0) return;

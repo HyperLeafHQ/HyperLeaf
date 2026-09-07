@@ -78,9 +78,11 @@
       "innerToken": "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
       "yield": {
         "inner": "cbeth-rate",
-        "pullInner": "rate-surplus",
-        "toHype": ["rate-surplus-cbETH"],
-        "rateKind": "exchangeRate"
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "exchangeRate",
+        "retainRateYield": true
       },
       "source": "base",
       "sourceChainId": 8453,
@@ -89,7 +91,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Base Coinbase staked ETH. Only ETH PoS, in exchangeRate(). Harvest sells the rate surplus (inner * dRate / rate) to WHYPE; 99% holders / 1% protocol. Principal stays. Redeem is pro-rata remaining cbETH, not 1:1 after harvest. Never Coinbase unwrap. Never pull more than surplus. Ethereum-mainnet wstETH is a later separate listing.",
+      "note": "Base Coinbase staked ETH. Only ETH PoS, in exchangeRate(). retainRateYield: harvest pulls 1% of (inner * dRate / rate) to converter as protocol fee; 99% stays so LP/lend keep the ETH value. Holders do not claim WHYPE. Never Coinbase unwrap. Never pull more than the 1% skim. Ethereum-mainnet wstETH is a later separate listing.",
       "testnet": { "sourceChain": "base-sepolia", "mockInner": true },
       "status": "testnet-ready",
       "priority": 2

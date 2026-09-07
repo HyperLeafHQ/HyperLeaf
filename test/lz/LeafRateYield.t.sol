@@ -67,6 +67,7 @@ contract LeafRateYieldTest is PegReady {
         adapter.setPeer(DST, address(oft));
         oft.setPeer(SRC, address(adapter));
         adapter.setRateKind(LeafYieldFee.RateKind.ExchangeRate);
+        adapter.setRetainRateYield(true);
         adapter.setConvertYieldToHype(true);
         adapter.setConverter(converter);
         adapter.setHarvester(owner);
@@ -111,6 +112,10 @@ contract LeafRateYieldTest is PegReady {
         adapter.lzReceive(oOut, bytes32(uint256(nonce)), payload, address(0), "");
     }
 
+    function _fee(uint256 surplus) internal pure returns (uint256) {
+        return (surplus * 100) / 10_000;
+    }
+
     function testRateSurplusGoesToConverterNotPrincipal() public {
         _mintLeaf(100e18);
         assertEq(adapter.totalLocked(), 100e18);
@@ -118,8 +123,9 @@ contract LeafRateYieldTest is PegReady {
         vm.prank(owner);
         adapter.pullYield(inner, converter);
         uint256 surplus = _surplus(100e18, 1e18, 11e17);
-        assertEq(inner.balanceOf(converter), surplus);
-        assertEq(inner.balanceOf(address(adapter)), 100e18 - surplus);
+        uint256 fee = _fee(surplus);
+        assertEq(inner.balanceOf(converter), fee);
+        assertEq(inner.balanceOf(address(adapter)), 100e18 - fee);
         assertEq(adapter.totalLocked(), 100e18);
         vm.prank(owner);
         vm.expectRevert(LeafYieldFee.NoYield.selector);
@@ -136,6 +142,8 @@ contract LeafRateYieldTest is PegReady {
         assertEq(inner.balanceOf(user), 200e18 - 100e18 + remaining);
         assertEq(oft.totalSupply(), 0);
         assertEq(inner.balanceOf(address(adapter)), 0);
+        // 99% of the rate surplus stayed in remaining cbETH (ETH value rose).
+        assertGt(remaining, 99e18);
     }
 
     function testLaterDepositMintsAtNav() public {
@@ -170,14 +178,13 @@ contract LeafRateYieldTest is PegReady {
         inner.setRate(11e17);
         uint256 shares2 = _mintLeaf(10e18);
         assertEq(inner.balanceOf(converter), 0);
-        uint256 expect = _surplus(100e18, 1e18, 11e17);
-        assertEq(adapter.accruedRateYield(), expect);
-        // New deposit at current rate: same NAV as if we had harvested first.
-        uint256 remainingPrincipal = 100e18 - expect;
-        assertEq(shares2, (10e18 * 100e18) / remainingPrincipal);
+        assertEq(adapter.accruedRateYield(), 0);
+        // Retain: cbETH quantity NAV is still ~1:1 until the 1% skim.
+        assertEq(shares2, 10e18);
         vm.prank(owner);
         adapter.pullYield(inner, converter);
-        assertEq(inner.balanceOf(converter), expect);
+        uint256 surplus = _surplus(110e18, 1e18, 11e17);
+        assertEq(inner.balanceOf(converter), _fee(surplus));
     }
 
     function testDonationIsNotYield() public {
@@ -193,10 +200,11 @@ contract LeafRateYieldTest is PegReady {
         vm.prank(owner);
         adapter.pullYield(inner, converter);
         uint256 surplus = _surplus(100e18, 1e18, 11e17);
-        assertEq(inner.balanceOf(converter), surplus);
+        uint256 fee = _fee(surplus);
+        assertEq(inner.balanceOf(converter), fee);
         // Donation remains as extra backing, not converted.
-        assertEq(inner.balanceOf(address(adapter)), 200e18 - surplus);
-        assertEq(adapter.lastAccounted(), 100e18 - surplus);
+        assertEq(inner.balanceOf(address(adapter)), 200e18 - fee);
+        assertEq(adapter.lastAccounted(), 100e18 - fee);
     }
 
     function testRoundingFloorsSurplus() public {
@@ -205,13 +213,24 @@ contract LeafRateYieldTest is PegReady {
         uint256 accounted = adapter.lastAccounted();
         uint256 add = _surplus(accounted, 1e18, 11e17);
         assertGe(add, 0);
-        // surplus * rate <= accounted * (rate - lastRate)  (floor)
         assertLe(add * uint256(11e17), accounted * (uint256(11e17) - uint256(1e18)));
         vm.prank(owner);
         adapter.pullYield(inner, converter);
-        assertEq(inner.balanceOf(converter), add);
-        // Dust stays principal.
-        assertEq(adapter.lastAccounted() + add, 100e18);
+        uint256 fee = _fee(add);
+        assertEq(inner.balanceOf(converter), fee);
+        assertEq(adapter.lastAccounted() + fee, 100e18);
+    }
+
+    function testSellAllStillWorksWhenRetainOff() public {
+        vm.prank(owner);
+        adapter.setRetainRateYield(false);
+        _mintLeaf(100e18);
+        inner.setRate(11e17);
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        uint256 surplus = _surplus(100e18, 1e18, 11e17);
+        assertEq(inner.balanceOf(converter), surplus);
+        assertEq(inner.balanceOf(address(adapter)), 100e18 - surplus);
     }
 
     function testRateFuzzHighWaterMark(uint256 r1, uint256 r2, uint256 r3, uint256 r4) public {
@@ -233,23 +252,26 @@ contract LeafRateYieldTest is PegReady {
                 continue;
             }
             uint256 add = _surplus(accounted, last, rates[i]);
+            uint256 fee = _fee(add);
             vm.prank(owner);
-            if (add == 0 && rates[i] == last) {
-                vm.expectRevert(LeafYieldFee.NoYield.selector);
+            if (fee == 0) {
+                if (rates[i] == last) {
+                    vm.expectRevert(LeafYieldFee.NoYield.selector);
+                }
                 adapter.pullYield(inner, converter);
+                last = rates[i];
             } else {
                 adapter.pullYield(inner, converter);
-                harvested += add;
-                accounted -= add;
+                harvested += fee;
+                accounted -= fee;
                 last = rates[i];
             }
         }
         assertEq(adapter.lastAccounted(), accounted);
         assertEq(inner.balanceOf(converter), harvested);
         assertEq(inner.balanceOf(address(adapter)), 100e18 - harvested);
-        // Remaining principal in ETH terms never exceeds the high-water ETH of the
-        // surviving principal after slashes. Harvested cbETH is never more than deposited.
         assertLe(harvested, 100e18);
         assertLe(accounted, 100e18);
     }
 }
+

@@ -26,15 +26,18 @@ Harvester-only `pullYield`. Then swap + bridge + `LeafHypeRewarder.notify`.
 
 `pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner` unless a **rate feed** is set. Then only the rate-implied surplus may leave (`setRateKind(ExchangeRate)` for cbETH; `ConvertToAssets` only if that listing's SOLVENCY row opts in). C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked` (C1) or `(lastAccounted * (rate - lastRate)) / rate` (rate L, floor, principal only). Donations are not surplus.
 
-1% protocol / 99% holders happens on HyperEVM at `notify`, not on the source swap. Rate surplus is sold to WHYPE first; `notify` then splits. Redeem after harvest is pro-rata remaining inner, not 1 token = 1 token. Wrap/redeem accrue the watermark; they do **not** transfer to the converter. `pullYield` is the only inner outflow for yield.
+1% protocol / 99% holders at `notify` is **side-token yield only** (QUID, airdrops). Rate-bearing L (`retainRateYield`): 1% of surplus to converter, 99% stays in the receipt. Wrap/redeem do **not** transfer to the converter. `pullYield` is the only inner outflow for yield.
 
 
-## Rate-bearing (hcbETH) — where the 1% comes from
+## Rate-bearing (hcbETH) — Lido-style, 1% skim
 
-cbETH does not mint extra tokens. ETH PoS lives in Coinbase `exchangeRate()`. There is no airdrop to claim. The only honest take of depositor yield is to sell the **rate-implied surplus**:
+cbETH does not mint extra tokens. ETH PoS lives in Coinbase `exchangeRate()`.
+HyperLeaf does **not** sell that yield to WHYPE for holders. `retainRateYield`:
 
 ```
-surplus = (lastAccounted × (rate − lastRate)) / rate     // floor; dust stays principal
+surplus = (lastAccounted × (rate − lastRate)) / rate     // floor
+fee     = surplus × 1%                                   // protocol only
+99% of surplus stays in the lockbox
 ```
 
 `lastAccounted` is pulled principal, not `balanceOf`. A donation into the lockbox does not raise it.
@@ -45,21 +48,16 @@ Example: deposit 100 cbETH at rate 1.00. Later rate 1.10.
 | | cbETH | ETH value |
 | --- | ---: | ---: |
 | Locked | 100 | 110 |
-| Surplus pulled (`100 − 100/1.10`) | 9.0909 | 10 (the yield) |
-| Stays in the box | 90.9091 | 100 (principal) |
+| Protocol skim (1% of 9.0909) | 0.0909 | 0.10 |
+| Stays in the box | 99.9091 | 109.90 |
 
-Converter sells 9.0909 cbETH → WHYPE. `LeafHypeRewarder.notify`:
+Converter sells **0.0909 cbETH** → WHYPE → **protocol fee recipient**. Holders do **not** `notify` / claim. Redeem 100 hcbETH → **99.9091 cbETH** (still ~109.9 ETH). LP of hcbETH keeps that ETH value. The 1% is of **yield**, never of the deposit.
 
-- protocol **1%** of that WHYPE
-- holders **99% allocated** across `totalSupply` (claimable, does not burn the Leaf). Addresses that never `claim` (pairs, pools, hot wallets) leave their slice in the rewarder. Wallet APR is therefore **below** 99% × yield / supply whenever Leaf is in DeFi. See `docs/HYPE_COMPOSABILITY.md`.
+Slash (`rate < lastRate`): watermark drops, pull 0.
+
+xSQUID is the other class: QUID is a different ERC-20, so redeem stays 1 xSQUID = 1 xSQUID. QUID → WHYPE → `notify` 99/1. That Rewarder path **does** allocate by address; see `HYPE_COMPOSABILITY.md`. `minNotify` still applies there.
 
 `notify` reverts `DustNotify` when the batch cannot bump `accHypePerShare`. Keeper: read `minNotify(listingId)` and wait until harvested WHYPE ≥ that. Do not retry dust.
-
-Redeem 100 hcbETH → **90.9091 cbETH** (still ~100 ETH) plus the HYPE they claimed. 1 hcbETH ≠ 1 cbETH after harvest. The 1% is of **yield**, never of the deposit.
-
-Slash (`rate < lastRate`): watermark drops, pull 0. Later deposits mint at NAV (`_sharesForAssets`).
-
-xSQUID is the other class: QUID is a different ERC-20, so redeem stays 1 xSQUID = 1 xSQUID. Same 99/1 after the QUID is sold.
 
 ## Routes (keeper)
 

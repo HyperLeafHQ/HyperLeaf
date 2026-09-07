@@ -63,7 +63,8 @@ forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
 ```
 
 Sets `convertYieldToHype`, harvester, converter. hxSQUID also sets `rewardsSelector` `0x9a99b4f0`.
-hcbETH: script also `setRateKind(ExchangeRate)`. Mock inner is `MockRateERC20` with `exchangeRate()`. To smoke harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield(inner, converter)` — wrap itself must **not** move surplus; only `pullYield` does. Surplus is from `lastAccounted`, not a donation.
+hcbETH: script also `setRateKind(ExchangeRate)` + `setRetainRateYield(true)`. Mock inner is `MockRateERC20` with `exchangeRate()`. To smoke harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield(inner, converter)` — converter receives **1% of surplus**, ~99.91% stays in the lockbox. Wrap itself must **not** move surplus. Donation is not yield. Redeem remaining cbETH, not 1:1 after the skim. No holder WHYPE claim on this ticker.
+
 
 ## 4c. Rewarder bind (HyperEVM 998) — order is the test
 
@@ -126,7 +127,7 @@ C1 (`bluai4y`) step 6 **must revert** `ExitViaMarketOnly`. Do bluai4y only after
 | --- | --- | --- | --- |
 | Deposit mints dest ticker | yes | yes | yes |
 | Burn dest returns inner | 1:1 xSQUID | remaining cbETH (not 1:1 after harvest) | **no** |
-| `pullYield(inner)` | revert `CannotPullInner` | rate surplus only | surplus BLUAI ok |
+| `pullYield(inner)` | revert `CannotPullInner` | **1% of** rate surplus; 99% stays | surplus BLUAI ok |
 | pokeRewards on mock xSQUID | mints 1 mock QUID to lockbox | n/a | n/a |
 
 Log every address in the PR. Tiny caps. Then repeat 1–6 with `ASSET=hcbeth`.

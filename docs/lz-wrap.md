@@ -26,7 +26,7 @@ Executor = mailman (LayerZero). DVN = notary. Google Cloud is on Base but not Hy
 No protocol fee on deposit or redeem. Users pay LZ messaging + gas.
 
 - Convert **off**: 1% of newly accrued inner yield (`YIELD_FEE_BPS = 100` in `LeafYieldFee`) stays as inner, sent to `feeRecipient`.
-- Convert **on**: surplus → converter → WHYPE; **1% protocol / 99% holders at `notify`**. Rate-bearing L (hcbETH) may pull only `free * (rate - lastRate) / rate`. That slice is yield. Principal stays. Redeem after harvest is remaining inner / shares.
+- Convert **on**: side-token surplus → converter → WHYPE; **1% protocol / 99% holders at `notify`**. Rate-bearing L (hcbETH) with `retainRateYield` pulls **1% of** `(lastAccounted * (rate - lastRate)) / rate`. 99% stays in the box. Principal stays.
 
 `harvest()` / `harvestToken()` are permissionless; no new yield → no extra fee.
 

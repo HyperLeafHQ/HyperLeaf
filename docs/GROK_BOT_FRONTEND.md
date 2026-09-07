@@ -73,15 +73,16 @@ Add the same line to the queued-state screen, or users will think they can abort
 
 ## Claim HYPE is not on every ticker
 
-Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty.
+Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty **and lists a holder-facing token** (QUID, airdrop ERC-20s). `protocolFee` / empty `toHype` = no claim button.
 
 | Ticker | UI |
 | ------ | -- |
 | hxSQUID | 领取 WHYPE. Does not burn the Leaf. Extra QUID, not the xSQUID. |
-| hcbETH | 领取 WHYPE. PoS is **sold as rate surplus**. Redeem is 金库按份额能付的 cbETH, **not** 1:1 after harvest. Copy: 质押收益按官方汇率卖掉，99% 打成 HYPE 给你领，1% 归协议。赎回拿回的是剩下的收据，不是当初那一枚。 |
-| hgSOON, hsWBERA, Morpho shares | **No claim button** unless that listing's SOLVENCY row sets `rateKind` and `toHype`. Default is yield-in-the-share: wrap 1 share, unwrap 1 share. Do not copy hcbETH's surplus-sale UI onto them. |
+| hcbETH | **No 领取 HYPE for holders.** PoS stays in cbETH. Protocol skims 1% of the rate surplus (sold to HYPE). Copy: 质押收益留在这份收据里，做市和借贷也能拿到。协议从增值里抽 1%。赎回拿回的是金库按份额能付的 cbETH。 |
+| hgSOON, hsWBERA, Morpho shares | **No claim button.** Yield-in-the-share: wrap 1 share, unwrap 1 share. Do not copy either hcbETH skim or hxSQUID claim onto them. |
 
-Do not invent “偶发空投” for cbETH. Do not say 1 hcbETH always unwraps 1 cbETH after a harvest.
+Do not invent “偶发空投” for cbETH. After the 1% skim, 1 hcbETH unwraps slightly less cbETH; that remaining cbETH is worth more ETH. Do not say holders claim HYPE for cbETH PoS.
+
 
 Who can actually receive that button’s money is **not** “anyone who ever wrapped”. See **Who gets HYPE** below.
 

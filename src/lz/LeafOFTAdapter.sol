@@ -106,6 +106,10 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRateKind(innerToken, kind);
     }
 
+    function setRetainRateYield(bool retain) external onlyOwner {
+        _setRetainRateYield(retain);
+    }
+
     /// @notice Anyone pays gas. Allowlisted Sign/TokenTable claim, as this lockbox.
     function pokeClaim(address t, bytes calldata data) external payable nonReentrant {
         _pokeClaim(address(innerToken), t, data);

@@ -67,21 +67,21 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 
 | | |
 | --- | --- |
-| Canonical backing | cbETH **pulled** into the lockbox. After harvest, remaining cbETH + WHYPE already notified |
-| Accounting unit | hcbETH **shares**, not 1 hcbETH = 1 cbETH after a rate harvest |
+| Canonical backing | cbETH **pulled** into the lockbox. After skim, remaining cbETH (includes 99% of rate surplus) |
+| Accounting unit | hcbETH **shares**. Quantity of cbETH per share moves only by the 1% protocol skim |
 | Core invariant | `oft.totalSupply() ≤ adapter.totalLocked()` (shares). Remaining inner ≥ lastAccounted. `lastAccounted + accruedRateYield ≤ inner.balanceOf(lockbox)` |
 | Rate source | Coinbase cbETH `exchangeRate()`. This is a solvency oracle, not a price feed we control |
 | Rate trust | upstream contract implementation / upgrade. Anomalous jump, drop, stale return, or malicious upgrade |
 | Rate anomaly | jump → surplus floors and caps at lastAccounted (cannot sell donations). drop → watermark down, pull 0. Never harvest a donated balance |
-| Maximum harvest | `(lastAccounted * (rate - lastRate)) / rate` (floor). Dust stays in `lastAccounted` (holders / principal), not protocol |
-| Proof source | `lastAccounted` + `accruedRateYield` + `exchangeRate()` + cash on redeem |
-| Mint / redeem | wrap/unwrap cbETH. Later deposits mint at NAV. Last exit pays remaining inner in kind, including unharvested surplus. **Never** Coinbase unwrap |
-| Yield | ETH PoS inside `exchangeRate()`. Harvester `pullYield` sells only accrued surplus → WHYPE → `notify` 99/1. Wrap/redeem **do not** transfer to converter |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box. Dust of the 1% stays with holders |
+| Proof source | `lastAccounted` + `exchangeRate()` + cash on redeem. `retainRateYield = true` |
+| Mint / redeem | wrap/unwrap cbETH. Later deposits mint at remaining-inner NAV. Last exit pays remaining inner. **Never** Coinbase unwrap |
+| Yield | ETH PoS inside `exchangeRate()`, **left in the receipt** (Lido/wstETH). Protocol skims 1% of surplus to converter → HYPE. Holders have **no** WHYPE claim. LP/lend keep the 99% |
 | Donation | extra `transfer` into the lockbox is **not** yield. It is extra backing. It must not mint HYPE or pay the 1% |
-| Failure | Coinbase rate lie / upgrade; converter swap (yield loss, not principal); inner print (`innerSupplyCeiling`) |
+| Failure | Coinbase rate lie / upgrade; converter swap on the 1% only; inner print (`innerSupplyCeiling`) |
 | Auto-pause | `reportInnerSupply` → Degraded. Guardian close |
-| Worst-case loss | min(depositCap, maxPerDay) on principal. Yield path loss is converter execution, separate from backing |
-| Test | `test/lz/LeafRateYield.t.sol` — surplus, slash, NAV mint, donation invariance, floor rounding, rate fuzz |
+| Worst-case loss | min(depositCap, maxPerDay) on principal. Yield path loss is converter execution on the 1% skim |
+| Test | `test/lz/LeafRateYield.t.sol` — 1% skim, 99% retained, slash, NAV mint, donation invariance, floor rounding, rate fuzz, sell-all still works if retain is off |
 
 Do **not** enable `rateKind` on hgSOON / hsWBERA / Morpho shares unless that listing's row says pull rate surplus. Default for those is yield-in-the-share, 1 share = 1 wrapped share.
 

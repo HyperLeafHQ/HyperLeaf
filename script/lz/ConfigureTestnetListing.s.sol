@@ -31,6 +31,7 @@ contract ConfigureTestnetListing is Script {
         }
         if (keccak256(bytes(a.id)) == keccak256("hcbeth")) {
             box.setRateKind(LeafYieldFee.RateKind.ExchangeRate);
+            box.setRetainRateYield(true);
         }
         vm.stopBroadcast();
 
