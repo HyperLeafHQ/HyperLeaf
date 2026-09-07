@@ -126,6 +126,14 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 
 up. is Velodrome-line ve(3,3) on **Robinhood Chain 4663**. Liquid **UP** `0x57C0E45c…B4F1` is the emission token. Yield sits on **veUP** escrow NFT `0x5d321dE3…B7B6` (fees + votes). Wrapping UP would be wrapping spot. Wrapping veUP needs the same NFT lockbox as hveAERO. LZ exists (eid **30416**, EndpointV2 `0x6F475642…`). Do not write LeafOFTAdapter for this ticker.
 
+### hliSLVR (watch — wrap liSLVR only if tax-free)
+
+SLVR `0x791229E3…C29aD9` is a 1-minute grid lottery. Token has **2% buy/sell tax**. Never wrap or transfer SLVR. **liSLVR** vault `0xb06a7A96…41b3B` is the liquid claim: deposited SLVR is **permanently locked**; exit is sell the share. If and only if liSLVR is a clean ERC-20, Kind L: wrap the share, never `deposit` SLVR, never ve lock. ETH rake may harvest to HYPE. Unaudited. No adapter until the tax-free check is on-chain.
+
+### hTWO (watch — no transferable stake receipt)
+
+Twofold DualPool on Robinhood. TWO `0x2A4a33A2…88d5` (fixed 1B, no tax, ~$1.2M). **vTWO** `0x5c02401e…5950` is 1:1 vote wrap, unwrap anytime — occupancy. **StakingVaultV2** `0x06E463fD…B3A9` 1h unstake, TWO rewards. **TwoStakingUSDG** `0x9CF18bB1…E9e3` 7d unstake, USDG rewards. LP is ERC-1155. No L adapter. C2 only after a receipt exists.
+
 ### hsWBERA (research — wrap sWBERA only, never the 7d queue)
 
 Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.72e7.
