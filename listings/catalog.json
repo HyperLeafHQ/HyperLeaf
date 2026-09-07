@@ -301,6 +301,24 @@
       "priority": 16
     },
     {
+      "id": "hsteakusdg",
+      "kind": "L",
+      "symbol": "hsteakUSDG",
+      "name": "Hyperleaf steakUSDG",
+      "innerSymbol": "steakUSDG",
+      "innerToken": "0xBeEff033F34C046626B8D0A041844C5d1A5409dd",
+      "underlying": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": { "inner": "erc4626-rate", "pullInner": false, "toHype": [] },
+      "note": "Only Robinhood asset that currently fits L without a new Kind. Morpho V2 Steakhouse USDG vault (Robinhood Earn backend). Share steakUSDG, ~$454M, ~53k holders, rate ~1.006 USDG, claimed instant ERC-4626 redeem. Wrap the share only — never deposit USDG, never redeem/withdraw to USDG. Yield in convertToAssets. Credit risk = Morpho markets (USDe / syrupUSDG / spUSDG). Circuit breaker on USDG depeg before HyperEVM lending. Confirm live 4626 is not a queue. LZ eid 30416.",
+      "status": "research",
+      "priority": 14
+    },
+    {
       "id": "hlislvr",
       "kind": "L",
       "symbol": "hliSLVR",

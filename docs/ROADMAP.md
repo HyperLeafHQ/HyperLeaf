@@ -17,6 +17,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | later | **hORDER** | C1 | Arb/Base OFT CREATE2 | Address-keyed lockbox in code. esORDER claim +7d |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
 | later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |
+| later | **hsteakUSDG** | L | Robinhood | Morpho Steakhouse USDG share `0xBeEf…09dd`. Never deposit/redeem USDG. Fill SOLVENCY 4626 |
 | watch | **hliSLVR** | L | Robinhood | Wrap **liSLVR only**. Never taxed SLVR. Lottery rake. Confirm tax-free share |
 | watch | **hTWO** | C2 | Robinhood | Twofold. No receipt; 1h/7d stake vaults. Do not wrap TWO or vTWO |
 | later | **hsWBERA** | L | Berachain | Wrap sWBERA. Never 4626 withdraw/redeem (7d NFT queue) |

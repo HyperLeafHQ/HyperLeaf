@@ -126,6 +126,10 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 
 up. is Velodrome-line ve(3,3) on **Robinhood Chain 4663**. Liquid **UP** `0x57C0E45c…B4F1` is the emission token. Yield sits on **veUP** escrow NFT `0x5d321dE3…B7B6` (fees + votes). Wrapping UP would be wrapping spot. Wrapping veUP needs the same NFT lockbox as hveAERO. LZ exists (eid **30416**, EndpointV2 `0x6F475642…`). Do not write LeafOFTAdapter for this ticker.
 
+### hsteakUSDG (research — wrap Morpho share only)
+
+Steakhouse USDG vault `0xBeEff033…5409dd` on Robinhood 4663. Share **steakUSDG**, asset USDG `0x5fc5360D…d168`. Live ~$454M, share price ~1.006 USDG (2026-09-06). Docs: permissionless ERC-4626, instant redeem. **Wrap steakUSDG.** Never `deposit`/`mint` USDG. Never `withdraw`/`redeem` even if instant. Yield in the rate. Pause if USDG or vault share depegs. Not filled until a live `asset()` / `convertToAssets(1e18)` / `withdraw` selector check is logged.
+
 ### hliSLVR (watch — wrap liSLVR only if tax-free)
 
 SLVR `0x791229E3…C29aD9` is a 1-minute grid lottery. Token has **2% buy/sell tax**. Never wrap or transfer SLVR. **liSLVR** vault `0xb06a7A96…41b3B` is the liquid claim: deposited SLVR is **permanently locked**; exit is sell the share. If and only if liSLVR is a clean ERC-20, Kind L: wrap the share, never `deposit` SLVR, never ve lock. ETH rake may harvest to HYPE. Unaudited. No adapter until the tax-free check is on-chain.
