@@ -117,15 +117,18 @@ mod tests {
 
     #[test]
     fn slash_preserves_high_water_mark_and_recovery_is_net_of_loss() {
-        let (fee_down, next_down, r_down) = book_retain_fee(100, RATE_SCALE, RATE_SCALE * 9 / 10);
+        let principal = 100_000_000_000_000_000_000u128;
+        let (fee_down, next_down, r_down) = book_retain_fee(principal, RATE_SCALE, RATE_SCALE * 9 / 10);
         assert_eq!(fee_down, 0);
-        assert_eq!(next_down, 100);
+        assert_eq!(next_down, principal);
         assert_eq!(r_down, RATE_SCALE);
 
         let (fee_recovery, next_recovery, r_recovery) =
             book_retain_fee(next_down, r_down, RATE_SCALE * 105 / 100);
-        assert_eq!(fee_recovery, 476_190_476_190_476);
-        assert_eq!(next_recovery, 100 - 476_190_476_190_476);
+        let expected_add = principal * (RATE_SCALE * 5 / 100) / (RATE_SCALE * 105 / 100);
+        let expected_fee = expected_add / 100;
+        assert_eq!(fee_recovery, expected_fee);
+        assert_eq!(next_recovery, principal - expected_fee);
         assert_eq!(r_recovery, RATE_SCALE * 105 / 100);
     }
 
