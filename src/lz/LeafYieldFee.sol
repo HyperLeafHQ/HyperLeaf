@@ -229,7 +229,7 @@ abstract contract LeafYieldFee {
         uint256 free = bal - reserved;
         if (free <= lastAccounted) return 0;
         uint256 y = free - lastAccounted;
-        // 1% of y. y < 100 ⇒ fee 0, dust stays with holders (not the protocol).
+        // 1% of y. y < 100 => fee 0, dust stays with holders (not the protocol).
         fee = (y * YIELD_FEE_BPS) / BPS_DENOMINATOR;
         if (fee > 0) {
             token.safeTransfer(feeRecipient, fee);
@@ -287,7 +287,7 @@ abstract contract LeafYieldFee {
         return (assets * totalShares) / prev;
     }
 
-    /// @dev Inner surplus = balance − reserved principal. Side tokens: full balance.
+    /// @dev Inner surplus = balance - reserved principal. Side tokens: full balance.
     function _pullYield(IERC20 token, IERC20 inner, uint256 reserved, address to) internal returns (uint256 amt) {
         if (address(token) == address(inner)) {
             uint256 bal = token.balanceOf(address(this));
@@ -406,9 +406,9 @@ abstract contract LeafYieldFee {
     /// @notice Record the economic cost of a new rate-bearing deposit at the live feed rate.
     ///      A deposit during a drawdown therefore gets its own lower cost basis and cannot
     ///      inherit the historical loss carried by earlier shares.
-    function _recordRateDeposit(uint256 assets) internal {
+    function _recordRateDeposit(IERC20 token, uint256 assets) internal {
         if (rateKind == RateKind.None || assets == 0) return;
-        uint256 rate = _readRate(IERC20(address(this)));
+        uint256 rate = _readRate(token);
         rateCostBasis += _rateValueOfTokens(assets, rate);
     }
 
