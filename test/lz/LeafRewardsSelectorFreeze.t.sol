@@ -27,14 +27,8 @@ contract SelectorFreezeTarget {
     fallback() external payable {
         calls++;
         if (msg.sig == bytes4(0xbb492bf5)) {
-            address[] calldata assets;
-            address to;
-            assembly {
-                assets.offset := 4
-                to := calldataload(36)
-            }
-            claimedAsset = assets[0];
-            claimedTo = to;
+            claimedTo = address(uint160(uint256(calldataload(36))));
+            claimedAsset = address(uint160(uint256(calldataload(100))));
         }
     }
 }
