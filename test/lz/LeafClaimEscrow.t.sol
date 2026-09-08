@@ -532,4 +532,36 @@ contract LeafClaimEscrowTest is PegReady {
         filler.lzReceive(wrong, bytes32(uint256(13)), ack, address(0), "");
         assertEq(bluai.balanceOf(address(filler)), 70e18);
     }
+
+    function testListRejectsLongTtl() public {
+        _mintAlice(1e18);
+        vm.startPrank(alice);
+        oft.approve(address(escrow), 1e18);
+        vm.expectRevert(LeafClaimEscrow.BadOrder.selector);
+        escrow.list(address(oft), 1e18, address(bluai), 1e18, alice, uint64(block.timestamp + 91 days));
+        vm.stopPrank();
+    }
+
+    function testFuzzFilledMeansExactSwap(uint256 leafAmt, uint256 wantAmt) public {
+        leafAmt = bound(leafAmt, 1e18, 200e18);
+        wantAmt = bound(wantAmt, 100, 200e18);
+        _mintAlice(leafAmt);
+        uint256 supply = oft.totalSupply();
+        uint256 locked = adapter.totalLocked();
+        uint256 id = _list(leafAmt, wantAmt);
+        bluai.mint(bob, wantAmt);
+        vm.startPrank(bob);
+        bluai.approve(address(escrow), wantAmt);
+        escrow.fillLocal(id);
+        vm.stopPrank();
+        (uint256 toSeller, uint256 reward) = escrow.split(wantAmt);
+        assertEq(oft.balanceOf(bob), leafAmt);
+        assertEq(bluai.balanceOf(alice), toSeller);
+        assertEq(bluai.balanceOf(bob), reward);
+        assertEq(toSeller + reward, wantAmt);
+        assertEq(oft.totalSupply(), supply);
+        assertEq(adapter.totalLocked(), locked);
+        assertEq(oft.balanceOf(address(escrow)), 0);
+        assertEq(bluai.balanceOf(address(escrow)), 0);
+    }
 }

@@ -1,14 +1,18 @@
-# Secondary claims (not a spot book)
+# Exit board (not a DEX)
 
-HyperLeaf does **not** chase near-spot AMM depth in the first phase.
-A thin pool with subsidy and IL is a fake book. The protocol already
-refuses to guarantee a buyer (`GROK_BOT_FRONTEND.md`).
+> HyperLeaf does not provide liquidity. It provides an exit venue for otherwise illiquid claims.
 
-What *is* in scope later: a **peer-to-peer board for the Leaf itself**.
+Not an AMM. Not a matching engine. Not treasury inventory. On-chain
+escrow + a frontend that reads `orders[id]`. Seller lists, buyer fills
+that id. No RFQ, no oracle, no keeper matching.
 
-```
-productive position  →  hAsset (the claim)  →  someone else bids on that claim
-```
+Three things the contracts must keep:
+
+1. **Protocol never bids.** `OPEN → FILLED | CANCELLED | EXPIRED`. No fill, no trade.
+2. **The order is an unambiguous swap.** `Filled(id)` means buyer got exact `leafAmount`, seller got exact `wantToken × 99%`, buyer got exact `wantToken × 1%` (buyer incentive, not a protocol fee). No mint, no lockbox change, no second claim, no other token.
+3. **Ask is frozen at `list`.** Expiry ≤ 90 days. Occupancy HYPE while listed → protocol. Seller keeps already-accrued HYPE.
+
+C1 is the **only** protocol exit. hNEST on this board is an *early* exit before the official window — different product, same contracts, `fillLocal`. Do not market them as the same “spot sell”.
 
 Internal name: **Claim Market**. Never “debt”, never “HyperLeaf lends”,
 never “treasury fills the other side”.

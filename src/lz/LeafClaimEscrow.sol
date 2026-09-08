@@ -14,8 +14,15 @@ interface IClaimHype {
 
 /// @title LeafClaimEscrow
 /// @notice Exit board. Protocol is never the counterparty. No mint. Execution
-///         fee is 0. 1% of ask is a **buyer reward**. Occupancy HYPE while
+///         fee is 0. 1% of ask is a **buyer incentive**. Occupancy HYPE while
 ///         listed → `feeRecipient`. Cancel / expire returns Leaf; no cancel fee.
+///
+/// Filled(id) means all of:
+///   buyer got exact `leafAmount`
+///   seller got exact `wantToken` × 99%
+///   buyer got exact `wantToken` × 1%
+///   no mint, no lockbox change, no second claim, no other token
+/// Ask is frozen at `list`. Expiry ≤ 90 days. No matching engine.
 ///
 /// Allowlist (owner `setMarket`):
 /// 1. **C1 Closed OFTs first** — no protocol redeem; this is the product.
@@ -29,7 +36,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint16 public constant BPS = 10_000;
-    uint16 public constant BUYER_REWARD_BPS = 100; // 1% of ask → buyer
+    uint16 public constant BUYER_REWARD_BPS = 100; // 1% of ask → buyer incentive, not a protocol fee
+    uint64 public constant MAX_TTL = 90 days;
     uint8 public constant OP_FILL = 1;
     uint8 public constant OP_ACK = 2;
     uint8 public constant OP_REFUND = 3;
@@ -71,7 +79,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     mapping(uint256 id => uint32) public fillSrcEid;
 
     event MarketSet(address indexed leaf, address indexed wantToken, bytes32 rewardId, bool allowed);
-    event Listed(uint256 indexed id, address indexed seller, address leaf, uint256 leafAmount, address wantToken, uint256 wantAmount);
+    event Listed(uint256 indexed id, address indexed seller, address leaf, uint256 leafAmount, address wantToken, uint256 wantAmount, uint64 expiry);
     event Cancelled(uint256 indexed id);
     event Expired(uint256 indexed id);
     event Filled(uint256 indexed id, address indexed buyer, uint256 toSeller, uint256 buyerReward);
@@ -125,7 +133,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         if (leafAmount == 0 || wantAmount == 0) revert BadOrder();
         if (leafAmount > type(uint128).max || wantAmount > type(uint128).max) revert BadOrder();
         if (sourceRecipient == address(0)) revert ZeroAddress();
-        if (expiry <= block.timestamp) revert BadOrder();
+        if (expiry <= block.timestamp || expiry > block.timestamp + MAX_TTL) revert BadOrder();
 
         IERC20(leaf).safeTransferFrom(msg.sender, address(this), leafAmount);
         id = nextId++;
@@ -139,7 +147,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
             expiry: expiry,
             status: Status.Open
         });
-        emit Listed(id, msg.sender, leaf, leafAmount, wantToken, wantAmount);
+        emit Listed(id, msg.sender, leaf, leafAmount, wantToken, wantAmount, expiry);
     }
 
     /// @notice Seller rescue. No cancel fee. In-flight FILL sees NotOpen and refunds.

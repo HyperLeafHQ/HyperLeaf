@@ -8,6 +8,8 @@ HyperLeaf is the **ingress**. You deposit the productive form of an asset. You r
 
 > HyperLeaf does not create risk. It makes hidden lock and staking risk tradable.
 
+> **HyperLeaf does not provide liquidity. It provides an exit venue for otherwise illiquid claims.**
+
 App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https://x.com/HyperLeafHQ)
 
 Live on HyperEVM (999): **hNEST**, capped. Wrap listings are in this repo and **not deployed**. **Not externally audited.** Do not deposit funds you cannot lose.
@@ -24,6 +26,7 @@ You already hold something that earns — xSQUID, cbETH, a four-year farm, veNES
 | The same economic state: principal, yield, lock | A promise that every ticker exits 1:1 anytime |
 | New staking surplus paid in **WHYPE** | Deposit / withdraw protocol fees |
 | A book you can sell into | The protocol taking lock or borrow risk for you |
+| An exit board for claims that cannot unwrap today | An AMM, a treasury bid, or a promised 1:1 dump |
 
 Protocol take is **1% of staking yield only**. You still pay gas and LayerZero. There is no fee to lock or unlock.
 
@@ -37,6 +40,12 @@ Protocol take is **1% of staking yield only**. You still pay gas and LayerZero. 
 | **Fungible** | One ticker, one claim | Every listing exits the same way |
 
 If the source cannot unstake freely, the ticker says so (`BLUAI4Y`, `BONK12M`). A discount to NAV on those names is a **liquidity price**, not a depeg — unless the backing is gone.
+
+Early books will be thin. HyperLeaf will **not** seed an AMM or buy the other side. C1 (no protocol redeem) and long-window names like hNEST use a **peer-to-peer exit board**: you list a Leaf at a fixed ask, someone who was going to deposit inner buys it, 1% of the ask is a **buyer incentive** (not a protocol fee). No bid, no trade. Occupancy HYPE while listed goes to the protocol. Price does not follow NAV after you list.
+
+C1 is the only protocol exit. hNEST on the board is an *early* exit before the official window — do not mix the two in copy.
+
+Details: [`docs/CLAIM_MARKET.md`](docs/CLAIM_MARKET.md).
 
 ---
 
@@ -109,7 +118,7 @@ HyperLeaf **markets** lock and staking risk. It does not delete it.
 
 - Contracts are **not externally audited**. Architecture is specified by a human. Implementation is written by AI developers. Read it as unaudited generated code on a human design — not as a substitute for review.
 - C1 names can sit below NAV for a long time. That is a liquidity price, not a HyperLeaf peg, unless backing is gone. **The protocol does not guarantee a buyer or a book.**
-- HyperLeaf is infrastructure, availability, and yield split (99/1 of staking surplus). It does not make markets.
+- HyperLeaf is infrastructure, availability, and yield split (99/1 of staking surplus). It does not make markets. The exit board is matching only; the treasury never bids.
 - Source points and airdrops accrue to the vault until harvested
 - LayerZero delivery and thin HYPE books on source chains
 - Underlying protocols (Nest, Squid, Coinbase cbETH, …) can change
@@ -122,6 +131,7 @@ HyperLeaf **markets** lock and staking risk. It does not delete it.
 | | |
 | --- | --- |
 | Kinds and exits | [`docs/wrap-kinds.md`](docs/wrap-kinds.md) |
+| Exit board (not an AMM) | [`docs/CLAIM_MARKET.md`](docs/CLAIM_MARKET.md) |
 | Frontend bot (no L/C1/C2 on UI) | [`docs/GROK_BOT_FRONTEND.md`](docs/GROK_BOT_FRONTEND.md) |
 | Yield → HYPE | [`docs/HYPE_YIELD.md`](docs/HYPE_YIELD.md) |
 | Listing catalog | [`listings/catalog.json`](listings/catalog.json) |

@@ -41,13 +41,15 @@ Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary boa
 
 挂单确认必须写（整段，不要拆掉）：
 
-> 挂进转让板之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。折价是有人接盘的价格，不是底仓没了。
+> 挂进转让板之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。挂单价格按挂单时锁定，不会跟着账面价值变。折价是有人接盘的价格，不是底仓没了。
 
 > 出货有两条路。我们这条：挂单等下一个本来要存入的人来买，操作简单。你也可以自己去 DEX 做**单边 LP**（只放 Leaf、自己定价格），那是给会做深度 DeFi 的人用的，我们不代操作。
 
-> 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** HYPE 收益，也 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励，不是协议抽成）。相当于让出 1% 换更简单的撮合。
+> 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** HYPE 收益，也 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励 / buyer incentive，不是协议抽成）。相当于让出 1% 换更简单的撮合。
 
-Copy: 没人出价就不成交。协议不接盘。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。ACK 丢了会重试，不会铸新的 Leaf。买方中止要等三天（guardian 可立刻中止）。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
+C1（没有官方赎回）和 hNEST（有窗口、只是提前走）**不要做成同一个「卖出现货」入口**。C1：这是协议里唯一的退出。hNEST：官方窗口仍在，这是提前找人接。
+
+Copy: 没人出价就不成交。协议不接盘、不做市、不保证最低退出价。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。ACK 丢了会重试，不会铸新的 Leaf。买方中止要等三天（guardian 可立刻中止）。Not 债务, not 借贷, not 官方收单, not DEX. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
 
 
 **One line that must survive every rewrite:**

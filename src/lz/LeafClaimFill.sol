@@ -12,7 +12,7 @@ import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 ///         returned on REFUND / ABORT_OK. Protocol never takes the inner.
 ///
 /// Handshake:
-///   fill  → dest FILL → ACK  → pay 99% seller + 1% buyer reward
+///   fill  → dest FILL → ACK  → pay 99% seller + 1% buyer incentive
 ///   fill  → dest FILL fail   → REFUND → inner back to buyer
 ///   abort → dest ABORT → if still Open: ABORT_OK (refund);
 ///                        if already Filled: ACK (pay seller)
