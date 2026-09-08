@@ -115,8 +115,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     }
 
     /// @notice Allowlist a Leaf against the inner used as ask.
-///         C1 first. hNEST: same-chain `wantToken` = NEST. Share-price: only
-///         if you accept occupancy = 0 on cancel.
+    ///         C1 first. hNEST: same-chain `wantToken` = NEST. Share-price: only
+    ///         if you accept occupancy = 0 on cancel.
     function setMarket(address leaf, address wantToken, bytes32 rewardId, bool allowed) external onlyOwner {
         if (leaf == address(0) || wantToken == address(0)) revert ZeroAddress();
         markets[leaf][wantToken] = Market(allowed, rewardId);
@@ -224,6 +224,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     function _lzReceive(ILayerZeroEndpointV2.Origin calldata origin, bytes32, bytes calldata message, address, bytes calldata)
         internal
         override
+        whenNotPaused
     {
         (uint8 op, uint256 id) = abi.decode(message, (uint8, uint256));
         fillSrcEid[id] = origin.srcEid;
