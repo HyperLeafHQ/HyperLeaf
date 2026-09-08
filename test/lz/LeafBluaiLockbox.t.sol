@@ -193,4 +193,60 @@ contract LeafBluaiLockboxTest is PegReady {
         assertTrue(box.farmPrincipalOut());
         assertEq(bluai.balanceOf(address(box)), 0);
     }
+
+    function testFarmConfigMutableBeforeFirstDeposit() public {
+        vm.prank(owner);
+        box.setFarmExit(bytes4(0x12345678));
+        assertEq(box.farmExitSel(), bytes4(0x12345678));
+
+        vm.prank(owner);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0.01 ether);
+        assertEq(uint8(box.farmStyle()), uint8(LeafInboundLockbox.FarmStyle.AmountNative));
+        assertEq(box.farmNativeFee(), 0.01 ether);
+
+        vm.prank(owner);
+        box.setFarmRequest(bytes4(0x87654321));
+        assertEq(box.farmRequestSel(), bytes4(0x87654321));
+
+        vm.prank(owner);
+        box.setPublicRequestType(10, true);
+        assertTrue(box.publicRequestType(10));
+
+        vm.prank(owner);
+        box.setShareExit(true);
+        assertTrue(box.shareExitEnabled());
+    }
+
+    function testLiveFarmConfigCannotChangeAfterDeposit() public {
+        vm.startPrank(user);
+        bluai.approve(address(box), 40 ether);
+        box.sendTo{value: 0.01 ether}(40362, user, 40 ether);
+        vm.stopPrank();
+
+        vm.startPrank(owner);
+        vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
+        box.setFarm(address(0xCAFE), bytes4(0x11111111), 8, bytes4(0x22222222));
+        vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
+        box.setFarmExit(bytes4(0x33333333));
+        vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 1 ether);
+        vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
+        box.setFarmRequest(bytes4(0x44444444));
+        vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
+        box.setPublicRequestType(10, true);
+        vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
+        box.setShareExit(true);
+        vm.stopPrank();
+
+        assertEq(box.farm(), address(stake));
+        assertEq(box.farmStakeSel(), IBluaiStake.stake.selector);
+        assertEq(box.farmStakeArg(), 4);
+        assertEq(box.farmClaimSel(), IBluaiStake.claimAll.selector);
+        assertEq(box.farmExitSel(), IBluaiStake.unstake.selector);
+        assertEq(uint8(box.farmStyle()), uint8(LeafInboundLockbox.FarmStyle.AmountYears));
+        assertEq(box.farmNativeFee(), 0);
+        assertEq(box.farmRequestSel(), bytes4(0));
+        assertFalse(box.publicRequestType(10));
+        assertFalse(box.shareExitEnabled());
+    }
 }
