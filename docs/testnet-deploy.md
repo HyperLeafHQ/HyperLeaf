@@ -1,12 +1,10 @@
-# Testnet deploy (HyperEVM 998)
+# Testnet deploy (anvil / faucets only)
 
-Every listing in `listings/catalog.json` can be deployed with the same two scripts.
-Testnet **always mints a mock inner token** unless you set `INNER_TOKEN`.
-Do **not** point testnet adapters at mainnet sKAITO / VIRTUAL / BLUAI.
+**Go-live is mainnet.** Follow `docs/GROK_BOT_MAINNET.md`. HyperEVM testnet cannot run Labs + Horizen + Canary.
 
-HyperEVM testnet LayerZero DVNs are only **LayerZero Labs + P2P**. Skip
-`SetSecurityStack` on testnet (that script is the mainnet 2-of-3). Default
-endpoint config is enough to move test messages.
+Scripts below still mint a **mock inner** on 84532/97/998. They revert on 8453/999/56. Do **not** point them at mainnet sKAITO / VIRTUAL / BLUAI.
+
+The rest of this file is the old catalog map for those faucet scripts.
 
 ## Env
 

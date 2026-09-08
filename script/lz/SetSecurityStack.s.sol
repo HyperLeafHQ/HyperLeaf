@@ -54,6 +54,24 @@ contract SetSecurityStack is Script {
             receiveLib = A.RECEIVE_ULN_BERA;
             executor = A.EXECUTOR_BERA;
             optionalDvns = LeafSecurity.beraOptionalDvns();
+        } else if (chainId == 1) {
+            remoteEid = A.EID_HYPEREVM;
+            sendLib = A.SEND_ULN_ETH;
+            receiveLib = A.RECEIVE_ULN_ETH;
+            executor = A.EXECUTOR_ETH;
+            optionalDvns = LeafSecurity.ethOptionalDvns();
+        } else if (chainId == 42161) {
+            remoteEid = A.EID_HYPEREVM;
+            sendLib = A.SEND_ULN_ARB;
+            receiveLib = A.RECEIVE_ULN_ARB;
+            executor = A.EXECUTOR_ARB;
+            optionalDvns = LeafSecurity.arbOptionalDvns();
+        } else if (chainId == 43114) {
+            remoteEid = A.EID_HYPEREVM;
+            sendLib = A.SEND_ULN_AVAX;
+            receiveLib = A.RECEIVE_ULN_AVAX;
+            executor = A.EXECUTOR_AVAX;
+            optionalDvns = LeafSecurity.avaxOptionalDvns();
         } else {
             revert("unsupported chain");
         }

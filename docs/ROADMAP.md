@@ -2,20 +2,22 @@
 
 Public README shows what users will see. This file is why a ticker is here, parked, or blocked.
 
-One path at a time. Same chain + same Kind can batch after that path is proven.
+Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or the send/receive confirmation split. One path at a time. Same framework + proven chain can batch.
 
 | Order | Ticker | Kind | Source | Status |
 | ----- | ------ | ---- | ------ | ------ |
+| 0 | **hCANARY** | L | Base | Toy `LEAFTEST`. Real ULN. Close after redeem. Do not reuse |
 | 0 | hNEST | Native | HyperEVM | Live, capped |
-| 1 | hxSQUID | L | Base | First wrap. claimRewards → QUID → HYPE |
-| 1b | **hAVNT** | L | Base | Same adapter + `0x9a99b4f0`. Never `0xeab52318` |
-| 2 | hcbETH | L | Base | PoS in the rate |
-| **next testnet** | **hstkwaUSDC** | L | Ethereum | Wrap **stkwaEthUSDC.v1** `0x6bf1…8Aa6` only. Dual harvest: 4626 rate + RewardsController. Never cooldown / v2 auto-migrate. After current 4-asset round. |
-| **next testnet** | **hsAVAX** | L | Avalanche | BENQI sAVAX `0x2b2C…a4bE`. Same 1% rate skim as hcbETH via `getPooledAvaxByShares`. Never `requestUnlock`. |
-| **next testnet** | **hsETHFI** | L | Ethereum | Wrap sETHFI `0x86B578…c0161` only. Never ETHFI, never 10d DelayedWithdraw / teller deposit. Yield in share; KING merkle not this poke |
-| **next testnet** | **hgSOON** | L | **BSC** `0xcC48…` | cbETH-class 1% skim via `convertToAssets`. Never `cooldownShares` / 90d lock. BSC testnet 97 |
-| **batch 3 mainnet** | **hsWBERA** | L | Berachain 80094 | No testnet. `ConvertToAssets` + 1% skim. Never 7d NFT queue. One asset this phase |
-| **batch 4 testnet** | **hORDER** | C1 | **Arbitrum only** | `LeafInboundLockbox` + Orderly proxy. No CREATE2 twin. Arb Sepolia 421614 |
+| **1** | hxSQUID | L | Base | Side-token. claimRewards → QUID → HYPE |
+| **1** | **hAVNT** | L | Base | Same adapter + `0x9a99b4f0`. Never `0xeab52318` |
+| **2** | hcbETH | L | Base | PoS in the rate. 1% skim |
+| **2** | **hgSOON** | L | BSC | `convertToAssets` 1% skim. Never 90d cooldown |
+| **2** | **hsWBERA** | L | Berachain 80094 | Same skim. Never 7d NFT queue |
+| **3** | **hsAVAX** | L | Avalanche | BENQI. `getPooledAvaxByShares`. Never `requestUnlock` |
+| **3** | **hsETHFI** | L | Ethereum | Wrap sETHFI only. Yield in share. Never DelayedWithdraw |
+| **3** | **hstkwaUSDC** | L | Ethereum | stkwaEthUSDC.v1. Rate + RewardsController. Never cooldown / v2 migrate |
+| **4** | BLUAI4Y | C1 | BSC | No protocol redeem. Claim Board |
+| **4** | **hORDER** | C1 | **Arbitrum only** | `LeafInboundLockbox` + Orderly proxy. No CREATE2 twin |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
 | later | hveAERO | ve-NFT | Base | Needs NFT lockbox |
@@ -27,7 +29,6 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | watch | **hSB** | ve-NFT | Robinhood | StonkBrokers. Wrap **activated NFT**, never $STONKBROKER. TBA + geo. Skip until NFT lockbox |
 | later | hJupSOL / hANSEM | L | Solana | Needs Solana lockbox |
 | later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |
-| later | BLUAI4Y | C1 | BSC | High user risk. unstake 0x2e17de78 |
 | last | BONK12M / hMET | C1/C2 | Solana | |
 | parked | hSKY | C1 | Ethereum | Stake-only strips LockStake borrow. Min 1.44M SKY / 30k USDS |
 | parked | hGMX | C1 | Arbitrum | Stake yield frozen until $90. GLP V1 retired 2025-07-16 |
@@ -43,16 +44,13 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 
 ## Phases
 
-**A** — testnet hxSQUID / hAVNT then hcbETH, then mock BLUAI4Y (`GROK_BOT_TESTNET.md`). Do not add assets to `TestnetCatalog` this round.
-**A2** — next testnet: **hgSOON** (BSC 97) + **hsAVAX** (Fuji 43113) + **hstkwaUSDC** + **hsETHFI** (Sepolia). `NextTestnetCatalog` / `TestnetListings`.
-**A3** — **hsWBERA mainnet only** (Berachain 80094). No Bepolia. `DeployAdapter` + `ConfigureMainnetListing`. One asset.
-**A4** — **hORDER** Arb Sepolia (`FourthTestnetCatalog`). C1, single chain. Do not deploy CREATE2 twins.
-**A′** — do **not** seed a HyperEVM AMM to fake spot. C1 / queued listings get a peer **claim board** later (`docs/CLAIM_MARKET.md`). Protocol never bids.
-**B** — mainnet hxSQUID, tiny cap.
-**C** — hcbETH.
-**D** — skip hSKY.
+**0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). Real `SetSecurityStack`. Tiny cap. Close after redeem. `GROK_BOT_MAINNET.md`.
+**1** — hxSQUID then hAVNT. Same Base path the canary just proved.
+**2** — rate L: hcbETH (Base) + hgSOON (BSC) + hsWBERA (Bera). 1% skim. New LZ eids for BSC and Bera.
+**3** — hsAVAX (Avax) + hsETHFI + hstkwaUSDC (Ethereum).
+**4** — C1: BLUAI4Y then hORDER. Claim board after the first C1 lists. No CREATE2 twin.
+**A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO / remaining Ethereum (not SKY).
-**F** — sWBERA / AEVO / JupSOL / ANSEM.
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
 **Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.

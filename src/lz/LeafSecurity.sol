@@ -65,6 +65,13 @@ library LeafSecurity {
         d[2] = A.DVN_CANARY_AVAX;
     }
 
+    function ethOptionalDvns() internal pure returns (address[] memory d) {
+        d = new address[](3);
+        d[0] = A.DVN_HORIZEN_ETH;
+        d[1] = A.DVN_LZ_LABS_ETH;
+        d[2] = A.DVN_CANARY_ETH;
+    }
+
     function ulnConfig(uint64 confirmations, address hyperleafDvn, address[] memory optionalDvns)
         internal
         pure

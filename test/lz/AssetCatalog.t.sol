@@ -13,6 +13,7 @@ import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
 import {NextTestnetCatalog} from "src/lz/NextTestnetCatalog.sol";
 import {FourthTestnetCatalog} from "src/lz/FourthTestnetCatalog.sol";
 import {TestnetListings} from "src/lz/TestnetListings.sol";
+import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -187,6 +188,39 @@ contract AssetCatalogTest is Test {
         assertEq(this._endpoint(11155111), A.ENDPOINT_BASE_SEPOLIA);
         assertEq(this._endpoint(421614), A.ENDPOINT_BASE_SEPOLIA);
         assertEq(this._endpoint(42161), A.ENDPOINT_BSC);
+        assertEq(this._endpoint(1), A.ENDPOINT_ETH);
+        assertEq(this._endpoint(43114), A.ENDPOINT_ETH);
+        assertEq(A.ENDPOINT_ETH, A.ENDPOINT_BSC);
+    }
+
+    function testMainnetBatchesByFramework() public {
+        assertEq(MainnetBatches.batchOf("hcanary"), 0);
+        assertEq(MainnetBatches.batchOf("hxsquid"), 1);
+        assertEq(MainnetBatches.batchOf("havnt"), 1);
+        assertEq(MainnetBatches.batchOf("hcbeth"), 2);
+        assertEq(MainnetBatches.batchOf("hgsoon"), 2);
+        assertEq(MainnetBatches.batchOf("hswbera"), 2);
+        assertEq(MainnetBatches.batchOf("hsavax"), 3);
+        assertEq(MainnetBatches.batchOf("hsethfi"), 3);
+        assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
+        assertEq(MainnetBatches.batchOf("bluai4y"), 4);
+        assertEq(MainnetBatches.batchOf("horder"), 4);
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hkaito");
+        MainnetBatches.requireBatch("hxsquid", 1);
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._requireBatch("hcbeth", 1);
+        assertEq(AssetCatalog.get("hcanary").innerMainnet, address(0));
+        assertEq(AssetCatalog.get("hcanary").sourceChainIdMain, 8453);
+        assertEq(AssetCatalog.get("hcanary").defaultCap, 5e16);
+    }
+
+    function _batch(string calldata id) external pure returns (uint8) {
+        return MainnetBatches.batchOf(id);
+    }
+
+    function _requireBatch(string calldata id, uint8 batch) external pure {
+        MainnetBatches.requireBatch(id, batch);
     }
 
     function _endpoint(uint256 chainId) external pure returns (address) {

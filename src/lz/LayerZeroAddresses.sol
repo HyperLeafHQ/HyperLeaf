@@ -56,14 +56,29 @@ library LayerZeroAddresses {
     address internal constant RECEIVE_ULN_HYPEREVM_TESTNET = 0x012f6eaE2A0Bf5916f48b5F37C62Bcfb7C1ffdA1;
     address internal constant EXECUTOR_HYPEREVM_TESTNET = 0x72e34F44Eb09058bdDaf1aeEebDEC062f1844b00;
 
+    address internal constant ENDPOINT_ETH = 0x1a44076050125825900e736c501f859c50fE728c;
+    address internal constant SEND_ULN_ETH = 0xbB2Ea70C9E858123480642Cf96acbcCE1372dCe1;
+    address internal constant RECEIVE_ULN_ETH = 0xc02Ab410f0734EFa3F14628780e6e695156024C2;
+    address internal constant EXECUTOR_ETH = 0x173272739Bd7Aa6e4e214714048a9fE699453059;
+
+    address internal constant SEND_ULN_ARB = 0x975bcD720be66659e3EB3C0e4F1866a3020E493A;
+    address internal constant RECEIVE_ULN_ARB = 0x7B9E184e07a6EE1aC23eAe0fe8D6Be2f663f05e6;
+    address internal constant EXECUTOR_ARB = 0x31CAe3B7fB82d847621859fb1585353c5720660D;
+
+    address internal constant SEND_ULN_AVAX = 0x197D1333DEA5Fe0D6600E9b396c7f1B1cFCc558a;
+    address internal constant RECEIVE_ULN_AVAX = 0xbf3521d309642FA9B1c91A08609505BA09752c61;
+    address internal constant EXECUTOR_AVAX = 0x90E595783E43eb89fF07f63d27B8430e6B44bD9c;
+
     function endpoint(uint256 chainId) internal pure returns (address) {
+        if (chainId == 1) return ENDPOINT_ETH;
         if (chainId == 8453) return ENDPOINT_BASE;
         if (chainId == 84532) return ENDPOINT_BASE_SEPOLIA;
         if (chainId == 56) return ENDPOINT_BSC;
         if (chainId == 97) return ENDPOINT_BSC_TESTNET;
+        if (chainId == 43114) return ENDPOINT_ETH; // Avax V2 endpoint, same CREATE2 as ETH
         if (chainId == 43113) return ENDPOINT_BASE_SEPOLIA; // Fuji V2 endpoint, same CREATE2
         if (chainId == 11155111) return ENDPOINT_BASE_SEPOLIA; // Sepolia V2 endpoint
-        if (chainId == 42161 || chainId == 10) return ENDPOINT_BSC; // canonical V2, same as Base
+        if (chainId == 42161 || chainId == 10) return ENDPOINT_ETH;
         if (chainId == 421614) return ENDPOINT_BASE_SEPOLIA; // Arb Sepolia V2, same CREATE2 as Base Sepolia
         if (chainId == 80094) return ENDPOINT_BERA;
         if (chainId == 4663) return ENDPOINT_BERA; // Robinhood mainnet: same CREATE2 as Bera (LZ docs)

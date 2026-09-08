@@ -21,9 +21,25 @@
       "eid": 40102,
       "endpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f"
     },
-    "note": "HyperEVM testnet DVNs are only LayerZero Labs + P2P. Do not set the mainnet 2-of-3 ULN on testnet."
+    "note": "Go-live is mainnet (docs/GROK_BOT_MAINNET.md). HyperEVM testnet DVNs are only LayerZero Labs + P2P. Do not treat 998 as wrap acceptance."
   },
   "listings": [
+    {
+      "id": "hcanary",
+      "kind": "L",
+      "symbol": "hCANARY",
+      "name": "Hyperleaf Canary",
+      "innerSymbol": "LEAFTEST",
+      "innerToken": null,
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "Toy inner minted at deploy. Real SetSecurityStack. Close after redeem. Do not reuse addresses.",
+      "status": "mainnet-canary",
+      "priority": 0
+    },
     {
       "id": "hkaito",
       "kind": "L",
@@ -89,7 +105,7 @@
         "sourceChain": "base-sepolia",
         "mockInner": true
       },
-      "status": "testnet-ready",
+      "status": "mainnet-batch-1",
       "priority": 1
     },
     {
@@ -119,7 +135,7 @@
         "sourceChain": "base-sepolia",
         "mockInner": true
       },
-      "status": "testnet-ready",
+      "status": "mainnet-batch-2",
       "priority": 2
     },
     {
@@ -229,7 +245,7 @@
         "sourceChain": "bsc-testnet",
         "mockInner": true
       },
-      "status": "testnet-ready",
+      "status": "mainnet-batch-4",
       "priority": 8
     },
     {
@@ -252,7 +268,7 @@
         "mockInner": true,
         "batch": "next"
       },
-      "status": "next-testnet",
+      "status": "mainnet-batch-3",
       "priority": 11,
       "yield": {
         "inner": "benqi-pooled-avax",
@@ -544,7 +560,7 @@
         "toHype": []
       },
       "note": "Wrap sWBERA only. BATCH 3 MAINNET (Berachain 80094). No Bepolia. ConvertToAssets + retainRateYield 1% skim (same as hgSOON). ERC-4626 withdraw/redeem on this vault is the 7d unbond \u2014 never call it. Never deposit WBERA/BERA. Users exit via HyperEVM/Bera market or official unbond themselves after unwrap. LeafOFTAdapter. ConfigureMainnetListing.",
-      "status": "mainnet-batch-3",
+      "status": "mainnet-batch-2",
       "priority": 3
     },
     {
@@ -692,8 +708,8 @@
           "note": "King Protocol compound ERC-20; distributor still holds ~2461 KING"
         }
       ],
-      "note": "NEXT TESTNET BATCH (Sepolia 11155111, NextTestnetCatalog, ASSET=hsethfi). L wrap of transferable sETHFI on Ethereum only, not ETHFI, not Base/OP copies of the same address. Deposit path: 0x24a993c9 on Teller 0xe2acf9. Yield is extra merkle ERC-20s, not a convertToAssets skim (NAV stays in the share). 2024-10-12: ETHFI season 0xbd4569 claim() 0x2e7ba6ef (~21 ETHFI) and EIGEN season 0x2Ec90e same selector (~3.89 EIGEN) \u2014 both distributors now empty. 2025-03-16: replaced by King Protocol KING 0x8F08B704 via 0x6Db24 claim(address,uint256,bytes32,bytes32[]) 0x1d7d4ebc (~0.0067 KING that tx); distributor still funded. Same class as KAITO: per-campaign merkle, leaf = wallet. Lockbox must appear in the tree or this yield is stripped. Do not block L. Never DelayedWithdraw. This round: no rewardsSelector (poke ABI is (this,max)). Alias hsETHFI / hethfi.",
-      "status": "next-testnet",
+      "note": "BATCH 3 mainnet (Ethereum 1, ASSET=hsethfi). L wrap of transferable sETHFI on Ethereum only, not ETHFI, not Base/OP copies of the same address. Deposit path: 0x24a993c9 on Teller 0xe2acf9. Yield is extra merkle ERC-20s, not a convertToAssets skim (NAV stays in the share). 2024-10-12: ETHFI season 0xbd4569 claim() 0x2e7ba6ef (~21 ETHFI) and EIGEN season 0x2Ec90e same selector (~3.89 EIGEN) \u2014 both distributors now empty. 2025-03-16: replaced by King Protocol KING 0x8F08B704 via 0x6Db24 claim(address,uint256,bytes32,bytes32[]) 0x1d7d4ebc (~0.0067 KING that tx); distributor still funded. Same class as KAITO: per-campaign merkle, leaf = wallet. Lockbox must appear in the tree or this yield is stripped. Do not block L. Never DelayedWithdraw. This round: no rewardsSelector (poke ABI is (this,max)). Alias hsETHFI / hethfi.",
+      "status": "mainnet-batch-3",
       "priority": 11
     },
     {
@@ -793,13 +809,13 @@
         "sideClaim": "RewardsController.claimAllRewards"
       },
       "claim": "poke RewardsController.claimAllRewards([stkwaEthUSDC.v1], lockbox) \u2014 pin 4-byte from the live controller ABI before deploy, never from a tx hash. Then pullYield side tokens. Rate surplus (aToken interest in convertToAssets) uses hcbETH retainRateYield 1% skim. Never poke inner. Never cooldown/redeem/withdraw on the StakeToken.",
-      "note": "NEXT TESTNET BATCH (Sepolia 11155111, NextTestnetCatalog, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 at this address \u2014 pin address, not ticker. .v1 is a factory suffix; a .v2 is a new ERC-20 and a new listing. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks this round. Never start cooldown (20d, one record per address \u2014 lockbox would freeze everyone). Never auto-migrate to v2. Users exit by unwrapping the v1 receipt and migrating on Aave themselves. Slash lowers convertToAssets (watermark must drop). Dual harvest: rate (cbETH path) + RewardsController.claimAllRewards 0xbb492bf5 on 0x4655\u2026, never inner. Round-1 TestnetCatalog stays four assets.",
+      "note": "BATCH 3 mainnet (Ethereum 1, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 at this address \u2014 pin address, not ticker. .v1 is a factory suffix; a .v2 is a new ERC-20 and a new listing. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks this round. Never start cooldown (20d, one record per address \u2014 lockbox would freeze everyone). Never auto-migrate to v2. Users exit by unwrapping the v1 receipt and migrating on Aave themselves. Slash lowers convertToAssets (watermark must drop). Dual harvest: rate (cbETH path) + RewardsController.claimAllRewards 0xbb492bf5 on 0x4655\u2026, never inner. Canary then batch 1\u20132 before this ticker.",
       "testnet": {
         "sourceChain": "sepolia",
         "mockInner": true,
         "batch": "next"
       },
-      "status": "next-testnet",
+      "status": "mainnet-batch-3",
       "priority": 10
     },
     {
@@ -871,7 +887,7 @@
         "retainRateYield": true
       },
       "note": "NEXT TESTNET BATCH (BSC testnet 97, NextTestnetCatalog). Same L/retainRateYield path as hcbETH; rate ABI is convertToAssets not exchangeRate. Wrap gSOON only, never SOON, never cooldownShares / 90d lock. Harvest pulls 1% of (inner * dRate / rate) to converter; 99% stays so LP/lend keep SOON value. Holders do not claim WHYPE. Redeem remaining gSOON, not 1:1 after skim. This round's TestnetCatalog stays four assets.",
-      "status": "next-testnet",
+      "status": "mainnet-batch-2",
       "priority": 10,
       "claim": "No side token. Rate is convertToAssets(1e18). setRateKind(ConvertToAssets)+retainRateYield. Never setRewardsSelector. Never deposit/mint SOON 0x6e553f65, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f.",
       "refs": {
@@ -934,7 +950,7 @@
       "exit": "market-only",
       "infra": "evm",
       "note": "C1. Arbitrum only. ORDER OFT 0x4E20\u2026 (not ETH ERC-20). Orderly proxy 0xC8A8\u2026 stakeOrder. farmPrincipalOut is location only; solvency is guardian reportLedgerPrincipal vs Orderly ledger. No CREATE2 twin \u2014 one lockbox address is the identity. Unstake 2/3/4 owner; harvest 10/17 public. USDC harvest \u2260 principal. FourthTestnetCatalog ASSET=horder Arb Sepolia 421614.",
-      "status": "testnet-batch-4",
+      "status": "mainnet-batch-4",
       "priority": 4
     },
     {
@@ -978,7 +994,7 @@
       "maxSlashBps": 2000,
       "note": "Accept transferable stkAVNT only \u2014 never AVNT. pokeRewards = claimRewards(this,max) selector 0x9a99b4f0, same 4 bytes as QUID. NEVER setRewardsSelector to claimRewardsAndRedeem 0xeab52318 (burns stkAVNT) or cooldown() 0x787a08a6. Claim tx 0x26f4ca90 (2026-07-03, 51.68 AVNT, no stkAVNT moved). Combined-redeem tx 0x24398d72 is the same 0xeab52318 call \u2014 a tx hash is not a selector. Slash max 20% stays in the receipt. AVNT 0x696F9436 isBlackListed. Stake pin 0x7aaf51e8.",
       "claimRewardsTx": "0x26f4ca907a874d263e3f2bea18906f33559a21c9e68fe5c585a72e81cfc5e31b",
-      "status": "ready",
+      "status": "mainnet-batch-1",
       "priority": 2
     }
   ]

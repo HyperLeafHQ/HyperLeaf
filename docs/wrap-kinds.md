@@ -32,7 +32,7 @@ HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset,
 | C1 | `LeafInboundLockbox` / `LeafVirtualsLockbox` | `LeafClosedOFT` | Sell on HyperEVM only | `hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`, `hORDER` |
 | C2 | `LeafRedeemQueue` | `LeafOFT` | Burn, wait, `claim` | `hMET` |
 
-Deploy: `docs/testnet-deploy.md`. Ids: `src/lz/AssetCatalog.sol`.
+Deploy: `docs/GROK_BOT_MAINNET.md`. Ids: `src/lz/AssetCatalog.sol`.
 
 ## Fees
 
@@ -49,16 +49,18 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 
 ## Queue
 
-1. **hxSQUID** (L, Base)
-2. **hcbETH** (L, Base)
-3. **hveAERO** (ve-NFT, Base — later)
-4. **hsWBERA** (L, Berachain) — wrap sWBERA. Never 4626 `withdraw`/`redeem` (those queue 7d)
+0. **hCANARY** (L, Base mainnet toy) — real DVN stack, then dead
+1. **hxSQUID** then **hAVNT** (L, Base) — side-token claim
+2. **hcbETH** / **hgSOON** / **hsWBERA** (L, rate skim)
+3. **hsAVAX** / **hsETHFI** / **hstkwaUSDC**
+4. **BLUAI4Y** / **hORDER** (C1, market exit)
+5. **hveAERO** (ve-NFT, Base — later)
+
+Deploy: `docs/GROK_BOT_MAINNET.md`. Ids: `src/lz/AssetCatalog.sol`. `MainnetBatches` locks `BATCH`.
 
 **Morpho vault shares (L family):** wrap the **ERC-4626 vault token**, not USDC/USDG, not a Morpho Blue market position. Blue supply is address-keyed — that is ORDER-class, skip. Each vault is its own listing (curator + markets ≠ shared backing). Never `deposit`/`mint`/`withdraw`/`redeem` on the vault. Yield in `convertToAssets`. Base and Robinhood both have LZ. Do not auto-list every Morpho vault; each needs a SOLVENCY row.
-5. **hAEVO** (C1, Ethereum)
-6. **hJupSOL** (L, Solana)
-7. **hANSEM** (L, Solana, ansem.io)
-8. **hwstETH** (L, Ethereum) — later, own ticker
+
+Later: hAEVO (C1), hJupSOL / hANSEM (Solana), hwstETH (own ticker).
 
 **Parked:** **hSKY** — stake-only (~4%) strips LockStake borrow. Min 30k USDS / ~1.44M SKY. If revived: C1 only-in, disclose liquidation. **hGMX** — stake yield frozen until $90; GLP V1 retired 2025-07-16. **hUNCX** — stake rewards + buybacks paused 2026-08-21; locker fees continue, not paid to stakers. **hSNX** — 420 staking closed Jun 2026; SIP-423 Phase 4 deferred. **hveUP** — veUP NFT on Robinhood Chain; wait NFT lockbox (with hveAERO). Never wrap liquid UP.
 

@@ -1,17 +1,16 @@
-# Grok bot — next-batch L receipts (hgSOON / hsAVAX / hstkwaUSDC / hsETHFI)
+# Grok bot — batch 2–3 L receipts (hgSOON / hsWBERA / hsAVAX / hstkwaUSDC / hsETHFI)
 
-Copy-paste after `docs/SOLVENCY.md` and `test/lz/LeafRateYield.t.sol` / `test/lz/LeafUmbrella.t.sol`. **Do not deploy mainnet.** **Do not set `INNER_TOKEN`.** Scripts revert if the inner is the live token.
+Go-live copy-paste is **`docs/GROK_BOT_MAINNET.md`**. This page is asset-specific harvest notes.
 
-Round-1 `TestnetCatalog.get` still reverts for these ids. `ASSET=…` goes through `TestnetListings` → `NextTestnetCatalog`.
+`BATCH=2` for hgSOON / hsWBERA (with hcbETH). `BATCH=3` for hsAVAX / hsETHFI / hstkwaUSDC. Mainnet inners from `AssetCatalog`. Canary must already have closed.
 
-Source testnet is the **same family as mainnet**. Do not put Fuji/Sepolia/BSC assets on Base Sepolia.
-
-| ASSET | Mainnet source | Testnet source | Dest |
+| ASSET | Mainnet source | Dest | Batch |
 | --- | --- | --- | --- |
-| `hgsoon` | BSC 56 | **BSC testnet 97** (LZ eid 40102) | HyperEVM 998 |
-| `hsavax` | Avalanche 43114 | **Fuji 43113** (eid 40106) | HyperEVM 998 |
-| `hstkwausdc` | Ethereum 1 | **Sepolia 11155111** (eid 40161) | HyperEVM 998 |
-| `hsethfi` | Ethereum 1 | **Sepolia 11155111** (eid 40161) | HyperEVM 998 |
+| `hgsoon` | BSC 56 | HyperEVM 999 | 2 |
+| `hswbera` | Bera 80094 | 999 | 2 |
+| `hsavax` | Avalanche 43114 | 999 | 3 |
+| `hstkwausdc` | Ethereum 1 | 999 | 3 |
+| `hsethfi` | Ethereum 1 | 999 | 3 |
 
 Skip `SetSecurityStack` on testnet. Same four keys as `docs/GROK_BOT_TESTNET.md`.
 

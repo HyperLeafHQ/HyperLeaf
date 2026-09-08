@@ -100,12 +100,11 @@ One listing at a time. Empty books and mixed exits do not help the ecosystem. Wr
 | | Ticker | Kind | Source | For users |
 | --- | --- | --- | --- | --- |
 | Live | **hNEST** | Native | HyperEVM | NEST / veNEST as a HyperEVM ERC-20 |
-| Next | **hxSQUID** | L | Base | Trade xSQUID here; QUID surplus → HYPE |
-| Then | **hcbETH** | L | Base | ETH PoS harvested as rate surplus → HYPE 99/1. Redeem remaining cbETH, not 1:1 after harvest |
-| Next testnet | **hgSOON**, **hstkwaUSDC**, **hsAVAX**, **hsETHFI** | L | BSC / Ethereum / Avalanche / Ethereum | gSOON (1% of rate surplus, like cbETH); Umbrella USDC; BENQI sAVAX; sETHFI (unwrap the receipt, never DelayedWithdraw) |
-| Batch 3 mainnet | **hsWBERA** | L | Berachain | Only this asset. No testnet. 1% of sWBERA rate surplus. Never the 7-day unbond |
-| Batch 4 testnet | **hORDER** | C1 | Arbitrum | Staked ORDER on one chain. Market exit. No CREATE2 twin |
-| Same L adapter | **hAVNT** | L | Base | stkAVNT. Instant unwrap. Never combined redeem |
+| Canary | **hCANARY** | L | Base | Toy token on the real LZ stack. Not a product |
+| Batch 1 | **hxSQUID**, **hAVNT** | L | Base | Trade xSQUID / stkAVNT here; QUID or AVNT surplus → HYPE |
+| Batch 2 | **hcbETH**, **hgSOON**, **hsWBERA** | L | Base / BSC / Bera | Rate surplus 1% protocol / 99% stays in the receipt |
+| Batch 3 | **hsAVAX**, **hsETHFI**, **hstkwaUSDC** | L | Avax / Ethereum | BENQI; ether.fi receipt; Umbrella USDC |
+| Batch 4 | **BLUAI4Y**, **hORDER** | C1 | BSC / Arbitrum | Market exit. No protocol redeem. No CREATE2 twin |
 | Morpho vaults | **hsteakUSDC**, **hsteakUSDG** | L | Base / Robinhood | Wrap the ERC-4626 **share**. Never deposit/redeem USDC/USDG. Never Morpho Blue positions |
 | Later C1 | hB3, PTSMAX | C1 | Base / BSC | Address-keyed farm or NFT. Market exit |
 | Needs new lockbox | veAERO, veUP, JupSOL, stDYDX | ve-NFT / L | Base / Robinhood / Solana / Cosmos | NFT or IBC first. Never wrap liquid UP or ethDYDX |

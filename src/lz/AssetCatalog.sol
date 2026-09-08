@@ -31,6 +31,23 @@ library AssetCatalog {
 
     function get(string memory id) internal pure returns (Listing memory a) {
         bytes32 k = keccak256(bytes(id));
+        if (k == keccak256("hcanary")) {
+            return Listing(
+                Kind.Liquid,
+                "hcanary",
+                "Hyperleaf Canary",
+                "hCANARY",
+                "LEAFTEST",
+                8453,
+                30184,
+                40245,
+                0,
+                0,
+                address(0),
+                5e16,
+                true
+            );
+        }
         if (k == keccak256("hkaito")) {
             return Listing(
                 Kind.Liquid,

@@ -198,7 +198,7 @@ Staking rewards and buybacks paused **2026-08-21**. UNCX lockers still take fees
 
 Do not wrap ethDYDX. Yield is validator stake on **dYdX Chain** (USDC fees, ~21–30d unbond, address-keyed). Liquid receipt is **Stride stDYDX**. Same class as hJupSOL: non-EVM lockbox first. Never undelegate from the lockbox.
 
-### hsWBERA (batch 3 — Berachain **mainnet only**, wrap sWBERA, 1% rate skim)
+### hsWBERA (batch 2 — Berachain mainnet, wrap sWBERA, 1% rate skim)
 
 No Bepolia. LZ EndpointV2 is live on 80094. One listing this phase.
 
@@ -235,7 +235,7 @@ Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.7
 | Worst-case loss | all TVL (custodial). C1: no protocol peg-out |
 | Test | do not ship until WIN claim is pinned. A row that says `hB3 ≤ B3.balanceOf(0x18541)` is **rejected** |
 
-### hORDER (batch 4 testnet — **Arbitrum only**, no CREATE2 twin)
+### hORDER (batch 4 — **Arbitrum only**, no CREATE2 twin)
 
 Canonical economic owner is **the Orderly ledger account = the Arb lockbox address**. Orderly already keys by address across chains. HyperLeaf only *appears* on Arb, so one address is enough. CREATE2 twins are the same identity idea — unused here.
 
