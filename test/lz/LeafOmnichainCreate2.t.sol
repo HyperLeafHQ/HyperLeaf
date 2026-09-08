@@ -12,6 +12,9 @@ import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 import {MockOrderlyProxy} from "test/mocks/MockOrderlyProxy.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
+import {LeafOrderPolicy} from "src/lz/LeafOrderPolicy.sol";
+import {HypeAddresses as H} from "src/lz/HypeAddresses.sol";
+import {LeafClosedOFT} from "src/lz/LeafClosedOFT.sol";
 
 contract MockOft is ERC20 {
     constructor() ERC20("ORDER", "ORDER") {}
@@ -215,5 +218,66 @@ contract LeafOmnichainCreate2Test is PegReady {
         vm.prank(user);
         vm.expectRevert();
         box.reportLedgerPrincipal(1_000e18);
+    }
+
+    function testSelectorsMatchPins() public pure {
+        assertEq(LeafOrderPolicy.STAKE_ORDER, bytes4(keccak256("stakeOrder(uint256)")));
+        assertEq(LeafOrderPolicy.SEND_REQUEST, bytes4(keccak256("sendUserRequest(uint256,uint8)")));
+        assertEq(STAKE_ORDER, LeafOrderPolicy.STAKE_ORDER);
+        assertEq(H.ORDER_OFT, LeafOrderPolicy.ORDER_OFT);
+        assertTrue(H.ORDER_ETH != H.ORDER_OFT);
+        assertTrue(LeafOrderPolicy.isPublicRequestType(10));
+        assertTrue(LeafOrderPolicy.isPublicRequestType(17));
+        assertFalse(LeafOrderPolicy.isPublicRequestType(2));
+        assertTrue(LeafOrderPolicy.isUnstakeType(4));
+    }
+
+    function testCannotMakeUnstakePublic() public {
+        vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.setPublicRequestType(2, true);
+    }
+
+    function testFarmUnstakeDisabledForOrder() public {
+        vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.farmUnstake(1);
+    }
+
+    function testIdleOrderIsNotYield() public {
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+        inner.mint(address(box), 10e18);
+        vm.startPrank(owner);
+        box.setConvertYieldToHype(true);
+        box.setHarvester(address(this));
+        vm.expectRevert();
+        box.pullYield(inner, address(0xC0));
+        vm.stopPrank();
+        assertEq(inner.balanceOf(address(box)), 10e18);
+        vm.prank(owner);
+        box.acknowledgePrincipalInBox();
+        assertFalse(box.farmPrincipalOut());
+    }
+
+    function testClosedOftMarketOnly() public {
+        vm.prank(owner);
+        LeafClosedOFT oft = new LeafClosedOFT("Hyperleaf staked ORDER", "hORDER", 0, address(ep), owner, guardian);
+        assertFalse(oft.redeemEnabled());
+        vm.prank(user);
+        vm.expectRevert(LeafClosedOFT.ExitViaMarketOnly.selector);
+        oft.send(30110, bytes32(uint256(uint160(user))), 1, user);
+    }
+
+    function testCannotAcknowledgeWithoutIdleOrder() public {
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+        vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.InsufficientLocked.selector);
+        box.acknowledgePrincipalInBox();
     }
 }

@@ -246,7 +246,21 @@ forge script script/lz/DeployClosed.s.sol:DeployClosed \
 # → OFT (LeafClosedOFT)
 ```
 
-Then WirePeers + SetSecurityStack + OpenPeg with `ASSET=`. Configure the closed listing (not `ConfigureMainnetListing`). Check `redeemEnabled == false` on the dest OFT.
+Then WirePeers + SetSecurityStack + OpenPeg with `ASSET=`. Then pin the farm:
+
+```
+BATCH=4 ASSET=$ASSET SOURCE=$SOURCE HARVESTER=$HARVESTER CONVERTER=$CONVERTER OWNER=$OWNER \
+forge script script/lz/ConfigureClosedListing.s.sol:ConfigureClosedListing \
+  --rpc-url $SOURCE_RPC --broadcast --private-key $PRIVATE_KEY
+```
+
+`horder` must be `--rpc-url arb` (42161). Script sets Orderly proxy, `stakeOrder`, public types **10 and 17 only**, unstake 2/3/4 stay owner. Inner must be OFT `0x4E200fE2…`, never ETH `0xABD4…`. Solvency is `reportLedgerPrincipal`, not `ORDER.balanceOf(lockbox)`.
+
+`bluai4y` must be BSC. Script sets `stake(amount, 4)` + `claimAll`. Do not `setShareExit`. Check dest `redeemEnabled == false`.
+
+After wrap smoke: guardian reports ledger (hORDER) before a second mint. Claim Board only after that smoke. Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive, not protocol fee.
+
+Do not enable protocol redeem to “help” a seller. Do not `DeployOmnichainLockbox` for ORDER.
 
 | ASSET | SOURCE_RPC | Inner | Harvest |
 | --- | --- | --- | --- |

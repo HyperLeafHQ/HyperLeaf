@@ -27,6 +27,11 @@ library HypeAddresses {
 
     /// @dev ORDER OFT (Arb / Base / OP). Wrap this, never the Ethereum ERC-20.
     address internal constant ORDER_OFT = 0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8;
+    /// @dev Circle native USDC on Arbitrum (ORDER harvest hop). Not ORDER.
+    address internal constant USDC_ARB = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+
+    /// @dev Ethereum ORDER ERC-20. Never wrap this. hORDER inner is the OFT.
+    address internal constant ORDER_ETH = 0xABD4C63d2616A5201454168269031355f4764337;
     /// @dev Orderly staking proxy. Identical on Eth/Arb/OP/Polygon/Base/Avax.
     address internal constant ORDERLY_PROXY = 0xC8A8Ce0Ab010E499ca57477AC031358febCbbF17;
 

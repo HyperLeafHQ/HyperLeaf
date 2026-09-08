@@ -275,7 +275,7 @@ Canonical economic owner is **the Orderly ledger account = the Arb lockbox addre
 | Failure | LZ to Orderly not credited; wrong-chain withdrawal; user inflating ledger report |
 | Auto-pause | `reportLedgerPrincipal < totalLocked` → Degraded, mint stops |
 | Worst-case loss | C1 TVL. First deposit after a gap is at-risk until the ledger report (bounded by `maxPerTx`) |
-| Test | `test/lz/LeafOmnichainCreate2.t.sol` (name is historical; listing is Arb-only). Pins: withdraw 1196 `0xdd65ff33`; USDC 1.156 `0x93ec1d61`; type 17 `0x7a9676a6` |
+| Test | `test/lz/LeafOmnichainCreate2.t.sol`. Idle ORDER cannot be `pullYield`. `farmUnstake` disabled (async 2/3/4). Pins: withdraw 1196 `0xdd65ff33`; USDC 1.156 `0x93ec1d61`; type 17 `0x7a9676a6` |
 | Deploy | `BATCH=4` `ASSET=horder` on Arb 42161. Mock ORDER + MockOrderlyProxy in forge tests |
 
 

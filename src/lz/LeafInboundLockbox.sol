@@ -156,8 +156,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit FarmRequestSel(sel);
     }
 
-    /// @dev Harvest types (Orderly 9/10/17) may be public. Unstake 2/3/4 stays owner.
+    /// @dev Harvest types (Orderly 10/17) may be public. Unstake 2/3/4 stays owner.
     function setPublicRequestType(uint8 payloadType, bool ok) external onlyOwner {
+        if (ok && farmStyle == FarmStyle.AmountNative && payloadType >= 2 && payloadType <= 4) revert BadStake();
         publicRequestType[payloadType] = ok;
     }
 
@@ -182,13 +183,23 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     /// @notice After the 4y lock: pull principal back. Then restakeIdle or setShareExit.
+    ///         ORDER unstake is async (`pokeFarmRequest` types 2/3/4) — this reverts.
     function farmUnstake(uint256 amount) external onlyOwner nonReentrant {
+        if (farmStyle == FarmStyle.AmountNative) revert BadStake();
         if (farm == address(0) || farmExitSel == bytes4(0) || amount == 0) revert BadStake();
         uint256 before = innerToken.balanceOf(address(this));
         (bool ok,) = farm.call(abi.encodeWithSelector(farmExitSel, amount));
         if (!ok || innerToken.balanceOf(address(this)) <= before) revert BadStake();
         farmPrincipalOut = false;
         emit FarmUnstaked(amount);
+    }
+
+    /// @notice ORDER returned to this box (async unstake). Does not mint. Does not
+    ///         prove the ledger. Owner only, and only if idle ORDER covers totalLocked.
+    function acknowledgePrincipalInBox() external onlyOwner {
+        if (farmStyle != FarmStyle.AmountNative) revert BadStake();
+        if (innerToken.balanceOf(address(this)) < totalLocked) revert InsufficientLocked();
+        farmPrincipalOut = false;
     }
 
     /// @notice No HyperEVM discount → lock idle BLUAI for another 4 years.
@@ -218,7 +229,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
     function harvest() external nonReentrant {
         _requireInnerSupplyOk(innerToken);
-        _harvestInner(innerToken, 0);
+        _harvestInner(innerToken, _principalReserved());
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
@@ -236,7 +247,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         }
         _requireInnerSupplyOk(innerToken);
 
-        _harvestInner(innerToken, 0);
+        _harvestInner(innerToken, _principalReserved());
 
         uint256 got = _pull(msg.sender, amount);
         if (totalLocked + got > depositCap) revert CapExceeded();
@@ -302,6 +313,11 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function _principalReserved() internal view virtual returns (uint256) {
+        // ORDER in this box is always principal (idle or in-transit). Never yield.
+        // Harvest is USDC / VALOR, pulled as a different token.
+        if (farmStyle == FarmStyle.AmountNative) {
+            return innerToken.balanceOf(address(this));
+        }
         return farmPrincipalOut ? 0 : totalLocked;
     }
 }

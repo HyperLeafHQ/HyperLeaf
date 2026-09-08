@@ -38,4 +38,8 @@ Env: `OWNER`, `GUARDIAN`, `FEE_RECIPIENT` (optional, defaults to owner), `INNER_
 
 One lockbox **address** per inner token. Never two lockboxes for the same token. Never enable reverse send on a C1 pair.
 
-If the source ledger keys by EVM address (Orderly ORDER/VALOR), CREATE2 that same lockbox on every OFT chain you will receive on (`script/lz/DeployOmnichainLockbox.s.sol`). Users do not pick Arb vs Base — the lockbox on this chain is the identity. Principal (staked), occupancy (VALOR/esORDER), and harvest (USDC → HYPE) stay separate.
+hORDER is **Arbitrum only**. One lockbox address is the Orderly identity. Do not
+CREATE2 a Base/OP twin and do not `openBridge` a second source into the same
+dest OFT (double-count `ledgerPrincipal`). `DeployOmnichainLockbox` is kept
+for a future listing that actually needs twins. Principal (staked ORDER),
+occupancy (VALOR/esORDER), and harvest (USDC → HYPE) stay separate.
