@@ -167,7 +167,9 @@ Do not open batch N+1 until batch N has those three answers.
 
 ## 5. hJitoSOL dest OFT (after batch 4, dest only)
 
-Source lockbox is a Solana program. This pass only deploys HyperEVM `LeafOFT`.
+Source lockbox is a Solana program. **This sandbox cannot emit a `.so`.**
+Grok bot builds it on a Docker machine — `docs/GROK_BOT_SOLANA.md`. This
+pass only deploys HyperEVM `LeafOFT` **after** that Store PDA exists.
 
 ```
 BATCH=5 ASSET=hjitosol OWNER=$OWNER GUARDIAN=$GUARDIAN \

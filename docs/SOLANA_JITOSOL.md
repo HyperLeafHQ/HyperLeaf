@@ -85,7 +85,14 @@ Spec crate: `solana/leaf-jito-rate` (`cargo test --manifest-path solana/leaf-jit
 
 There is **no user `Unlock`**. Burning hJitoSOL on HyperEVM is the only way shares leave.
 
-PDA: seeds `b"Store"` (this is the LZ OApp receiver / HyperEVM peer). Escrow ATA = Store's ATA for the JitoSOL mint. Rate account = Jito pool, read-only; `pool_mint` must equal JitoSOL.
+## Binary
+
+`cargo test` here is the spec, not the deployable program. Mainnet `.so` =
+Grok bot + Docker + LZ `oapp-solana` verifiable build
+(`docs/GROK_BOT_SOLANA.md`). Do not check in a `.so` from this sandbox.
+
+NCN is out. No restake, no VRT wrap, no extra airdrop harvest unless a
+future mint lands in the escrow without us asking.
 
 Cash invariant: `escrow_atoms >= last_accounted`. Harvest fee **leaves** the escrow ATA (to harvest ATA) in the same instruction that books it — not an accounting-only flag. Unlock transfers the computed remaining atoms, never `ATA.amount`. Extra JitoSOL in the ATA is a donation (backing, not yield).
 
