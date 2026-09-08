@@ -47,7 +47,7 @@ Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary boa
 
 > 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** HYPE 收益，也 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励，不是协议抽成）。相当于让出 1% 换更简单的撮合。
 
-Copy: 没人出价就不成交。协议不接盘。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
+Copy: 没人出价就不成交。协议不接盘。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
 
 
 **One line that must survive every rewrite:**
@@ -80,7 +80,7 @@ Do **not** ship Cancel / 撤销赎回 / “I changed my mind”. That button doe
 | ---------------- | ------------ | -- |
 | Burned an instant-receipt ticker | Leaf is gone. Receipt is in flight or already back on source. | Confirm copy before send: 烧掉之后不能撤回。 |
 | Burned a queued ticker (C2 / hNEST `requestWithdraw`) | Leaf is gone **and** they do not have the inner yet. Ticket waits `eta`. | 排队中不能取消。到期去源链领取。期间既没有 Leaf，也还没有收据。 |
-| Want Leaf again after they hold the receipt | That is a **new wrap**. New LZ fee. New mint. | Label it 再次存入 / wrap again. Never 取消赎回 or 恢复铸造. |
+| Want Leaf again after they hold the receipt | That is a **new wrap**. New LZ fee (paid to LayerZero, not us). New mint. | Label it 再次存入 / wrap again. Never 取消赎回 or 恢复铸造. |
 | Hold a sell-only ticker | There is no protocol redeem to cancel. | Only 卖掉. |
 
 `abortCredit` is owner/guardian after halt — not a user cancel. Do not surface it.
@@ -167,7 +167,7 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | ---- | ----- |
 | Always | 合约未经外部审计。架构由人定，实现由 AI 写。 |
 | Always | 不保证市场上有人买，不保证能按账面价卖掉。 |
-| Always | 跨链你付 LayerZero。送达不是协议能保证的即时到账。 |
+| Always | 跨链费是 LayerZero 收的最低标准，付给 LZ，不是付给 HyperLeaf。协议不从中获利。送达不是即时到账。 |
 | Caps / pause live | 有上限，可暂停。 |
 | Sell-only ticker | 可以长期低于账面价。那是流动性价格，除非底仓没了。 |
 | Claim board (if it exists) | 转让，不是现货，不是债。没人买就不成交。协议不接盘。挂单期间 HYPE 归协议。 |
@@ -179,6 +179,18 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Every listing | 底层协议可以改规则。HyperLeaf 不替它们偿付。 |
 
 Do not say audited. Do not say auto-compound NAV while `recordCompound` is disabled (`PRODUCT_COPY_YIELD.md`).
+
+## LayerZero fees (not ours)
+
+Any wrap, redeem, or 转让板跨链成交旁都要写：
+
+> 这笔是 LayerZero 收取的跨链费（按对方最低标准），付给 LayerZero，HyperLeaf 不抽成、不加价。
+
+Do not put it under “协议手续费”. The 1% buyer reward on the board is **not** an LZ fee. Converter / harvest hops are keeper-paid, not a user LZ line.
+
+English:
+
+> LayerZero fee, at their minimum. Paid to LayerZero. HyperLeaf does not take it.
 
 ## Words that are not synonyms (user language)
 
