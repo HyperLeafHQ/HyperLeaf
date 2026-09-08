@@ -8,7 +8,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
-import {LeafCallRewardSource} from "src/lz/LeafCallRewardSource.sol";
 import {ILeafRewardSource} from "src/lz/ILeafRewardSource.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -159,13 +158,6 @@ contract LeafHarvestSplitTest is PegReady {
         lockbox.pullYield(bluai, converter);
         assertEq(bluai.balanceOf(converter), 8e18);
         assertEq(bluai.balanceOf(address(lockbox)), 50e18);
-    }
-
-    function testCallRewardSourceRejectsWrongBox() public {
-        LeafCallRewardSource src = new LeafCallRewardSource(address(adapter), owner);
-        vm.prank(alice);
-        vm.expectRevert();
-        src.harvest(alice);
     }
 
     function testPokeClaimMustBeAllowlistedAndPaysLockbox() public {

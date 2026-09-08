@@ -25,7 +25,7 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 
 **HYPE convert** (`docs/HYPE_YIELD.md`):
 
-1. Anyone: `LeafCallRewardSource.harvest(lockbox)` — claim into the lockbox, pay gas, no swap.
+1. Anyone: `pokeClaim` / farm `harvest(lockbox)` — claim into the lockbox, pay gas, no swap.
 2. Keeper weekly: `pullYield` QUID / extra BLUAI / airdrops → WHYPE → `notify` 1%/99%. **cbETH:** pull **1% of rate surplus** only; 99% stays in the box.
 3. L never `pullYield` sKAITO or xSQUID. C1 BLUAI4Y may pull extra inner BLUAI only. Rate L may pull **only** the `exchangeRate` / `convertToAssets` surplus.
 

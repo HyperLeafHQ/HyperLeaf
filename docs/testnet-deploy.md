@@ -70,7 +70,7 @@ forge script script/lz/DeployTestnetDest.s.sol:DeployTestnetDest \
   --rpc-url $HYPEREVM_TESTNET_RPC_URL --broadcast --private-key $PRIVATE_KEY
 ```
 
-Log: `LeafOFT` or `LeafClosedOFT`, plus a `LeafWrapRegistry` the first time.
+Log: `LeafOFT` or `LeafClosedOFT`. No registry.
 
 ### 3. Wire both ways
 

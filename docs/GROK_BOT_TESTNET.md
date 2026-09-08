@@ -40,7 +40,7 @@ forge script script/lz/DeployTestnetDest.s.sol:DeployTestnetDest \
   --rpc-url hyperevm_testnet --broadcast --private-key $PRIVATE_KEY
 ```
 
-Copy: `LeafOFT` → `OFT`. First run also logs `LeafWrapRegistry`.
+Copy: `LeafOFT` → `OFT`. Do **not** deploy a wrap registry. Do **not** deploy `LeafClaimEscrow` / `LeafClaimFill` until abort/skip exists.
 
 ## 3. Peers both ways
 

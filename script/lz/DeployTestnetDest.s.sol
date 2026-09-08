@@ -4,12 +4,10 @@ pragma solidity ^0.8.24;
 import {Script, console2} from "forge-std/Script.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafClosedOFT} from "src/lz/LeafClosedOFT.sol";
-import {LeafWrapRegistry} from "src/lz/LeafWrapRegistry.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
 /// @notice HyperEVM testnet (998) half. Run after DeployTestnetSource.
-///         Optional REGISTRY=0x… to register the pair.
 contract DeployTestnetDest is Script {
     function run() external {
         string memory id = vm.envString("ASSET");
@@ -30,12 +28,6 @@ contract DeployTestnetDest is Script {
             console2.log("LeafOFT", oft);
         }
 
-        address registry = vm.envOr("REGISTRY", address(0));
-        if (registry == address(0)) {
-            LeafWrapRegistry reg = new LeafWrapRegistry(owner);
-            registry = address(reg);
-            console2.log("LeafWrapRegistry", registry);
-        }
         vm.stopBroadcast();
 
         console2.log("ASSET", id);
