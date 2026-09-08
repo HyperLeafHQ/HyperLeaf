@@ -603,9 +603,9 @@
       "exit": "instant-receipt",
       "infra": "solana-pending",
       "pairsWithUnit": "uSOL",
-      "note": "Jupiter LST (rate, Sanctum rails). Second Solana L after hJitoSOL. Part of headline APY is validator subsidy. Solana lockbox required. If you meant vote-locked JUP, that is a different listing.",
-      "status": "later-solana-lockbox",
-      "priority": 31
+      "note": "Do not start. Same rate-L family as hJitoSOL. After hJitoSOL has live locks. Sanctum/Jupiter subsidy APY. Never this BATCH=5.",
+      "status": "later-after-hjitosol",
+      "priority": 90
     },
     {
       "id": "hstdrv",
@@ -1019,7 +1019,12 @@
       "priority": 30,
       "decimalsInner": 9,
       "decimalsShare": 18,
-      "jitoPool": "Jito4APyf642JPZPx3hGc6WWJ8zPKtRbRs4P815Awbb"
+      "jitoPool": "Jito4APyf642JPZPx3hGc6WWJ8zPKtRbRs4P815Awbb",
+      "ncn": {
+        "switchboard": "no \u2014 requires Jito Vault / Fragmetric VRT, slashable",
+        "tiprouterRestake": "no \u2014 vault. Pool TOV already in JitoSOL rate",
+        "holderAirdropAta": "yes if pushed to PDA ATA; harvest_other, never restake"
+      }
     }
   ]
 }

@@ -7,6 +7,7 @@ import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
+import {LeafJitoPolicy} from "src/lz/LeafJitoPolicy.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
 contract LeafJitoRateTest is Test {
@@ -61,13 +62,32 @@ contract LeafJitoRateTest is Test {
         assertEq(atoms - out, fee);
     }
 
+    function testListingTagMatchesKeccak() public pure {
+        assertEq(LeafJitoPolicy.LISTING_TAG, keccak256("hjitosol"));
+        assertTrue(LeafJitoPolicy.isForbiddenProgram(LeafJitoPolicy.VAULT_PROGRAM));
+        assertTrue(LeafJitoPolicy.isForbiddenProgram(LeafJitoPolicy.RESTAKING_PROGRAM));
+        assertTrue(LeafJitoPolicy.isForbiddenProgram(LeafJitoPolicy.STAKE_POOL_PROGRAM));
+        assertFalse(LeafJitoPolicy.isForbiddenProgram(bytes32(uint256(1))));
+    }
+
+    function testHarvestOtherRejectsJitoMint() public {
+        vm.expectRevert(LeafJitoPolicy.CannotHarvestInner.selector);
+        this._harvestOther(LeafJitoPolicy.JITO_MINT);
+        LeafJitoPolicy.requireHarvestOther(bytes32(uint256(2)));
+    }
+
+    function _harvestOther(bytes32 mint) external pure {
+        LeafJitoPolicy.requireHarvestOther(mint);
+    }
+
     function testPayloadIsAbiEncodeTagToAmount() public {
         AssetCatalog.Listing memory a = AssetCatalog.get("hjitosol");
         assertEq(a.sourceEidMain, A.EID_SOLANA);
         assertEq(a.innerMainnet, address(0));
         assertFalse(a.productionEvm);
         assertEq(MainnetBatches.batchOf("hjitosol"), 5);
-        bytes32 tag = keccak256(bytes("hjitosol"));
+        bytes32 tag = LeafJitoPolicy.LISTING_TAG;
+        assertEq(tag, keccak256("hjitosol"));
         bytes32 to = bytes32(uint256(uint160(address(0xBEEF))));
         uint256 amount = 1e18;
         bytes memory payload = abi.encode(tag, to, amount);

@@ -76,7 +76,8 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 | Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate`. 99% stays in the PDA |
 | Proof source | PDA token balance + pool account + `LeafJitoRate` |
 | Mint / redeem | lock JitoSOL / unlock remaining JitoSOL. **Never** `depositSol` / `withdrawSol` / `depositStake` |
-| Yield | staking + MEV inside the rate, left in remaining JitoSOL. Protocol skims 1% JitoSOL → harvest ATA → WHYPE. Holders have **no** WHYPE claim |
+| Yield | staking + MEV/TOV **inside the rate**, left in remaining JitoSOL. Protocol skims 1% JitoSOL → harvest ATA → WHYPE. Holders have **no** WHYPE claim |
+| NCN / Switchboard | **Not backing, not this listing.** SWTCH and TipRouter restake rewards require depositing JitoSOL into a Jito Vault (VRT, slashable). Lockbox never CPI Vault `Vau1t6sL…` or Restaking `RestkWeA…`. Idle PDA does not earn them. Token-push airdrops to the PDA ATA: `harvest_other`, not JitoSOL |
 | Donation | extra JitoSOL into the PDA is extra backing, not yield |
 | Failure | Solana program upgrade; pool_mint mismatch; EVM `WirePeers(address)` instead of 32-byte PDA; confirmations < 32 |
 | Auto-pause | guardian halt on dest OFT; source pause |

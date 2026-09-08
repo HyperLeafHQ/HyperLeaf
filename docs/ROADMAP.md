@@ -65,13 +65,12 @@ Do **not** mock Solana inners on Base.
 
 | Candidate | Kind | Why / why not |
 | --- | --- | --- |
-| **jitoSOL** | L rate | Deepest single LST (~14M SOL / ~$0.7–1.1B). Yield in the SOL/jitoSOL rate (cbETH-class). First Solana ticker once the program exists |
-| **jupSOL** | L rate | Already catalogued. Sanctum rails, Jupiter validator, part of APY is subsidy. Second, not first |
-| **mSOL** / **INF** | L rate | Same math. Smaller or basket. After jitoSOL |
-| **bnSOL** | skip | Binance-issued. Redemption is CEX-shaped |
-| **hANSEM** | watch | Spot memecoin + launchpad airdrops. No stake-pool rate. Not batch-1 Solana |
-| **BONK12M** | C1 | 12m lock. Needs the same escrow plus lock accounting |
-| **hMET** | C2 | ~21d unbond queue. After L |
+| **jitoSOL** | L rate | **This listing.** Stake-pool rate only. No NCN restake |
+| **jupSOL** | later | Same math, after hJitoSOL has live locks. Subsidy APY |
+| **mSOL** / **INF** | later | Same math. After jitoSOL |
+| **bnSOL** | skip | Binance-issued |
+| **hANSEM** | watch | Not an LST |
+| **BONK12M** / **hMET** | last | After the JitoSOL program exists |
 
 Harvest on Solana rate LSTs is the cbETH skim (`SOL per share` ↑), not a side token. That skim has to run in the Solana program or an EVM view of a rate oracle — design that with the lockbox, do not pretend `pokeRewards` exists on SPL.
 

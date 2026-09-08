@@ -64,6 +64,8 @@ pub fn encode_bridge(tag: [u8; 32], to: [u8; 32], amount: u128) -> [u8; 96] {
     out
 }
 
+pub mod lockbox;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -95,3 +97,4 @@ mod tests {
         assert_eq!(&buf[64 + 24..], &[0x0d, 0xe0, 0xb6, 0xb3, 0xa7, 0x64, 0x00, 0x00]);
     }
 }
+
