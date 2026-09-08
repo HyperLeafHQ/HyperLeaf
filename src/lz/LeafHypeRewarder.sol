@@ -47,6 +47,7 @@ contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
     error DustNotify();
     error ListingMismatch();
     error TokenAlreadyRegistered();
+    error RewardsDisabled();
 
     constructor(address hype_, address owner_, address feeRecipient_) Ownable(owner_) {
         if (hype_ == address(0) || owner_ == address(0) || feeRecipient_ == address(0)) revert ZeroAddress();
@@ -93,10 +94,12 @@ contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
     }
 
     /// @notice Pull WHYPE from caller, take 1%, credit 99% to current hToken supply.
-    ///         Reverts `DustNotify` when `amount` < `minNotify(id)` (acc would not increase).
+    ///         A retired hToken can settle/claim existing rewards but cannot receive
+    ///         any new distribution after its lifecycle is permanently disabled.
     function notify(bytes32 id, uint256 amount) external nonReentrant {
         Pool storage p = pools[id];
         if (!p.exists) revert UnknownPool();
+        if (!ILeafOFTRewardBind(p.hToken).rewardsActive()) revert RewardsDisabled();
         if (amount == 0) return;
         uint256 supply = IERC20(p.hToken).totalSupply();
         if (supply == 0) revert NoSupply();
