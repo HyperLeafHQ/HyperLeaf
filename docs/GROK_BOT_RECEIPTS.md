@@ -15,7 +15,7 @@ Source testnet is the **same family as mainnet**. Do not put Bera or BSC assets 
 
 Skip `SetSecurityStack` on testnet. Same four keys as `docs/GROK_BOT_TESTNET.md`.
 
-Yield is **in the share rate**. `pullYield(inner)` must revert `CannotPullInner`. Never call vault unbond/cooldown on the inner.
+Yield is **cbETH-class**: `setRateKind(ConvertToAssets)` + `setRetainRateYield(true)`. Anyone `pullYield(inner, converter)` after the mock rate rises — converter gets **1% of surplus**, ~99% stays. Wrap itself must **not** move surplus. Donation is not yield. Redeem remaining gSOON, not 1:1 after the skim. Never call vault unbond/cooldown on the inner.
 
 ---
 
@@ -91,7 +91,9 @@ forge script script/lz/SmokeTestnetRedeem.s.sol:SmokeTestnetRedeem \
   --rpc-url hyperevm_testnet --broadcast --private-key $PRIVATE_KEY
 ```
 
-`INNER.balanceOf(OWNER)` on 97 must rise. `pullYield($INNER)` from owner must revert.
+`INNER.balanceOf(OWNER)` on 97 must rise.
+
+Harvest smoke: `cast send $INNER "setRate(uint256)" 1100000000000000000` then anyone `pullYield($INNER, $CONVERTER)` — converter receives **1% of surplus**. `pullYield` of the inner is the skim, not a bug. Cooldown selectors must revert if set.
 
 ---
 

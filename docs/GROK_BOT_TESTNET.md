@@ -208,7 +208,7 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 
 ## Next testnet batch — hgSOON first (do not mix with §7 of this round)
 
-`TestnetCatalog.get("hgsoon")` still reverts. Use `ASSET=hgsoon` with the same deploy scripts — they go through `TestnetListings` → `NextTestnetCatalog`. Source **BSC testnet 97**, dest 998. Mock inner. **No** `setRewardsSelector`. `pullYield(inner)` must revert `CannotPullInner`.
+`TestnetCatalog.get("hgsoon")` still reverts. Use `ASSET=hgsoon` with the same deploy scripts — they go through `TestnetListings` → `NextTestnetCatalog`. Source **BSC testnet 97**, dest 998. Mock inner implements `convertToAssets`. Configure sets `ConvertToAssets` + `retainRateYield`. **No** `setRewardsSelector`. After `setRate` on the mock, `pullYield(inner, converter)` skims **1%**.
 
 Copy-paste: `docs/GROK_BOT_RECEIPTS.md` section A.
 

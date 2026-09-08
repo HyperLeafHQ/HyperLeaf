@@ -6,7 +6,7 @@ Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
 
 **Rate-bearing L (hcbETH):** `setRateKind` + `setRetainRateYield(true)`. Harvest pulls **1% of** `(lastAccounted * (rate - lastRate)) / rate` to the converter (protocol fee → HYPE). **99% stays in the lockbox.** Redeem is remaining inner / shares. LP and lending keep the ETH-value of that remaining cbETH. Do not sell the whole surplus to WHYPE. Donations are not yield. Wrap/redeem do not talk to the converter.
 
-xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). hgSOON / hsWBERA / Morpho default to yield-in-share — do not set `rateKind` unless the row says so.
+xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). **hgSOON** uses `ConvertToAssets` + `retainRateYield` (cbETH-class 1% skim). hsWBERA / Morpho stay yield-in-share until their row opts in.
 
 
 HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset, keep the extra income of the source position.

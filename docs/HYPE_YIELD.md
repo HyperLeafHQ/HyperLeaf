@@ -36,7 +36,7 @@ Same converter bytecode on source (swap/bridge) and HyperEVM (`setRewarder` + `n
 | **hxSQUID** | L, return xSQUID | **QUID** | **xSQUID** |
 | **hcbETH** | L, shares of remaining cbETH | **Rate surplus only** (`exchangeRate` × dRate / rate) | Principal. Coinbase unwrap. More than surplus |
 | **hsAVAX** | L, shares of remaining sAVAX | **Rate surplus only** (`getPooledAvaxByShares`) | Principal. BENQI `requestUnlock`. More than surplus |
-| **hgSOON** | L, return gSOON | nothing — yield stays in `convertToAssets` | **gSOON**. SOON. `deposit` / `cooldownShares` / 90d `lock` |
+| **hgSOON** | L, remaining gSOON | **Rate surplus 1%** (`convertToAssets`) | Principal. SOON. `deposit` / `cooldownShares` / 90d `lock`. More than the 1% |
 | **BLUAI4Y** | C1, market only | Extra **BLUAI** (`pullInnerEnabled = true`, surplus only) | Principal (`totalLocked`) |
 | **hVIRTUALMAX** | C1 | Agent airdrops | Staked VIRTUAL (Auto Max-lock) |
 

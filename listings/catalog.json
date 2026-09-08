@@ -864,14 +864,17 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "yield": {
-        "inner": "keep-gsoon-rate",
-        "pullInner": false,
-        "toHype": []
+        "inner": "gsoon-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
       },
-      "note": "NEXT TESTNET BATCH (BSC testnet 97, NextTestnetCatalog). Wrap transferable gSOON only \u2014 never SOON. 1 hgSOON = 1 gSOON; SOON NAV lives in convertToAssets (1.122 \u2192 1.224 \u2192 1.435 at cooldown; live ~1.745). Do not set rateKind / retainRateYield \u2014 yield stays in the share (unlike hcbETH). Never cooldownShares / claim / 90d lock. Users unwrap hgSOON then unstake at SOON themselves. This round's TestnetCatalog stays four assets. Deploy via ASSET=hgsoon on chain 97 using TestnetListings.",
+      "note": "NEXT TESTNET BATCH (BSC testnet 97, NextTestnetCatalog). Same L/retainRateYield path as hcbETH; rate ABI is convertToAssets not exchangeRate. Wrap gSOON only, never SOON, never cooldownShares / 90d lock. Harvest pulls 1% of (inner * dRate / rate) to converter; 99% stays so LP/lend keep SOON value. Holders do not claim WHYPE. Redeem remaining gSOON, not 1:1 after skim. This round's TestnetCatalog stays four assets.",
       "status": "next-testnet",
       "priority": 10,
-      "claim": "No side token. Yield is convertToAssets on gSOON. Never setRewardsSelector. Never deposit/mint SOON, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f on 0x660102f6.",
+      "claim": "No side token. Rate is convertToAssets(1e18). setRateKind(ConvertToAssets)+retainRateYield. Never setRewardsSelector. Never deposit/mint SOON 0x6e553f65, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f.",
       "refs": {
         "depositTx1": "0x246a12a44e1c761d2201a3bc14f50e77310f92204c14d2fd3d053454c194bec9",
         "depositTx2": "0xc6559838645fc6c719a8bd26cce4e98d752ac4d854b47ae028d3176ce306dee2",

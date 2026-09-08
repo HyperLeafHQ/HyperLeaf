@@ -5,6 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockClaimInner} from "test/mocks/MockClaimInner.sol";
 import {MockRateERC20} from "test/mocks/MockRateERC20.sol";
+import {MockConvertERC20} from "test/mocks/MockConvertERC20.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
@@ -55,6 +56,10 @@ contract DeployTestnetSource is Script {
                 console2.log("MockSideToken", address(extra));
             } else if (keccak256(bytes(id)) == keccak256("hcbeth")) {
                 MockRateERC20 mock = new MockRateERC20(a.innerSymbol, a.innerSymbol);
+                mock.mint(owner, 1_000_000 ether);
+                inner = address(mock);
+            } else if (keccak256(bytes(id)) == keccak256("hgsoon")) {
+                MockConvertERC20 mock = new MockConvertERC20(a.innerSymbol, a.innerSymbol);
                 mock.mint(owner, 1_000_000 ether);
                 inner = address(mock);
             } else {

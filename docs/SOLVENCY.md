@@ -83,7 +83,7 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 | Worst-case loss | min(depositCap, maxPerDay) on principal. Yield path loss is converter execution on the 1% skim |
 | Test | `test/lz/LeafRateYield.t.sol` — 1% skim, 99% retained, slash, NAV mint, donation invariance, floor rounding, rate fuzz, sell-all still works if retain is off |
 
-Do **not** enable `rateKind` on hgSOON / hsWBERA / Morpho shares unless that listing's row says pull rate surplus. Default for those is yield-in-the-share, 1 share = 1 wrapped share.
+Do **not** enable `rateKind` on hsWBERA / Morpho shares unless that listing's row says pull rate surplus. **hgSOON opts in:** `ConvertToAssets` + `retainRateYield` (same 1% skim as hcbETH).
 
 Converter `minOut` is enforced on `LeafYieldConverter.execute` (balance delta) and `notify(amount, minAmount)`. It is **not** a lockbox invariant — wrap/redeem never talk to the converter. A dead hop: `halt` + `returnToLockbox`. Next hop can be a different allowlisted bridge (deBridge / Mayan / Relay).
 
@@ -112,23 +112,25 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Worst-case loss | min(cap, maxPerDay) on principal. KING/ETHFI/EIGEN are yield, not backing |
 | Test | L suite. Deposit 0x24a993c9. Do not treat empty ETHFI/EIGEN distributors as current yield |
 
-### hgSOON (next testnet — wrap gSOON only)
+### hgSOON (next testnet — wrap gSOON, cbETH-class 1% skim)
 
 | | |
 | --- | --- |
-| Canonical backing | transferable gSOON pulled (`0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7` on **BSC**, ERC-4626, vault=token) |
-| Accounting unit | 1 hgSOON = 1 gSOON. Rate vs SOON lives in gSOON |
-| Core invariant | L: `supply ≤ totalLocked gSOON` + gSOON/SOON vault ceiling |
-| Proof source | lockbox `totalLocked` + `previewRedeem` / inner supply |
-| Mint / redeem | wrap/unwrap **gSOON**. Instant. **Never** `deposit` SOON `0x6e553f65`. **Never** 7d unstake: `cooldownShares(uint256)` 0x9343d9e1 / `cooldownAssets(uint256)` 0xcdac52ed, then `claim(address)` 0x1e83409a after 604800. Silo `agingPool` `0x64512C59…` |
-| Yield | in `convertToAssets`. **No** `rateKind` / **no** retainRateYield (unlike hcbETH). `pullYield(gSOON)` reverts `CannotPullInner`. No WHYPE claim |
-| 90d lock | occupancy on `0x660102f6` (`lock(uint256,uint256)` 0x1338736f / `withdraw(uint256)` 0x2e1a7d4d) — not backing, not harvest. Do not enter |
-| Pins (16ba) | deposit1 `0x246a12a4` 4998.4994 SOON → 4454.0268 gSOON @ **1.1222** (2025-05-29). deposit2 `0xc6559838` 3413 SOON → 2789.0880 gSOON @ **1.2237** (2025-06-22). lock/unlock 7243.1147 gSOON 1:1. cooldownShares `0x5a3c5441` burns 7243.1148 gSOON → 10390.2495 SOON @ **1.4345** (2025-09-22). Live ~1.7447. Share dust ~6.6e-6 left |
-| Failure | vault upgrade; someone calls cooldown on our lockbox (principal in silo 7d) |
+| Canonical backing | transferable gSOON pulled (`0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7` on **BSC**) |
+| Accounting unit | hgSOON **shares**. Remaining gSOON per share moves only by the 1% protocol skim |
+| Core invariant | `oft.totalSupply() ≤ adapter.totalLocked()` (shares). Remaining inner ≥ lastAccounted |
+| Rate source | gSOON `convertToAssets(1e18)` (`RateKind.ConvertToAssets`). Not `exchangeRate()` |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box |
+| Mint / redeem | wrap/unwrap **gSOON**. Instant. After skim, remaining gSOON is not 1:1. **Never** `deposit` SOON `0x6e553f65`. **Never** `cooldownShares` 0x9343d9e1 / `cooldownAssets` 0xcdac52ed / `claim` 0x1e83409a |
+| Yield | SOON staking already in the 4626 rate. Protocol skims 1% of surplus to converter → HYPE. Holders have **no** WHYPE claim. LP/lend keep the 99% |
+| Donation | extra gSOON transfer is backing, not yield |
+| 90d lock | occupancy on `0x660102f6` (`lock(uint256,uint256)` 0x1338736f). Do not enter |
+| Pins (16ba) | deposit1 `0x246a12a4` @ 1.1222. deposit2 `0xc6559838` @ 1.2237. cooldownShares `0x5a3c5441` @ 1.4345. Live ~1.7447 |
+| Failure | vault upgrade; cooldown on the lockbox |
 | Auto-pause | ceiling / health |
-| Worst-case loss | min(cap, maxPerDay) on gSOON principal. 90d lock APY is not backing |
-| Test | `LeafReceiptOnly`, `testRewardsSelectorRejectsGsoonCooldownAndLock`. `TestnetCatalog.get("hgsoon")` reverts; `NextTestnetCatalog` / `TestnetListings` accept it |
-| Testnet | BSC testnet 97 mock inner. Same `LeafOFTAdapter` as hxSQUID, **no** `setRewardsSelector`. Not in this round's four-id `TestnetCatalog` |
+| Worst-case loss | min(cap, maxPerDay) on principal. Converter execution on the 1% skim |
+| Test | `testGsoonConvertToAssetsSameMathAsCbeth`, `testRewardsSelectorRejectsGsoonCooldownAndLock` |
+| Testnet | BSC testnet 97 `MockConvertERC20`. `setRateKind(ConvertToAssets)` + `setRetainRateYield(true)`. No `setRewardsSelector` |
 
 
 

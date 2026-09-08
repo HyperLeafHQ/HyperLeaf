@@ -330,6 +330,56 @@ contract LeafRateYieldTest is PegReady {
         assertEq(savax.balanceOf(converter), _fee(surplus));
         assertEq(box.totalLocked(), 100e18);
     }
+
+    function testGsoonConvertToAssetsSameMathAsCbeth() public {
+        MockGSOON gsoon = new MockGSOON();
+        vm.startPrank(owner);
+        LeafOFTAdapter box = new LeafOFTAdapter(address(gsoon), address(epSrc), owner, guardian, feeTo, 1_000e18);
+        LeafOFT dest = new LeafOFT("hgSOON", "hgSOON", address(epDst), owner, guardian);
+        box.setPeer(DST, address(dest));
+        dest.setPeer(SRC, address(box));
+        box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+        box.setRetainRateYield(true);
+        box.setConvertYieldToHype(true);
+        box.setConverter(converter);
+        box.setHarvester(owner);
+        vm.stopPrank();
+        _openPair(box, dest, owner, 1_000e18);
+        gsoon.mint(user, 100e18);
+        vm.startPrank(user);
+        gsoon.approve(address(box), 100e18);
+        box.sendTo{value: 0.01 ether}(DST, user, 100e18);
+        vm.stopPrank();
+        // 1.1222 → 1.4345 like the 16ba cooldown path
+        gsoon.setAssets(1_4345e14);
+        vm.prank(owner);
+        box.pullYield(gsoon, converter);
+        uint256 surplus = _surplus(100e18, 1e18, 1_4345e14);
+        assertEq(gsoon.balanceOf(converter), _fee(surplus));
+        assertEq(box.totalLocked(), 100e18);
+        // cooldownShares still forbidden
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        box.setRewardsSelector(bytes4(0x9343d9e1));
+    }
+}
+
+contract MockGSOON is ERC20 {
+    uint256 public assetsPerShare = 1e18;
+
+    constructor() ERC20("gSOON", "gSOON") {}
+
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
+    }
+
+    function setAssets(uint256 r) external {
+        assetsPerShare = r;
+    }
+
+    function convertToAssets(uint256 shares) external view returns (uint256) {
+        return shares * assetsPerShare / 1e18;
+    }
 }
 
 contract MockSAVAX is ERC20 {

@@ -35,6 +35,10 @@ contract ConfigureTestnetListing is Script {
             box.setRateKind(LeafYieldFee.RateKind.ExchangeRate);
             box.setRetainRateYield(true);
         }
+        if (keccak256(bytes(a.id)) == keccak256("hgsoon")) {
+            box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+            box.setRetainRateYield(true);
+        }
         vm.stopBroadcast();
 
         console2.log("configured", source);

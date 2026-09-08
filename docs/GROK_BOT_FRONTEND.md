@@ -127,7 +127,8 @@ Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty *
 | ------ | -- |
 | hxSQUID | 领取 WHYPE. Does not burn the Leaf. Extra QUID, not the xSQUID. |
 | hcbETH | **No 领取 HYPE for holders.** PoS stays in cbETH. Protocol skims 1% of the rate surplus (sold to HYPE). Copy: 质押收益留在这份收据里，做市和借贷也能拿到。协议从增值里抽 1%。赎回拿回的是金库按份额能付的 cbETH。 |
-| hgSOON, hsWBERA, Morpho shares | **No claim button.** Yield-in-the-share: wrap 1 share, unwrap 1 share. Do not copy either hcbETH skim or hxSQUID claim onto them. |
+| hgSOON | **Same as hcbETH.** No 领取 HYPE. gSOON/SOON rate stays in the receipt. Protocol skims 1% of surplus. Copy: 赎回拿回的是剩下的 gSOON，不是当初那一枚。永远不要帮用户冷却或 90 天锁。 |
+| hsWBERA, Morpho shares | **No claim button.** Yield-in-the-share until that listing opts into `rateKind`. Do not copy hcbETH skim onto them until SOLVENCY says so. |
 
 Do not invent “偶发空投” for cbETH. After the 1% skim, 1 hcbETH unwraps slightly less cbETH; that remaining cbETH is worth more ETH. Do not say holders claim HYPE for cbETH PoS.
 
@@ -155,7 +156,7 @@ HYPE is **not** inside the Leaf. Leaf does **not** rebase. Pending WHYPE is **pe
 
 hNEST does **not** use this rewarder. Do not put 领取 HYPE on hNEST.
 
-Tickers whose yield stays in the share (`hgSOON`, `hsWBERA`, Morpho unless `rateKind`+`toHype`) have **no** HYPE claim in any of the rows above.
+Tickers with `retainRateYield` (`hcbETH`, `hgSOON`, later `hsAVAX`) have **no** holder HYPE claim. Copy must say remaining receipt, not 1:1. `hsWBERA` / Morpho stay 1 share = 1 share until their row opts in.
 
 ### Copy that must appear
 

@@ -13,7 +13,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | **next testnet** | **hstkwaUSDC** | L | Ethereum | Wrap **stkwaEthUSDC.v1** `0x6bf1…8Aa6` only. Dual harvest: 4626 rate + RewardsController. Never cooldown / v2 auto-migrate. After current 4-asset round. |
 | **next testnet** | **hsAVAX** | L | Avalanche | BENQI sAVAX `0x2b2C…a4bE`. Same 1% rate skim as hcbETH via `getPooledAvaxByShares`. Never `requestUnlock`. |
 | later | **hsETHFI** | L | Ethereum | Receipt only. Never 10d DelayedWithdraw |
-| **next testnet** | **hgSOON** | L | **BSC** `0xcC48…` | Same L adapter, yield-in-share. Never `cooldownShares` / 90d lock. BSC testnet 97 via `NextTestnetCatalog` |
+| **next testnet** | **hgSOON** | L | **BSC** `0xcC48…` | cbETH-class 1% skim via `convertToAssets`. Never `cooldownShares` / 90d lock. BSC testnet 97 |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
 | later | **hORDER** | C1 | Arb/Base OFT CREATE2 | Address-keyed lockbox in code. esORDER claim +7d |
@@ -45,7 +45,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 ## Phases
 
 **A** — testnet hxSQUID / hAVNT then hcbETH, then mock BLUAI4Y (`GROK_BOT_TESTNET.md`). Do not add assets to `TestnetCatalog` this round.
-**A2** — next testnet: **hgSOON** (BSC 97, yield-in-share, `NextTestnetCatalog`) then **hstkwaUSDC** + **hsAVAX**. Do not add any of them to this round's four-id `TestnetCatalog`. hsteakUSDC later — Umbrella already covers USDC.
+**A2** — next testnet: **hgSOON** (BSC 97, cbETH-class 1% skim via `convertToAssets`) then **hstkwaUSDC** + **hsAVAX**. Do not add any of them to this round's four-id `TestnetCatalog`. hsteakUSDC later — Umbrella already covers USDC.
 **A′** — do **not** seed a HyperEVM AMM to fake spot. C1 / queued listings get a peer **claim board** later (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **B** — mainnet hxSQUID, tiny cap.
 **C** — hcbETH.
