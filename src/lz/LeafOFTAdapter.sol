@@ -12,8 +12,8 @@ import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 /// @notice Source-chain lockbox for an existing ERC20 (e.g. sKAITO / xSQUID / cbETH).
 ///         Convert-off: 1% of newly accrued inner yield to feeRecipient.
 ///         Convert-on: surplus → converter → WHYPE `notify` 99/1. Rate-bearing
-///         listings accrue `exchangeRate` surplus on lastAccounted only; pullYield
-///         (harvester) is the only transfer to converter. Wrap/redeem never swap.
+///         listings use an economic cost-basis HWM, not a mutable rate watermark;
+///         pullYield is the only transfer to converter. Wrap/redeem never swap.
 ///         No fee on in/out.
 contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     using SafeERC20 for IERC20;
@@ -66,11 +66,13 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (to == address(0) || amount == 0) revert ZeroAmount();
         if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
         if (amount > totalLocked) revert InsufficientLocked();
+        _syncRateShares(totalLocked);
         _accrueRateYield(innerToken);
         uint256 assetsOut = _assetsForShares(innerToken, amount, totalLocked, 0);
         _requireCash(innerToken, assetsOut, 0);
         _reducePrincipal(amount, totalLocked);
         totalLocked -= amount;
+        _syncRateShares(totalLocked);
         innerToken.safeTransfer(to, assetsOut);
         emit CreditAborted(to, assetsOut);
     }
@@ -126,8 +128,9 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         rateJumped = false;
     }
 
-    /// @notice Anyone. Books retain fee or trips the rate-jump breaker without minting.
+    /// @notice Anyone. Books rate yield against the economic cost basis or trips the breaker.
     function pokeRate() external {
+        _syncRateShares(totalLocked);
         _accrueRateYield(innerToken);
     }
 
@@ -138,14 +141,15 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
     /// @notice Pull harvestable surplus to the converter. Anyone. `to` must be converter.
     ///         Inner, RateKind.None: revert (principal, including donations).
-    ///         Inner, rate-bearing: only rate-implied surplus on `lastAccounted`.
+    ///         Inner, rate-bearing: only rate-implied surplus on the cost-basis HWM.
     ///         Any other ERC20 (QUID, airdrops): entire balance. Not backing.
-    ///         Pulling a side token does not change `totalLocked` / `lastAccounted`.
+    ///         Pulling a side token does not change `totalLocked` / rate cost basis.
     function pullYield(IERC20 token, address to) external nonReentrant {
         _requireConverter(to);
         if (address(token) == address(innerToken)) {
             if (rateKind == RateKind.None) revert CannotPullInner();
             _requireConvertOn();
+            _syncRateShares(totalLocked);
             uint256 before = lastRate;
             if (_tryPullRateYield(innerToken, 0, to) == 0) {
                 if (lastRate == before) revert NoYield();
@@ -174,6 +178,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _requireInnerSupplyOk(innerToken);
 
         _harvestInner(innerToken, 0);
+        _syncRateShares(totalLocked);
         _accrueRateYield(innerToken);
         if (rateJumped) revert NotHealthy();
 
@@ -187,6 +192,8 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         }
         totalLocked += shares;
         _accountDeposit(got);
+        _recordRateDeposit(innerToken, got);
+        _syncRateShares(totalLocked);
 
         _takeQuota(shares);
 
@@ -217,11 +224,13 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (rateKind == RateKind.None && innerToken.balanceOf(address(this)) < totalLocked) revert Underbacked();
 
         _harvestInner(innerToken, 0);
+        _syncRateShares(totalLocked);
         _accrueRateYield(innerToken);
         uint256 assetsOut = _assetsForShares(innerToken, amount, totalLocked, 0);
         _requireCash(innerToken, assetsOut, 0);
         _reducePrincipal(amount, totalLocked);
         totalLocked -= amount;
+        _syncRateShares(totalLocked);
         innerToken.safeTransfer(to, assetsOut);
         emit BridgedIn(to, origin.srcEid, assetsOut, guid);
     }
