@@ -20,9 +20,15 @@ contract MockBluaiStake is IBluaiStake {
     IERC20 public immutable token;
     mapping(address => uint256) public staked;
     uint256 public pending;
+    uint256 public consumptionBps = 10_000;
 
     constructor(IERC20 t) {
         token = t;
+    }
+
+    function setConsumptionBps(uint256 bps) external {
+        require(bps <= 10_000, "bps");
+        consumptionBps = bps;
     }
 
     function seed(uint256 a) external {
@@ -32,8 +38,9 @@ contract MockBluaiStake is IBluaiStake {
 
     function stake(uint256 amount, uint256 years_) external override {
         require(years_ == 4, "years");
-        token.transferFrom(msg.sender, address(this), amount);
-        staked[msg.sender] += amount;
+        uint256 accepted = amount * consumptionBps / 10_000;
+        if (accepted > 0) token.transferFrom(msg.sender, address(this), accepted);
+        staked[msg.sender] += accepted;
     }
 
     function claimAll() external override {
@@ -109,6 +116,48 @@ contract LeafBluaiLockboxTest is PegReady {
         assertEq(stake.staked(address(box)), 40 ether);
         assertEq(bluai.balanceOf(address(box)), 0);
         assertEq(box.totalLocked(), 40 ether);
+    }
+
+    function testPartialFarmConsumptionRevertsAndLeavesAccountingUnchanged() public {
+        vm.prank(owner);
+        stake.setConsumptionBps(9_900);
+
+        uint256 userBefore = bluai.balanceOf(user);
+        uint256 boxBefore = bluai.balanceOf(address(box));
+        uint256 lockedBefore = box.totalLocked();
+
+        vm.startPrank(user);
+        bluai.approve(address(box), 40 ether);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.sendTo{value: 0.01 ether}(40362, user, 40 ether);
+        vm.stopPrank();
+
+        assertEq(bluai.balanceOf(user), userBefore);
+        assertEq(bluai.balanceOf(address(box)), boxBefore);
+        assertEq(box.totalLocked(), lockedBefore);
+        assertEq(stake.staked(address(box)), 0);
+        assertFalse(box.farmPrincipalOut());
+    }
+
+    function testZeroFarmConsumptionRevertsAndLeavesAccountingUnchanged() public {
+        vm.prank(owner);
+        stake.setConsumptionBps(0);
+
+        uint256 userBefore = bluai.balanceOf(user);
+        uint256 boxBefore = bluai.balanceOf(address(box));
+        uint256 lockedBefore = box.totalLocked();
+
+        vm.startPrank(user);
+        bluai.approve(address(box), 40 ether);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.sendTo{value: 0.01 ether}(40362, user, 40 ether);
+        vm.stopPrank();
+
+        assertEq(bluai.balanceOf(user), userBefore);
+        assertEq(bluai.balanceOf(address(box)), boxBefore);
+        assertEq(box.totalLocked(), lockedBefore);
+        assertEq(stake.staked(address(box)), 0);
+        assertFalse(box.farmPrincipalOut());
     }
 
     function testClaimAllThenPullIdleBluai() public {
