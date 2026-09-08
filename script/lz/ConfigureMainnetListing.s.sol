@@ -7,6 +7,7 @@ import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
+import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -52,6 +53,15 @@ contract ConfigureMainnetListing is Script {
         }
         if (keccak256(bytes(a.id)) == keccak256("hsavax")) {
             box.setRateKind(LeafYieldFee.RateKind.GetPooledAvaxByShares);
+            box.setRetainRateYield(true);
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hlbtc")) {
+            require(address(box.innerToken()) == LeafLbtcPolicy.LBTC, "not LBTC");
+            require(address(box.innerToken()) != LeafLbtcPolicy.BTCB, "BTC.b");
+            box.setRewardsTarget(LeafLbtcPolicy.ASSET_ROUTER);
+            box.setShareScale(LeafLbtcPolicy.SHARE_SCALE);
+            box.setMaxRateJumpBps(LeafLbtcPolicy.MAX_RATE_JUMP_BPS);
+            box.setRateKind(LeafYieldFee.RateKind.RouterGetRate);
             box.setRetainRateYield(true);
         }
         if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {

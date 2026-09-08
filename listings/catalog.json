@@ -713,6 +713,24 @@
       "priority": 11
     },
     {
+      "id": "hlbtc",
+      "kind": "L",
+      "symbol": "hLBTC",
+      "name": "Hyperleaf LBTC",
+      "innerSymbol": "LBTC",
+      "innerToken": "0x8236a87084f8B84306f72007F36F2618A5634494",
+      "never": ["0xB0F70C0bD6FD87dbEb7C10dC692a2a6106817072", "0x5401b8620E5FB570064CA9114fd1e135fd77D57c"],
+      "rateRouter": "0x9eCe5fB1aB62d9075c4ec814b321e24D8EA021ac",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300. Never BTC.b / LBTCv / 10d BTC redeem. Bitwise covered-call, not Babylon. Cap 0.05 LBTC.",
+      "status": "mainnet-batch-3",
+      "priority": 12
+    },
+    {
       "id": "hsnx",
       "kind": "parked",
       "symbol": "hSNX",

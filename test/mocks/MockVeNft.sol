@@ -16,6 +16,10 @@ contract MockVeNft is ERC721 {
         escrowType[id] = IVeNft.EscrowType.NORMAL;
     }
 
+    function setLocked(uint256 id, int128 amount, bool permanent, uint256 end) external {
+        _locked[id] = IVeNft.LockedBalance(amount, end, permanent);
+    }
+
     function setType(uint256 id, IVeNft.EscrowType t) external {
         escrowType[id] = t;
     }

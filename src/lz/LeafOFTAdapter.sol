@@ -110,6 +110,27 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRetainRateYield(retain);
     }
 
+    function setShareScale(uint256 s) external onlyOwner {
+        if (totalLocked > 0) revert ConfigFrozen();
+        _setShareScale(s);
+    }
+
+    function setMaxRateJumpBps(uint16 bps) external onlyOwner {
+        if (totalLocked > 0) revert ConfigFrozen();
+        _setMaxRateJumpBps(bps);
+    }
+
+    /// @notice Guardian: accept the current rate as watermark without taking the jump as yield.
+    function acknowledgeRate() external onlyGuardian {
+        lastRate = _readRate(innerToken);
+        rateJumped = false;
+    }
+
+    /// @notice Anyone. Books retain fee or trips the rate-jump breaker without minting.
+    function pokeRate() external {
+        _accrueRateYield(innerToken);
+    }
+
     /// @notice Squid-style: claimRewards(this, max) on the inner staking token.
     function pokeRewards() external payable nonReentrant {
         _pokeRewards(address(innerToken));
@@ -150,9 +171,8 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _requireInnerSupplyOk(innerToken);
 
         _harvestInner(innerToken, 0);
-        // Retain: settle 1% (flush to converter if convert on; book only if halted).
-        // Wrap must not swap. Halt must not block mint.
         _accrueRateYield(innerToken);
+        if (rateJumped) revert NotHealthy();
 
         uint256 got = _pull(msg.sender, amount);
         uint256 shares = _sharesForAssets(innerToken, got, totalLocked, 0);

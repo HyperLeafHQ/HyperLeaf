@@ -32,7 +32,8 @@ abstract contract LeafYieldFee {
         None,
         ExchangeRate,
         ConvertToAssets,
-        GetPooledAvaxByShares
+        GetPooledAvaxByShares,
+        RouterGetRate
     }
 
     RateKind public rateKind;
@@ -43,6 +44,11 @@ abstract contract LeafYieldFee {
     ///      Only 1% is pulled to the converter (protocol fee → HYPE).
     ///      false = sell the whole surplus to WHYPE and split 99/1 at notify.
     bool public retainRateYield;
+    /// @dev Inner wei → dest shares. 1 for 18-dec. 1e10 for LBTC 8-dec.
+    uint256 public shareScale;
+    /// @dev 0 = off. Else mint stops if getRate jumps more than this in one accrue.
+    uint16 public maxRateJumpBps;
+    bool public rateJumped;
 
     event ConvertModeSet(bool enabled);
     event HarvesterSet(address indexed harvester);
@@ -56,6 +62,9 @@ abstract contract LeafYieldFee {
     event YieldPulled(address indexed token, address indexed to, uint256 amount);
     event FeeRecipientUpdated(address indexed recipient);
     event YieldHarvested(address indexed token, uint256 yieldAmount, uint256 fee);
+    event RateJump(uint256 lastRate, uint256 newRate);
+    event ShareScaleSet(uint256 scale);
+    event MaxRateJumpSet(uint16 bps);
 
     error NotHarvester();
     error NoYield();
@@ -66,6 +75,8 @@ abstract contract LeafYieldFee {
     error BadRateFeed();
     error FeeRecipientZero();
     error ConvertHalted();
+
+    error RateJumpErr();
 
     function _initFee(address recipient) internal {
         if (recipient == address(0)) revert FeeRecipientZero();
@@ -152,7 +163,8 @@ abstract contract LeafYieldFee {
             || s == bytes4(0x397a1b28) // requestWithdraw(address,uint256) — ether.fi DelayedWithdraw arity
             || s == bytes4(0x0efe6a8b) // deposit(address,uint256,uint256) — sETHFI teller, never poke
             || s == bytes4(0x1d7d4ebc) // KING merkle claim(address,uint256,bytes32,bytes32[])
-            || s == bytes4(0x2e7ba6ef); // ETHFI/EIGEN merkle claim(uint256,address,uint256,bytes32[])
+            || s == bytes4(0x2e7ba6ef) // ETHFI/EIGEN merkle claim(uint256,address,uint256,bytes32[])
+            || s == bytes4(0x42966c68); // burn(uint256) — LBTC / never poke
     }
 
     function _setRewardsTarget(address t) internal {
@@ -238,7 +250,10 @@ abstract contract LeafYieldFee {
         returns (uint256)
     {
         if (assets == 0) return 0;
-        if (rateKind == RateKind.None || totalShares == 0) return assets;
+        if (rateKind == RateKind.None || totalShares == 0) {
+            uint256 s = shareScale == 0 ? 1 : shareScale;
+            return assets * s;
+        }
         uint256 backing = _backingInner(token, reserved);
         uint256 prev = backing > assets ? backing - assets : 0;
         if (prev == 0) return assets;
@@ -258,6 +273,17 @@ abstract contract LeafYieldFee {
         }
         token.safeTransfer(to, amt);
         emit YieldPulled(address(token), to, amt);
+    }
+
+    function _setShareScale(uint256 s) internal {
+        if (s == 0) revert BadRateFeed();
+        shareScale = s;
+        emit ShareScaleSet(s);
+    }
+
+    function _setMaxRateJumpBps(uint16 bps) internal {
+        maxRateJumpBps = bps;
+        emit MaxRateJumpSet(bps);
     }
 
     function _setRetainRateYield(bool retain) internal {
@@ -294,6 +320,12 @@ abstract contract LeafYieldFee {
                 address(token).staticcall(abi.encodeWithSignature("getPooledAvaxByShares(uint256)", uint256(1e18)));
             if (!ok || ret.length < 32) revert BadRateFeed();
             rate = abi.decode(ret, (uint256));
+        } else if (rateKind == RateKind.RouterGetRate) {
+            address t = rewardsTarget;
+            if (t == address(0) || t == address(token)) revert BadRateFeed();
+            (bool ok, bytes memory ret) = t.staticcall(abi.encodeWithSignature("getRate(address)", address(token)));
+            if (!ok || ret.length < 32) revert BadRateFeed();
+            rate = abi.decode(ret, (uint256));
         }
         if (rate == 0) revert BadRateFeed();
     }
@@ -303,6 +335,10 @@ abstract contract LeafYieldFee {
         if (rateKind == RateKind.None) return (0, 0);
         rate = _readRate(token);
         if (lastRate == 0 || lastAccounted == 0 || rate <= lastRate) return (0, rate);
+        if (maxRateJumpBps != 0) {
+            uint256 jump = ((rate - lastRate) * BPS_DENOMINATOR) / lastRate;
+            if (jump > maxRateJumpBps) return (0, rate);
+        }
         add = (lastAccounted * (rate - lastRate)) / rate;
     }
 
@@ -333,6 +369,14 @@ abstract contract LeafYieldFee {
             return;
         }
         if (rate == lastRate) return;
+        if (maxRateJumpBps != 0) {
+            uint256 jump = ((rate - lastRate) * BPS_DENOMINATOR) / lastRate;
+            if (jump > maxRateJumpBps) {
+                rateJumped = true;
+                emit RateJump(lastRate, rate);
+                return;
+            }
+        }
         uint256 add = (lastAccounted * (rate - lastRate)) / rate;
         lastAccounted -= add;
         accruedRateYield += add;
@@ -352,6 +396,14 @@ abstract contract LeafYieldFee {
             return;
         }
         if (rate == lastRate || lastAccounted == 0) return;
+        if (maxRateJumpBps != 0) {
+            uint256 jump = ((rate - lastRate) * BPS_DENOMINATOR) / lastRate;
+            if (jump > maxRateJumpBps) {
+                rateJumped = true;
+                emit RateJump(lastRate, rate);
+                return;
+            }
+        }
         uint256 add = (lastAccounted * (rate - lastRate)) / rate;
         lastRate = rate;
         uint256 fee = (add * YIELD_FEE_BPS) / BPS_DENOMINATOR;

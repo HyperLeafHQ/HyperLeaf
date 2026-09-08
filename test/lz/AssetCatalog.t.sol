@@ -152,6 +152,9 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hsavax"), 3);
         assertEq(MainnetBatches.batchOf("hsethfi"), 3);
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
+        assertEq(MainnetBatches.batchOf("hlbtc"), 3);
+        assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);
+        assertEq(AssetCatalog.get("hlbtc").defaultCap, 5e6);
         assertEq(MainnetBatches.batchOf("bluai4y"), 4);
         assertEq(MainnetBatches.batchOf("horder"), 4);
         assertEq(MainnetBatches.batchOf("hjitosol"), 5);

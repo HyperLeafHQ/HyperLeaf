@@ -280,6 +280,23 @@ Canonical economic owner is **the Orderly ledger account = the Arb lockbox addre
 
 
 
+### hLBTC (batch 3 — Ethereum, wrap LBTC, Bitwise covered-call rate)
+
+Wrap **LBTC** `0x8236a870…` only. Never BTC.b, LBTCv, or native BTC. 10-day Lombard redeem is **not** called.
+
+| | |
+| --- | --- |
+| Canonical backing | lockbox LBTC on Ethereum |
+| Accounting unit | 1 hLBTC (18 dec) = 1 LBTC (8 dec) via `shareScale = 1e10` |
+| Core invariant | dest shares / 1e10 ≤ lockbox LBTC − protocol 1% skim |
+| Rate source | AssetRouter `getRate(LBTC)` `0x9eCe5fB1…`. **Admin/Bitwise**, not Babylon |
+| Circuit | `maxRateJumpBps = 300`. `pokeRate` latches `rateJumped` (mint tx would roll it back). Guardian `acknowledgeRate` sets watermark **without** taking the spike as 1% |
+| Mint / redeem | wrap/unwrap LBTC. Never `burn` / Bascule redeem |
+| Yield | Covered-call premiums in the rate. 1% skim, 99% stays. Rally can lag BTC; slash watermark down |
+| Failure | Router lie / 10% overnight print; wrapping BTC.b |
+| Worst-case loss | 0.05 LBTC default cap |
+| Test | `test/lz/LeafLbtc.t.sol`. `BATCH=3 ASSET=hlbtc` |
+
 ### hveAERO (later — NFT lockbox, not a grok-bot batch)
 
 Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decaying positions cannot share one ERC-20 (Alice 4y vs Bob 1 week would steal duration).
@@ -294,7 +311,7 @@ Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decay
 | Never | `merge` / `split` / `withdraw` / `unlockPermanent` / `vote` / wrap liquid AERO |
 | Yield | Rebase stays inside the NFT (NAV of the pool, no 1% skim until a split path exists). Bribe/fee ERC-20s on the lockbox → converter → HYPE 99/1. Never pull the NFT |
 | Failure | Aerodrome unlocks permanent; we accepted a decaying NFT (code rejects); mixing veUP into this listing |
-| Auto-pause | guardian. `canonicalInner` is 0 — VE `totalSupply` is NFT count, not AERO |
+| Auto-pause | `reportNftHealth` (permissionless): unlock, amount drop, or NFT left → Degraded. tokenId 0 rejected. `maxPrincipalPerNft` |
 | Worst-case loss | C1 cap. First-batch listing is **not** MainnetBatches (cannot `BATCH=n`) |
 | Test | `test/lz/LeafNftLockbox.t.sol` |
 | Same box later | hveUP (Robinhood) once veUP is the same permanent-lock shape. StonkBrokers / PTSMAX only if they have a comparable principal unit |

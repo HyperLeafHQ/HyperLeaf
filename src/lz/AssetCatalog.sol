@@ -319,6 +319,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("hlbtc") || k == keccak256("hLBTC")) {
+            return Listing(
+                Kind.Liquid,
+                "hlbtc",
+                "Hyperleaf LBTC",
+                "hLBTC",
+                "LBTC",
+                1,
+                30101,
+                40161,
+                0,
+                0,
+                0x8236a87084f8B84306f72007F36F2618A5634494,
+                5e6,
+                true
+            );
+        }
         if (k == keccak256("hveaero") || k == keccak256("hveAERO")) {
             return Listing(
                 Kind.Closed,

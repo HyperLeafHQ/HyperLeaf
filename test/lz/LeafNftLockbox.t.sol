@@ -6,6 +6,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PegReady} from "test/lz/PegReady.sol";
 import {LeafNftLockbox} from "src/lz/LeafNftLockbox.sol";
+import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {LeafClosedOFT} from "src/lz/LeafClosedOFT.sol";
 import {LeafVePolicy} from "src/lz/LeafVePolicy.sol";
 import {IVeNft} from "src/lz/IVeNft.sol";
@@ -135,6 +136,32 @@ contract LeafNftLockboxTest is PegReady {
         assertEq(box.totalLocked(), 10e18);
         assertEq(bribe.balanceOf(address(0xC0)), 5e18);
         assertEq(ve.ownerOf(2), address(box));
+    }
+
+    function testRejectsTokenIdZero() public {
+        ve.mint(user, 0, int128(uint128(10e18)), true, 0);
+        vm.startPrank(user);
+        ve.approve(address(box), 0);
+        vm.expectRevert(LeafNftLockbox.BadNft.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 0, user);
+        vm.stopPrank();
+    }
+
+    function testUnlockDegrades() public {
+        ve.mint(user, 3, int128(uint128(10e18)), true, 0);
+        vm.startPrank(user);
+        ve.approve(address(box), 3);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 3, user);
+        vm.stopPrank();
+        ve.setLocked(3, int128(uint128(10e18)), false, block.timestamp + 30 days);
+        box.reportNftHealth();
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Degraded));
+        ve.mint(user, 4, int128(uint128(10e18)), true, 0);
+        vm.startPrank(user);
+        ve.approve(address(box), 4);
+        vm.expectRevert(LeafOApp.NotHealthy.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 4, user);
+        vm.stopPrank();
     }
 
     function testDestMarketOnly() public {

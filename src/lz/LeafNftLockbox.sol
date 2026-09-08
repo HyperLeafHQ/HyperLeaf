@@ -23,10 +23,12 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     uint256 public totalLocked;
     uint256 public maxNfts;
     uint256[] public ids;
+    uint256 public maxPrincipalPerNft;
     mapping(uint256 => uint256) public principalOf;
 
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 tokenId, uint256 principal, bytes32 guid);
     event CapUpdated(uint256 cap);
+    event NftUnhealthy(uint256 indexed tokenId);
 
     error ZeroAmount();
     error CapExceeded();
@@ -47,6 +49,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         ve = IVeNft(ve_);
         depositCap = depositCap_;
         maxNfts = 64;
+        maxPrincipalPerNft = 100_000e18;
         _initFee(feeRecipient_);
     }
 
@@ -63,6 +66,37 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     function setMaxNfts(uint256 n) external onlyOwner {
         if (n == 0 || (maxNfts != 0 && n > maxNfts)) revert CapIncrease();
         maxNfts = n;
+    }
+
+    function setMaxPrincipalPerNft(uint256 n) external onlyOwner {
+        if (n == 0 || (maxPrincipalPerNft != 0 && n > maxPrincipalPerNft)) revert CapIncrease();
+        maxPrincipalPerNft = n;
+    }
+
+    /// @notice Anyone. Permanent lock broken, amount below wrap principal, or NFT left.
+    function reportNftHealth() external {
+        uint256 n = ids.length;
+        for (uint256 i; i < n; ++i) {
+            uint256 id = ids[i];
+            if (ve.ownerOf(id) != address(this)) {
+                _degrade(id);
+                return;
+            }
+            IVeNft.LockedBalance memory L = ve.locked(id);
+            uint256 amt = L.amount <= 0 ? 0 : uint256(int256(L.amount));
+            if (!L.isPermanent || ve.escrowType(id) != IVeNft.EscrowType.NORMAL || amt < principalOf[id]) {
+                _degrade(id);
+                return;
+            }
+        }
+    }
+
+    function _degrade(uint256 id) internal {
+        emit NftUnhealthy(id);
+        if (uint8(health) < uint8(Health.Degraded)) {
+            health = Health.Degraded;
+            emit HealthSet(Health.Degraded, msg.sender);
+        }
     }
 
     function setConvertYieldToHype(bool enabled) external onlyOwner {
@@ -131,13 +165,15 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     }
 
     function _takeNft(address from, uint256 tokenId) internal returns (uint256 principal) {
+        if (tokenId == 0) revert BadNft();
         if (principalOf[tokenId] != 0) revert AlreadyHeld();
         if (ve.escrowType(tokenId) != IVeNft.EscrowType.NORMAL) revert BadNft();
         IVeNft.LockedBalance memory L = ve.locked(tokenId);
         if (!L.isPermanent) revert BadNft();
         if (L.amount <= 0) revert ZeroAmount();
-        principal = uint256(uint128(uint256(int256(L.amount))));
+        principal = uint256(int256(L.amount));
         if (principal == 0) revert ZeroAmount();
+        if (maxPrincipalPerNft != 0 && principal > maxPrincipalPerNft) revert CapExceeded();
         ve.safeTransferFrom(from, address(this), tokenId);
         if (ve.ownerOf(tokenId) != address(this)) revert BadNft();
     }

@@ -14,7 +14,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **2** | **hgSOON** | L | BSC | `convertToAssets` 1% skim. Never 90d cooldown |
 | **2** | **hsWBERA** | L | Berachain 80094 | Same skim. Never 7d NFT queue |
 | **3** | **hsAVAX** | L | Avalanche | BENQI. `getPooledAvaxByShares`. Never `requestUnlock` |
-| **3** | **hsETHFI** | L | Ethereum | Wrap sETHFI only. Yield in share. Never DelayedWithdraw |
+| **3** | **hLBTC** | L | Ethereum | LBTC only. 8-dec. Router getRate. 3% jump breaker. Not BTC.b |
 | **3** | **hstkwaUSDC** | L | Ethereum | stkwaEthUSDC.v1. Rate + RewardsController. Never cooldown / v2 migrate |
 | **4** | BLUAI4Y | C1 | BSC | No protocol redeem. Claim Board |
 | **4** | **hORDER** | C1 | **Arbitrum only** | `LeafInboundLockbox` + Orderly proxy. No CREATE2 twin |

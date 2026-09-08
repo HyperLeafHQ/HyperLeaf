@@ -29,7 +29,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 | **0** | first | `hcanary` | Toy ERC-20, L adapter, **real** ULN | Base 8453 |
 | **1** | canary dead | `hxsquid` then `havnt` | Side-token L. `0x9a99b4f0`. Never `0xeab52318` | Base 8453 |
 | **2** | batch 1 passed | `hcbeth` then `hgsoon` then `hswbera` | Rate L, 1% skim, 99% in receipt | Base / BSC 56 / Bera 80094 |
-| **3** | batch 2 passed | `hsavax` then `hsethfi` then `hstkwausdc` | Rate / yield-in-share / Umbrella | Avax 43114 / ETH 1 / ETH 1 |
+| **3** | batch 2 passed | `hsavax` then `hsethfi` then `hstkwausdc` then **`hlbtc`** | Rate / yield-in-share / Umbrella / LBTC 8-dec | Avax / ETH |
 | **4** | batch 3 passed | `bluai4y` then `horder` | C1 lockbox + closed OFT. Market exit | BSC 56 / Arb 42161 |
 | **5** | batch 4 passed **and** Store PDA exists | `hjitosol` | Solana lockbox + dest `LeafOFT`. No Rewarder | Solana 30168 → HyperEVM 999 |
 
@@ -225,6 +225,7 @@ Do not print a protocol APR on a dust vault.
 | `hsavax` | avalanche | `GetPooledAvaxByShares`. Never `requestUnlock` |
 | `hsethfi` | ethereum | Yield in the receipt. **No** `setRateKind`. Never DelayedWithdraw / teller deposit |
 | `hstkwausdc` | ethereum | `ConvertToAssets` + `REWARDS_CONTROLLER` + `0xbb492bf5`. Never `cooldown`. Wrap **stkwaEthUSDC.v1** only. Umbrella will upgrade — users exit that receipt, we do not auto-migrate |
+| `hlbtc` | ethereum | **Last in batch 3.** Router `getRate(LBTC)`. 8-dec, `shareScale=1e10`. Jump >3% → mint halt, no fee. Never BTC.b / LBTCv / 10d BTC redeem. Cap `5e6` (0.05 LBTC). Yield is Bitwise covered-call, not Babylon |
 
 `hstkwausdc` needs env `REWARDS_CONTROLLER` on `ConfigureMainnetListing`.
 
