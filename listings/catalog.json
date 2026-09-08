@@ -543,9 +543,9 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Wrap sWBERA only. ERC-4626 withdraw/redeem on this vault is the 7d unbond (not instant). Never deposit WBERA/BERA. Rate in convertToAssets. Users exit via HyperEVM/Bera market or official unbond themselves after unwrap. LeafOFTAdapter. SOLVENCY filled.",
-      "status": "adapter-ready",
-      "priority": 6
+      "note": "Wrap sWBERA only. BATCH 3 MAINNET (Berachain 80094). No Bepolia. ConvertToAssets + retainRateYield 1% skim (same as hgSOON). ERC-4626 withdraw/redeem on this vault is the 7d unbond \u2014 never call it. Never deposit WBERA/BERA. Users exit via HyperEVM/Bera market or official unbond themselves after unwrap. LeafOFTAdapter. ConfigureMainnetListing.",
+      "status": "mainnet-batch-3",
+      "priority": 3
     },
     {
       "id": "haevo",
@@ -923,16 +923,19 @@
       "symbol": "hORDER",
       "name": "Hyperleaf staked ORDER",
       "innerSymbol": "ORDER",
-      "innerToken": "0xABD4C63d2616A5201454168269031355f4764337",
-      "innerOft": "0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8",
+      "innerToken": "0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8",
+      "innerCanonicalEth": "0xABD4C63d2616A5201454168269031355f4764337",
+      "stake": "0xC8A8Ce0Ab010E499ca57477AC031358febCbbF17",
+      "stakeSelector": "0x413aaa60",
+      "requestSelector": "0xcec09c0d",
       "source": "arbitrum",
       "sourceChainId": 42161,
       "sourceEid": 30110,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1 address-keyed. CREATE2 lockbox Arb+Base. farmPrincipalOut is location only; solvency is guardian reportLedgerPrincipal vs Orderly ledger, never balanceOf. Further mint halt until ledgerPrincipal >= totalLocked. stakeOrder 0x413aaa60; pokeFarmRequest no dest chain (10/17 public, 2/3/4 owner). USDC harvest \u2260 principal.",
-      "status": "research",
-      "priority": 10
+      "note": "C1. Arbitrum only. ORDER OFT 0x4E20\u2026 (not ETH ERC-20). Orderly proxy 0xC8A8\u2026 stakeOrder. farmPrincipalOut is location only; solvency is guardian reportLedgerPrincipal vs Orderly ledger. No CREATE2 twin \u2014 one lockbox address is the identity. Unstake 2/3/4 owner; harvest 10/17 public. USDC harvest \u2260 principal. FourthTestnetCatalog ASSET=horder Arb Sepolia 421614.",
+      "status": "testnet-batch-4",
+      "priority": 4
     },
     {
       "id": "hseed",

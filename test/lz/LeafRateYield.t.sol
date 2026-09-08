@@ -390,6 +390,39 @@ contract LeafRateYieldTest is PegReady {
         vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
         box.setRewardsSelector(bytes4(0x9343d9e1));
     }
+
+    function testSwberaConvertToAssetsSameMathAsCbeth() public {
+        MockGSOON swbera = new MockGSOON();
+        vm.startPrank(owner);
+        LeafOFTAdapter box = new LeafOFTAdapter(address(swbera), address(epSrc), owner, guardian, feeTo, 1_000e18);
+        LeafOFT dest = new LeafOFT("hsWBERA", "hsWBERA", address(epDst), owner, guardian);
+        box.setPeer(DST, address(dest));
+        dest.setPeer(SRC, address(box));
+        box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+        box.setRetainRateYield(true);
+        box.setConvertYieldToHype(true);
+        box.setConverter(converter);
+        box.setHarvester(owner);
+        vm.stopPrank();
+        _openPair(box, dest, owner, 1_000e18);
+        swbera.mint(user, 100e18);
+        vm.startPrank(user);
+        swbera.approve(address(box), 100e18);
+        box.sendTo{value: 0.01 ether}(DST, user, 100e18);
+        vm.stopPrank();
+        swbera.setAssets(1458e15); // ~1.458 WBERA / sWBERA
+        vm.prank(owner);
+        box.pullYield(swbera, converter);
+        uint256 surplus = _surplus(100e18, 1e18, 1458e15);
+        assertEq(swbera.balanceOf(converter), _fee(surplus));
+        assertEq(box.totalLocked(), 100e18);
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        box.setRewardsSelector(bytes4(0xb460af94));
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        box.setRewardsSelector(bytes4(0x38248a0c));
+        vm.stopPrank();
+    }
 }
 
 contract MockGSOON is ERC20 {

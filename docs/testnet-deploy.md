@@ -40,7 +40,8 @@ Grok bot: follow **`docs/GROK_BOT_TESTNET.md`** (hxSQUID then hcbETH, then bluai
 | `hmet` | C2 | Base Sepolia mock | 998 |
 | `hshmon` | L | Base Sepolia mock | 998 |
 | `hgsoon` | L | BSC testnet 97 | 998 |
-| `hswbera` | L | Bepolia 80069 (LZ EndpointV2 **not deployed** — blocked) | 998 |
+| `horder` | C1 | Arb Sepolia 421614 (`FourthTestnetCatalog`) | 998 |
+| `hswbera` | L | **not testnet** — Berachain mainnet 80094 only | — |
 
 hNEST is **not** LZ. It stays on HyperEVM (`NestVault`).
 

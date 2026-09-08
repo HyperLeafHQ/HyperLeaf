@@ -139,6 +139,10 @@ abstract contract LeafYieldFee {
             || s == bytes4(0x1e83409a) // claim(address)
             || s == bytes4(0x9ad82aa0) // queueRedeem
             || s == bytes4(0x50b3f984) // queueWithdraw
+            || s == bytes4(0x38248a0c) // completeWithdrawal(bool) — sWBERA 7d NFT
+            || s == bytes4(0x06866fdc) // completeWithdrawal(bool,uint256)
+            || s == bytes4(0x1b0aed2c) // cancelQueuedWithdrawal (vault)
+            || s == bytes4(0x041d5408) // cancelQueuedWithdrawal()
             || s == bytes4(0xc9d2ff9d) // requestUnlock(uint256) — BENQI sAVAX 15d
             || s == bytes4(0x2e1a7d4d) // withdraw(uint256) — BENQI claim AVAX / SOON 90d unlock
             || s == bytes4(0x1338736f) // lock(uint256,uint256) — SOON occupancy 0x6601, not gSOON vault

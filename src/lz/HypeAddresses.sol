@@ -25,6 +25,13 @@ library HypeAddresses {
     /// @dev BLUAI 4-year stake (BSC). stake(amount, 4) / claimAll().
     address internal constant BLUAI_STAKE_BSC = 0x94b9865Ef26166fEBB7775d12d6dF23B51465040;
 
+    /// @dev ORDER OFT (Arb / Base / OP). Wrap this, never the Ethereum ERC-20.
+    address internal constant ORDER_OFT = 0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8;
+    /// @dev Orderly staking proxy. Identical on Eth/Arb/OP/Polygon/Base/Avax.
+    address internal constant ORDERLY_PROXY = 0xC8A8Ce0Ab010E499ca57477AC031358febCbbF17;
+
+    /// @dev SKY (Ethereum). Not MKR. Lockstake V2 is SKY-only.
+
     /// @dev SKY (Ethereum). Not MKR. Lockstake V2 is SKY-only.
     address internal constant SKY_ETH = 0x56072C95FAA701256059aa122697B133aDEd9279;
     address internal constant LOCKSTAKE_ENGINE = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3;

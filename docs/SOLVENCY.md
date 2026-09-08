@@ -83,7 +83,7 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 | Worst-case loss | min(depositCap, maxPerDay) on principal. Yield path loss is converter execution on the 1% skim |
 | Test | `test/lz/LeafRateYield.t.sol` — 1% skim, 99% retained, slash, NAV mint, donation invariance, floor rounding, rate fuzz, sell-all still works if retain is off |
 
-Do **not** enable `rateKind` on hsWBERA / Morpho shares unless that listing's row says pull rate surplus. **hgSOON opts in:** `ConvertToAssets` + `retainRateYield` (same 1% skim as hcbETH).
+Do **not** enable `rateKind` on Morpho shares unless that listing's row says pull rate surplus. **hgSOON and hsWBERA opt in:** `ConvertToAssets` + `retainRateYield` (same 1% skim as hcbETH).
 
 Converter `minOut` is enforced on `LeafYieldConverter.execute` (balance delta) and `notify(amount, minAmount)`. It is **not** a lockbox invariant — wrap/redeem never talk to the converter. A dead hop: `halt` + `returnToLockbox`. Next hop can be a different allowlisted bridge (deBridge / Mayan / Relay).
 
@@ -198,22 +198,26 @@ Staking rewards and buybacks paused **2026-08-21**. UNCX lockers still take fees
 
 Do not wrap ethDYDX. Yield is validator stake on **dYdX Chain** (USDC fees, ~21–30d unbond, address-keyed). Liquid receipt is **Stride stDYDX**. Same class as hJupSOL: non-EVM lockbox first. Never undelegate from the lockbox.
 
-### hsWBERA (research — wrap sWBERA only, never the 7d queue)
+### hsWBERA (batch 3 — Berachain **mainnet only**, wrap sWBERA, 1% rate skim)
+
+No Bepolia. LZ EndpointV2 is live on 80094. One listing this phase.
 
 Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.72e7.
 
 | | |
 | --- | --- |
 | Canonical backing | transferable **sWBERA** pulled (`0x118D2cEe…eC9a` on **Berachain 80094**). Vault **is** the ERC-20. Asset = WBERA `0x6969…6969` |
-| Accounting unit | 1 hsWBERA = 1 sWBERA. WBERA NAV lives in `convertToAssets` |
+| Accounting unit | 1 hsWBERA share. WBERA NAV lives in `convertToAssets` |
 | Core invariant | L: `supply ≤ totalLocked sWBERA` + sWBERA supply ceiling |
 | Proof source | lockbox `totalLocked` + `sWBERA.totalSupply` / `convertToAssets` |
-| Mint / redeem | wrap/unwrap **sWBERA** as ERC-20. Instant. **Never** native BERA / WBERA `deposit`/`mint`. **Never** the 7d unbond: standard ERC-4626 `withdraw` 0xb460af94 / `redeem` 0xba087652 **queue** here (burn shares, NFT, `reservedAssets`). Also `queueWithdraw` 0x50b3f984 / `queueRedeem` 0x9ad82aa0 / `completeWithdrawal(bool)` 0x38248a0c / `completeWithdrawal(bool,uint256)` 0x06866fdc / `cancelQueuedWithdrawal` 0x1b0aed2c. Cooldown `WITHDRAWAL_COOLDOWN()` = **604800**. NFT `0x30e47fd0…99DA` |
-| Yield | auto-compound in the sWBERA/WBERA rate (Incentive Auction WBERA). No claim. Do not pull sWBERA as harvest |
-| Failure | vault pause (`MANAGER_ROLE`); someone `redeem`s lockbox shares (principal in 7d NFT, no yield while queued); cancel remints at **current** rate |
+| Rate source | `convertToAssets(1e18)` (`RateKind.ConvertToAssets`) + `retainRateYield`. Same 1% skim as hcbETH / hgSOON. Wrap/redeem settle the 1% first |
+| Mint / redeem | wrap/unwrap **sWBERA** as ERC-20. Instant. **Never** native BERA / WBERA `deposit`/`mint`. **Never** the 7d unbond: `withdraw` 0xb460af94 / `redeem` 0xba087652 / `queueWithdraw` 0x50b3f984 / `queueRedeem` 0x9ad82aa0 / `completeWithdrawal` 0x38248a0c, 0x06866fdc / `cancelQueuedWithdrawal` 0x1b0aed2c. Cooldown **604800**. NFT `0x30e47fd0…99DA` |
+| Yield | auto-compound in the sWBERA/WBERA rate (Incentive Auction WBERA). Protocol skims **1% of surplus**. Holders have no WHYPE claim. Do not pull sWBERA as side-token harvest |
+| Failure | vault pause; someone `redeem`s lockbox shares (principal in 7d NFT); cancel remints at **current** rate |
 | Auto-pause | ceiling / health / inner paused |
 | Worst-case loss | min(cap, maxPerDay) on sWBERA. Unbond APY gap is not backing |
-| Test | `test/lz/LeafReceiptOnly.t.sol`. Adapter never calls 0xb460af94 / 0xba087652 / 0x50b3f984 / 0x9ad82aa0. LZ eid 30362, EndpointV2 `0x6F475642…` |
+| Test | `testSwberaConvertToAssetsSameMathAsCbeth`, `LeafReceiptOnly`. Adapter never calls the 7d queue selectors. `ConfigureMainnetListing` `ASSET=hswbera` |
+| Deploy | **Mainnet** `DeployAdapter` on 80094. Not `DeployTestnetSource`. Not Bepolia |
 
 
 
@@ -231,23 +235,25 @@ Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.7
 | Worst-case loss | all TVL (custodial). C1: no protocol peg-out |
 | Test | do not ship until WIN claim is pinned. A row that says `hB3 ≤ B3.balanceOf(0x18541)` is **rejected** |
 
-### hORDER (research — stake + VALOR redeem request pinned, esORDER claim not)
+### hORDER (batch 4 testnet — **Arbitrum only**, no CREATE2 twin)
 
-Canonical economic owner is **the Orderly ledger account = CREATE2 lockbox address**. Same address on Arb and Base is identity equivalence, **not** shared ERC-20 state.
+Canonical economic owner is **the Orderly ledger account = the Arb lockbox address**. Orderly already keys by address across chains. HyperLeaf only *appears* on Arb, so one address is enough. CREATE2 twins are the same identity idea — unused here.
 
 | | |
 | --- | --- |
 | Canonical backing | Orderly ledger **stake** keyed by that lockbox address. Physical custody is the farm/ledger. **Not** `ORDER.balanceOf(lockbox)`. **Not** VALOR. **Not** USDC |
 | Accounting unit | ORDER principal on the ledger. 1 hORDER ≤ 1 verified ledger ORDER |
 | Core invariant | HyperEVM hORDER supply ≤ `ledgerPrincipal` for this identity. `farmPrincipalOut` is a location flag only |
-| Proof source | Guardian `reportLedgerPrincipal(observed)` after Orderly compose (eid 30213). CREATE2 predict matches on Arb/Base. After `stakeOrder`, `inner.balanceOf` is **0** and is not the proof |
-| Mint / redeem | C1, market-only. Further mints halt until `ledgerPrincipal >= totalLocked`. Unstake 2/3/4 owner-only, no dest chain. Harvest 10/17 public. **One source eid `openBridge` at a time** — two CREATE2 twins minting into one dest OFT double-count the same Orderly identity |
-
+| Proof source | Guardian `reportLedgerPrincipal(observed)` after Orderly compose (eid 30213). After `stakeOrder`, `inner.balanceOf` is **0** and is not the proof |
+| Mint / redeem | C1, market-only. Further mints halt until `ledgerPrincipal >= totalLocked`. Unstake types 2/3/4 owner-only. Harvest 10/17 public. **One source eid** (`30110` main / `40231` Arb Sepolia). Do not `openBridge` a Base/OP lockbox into this OFT |
+| Inner | Arb ORDER OFT `0x4E200fE2…`. Never the Ethereum ERC-20 `0xABD4…` |
+| Farm | Orderly proxy `0xC8A8Ce0A…`, `stakeOrder` `0x413aaa60`, `FarmStyle.AmountNative`. Request `sendUserRequest` `0xcec09c0d` |
 | Yield | USDC (legacy 9→10) → HYPE. Occupancy: VALOR / esORDER (type 17). Do not vest |
-| Failure | LZ to Orderly not credited; wrong-chain withdrawal; user inflating ledger report; CREATE2 twin with different code |
-| Auto-pause | `reportLedgerPrincipal < totalLocked` → Degraded, mint stops. Guardian `closeBridge` |
+| Failure | LZ to Orderly not credited; wrong-chain withdrawal; user inflating ledger report |
+| Auto-pause | `reportLedgerPrincipal < totalLocked` → Degraded, mint stops |
 | Worst-case loss | C1 TVL. First deposit after a gap is at-risk until the ledger report (bounded by `maxPerTx`) |
-| Test | `test/lz/LeafOmnichainCreate2.t.sol`. Pins: Base withdraw 1196 `0xdd65ff33`; USDC 1.156 `0x93ec1d61`; type 17 `0x7a9676a6` |
+| Test | `test/lz/LeafOmnichainCreate2.t.sol` (name is historical; listing is Arb-only). Pins: withdraw 1196 `0xdd65ff33`; USDC 1.156 `0x93ec1d61`; type 17 `0x7a9676a6` |
+| Testnet | `FourthTestnetCatalog` `ASSET=horder` on **Arb Sepolia 421614**. Mock ORDER + MockOrderlyProxy |
 
 
 

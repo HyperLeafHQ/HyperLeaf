@@ -198,11 +198,12 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 ## Still not this pass
 
 - Mainnet inners, `SetSecurityStack`, WHYPE converter fills, multi-DEX/bridge converter routes
-- hKAITO / hVIRTUALMAX / hSKY / hsWBERA (not this `ASSET` round)
+- hKAITO / hVIRTUALMAX / hSKY
 - NestVault / HNest / HevAdapter
-- LeafVirtualsLockbox / LeafOmnichainHolder / LeafCreate2
+- LeafVirtualsLockbox / LeafOmnichainHolder / LeafCreate2 twins
 - C1 `shareExit` / protocol redeem
 - generic `pokeClaim` / `harvestToken` (removed from wrap lockboxes)
+- hsWBERA on any testnet (mainnet Berachain only — `ConfigureMainnetListing`)
 
 ---
 
@@ -220,4 +221,12 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 Copy-paste: `docs/GROK_BOT_RECEIPTS.md`. Do **not** point `INNER_TOKEN` at mainnet. Do **not** add these to `TestnetCatalog`.
 
 `claimAllRewards` is **on the controller**, never on the StakeToken. `cooldown` / `requestUnlock` / ether.fi `requestWithdraw` / teller `deposit` stay blacklisted. Unwrap is the receipt (gSOON / sAVAX / stk v1 / sETHFI). Protocol never starts Aave cooldown, BENQI unlock, or the 10d DelayedWithdraw.
+
+## Fourth testnet batch — hORDER (Arb Sepolia 421614)
+
+`ASSET=horder`. `FourthTestnetCatalog`. C1 `LeafInboundLockbox` + `LeafClosedOFT`. Mock ORDER + MockOrderlyProxy (`stakeOrder` `0x413aaa60`). `ConfigureClosedListing` after wire. `redeemEnabled` must stay false.
+
+Do **not** deploy CREATE2 on Base/OP. One source eid. Guardian `reportLedgerPrincipal` after mock stake before a second mint.
+
+Copy-paste: `docs/GROK_BOT_RECEIPTS.md` section F.
 

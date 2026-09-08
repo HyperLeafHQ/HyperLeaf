@@ -12,6 +12,9 @@ import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
 import {IBluaiStake} from "src/lz/IBluaiStake.sol";
+import {IOrderlyStake} from "src/lz/IOrderlyStake.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {MockOrderlyProxy} from "test/mocks/MockOrderlyProxy.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {TestnetListings} from "src/lz/TestnetListings.sol";
@@ -19,9 +22,10 @@ import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
 /// @notice Source-chain half of a testnet wrap.
-///         ASSET=hxsquid|havnt|hcbeth|bluai4y  (this round)
-///         ASSET=hgsoon|hsavax|hstkwausdc|hsethfi (next: TestnetListings → NextTestnetCatalog)
-///         INNER_TOKEN unset → deploys a mintable mock (always, on testnet).
+///         ASSET=hxsquid|havnt|hcbeth|bluai4y  (round 1)
+///         ASSET=hgsoon|hsavax|hstkwausdc|hsethfi (next)
+///         ASSET=horder (fourth: Arb Sepolia 421614)
+///         hsWBERA is mainnet-only — this script reverts.
 contract DeployTestnetSource is Script {
     function run() external {
         string memory id = vm.envString("ASSET");
@@ -50,7 +54,10 @@ contract DeployTestnetSource is Script {
             require(block.chainid == 11155111, "hstkwausdc/hsethfi source is Sepolia 11155111");
         }
         if (keccak256(bytes(id)) == keccak256("hswbera")) {
-            require(block.chainid == 80069, "hswbera testnet source is Bepolia 80069, not Base Sepolia");
+            revert("hsWBERA is mainnet-only (Berachain 80094). No Bepolia.");
+        }
+        if (keccak256(bytes(id)) == keccak256("horder") || keccak256(bytes(id)) == keccak256("hORDER")) {
+            require(block.chainid == 421614, "horder testnet source is Arb Sepolia 421614");
         }
 
         vm.startBroadcast();
@@ -118,6 +125,16 @@ contract DeployTestnetSource is Script {
                     LeafInboundLockbox(source).setFarmExit(IBluaiStake.unstake.selector);
                     console2.log("bluaiStake", stake);
                 }
+                if (keccak256(bytes(a.id)) == keccak256("horder")) {
+                    MockOrderlyProxy farm = new MockOrderlyProxy(IERC20(inner));
+                    LeafInboundLockbox box = LeafInboundLockbox(source);
+                    box.setFarm(address(farm), IOrderlyStake.stakeOrder.selector, 0, bytes4(0));
+                    box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0);
+                    box.setFarmRequest(IOrderlyStake.sendUserRequest.selector);
+                    box.setPublicRequestType(10, true);
+                    box.setPublicRequestType(17, true);
+                    console2.log("MockOrderlyProxy", address(farm));
+                }
             }
         } else {
             source = address(new LeafRedeemQueue(inner, endpoint, owner, guardian, feeRecipient, cap, a.redeemDelay));
@@ -134,6 +151,6 @@ contract DeployTestnetSource is Script {
 
     function _isTestnet(uint256 chainId) internal pure returns (bool) {
         return chainId == 84532 || chainId == 998 || chainId == 97 || chainId == 43113 || chainId == 11155111
-            || chainId == 80069;
+            || chainId == 421614;
     }
 }

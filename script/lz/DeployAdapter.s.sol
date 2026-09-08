@@ -6,7 +6,8 @@ import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
-/// @notice Mainnet L source. ASSET=hgsoon|hswbera|hxsquid|…
+/// @notice Mainnet L source. Batch 3: ASSET=hswbera on Berachain 80094 only.
+///         Then ConfigureMainnetListing (ConvertToAssets + retain 1%).
 ///         Broadcast on the listing's sourceChainIdMain. Never a mock inner.
 contract DeployAdapter is Script {
     function run() external {

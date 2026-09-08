@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PegReady} from "test/lz/PegReady.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafOApp} from "src/lz/LeafOApp.sol";
@@ -11,6 +10,10 @@ import {LeafCreate2} from "src/lz/LeafCreate2.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
+import {MockOrderlyProxy} from "test/mocks/MockOrderlyProxy.sol";
+import {FourthTestnetCatalog} from "src/lz/FourthTestnetCatalog.sol";
+import {TestnetListings} from "src/lz/TestnetListings.sol";
+import {NextTestnetCatalog} from "src/lz/NextTestnetCatalog.sol";
 
 contract MockOft is ERC20 {
     constructor() ERC20("ORDER", "ORDER") {}
@@ -23,32 +26,6 @@ contract MockUsdc is ERC20 {
     constructor() ERC20("USDC", "USDC") {}
     function mint(address to, uint256 a) external {
         _mint(to, a);
-    }
-}
-
-/// @dev Orderly proxy shape: stakeOrder(amount) payable, sendUserRequest(amount, type).
-contract MockOrderProxy {
-    IERC20 public immutable oft;
-    mapping(address => uint256) public staked;
-    uint256 public lastAmount;
-    uint8 public lastType;
-    address public lastCaller;
-
-    constructor(IERC20 t) {
-        oft = t;
-    }
-
-    function stakeOrder(uint256 amount) external payable {
-        oft.transferFrom(msg.sender, address(this), amount);
-        staked[msg.sender] += amount;
-        lastCaller = msg.sender;
-        lastAmount = amount;
-    }
-
-    function sendUserRequest(uint256 amount, uint8 payloadType) external payable {
-        lastCaller = msg.sender;
-        lastAmount = amount;
-        lastType = payloadType;
     }
 }
 
@@ -75,7 +52,7 @@ contract LeafOmnichainCreate2Test is PegReady {
     MockEndpoint ep;
     MockOft inner;
     MockUsdc usdc;
-    MockOrderProxy proxy;
+    MockOrderlyProxy proxy;
     LeafInboundLockbox box;
     address owner = address(0xA11CE);
     address guardian = address(0xB0B);
@@ -89,7 +66,7 @@ contract LeafOmnichainCreate2Test is PegReady {
         ep = new MockEndpoint();
         inner = new MockOft();
         usdc = new MockUsdc();
-        proxy = new MockOrderProxy(inner);
+        proxy = new MockOrderlyProxy(inner);
         vm.startPrank(owner);
         box = new LeafInboundLockbox(address(inner), address(ep), owner, guardian, feeTo, 1_000e18);
         box.setFarm(address(proxy), STAKE_ORDER, 0, bytes4(0));
@@ -106,7 +83,7 @@ contract LeafOmnichainCreate2Test is PegReady {
         vm.deal(address(box), 1 ether);
     }
 
-    function testHorderIsAddressKeyed() public pure {
+    function testHorderIsAddressKeyed() public view {
         assertTrue(AssetCatalog.addressKeyed("horder"));
         assertFalse(AssetCatalog.addressKeyed("bluai4y"));
         AssetCatalog.Listing memory a = AssetCatalog.get("horder");
@@ -114,8 +91,28 @@ contract LeafOmnichainCreate2Test is PegReady {
         assertEq(a.innerMainnet, 0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8);
         assertEq(a.sourceChainIdMain, 42161);
         assertEq(a.sourceEidMain, 30110);
+        assertEq(a.sourceEidTest, 40231);
+        assertEq(TestnetListings.get("horder").id, "horder");
+        assertEq(FourthTestnetCatalog.get("hORDER").symbol, "hORDER");
     }
 
+    function testHorderNotInEarlierCatalogs() public {
+        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
+        this._next("horder");
+        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
+        this._listings("hswbera");
+    }
+
+    function _next(string calldata id) external pure returns (AssetCatalog.Listing memory) {
+        return NextTestnetCatalog.get(id);
+    }
+
+    function _listings(string calldata id) external pure returns (AssetCatalog.Listing memory) {
+        return TestnetListings.get(id);
+    }
+
+    /// @dev CREATE2 would give the same lockbox on Base. We do not deploy that
+    ///      twin. Opening a second source eid is the double-count bug.
     function testCreate2AddressIgnoresChainId() public view {
         bytes memory init = abi.encodePacked(
             type(LeafInboundLockbox).creationCode,

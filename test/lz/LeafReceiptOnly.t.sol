@@ -174,6 +174,16 @@ contract LeafReceiptOnlyTest is PegReady {
         adapter.setRewardsSelector(DEPOSIT);
         vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
         adapter.setRewardsSelector(LOCK90);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(QUEUE_WITHDRAW);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(QUEUE_REDEEM);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(COMPLETE1);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(COMPLETE2);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(CANCEL_Q);
         vm.stopPrank();
     }
 

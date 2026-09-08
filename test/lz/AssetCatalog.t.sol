@@ -11,6 +11,7 @@ import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
 import {NextTestnetCatalog} from "src/lz/NextTestnetCatalog.sol";
+import {FourthTestnetCatalog} from "src/lz/FourthTestnetCatalog.sol";
 import {TestnetListings} from "src/lz/TestnetListings.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
@@ -158,6 +159,17 @@ contract AssetCatalogTest is Test {
         assertEq(TestnetListings.get("hsethfi").id, "hsethfi");
         assertEq(TestnetListings.get("hethfi").id, "hsethfi");
         assertEq(TestnetListings.get("bluai4y").id, "bluai4y");
+        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
+        this._next("horder");
+        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
+        this._listings("hswbera");
+        assertEq(FourthTestnetCatalog.get("horder").sourceEidTest, 40231);
+        assertEq(uint8(TestnetListings.get("horder").kind), uint8(AssetCatalog.Kind.Closed));
+        assertEq(TestnetListings.get("hORDER").innerMainnet, 0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8);
+    }
+
+    function _listings(string calldata id) external pure returns (AssetCatalog.Listing memory) {
+        return TestnetListings.get(id);
     }
 
     function _round1(string calldata id) external pure returns (AssetCatalog.Listing memory) {
@@ -173,6 +185,8 @@ contract AssetCatalogTest is Test {
         this._endpoint(80069);
         assertEq(this._endpoint(43113), A.ENDPOINT_BASE_SEPOLIA);
         assertEq(this._endpoint(11155111), A.ENDPOINT_BASE_SEPOLIA);
+        assertEq(this._endpoint(421614), A.ENDPOINT_BASE_SEPOLIA);
+        assertEq(this._endpoint(42161), A.ENDPOINT_BSC);
     }
 
     function _endpoint(uint256 chainId) external pure returns (address) {

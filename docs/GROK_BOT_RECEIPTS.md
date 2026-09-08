@@ -164,19 +164,47 @@ Smoke: wrap mock sETHFI → dest OFT → unwrap. `pullYield(inner)` must revert 
 
 ---
 
-## E. hsWBERA — Bepolia 80069 → 998 (blocked)
+## E. hsWBERA — Berachain **mainnet 80094** only (batch 3)
 
-Do not run until `eth_getCode` of the Bepolia EndpointV2 is non-empty. Then add `ENDPOINT_BEPOLIA` to `LayerZeroAddresses` and:
+No Bepolia. `DeployTestnetSource` reverts `ASSET=hswbera`. One listing this phase.
 
 ```
 ASSET=hswbera OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
-forge script script/lz/DeployTestnetSource.s.sol:DeployTestnetSource \
-  --rpc-url https://bepolia.rpc.berachain.com --broadcast --private-key $PRIVATE_KEY
+forge script script/lz/DeployAdapter.s.sol:DeployAdapter \
+  --rpc-url berachain --broadcast --private-key $PRIVATE_KEY
 ```
 
-Dest / wire: source `REMOTE_EID=40362`, dest `REMOTE_EID=40371`. Mock inner only — never live `0x118D…`.
+Dest 999 `ASSET=hswbera` `DeployOFT`. Wire source `REMOTE_EID=30367`, dest `REMOTE_EID=30362`.
 
-Until that ships: `forge test --match-contract LeafReceiptOnlyTest`.
+```
+ASSET=hswbera SOURCE=$SOURCE OWNER=$OWNER HARVESTER=$HARVESTER CONVERTER=$CONVERTER \
+forge script script/lz/ConfigureMainnetListing.s.sol:ConfigureMainnetListing \
+  --rpc-url berachain --broadcast --private-key $PRIVATE_KEY
+```
+
+Must set `ConvertToAssets` + `retainRateYield`. Never `setRewardsSelector`. Never 7d queue. `OPEN_BRIDGE=true` only after live tag/peers/caps. Do **not** run unless the owner says so.
+
+---
+
+## F. hORDER — Arb Sepolia 421614 → 998 (batch 4)
+
+```
+ASSET=horder OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
+forge script script/lz/DeployTestnetSource.s.sol:DeployTestnetSource \
+  --rpc-url https://sepolia-rollup.arbitrum.io/rpc --broadcast --private-key $PRIVATE_KEY
+```
+
+Copy: `MockInner`, `MockOrderlyProxy`, `LeafInboundLockbox` → `SOURCE`.
+
+Dest 998 `ASSET=horder` → `LeafClosedOFT`. Confirm `redeemEnabled == false`. Wire dest `REMOTE_EID=40231`, source `REMOTE_EID=40362`.
+
+```
+ASSET=horder SOURCE=$SOURCE OWNER=$OWNER HARVESTER=$HARVESTER CONVERTER=$CONVERTER \
+forge script script/lz/ConfigureClosedListing.s.sol:ConfigureClosedListing \
+  --rpc-url https://sepolia-rollup.arbitrum.io/rpc --broadcast --private-key $PRIVATE_KEY
+```
+
+Smoke: wrap mock ORDER → dest ClosedOFT. Second wrap must revert until guardian `reportLedgerPrincipal`. `pokeFarmRequest` type 10 public; type 2 owner-only. Do not deploy a Base twin. Do not `setShareExit`.
 
 ---
 
@@ -192,16 +220,16 @@ Log every address in the PR.
 
 ## Mainnet (do not run unless owner says so)
 
-`ASSET=hgsoon` on chain **56**, `ASSET=hswbera` on **80094**:
+Batch 3 is **only** `ASSET=hswbera` on **80094**. gSOON mainnet is later.
 
 ```
-ASSET=hgsoon OWNER=… GUARDIAN=… FEE_RECIPIENT=… \
-forge script script/lz/DeployAdapter.s.sol:DeployAdapter --rpc-url <bsc> --broadcast
+ASSET=hswbera OWNER=… GUARDIAN=… FEE_RECIPIENT=… \
+forge script script/lz/DeployAdapter.s.sol:DeployAdapter --rpc-url <berachain> --broadcast
 
-ASSET=hgsoon OWNER=… GUARDIAN=… \
+ASSET=hswbera OWNER=… GUARDIAN=… \
 forge script script/lz/DeployOFT.s.sol:DeployOFT --rpc-url <hyperevm> --broadcast
 ```
 
-Wire `REMOTE_EID=30367` from source, `30102` (gSOON) or `30362` (sWBERA) from HyperEVM.
+Wire `REMOTE_EID=30367` from source, `30362` from HyperEVM.
 
-`SetSecurityStack`: HyperEVM `ASSET=hgsoon` (remote BSC). On BSC/Bera set `DVN0,DVN1,DVN2` from the LZ chain page (Labs + Horizen + Nethermind). `OPEN_BRIDGE=true` only after reading live tag/peers/caps. Do not call any forbidden selector on the inner.
+`SetSecurityStack`: HyperEVM `ASSET=hswbera` (remote Bera). On Bera set `DVN0,DVN1,DVN2` from the LZ chain page (Labs + Horizen + Nethermind). `OPEN_BRIDGE=true` only after reading live tag/peers/caps. Do not call any forbidden selector on the inner.

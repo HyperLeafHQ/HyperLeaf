@@ -103,9 +103,11 @@ One listing at a time. Empty books and mixed exits do not help the ecosystem. Wr
 | Next | **hxSQUID** | L | Base | Trade xSQUID here; QUID surplus → HYPE |
 | Then | **hcbETH** | L | Base | ETH PoS harvested as rate surplus → HYPE 99/1. Redeem remaining cbETH, not 1:1 after harvest |
 | Next testnet | **hgSOON**, **hstkwaUSDC**, **hsAVAX**, **hsETHFI** | L | BSC / Ethereum / Avalanche / Ethereum | gSOON (1% of rate surplus, like cbETH); Umbrella USDC; BENQI sAVAX; sETHFI (unwrap the receipt, never DelayedWithdraw) |
-| Same L adapter | **hAVNT**, **hsWBERA**, **hsETHFI** | L | Base / Bera / Ethereum | stkAVNT, sWBERA, sETHFI. Instant unwrap of the receipt. Never cooldown / DelayedWithdraw |
+| Batch 3 mainnet | **hsWBERA** | L | Berachain | Only this asset. No testnet. 1% of sWBERA rate surplus. Never the 7-day unbond |
+| Batch 4 testnet | **hORDER** | C1 | Arbitrum | Staked ORDER on one chain. Market exit. No CREATE2 twin |
+| Same L adapter | **hAVNT** | L | Base | stkAVNT. Instant unwrap. Never combined redeem |
 | Morpho vaults | **hsteakUSDC**, **hsteakUSDG** | L | Base / Robinhood | Wrap the ERC-4626 **share**. Never deposit/redeem USDC/USDG. Never Morpho Blue positions |
-| Later C1 | **hORDER**, hB3, PTSMAX | C1 | Arb+Base / Base / BSC | Address-keyed farm or NFT. Market exit until `shareExit` |
+| Later C1 | hB3, PTSMAX | C1 | Base / BSC | Address-keyed farm or NFT. Market exit |
 | Needs new lockbox | veAERO, veUP, JupSOL, stDYDX | ve-NFT / L | Base / Robinhood / Solana / Cosmos | NFT or IBC first. Never wrap liquid UP or ethDYDX |
 | Not now | hKAITO, hVIRTUALMAX, hSKY, hGMX, hUNCX, hSNX, hLIT, **stkAAVE**, SLVR, TWO, StonkBrokers | | | Omnichain / frozen / tax / NFT TBA. Legacy stkAAVE stays HOLD — Umbrella is hstkwaUSDC. Full order: [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 

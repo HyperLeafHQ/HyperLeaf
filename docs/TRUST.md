@@ -47,7 +47,7 @@ Tests: `testFillDoesNotTouchLockbox`, `testFillLocalBuyerRewardNoMint`,
 broken — pause it, do not “fix” by minting the other side.
 
 
-Address-keyed externals (hORDER): CREATE2 same lockbox on Arb and Base is **identity**, not a shared balance. Solvency is the foreign ledger’s stake for that address (`ledgerPrincipal`), never `balanceOf(lockbox)` after the token has left.
+Address-keyed externals (hORDER): Orderly’s ledger keys by **EVM address**, chain-agnostic. HyperLeaf’s Arb lockbox is that address. Solvency is `ledgerPrincipal` for it, never `ORDER.balanceOf(lockbox)` after stake. CREATE2 twins would only be needed to be the *same* address on a second chain — **not deployed**. LZ wrap is a different idea (custody a token here, mint a receipt there). Do not open a Base/OP source into the same dest OFT (double-count).
 
 ## Health
 

@@ -218,7 +218,7 @@ library AssetCatalog {
                 false
             );
         }
-        if (k == keccak256("horder")) {
+        if (k == keccak256("horder") || k == keccak256("hORDER")) {
             return Listing(
                 Kind.Closed,
                 "horder",
@@ -306,10 +306,11 @@ library AssetCatalog {
         revert UnknownAsset();
     }
 
-    /// @dev Source ledger keys by EVM address. CREATE2 the same lockbox address
-    ///      on every OFT chain you *might* receive on. Identity ≠ shared balance.
-    ///      OpenBridge on **one** source eid at a time. Two live lockboxes minting
-    ///      into one dest OFT double-count `ledgerPrincipal`.
+    /// @dev Orderly keys stake by EVM address on its own ledger. That is the
+    ///      same *identity* idea as CREATE2 twins — not LZ wrap (custody + mint).
+    ///      hORDER is **Arbitrum only**: one lockbox address is enough. Do not
+    ///      deploy a Base/OP twin; two `openBridge` sources into one dest OFT
+    ///      double-count `ledgerPrincipal`.
     function addressKeyed(string memory id) internal pure returns (bool) {
 
         return keccak256(bytes(id)) == keccak256("horder");
