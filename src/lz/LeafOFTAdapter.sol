@@ -92,6 +92,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function setRewardsSelector(bytes4 s) external onlyOwner {
+        if (totalLocked > 0) revert ConfigFrozen();
         _setRewardsSelector(s);
     }
 
@@ -138,7 +139,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
     /// @notice Pull harvestable surplus to the converter. Anyone. `to` must be converter.
     ///         Inner, RateKind.None: revert (principal, including donations).
-    ///         Inner, rate-bearing: only rate-implied surplus on `lastAccounted`.
+    ///         Inner, rate-bearing: only rate-implied surplus on the economic cost basis.
     ///         Any other ERC20 (QUID, airdrops): entire balance. Not backing.
     ///         Pulling a side token does not change `totalLocked` / `lastAccounted`.
     function pullYield(IERC20 token, address to) external nonReentrant {
