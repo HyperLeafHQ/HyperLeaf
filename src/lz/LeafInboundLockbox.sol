@@ -307,8 +307,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         } else {
             (ok,) = farm.call(abi.encodeWithSelector(farmStakeSel, got, farmStakeArg));
         }
-        if (!ok || innerToken.balanceOf(address(this)) >= before) revert BadStake();
-        // Token left this box. Ledger credit is async (Orderly LZ). Flag only.
+        uint256 afterBalance = innerToken.balanceOf(address(this));
+        if (!ok || afterBalance > before || before - afterBalance != got) revert BadStake();
+        // Token left this box in the exact requested amount. Ledger credit is async (Orderly LZ).
         farmPrincipalOut = true;
     }
 
