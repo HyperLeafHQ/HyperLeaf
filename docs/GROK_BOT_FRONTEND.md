@@ -67,6 +67,18 @@ Required EN:
 
 > Yield is the inner protocol’s own emissions or revenue. HyperLeaf does not add yield, points, or incentives. The 1% take is of realized yield only.
 
+Rate-vault dust (hcbETH, hgSOON, hsAVAX, hJitoSOL — all `retainRateYield`):
+
+Required ZH (规则 / 金库 FAQ，不要放英雄区):
+
+> 协议抽的是已经记账的增值的 1%，按代币最小单位向下取整。金库很小时这一刀经常是 0：灰尘留给持有人，协议不补抽，也不倒扣本金。不要把「抽 1%」理解成金库一有余额我们就在赚钱。
+
+Required EN:
+
+> The 1% is of booked yield, floored to the inner token’s smallest unit. On a small vault that cut is often zero — holders keep the dust, the protocol does not claw it later and does not touch principal. Do not imply the protocol is earning 1% whenever TVL is tiny.
+
+Do not show a protocol APR, “我们已经抽到 X HYPE”, or a yield counter on an empty / dust vault.
+
 Show a “HYPE 从哪来” table with the productive listings (hxSQUID, hAVNT, hcbETH, hgSOON, hsAVAX, hstkwaUSDC, hsETHFI, Morpho, hORDER, BLUAI4Y, and later **hJitoSOL**). Each row: origin + how the user sees it (钱包领取 vs 留在收据). Parked tickers with frozen rewards stay off that table.
 
 When hJitoSOL is on the UI, the HYPE row is:

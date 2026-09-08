@@ -52,11 +52,13 @@ HyperLeaf does **not** sell that yield to WHYPE for holders. `retainRateYield`:
 
 ```
 surplus = (lastAccounted × (rate − lastRate)) / rate     // floor
-fee     = surplus × 1%                                   // protocol only
+fee     = surplus × 1%                                   // floor again
 99% of surplus stays in the lockbox
 ```
 
 `lastAccounted` is pulled principal, not `balanceOf`. A donation into the lockbox does not raise it.
+
+**Dust / low TVL:** two integer floors. `fee = surplus / 100` in inner atoms. If surplus < 100 atoms, **fee is 0**. The watermark still moves; the protocol does **not** accrue a debt and does **not** take it later. Holders keep the dust. That means a small vault can harvest often and the protocol earns nothing — expected, not a bug. Minimum non-zero take is **1 atom** of the inner token (cbETH: 1 wei; JitoSOL: 1e-9 JitoSOL), which needs ≥ 100 atoms of surplus. Do not print a protocol APR as if 1% is being collected on empty or dust vaults.
 
 Example: deposit 100 cbETH at rate 1.00. Later rate 1.10.
 

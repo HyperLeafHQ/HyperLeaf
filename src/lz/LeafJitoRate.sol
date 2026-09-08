@@ -46,7 +46,8 @@ library LeafJitoRate {
         return (atoms * totalShares) / prev;
     }
 
-    /// @dev On rate ↑: fee = 1% of (lastAccounted * dRate / rate), floor.
+    /// @dev On rate ↑: fee = 1% of (lastAccounted * dRate / rate), floor twice.
+    ///      Surplus < 100 atoms → fee 0; watermark still moves; dust stays.
     ///      lastAccounted is reduced by the fee only. 99% stays as atoms.
     ///      On rate ↓: watermark drops, fee 0.
     function bookRetainFee(uint256 lastAccounted, uint256 lastRate, uint256 newRate)

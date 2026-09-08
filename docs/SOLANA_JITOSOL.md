@@ -21,10 +21,12 @@ Never wrap SOL. User who wants SOL: unwrap hJitoSOL → JitoSOL, then Jito.
 JitoSOL quantity does not grow. SOL-per-token does (staking + MEV/TOV already in the pool). Same 1% retain skim as hcbETH. Math: `LeafJitoRate` / `solana/leaf-jito-rate`.
 
 ```
-surplus = lastAccounted * (rate - lastRate) / rate
-fee     = 1% of surplus   → harvest ATA → later WHYPE
+surplus = lastAccounted * (rate - lastRate) / rate     // floor
+fee     = surplus / 100                                 // floor; 0 if surplus < 100 atoms
 99%     stays as remaining JitoSOL in the PDA
 ```
+
+Low TVL: fee often 0. Watermark still moves. Dust stays with holders; protocol does not claw it later. Same as hcbETH. `docs/HYPE_YIELD.md`.
 
 ## Yield we **do not** capture: NCN / restaking
 

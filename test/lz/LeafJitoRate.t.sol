@@ -72,6 +72,23 @@ contract LeafJitoRateTest is Test, PegReady {
         assertEq(nr, 1.05e18);
     }
 
+    function testDustSurplusZeroFeeWatermarkMoves() public pure {
+        // surplus = 1 * 0.1e18 / 1.1e18 = 0 → fee 0, rate still updates
+        (uint256 fee, uint256 next, uint256 nr) = LeafJitoRate.bookRetainFee(1, 1e18, 1.1e18);
+        assertEq(fee, 0);
+        assertEq(next, 1);
+        assertEq(nr, 1.1e18);
+        // surplus = 1089/11 = 99 atoms → 99 * 100 / 10000 = 0
+        (fee, next, nr) = LeafJitoRate.bookRetainFee(1089, 1e18, 1.1e18);
+        assertEq(fee, 0);
+        assertEq(next, 1089);
+        assertEq(nr, 1.1e18);
+        // surplus = 1100/11 = 100 → fee 1 atom
+        (fee, next, nr) = LeafJitoRate.bookRetainFee(1100, 1e18, 1.1e18);
+        assertEq(fee, 1);
+        assertEq(next, 1099);
+    }
+
     function testDonationDoesNotCreateFee() public pure {
         (uint256 fee,,) = LeafJitoRate.bookRetainFee(100e9, 1e18, 1e18);
         assertEq(fee, 0);

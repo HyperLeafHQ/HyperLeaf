@@ -26,6 +26,10 @@ that 1% before minting or paying out so new deposits are not taxed for a
 move they missed. The rest never leaves the lockbox. `hxSQUID` is the
 Rewarder sample.
 
+Integer floor: 1% of surplus below 100 inner atoms is **0**. Watermark
+still advances. Low-TVL rate vaults can be protocol-unprofitable; dust
+stays with holders. Document that in the UI (`GROK_BOT_FRONTEND.md`).
+
 A wstETH-style `whAsset` wrapper (vault that holds Leaf + claims HYPE into
 share price) is the DeFi face for Rewarder listings. Not built yet. Do not
 ship it until a listing that actually needs LP of a side-token yield is live.

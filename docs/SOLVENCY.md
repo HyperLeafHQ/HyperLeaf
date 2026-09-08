@@ -73,7 +73,7 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 | Rate source | Jito stake pool `Jito4APyf642…Awbb`: `total_lamports / pool_token_supply`. Same class as cbETH `exchangeRate` |
 | Rate trust | SPL stake-pool program + Jito manager. Anomalous jump/drop/upgrade |
 | Rate anomaly | jump → 1% of surplus, floor, cannot sell donations. drop → watermark down, pull 0 |
-| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate`. 99% stays in the PDA |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate`. 99% stays in the PDA. Floor: surplus < 100 atoms → fee 0, watermark still moves, dust stays with holders. Low TVL can mean protocol take = 0 |
 | Proof source | PDA token balance + pool account + `LeafJitoRate` |
 | Mint / redeem | lock JitoSOL / unlock remaining JitoSOL. **Never** `depositSol` / `withdrawSol` / `depositStake` |
 | Yield | staking + MEV/TOV **inside the rate**, left in remaining JitoSOL. Protocol skims 1% JitoSOL → harvest ATA → WHYPE. Holders have **no** WHYPE claim |
@@ -96,7 +96,7 @@ Not batch 0–4. `BATCH=5`. Dest `DeployOFT`. Source is not `DeployAdapter`.
 | Rate source | Coinbase cbETH `exchangeRate()`. This is a solvency oracle, not a price feed we control |
 | Rate trust | upstream contract implementation / upgrade. Anomalous jump, drop, stale return, or malicious upgrade |
 | Rate anomaly | jump → surplus floors and caps at lastAccounted (cannot sell donations). drop → watermark down, pull 0. Never harvest a donated balance |
-| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box. Dust of the 1% stays with holders. Wrap/redeem settle this 1% before minting or paying out (flush if convert on; book if halted) |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box. Surplus < 100 inner atoms → fee 0; watermark still moves; dust stays with holders. Low TVL can mean protocol take = 0. Wrap/redeem settle this 1% before minting or paying out (flush if convert on; book if halted) |
 | Proof source | `lastAccounted` + `exchangeRate()` + cash on redeem. `retainRateYield = true` |
 | Mint / redeem | wrap/unwrap cbETH. Later deposits mint at remaining-inner NAV. Last exit pays remaining inner. **Never** Coinbase unwrap |
 | Yield | ETH PoS inside `exchangeRate()`, **left in the receipt** (Lido/wstETH). Protocol skims 1% of surplus to converter → HYPE. Holders have **no** WHYPE claim. LP/lend keep the 99% |
@@ -143,7 +143,7 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Accounting unit | hgSOON **shares**. Remaining gSOON per share moves only by the 1% protocol skim |
 | Core invariant | `oft.totalSupply() ≤ adapter.totalLocked()` (shares). Remaining inner ≥ lastAccounted |
 | Rate source | gSOON `convertToAssets(1e18)` (`RateKind.ConvertToAssets`). Not `exchangeRate()` |
-| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box. Wrap/redeem settle this 1% before mint/payout (flush if convert on; book if halted) |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). Surplus < 100 atoms → fee 0. Wrap/redeem settle this 1% before mint/payout |
 | Mint / redeem | wrap/unwrap **gSOON**. Instant. After skim, remaining gSOON is not 1:1. **Never** `deposit` SOON `0x6e553f65`. **Never** `cooldownShares` 0x9343d9e1 / `cooldownAssets` 0xcdac52ed / `claim` 0x1e83409a |
 | Yield | SOON staking already in the 4626 rate. Protocol skims 1% of surplus to converter → HYPE. Holders have **no** WHYPE claim. LP/lend keep the 99% |
 | Donation | extra gSOON transfer is backing, not yield |
