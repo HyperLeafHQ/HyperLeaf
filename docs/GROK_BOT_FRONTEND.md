@@ -9,7 +9,11 @@ This file is for the **frontend** bot (hyperleaf.finance, landing, this preview)
 HyperLeaf is infrastructure. It is responsible for:
 
 1. **Ingress** — lock a transferable receipt (or an address-keyed position), message it, mint one Leaf ticker per listing.
-2. **Availability** — bridge starts closed; caps; pause; health; listing isolation. A halt on hxSQUID must not touch hNEST.
+2. **Availability** — three independent flags, never collapse them:
+   - bridge closed ≠ unhealthy
+   - paused ≠ insolvent
+   - health Degraded = mint stopped, redeem may still work
+   A halt on hxSQUID must not touch hNEST. `maxPerDay` is per listing per chain, not one global daily cap.
 3. **Yield split** — depends on the listing (`docs/YIELD_OWNERSHIP.md`). Share-price tickers (hcbETH): 99% stays in the receipt, protocol skims 1%. Side-token tickers (hxSQUID): extra income → WHYPE, 99% allocated across `totalSupply`, 1% protocol. Do not show wallet APR = 99% × harvested ÷ supply on Rewarder tickers.
 
 It is **not** a market maker, not a DEX, not an AMM, not a lending pool.
@@ -67,7 +71,7 @@ ACK 丢了：重试，不铸新票。买方中止要等三天。
 
 C1（没有官方赎回）和 hNEST（有窗口、只是提前走）**不要做成同一个「卖出现货」入口**。C1：这是协议里唯一的退出。hNEST：官方窗口仍在，这是提前找人接。
 
-Copy: 没人出价就不成交。协议不接盘、不做市、不保证最低退出价。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。ACK 丢了会重试，不会铸新的 Leaf。买方中止要等三天（guardian 可立刻中止）。Not 债务, not 借贷, not 官方收单, not DEX. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
+Copy: 没人出价就不成交。协议不接盘、不做市、不保证最低退出价。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。ACK 丢了会重试，不会铸新的 Leaf。买方中止要等三天（guardian 可立刻中止）。**中止中 ≠ 已退款**：目的链若已放票，中止会变成付款给卖方。成交看源链 `Paid`，不要看目的链放票。Not 债务, not 借贷, not 官方收单, not DEX. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
 
 
 **One line that must survive every rewrite:**

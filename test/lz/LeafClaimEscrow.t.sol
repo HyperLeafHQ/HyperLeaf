@@ -343,6 +343,9 @@ contract LeafClaimEscrowTest is PegReady {
         assertEq(bluai.balanceOf(bob), 70e18);
         (,,,,,, LeafClaimFill.FillStatus st) = filler.fills(id);
         assertEq(uint8(st), uint8(LeafClaimFill.FillStatus.Refunded));
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(6)), ok, address(0), "");
+        assertEq(bluai.balanceOf(bob), 70e18);
     }
 
     function testAbortLosesToFill() public {
