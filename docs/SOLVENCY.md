@@ -250,9 +250,29 @@ Canonical economic owner is **the Orderly ledger account = CREATE2 lockbox addre
 
 Accounting unit is **sRIVER_V2 tokenId**, not `balanceOf(Pts)`. Do not ship on the ERC-20 adapter. Merkle weekly Pts is address-keyed, not NFT-keyed. Blocked on NFT lockbox + lockbox appearing in a weekly tree.
 
+
+### hstkwaUSDC (next testnet — Umbrella StakeToken, not stkAAVE)
+
+Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6` (Ethereum). `.v1` is a factory suffix. A later `.v2` is a different ERC-20 → new listing. Pin the address.
+
+| | |
+| --- | --- |
+| Canonical backing | lockbox balance of that StakeToken. Underlying is waEthUSDC `0xD4fa2D31…`. Never aUSDC / USDC / other Umbrella stks |
+| Accounting unit | 1 hstkwaUSDC = 1 stk share. Economic USDC is `convertToAssets` (can fall on slash) |
+| Core invariant | L: `supply ≤ totalLocked stk`. Rate harvest must not drop backing below outstanding principal watermark |
+| Proof source | lockbox `totalLocked` + `balanceOf(stk)` + `convertToAssets`. Side rewards are **not** backing |
+| Mint / redeem | wrap/unwrap the v1 receipt, instant. **Never** `cooldown` / `redeem` / `withdraw` on StakeToken (20d, one cooldown per address). **Never** auto-migrate to v2. User who wants Aave v2: unwrap, migrate themselves |
+| Yield | **Two books.** (1) aToken interest in `convertToAssets` → hcbETH `retainRateYield`, pull **1% of surplus** as protocol fee, 99% stays in backing. Slash / rate down → watermark down, pull 0. (2) Umbrella emissions via `RewardsController` `0x4655Ce3D…` `claimAllRewards([stk], lockbox)` → converter → WHYPE 99/1. Pin selector from controller ABI, not a tx hash |
+| Failure | Aave USDC deficit slash; governance upgrades implementation at same proxy; `.v2` migration (pause mint, keep redeem of v1); RewardsController mis-set to cooldown/redeem |
+| Auto-pause | health on slash / inner supply ceiling; guardian pause mint if Aave announces v2 |
+| Worst-case loss | slash of locked stk (Umbrella max is `totalAssets - MIN_ASSETS_REMAINING`) + converter slippage on side rewards |
+| Test | cooldown/redeem selectors forbidden; donation waUSDC not treated as rate yield; slash lowers watermark; claimAllRewards does not move stk |
+
+Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner. Do **not** put it in this round's `TestnetCatalog`.
+
 ### hSKY / hAAVE
 
-Parked. A row that says `hSKY ≤ LSSKY balance` is **rejected**. Realizable value is SKY principal + rewards − USDS debt − penalties. stkAAVE is not 1:1 AAVE.
+Parked. A row that says `hSKY ≤ LSSKY balance` is **rejected**. Realizable value is SKY principal + rewards − USDS debt − penalties. **stkAAVE is HOLD** (legacy Safety Module, governance). Umbrella USDC is **hstkwaUSDC**, above.
 
 ## Global outflow
 

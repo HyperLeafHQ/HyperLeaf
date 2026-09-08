@@ -10,6 +10,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | 1 | hxSQUID | L | Base | First wrap. claimRewards → QUID → HYPE |
 | 1b | **hAVNT** | L | Base | Same adapter + `0x9a99b4f0`. Never `0xeab52318` |
 | 2 | hcbETH | L | Base | PoS in the rate |
+| **next testnet** | **hstkwaUSDC** | L | Ethereum | Wrap **stkwaEthUSDC.v1** `0x6bf1…8Aa6` only. Dual harvest: 4626 rate + RewardsController. Never cooldown / v2 auto-migrate. After current 4-asset round. |
 | later | **hsETHFI** | L | Ethereum | Receipt only. Never 10d DelayedWithdraw |
 | later | **hgSOON** | L | **BSC** `0xcC48…` | ERC-4626. Never `cooldownShares` 0x9343d9e1 / `claim` 0x1e83409a. Never 90d lock `0x6601` |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
@@ -33,7 +34,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | parked | **hUNCX** | — | Ethereum | Stake rewards + buybacks paused 2026-08-21. Lockers still earn; not paid to stakers |
 | parked | **hSNX** | — | Ethereum | 420 Pool closed Jun 2026. Phase 4 staking deferred. Spot only |
 | later | **hstDYDX** | L | Cosmos/Stride | Wrap **stDYDX**, never ethDYDX. Needs IBC lockbox like JupSOL |
-| hold | hstkAAVE | | Ethereum | Safety Module → Umbrella |
+| hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
 | watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
 | blocked | hKAITO / hVIRTUALMAX | | Base | Extra-chain claims until CREATE2 holder |
@@ -42,7 +43,8 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 
 ## Phases
 
-**A** — testnet hxSQUID then hcbETH (`GROK_BOT_TESTNET.md`), then mock BLUAI4Y so C1 is not confused with L.
+**A** — testnet hxSQUID / hAVNT then hcbETH, then mock BLUAI4Y (`GROK_BOT_TESTNET.md`). Do not add assets to `TestnetCatalog` this round.
+**A2** — next testnet: **hstkwaUSDC** (Ethereum Umbrella StakeToken). Hybrid of hAVNT (side claim) + hcbETH (rate). Still L: unwrap the receipt, never Aave cooldown.
 **A′** — do **not** seed a HyperEVM AMM to fake spot. C1 / queued listings get a peer **claim board** later (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **B** — mainnet hxSQUID, tiny cap.
 **C** — hcbETH.
