@@ -282,7 +282,7 @@ Canonical economic owner is **the Orderly ledger account = the Arb lockbox addre
 
 ### hLBTC (batch 3 — Ethereum, wrap LBTC, Bitwise covered-call rate)
 
-Wrap **LBTC** `0x8236a870…` only. Never BTC.b, LBTCv, or native BTC. 10-day Lombard redeem is **not** called.
+Wrap **LBTC** `0x8236a870…` only. Never BTC.b, LBTCv, BTCe, Base LBTC, or native BTC. 10-day Lombard redeem is **not** called.
 
 | | |
 | --- | --- |
@@ -290,10 +290,12 @@ Wrap **LBTC** `0x8236a870…` only. Never BTC.b, LBTCv, or native BTC. 10-day Lo
 | Accounting unit | 1 hLBTC (18 dec) = 1 LBTC (8 dec) via `shareScale = 1e10` |
 | Core invariant | dest shares / 1e10 ≤ lockbox LBTC − protocol 1% skim |
 | Rate source | AssetRouter `getRate(LBTC)` `0x9eCe5fB1…`. **Admin/Bitwise**, not Babylon |
-| Circuit | `maxRateJumpBps = 300`. `pokeRate` latches `rateJumped` (mint tx would roll it back). Guardian `acknowledgeRate` sets watermark **without** taking the spike as 1% |
-| Mint / redeem | wrap/unwrap LBTC. Never `burn` / Bascule redeem |
-| Yield | Covered-call premiums in the rate. 1% skim, 99% stays. Rally can lag BTC; slash watermark down |
-| Failure | Router lie / 10% overnight print; wrapping BTC.b |
+| Circuit | `maxRateJumpBps = 300` **up or down**. `pokeRate` latches `rateJumped` (mint tx would roll it back). Guardian `acknowledgeRate` sets watermark **without** taking the spike as 1%. Small down (≤3%) pins the watermark, no fee |
+| Caps | `depositCap` = 0.05 LBTC inner (`5e6`). `setLimits` / OFT `supplyCap` = `5e6 * 1e10` share units. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` + headroom — **never** `5e6` |
+| Mint / redeem | wrap/unwrap LBTC. Never `burn` / `mint(bytes,bytes)` / AssetRouter `deposit` / Bascule / 10d `redeem` |
+| Yield | Covered-call premiums in the rate. 1% skim, 99% stays. Rally can lag BTC |
+| Failure | Router lie / 10% overnight print; wrapping BTC.b / Base LBTC; using inner cap as dest share cap |
+| Auto-pause | `rateJumped` → mint stops, redeem stays |
 | Worst-case loss | 0.05 LBTC default cap |
 | Test | `test/lz/LeafLbtc.t.sol`. `BATCH=3 ASSET=hlbtc` |
 
@@ -307,12 +309,12 @@ Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decay
 | Accounting unit | 1 hveAERO = 1 AERO locked in a **permanent** NFT. Not voting power. Not liquid AERO |
 | Core invariant | dest supply ≤ sum of recorded `principalOf` ≤ on-chain `locked.amount` of held ids |
 | Mint / redeem | C1, market-only (`LeafClosedOFT`). No protocol NFT return. No `createLock` of AERO |
-| Accept | `escrowType == NORMAL` and `isPermanent`. Reject LOCKED / MANAGED / decaying |
-| Never | `merge` / `split` / `withdraw` / `unlockPermanent` / `vote` / wrap liquid AERO |
-| Yield | Rebase stays inside the NFT (NAV of the pool, no 1% skim until a split path exists). Bribe/fee ERC-20s on the lockbox → converter → HYPE 99/1. Never pull the NFT |
-| Failure | Aerodrome unlocks permanent; we accepted a decaying NFT (code rejects); mixing veUP into this listing |
-| Auto-pause | `reportNftHealth` (permissionless): unlock, amount drop, or NFT left → Degraded. tokenId 0 rejected. `maxPrincipalPerNft` |
-| Worst-case loss | C1 cap. First-batch listing is **not** MainnetBatches (cannot `BATCH=n`) |
+| Accept | `escrowType == NORMAL`, `isPermanent`, not `voted`, `attachments == 0`. Reject LOCKED / MANAGED / decaying / tokenId 0 |
+| Never | `merge` / `split` / `withdraw` / `unlockPermanent` / `vote` / wrap liquid AERO / `DeployClosed` |
+| Yield | Rebase stays inside the NFT (NAV of the pool, no 1% skim until a split path exists). Bribe/fee ERC-20s on the lockbox → converter → HYPE 99/1. Never pull the NFT or AERO |
+| Failure | Aerodrome unlocks permanent; we accepted a decaying/voted/attached NFT (code rejects); mixing veUP into this listing |
+| Auto-pause | `reportNftHealth` (permissionless): unlock, amount drop, NFT left **or burned** (`ownerOf` revert) → Degraded. Owner `restoreHealth(Normal)` re-checks the same proof. `maxPrincipalPerNft` 100k AERO. `maxNfts` 64 |
+| Worst-case loss | C1 cap. First-batch listing is **not** MainnetBatches (cannot `BATCH=n`). Scripts: `DeployNftLockbox` / `ConfigureNftListing` |
 | Test | `test/lz/LeafNftLockbox.t.sol` |
 | Same box later | hveUP (Robinhood) once veUP is the same permanent-lock shape. StonkBrokers / PTSMAX only if they have a comparable principal unit |
 

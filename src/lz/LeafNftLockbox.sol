@@ -8,13 +8,14 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {LeafOApp} from "./LeafOApp.sol";
 import {LeafYieldFee} from "./LeafYieldFee.sol";
 import {IVeNft} from "./IVeNft.sol";
+import {LeafVePolicy} from "./LeafVePolicy.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 
 /// @title LeafNftLockbox
 /// @notice C1 source for permanent veNFTs (hveAERO first). Mints dest ClosedOFT
 ///         shares = locked AERO amount. Time-locked / managed / decaying NFTs
 ///         are rejected — those cannot share a fungible ticket.
-///         No protocol redeem. No vote / merge / split / withdraw.
+///         No protocol redeem. No vote / merge / split / withdraw / unlockPermanent.
 contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Receiver {
     using SafeERC20 for IERC20;
 
@@ -73,18 +74,28 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         maxPrincipalPerNft = n;
     }
 
+
+    /// @notice Burned / left / unlocked / short of wrap principal → false.
+    function nftHealthy(uint256 id) public view returns (bool) {
+        address o;
+        try ve.ownerOf(id) returns (address got) {
+            o = got;
+        } catch {
+            return false;
+        }
+        if (o != address(this)) return false;
+        IVeNft.LockedBalance memory L = ve.locked(id);
+        if (!L.isPermanent || ve.escrowType(id) != IVeNft.EscrowType.NORMAL) return false;
+        if (L.amount <= 0) return false;
+        return uint256(int256(L.amount)) >= principalOf[id];
+    }
+
     /// @notice Anyone. Permanent lock broken, amount below wrap principal, or NFT left.
     function reportNftHealth() external {
         uint256 n = ids.length;
         for (uint256 i; i < n; ++i) {
             uint256 id = ids[i];
-            if (ve.ownerOf(id) != address(this)) {
-                _degrade(id);
-                return;
-            }
-            IVeNft.LockedBalance memory L = ve.locked(id);
-            uint256 amt = L.amount <= 0 ? 0 : uint256(int256(L.amount));
-            if (!L.isPermanent || ve.escrowType(id) != IVeNft.EscrowType.NORMAL || amt < principalOf[id]) {
+            if (!this.nftHealthy(id)) {
                 _degrade(id);
                 return;
             }
@@ -96,6 +107,13 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         if (uint8(health) < uint8(Health.Degraded)) {
             health = Health.Degraded;
             emit HealthSet(Health.Degraded, msg.sender);
+        }
+    }
+
+    function _requireRestoreProof() internal view override {
+        uint256 n = ids.length;
+        for (uint256 i; i < n; ++i) {
+            if (!this.nftHealthy(ids[i])) revert NotSolvent();
         }
     }
 
@@ -115,7 +133,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     function pullYield(IERC20 token, address to) external nonReentrant {
         _requireConvertOn();
         _requireConverter(to);
-        if (address(token) == address(ve)) revert BadNft();
+        if (address(token) == address(ve) || address(token) == LeafVePolicy.AERO) revert LeafVePolicy.ForbiddenVeCall();
         _pullYield(token, IERC20(address(0)), 0, to);
     }
 
@@ -171,6 +189,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         IVeNft.LockedBalance memory L = ve.locked(tokenId);
         if (!L.isPermanent) revert BadNft();
         if (L.amount <= 0) revert ZeroAmount();
+        if (ve.voted(tokenId) || ve.attachments(tokenId) != 0) revert BadNft();
         principal = uint256(int256(L.amount));
         if (principal == 0) revert ZeroAmount();
         if (maxPrincipalPerNft != 0 && principal > maxPrincipalPerNft) revert CapExceeded();

@@ -376,7 +376,7 @@
           "bribe-erc20s"
         ]
       },
-      "note": "NFT lockbox LeafNftLockbox. Permanent NORMAL veNFT only. Shares = locked AERO amount. Not a MainnetBatches id. C1 market exit. No vote/merge/split.",
+      "note": "NFT lockbox LeafNftLockbox. Permanent NORMAL veNFT only. Shares = locked AERO amount. Reject voted/attached/LOCKED/MANAGED/decaying. Not a MainnetBatches id. C1 market exit. No vote/merge/split. DeployNftLockbox, not DeployClosed.",
       "status": "later",
       "priority": 15
     },
@@ -719,14 +719,14 @@
       "name": "Hyperleaf LBTC",
       "innerSymbol": "LBTC",
       "innerToken": "0x8236a87084f8B84306f72007F36F2618A5634494",
-      "never": ["0xB0F70C0bD6FD87dbEb7C10dC692a2a6106817072", "0x5401b8620E5FB570064CA9114fd1e135fd77D57c"],
+      "never": ["0xB0F70C0bD6FD87dbEb7C10dC692a2a6106817072", "0x5401b8620E5FB570064CA9114fd1e135fd77D57c", "0x3a4baaBf4DC9910596821615e848f0e6545762F3", "0xecAc9C5F704e954931349Da37F60E39f515c11c1"],
       "rateRouter": "0x9eCe5fB1aB62d9075c4ec814b321e24D8EA021ac",
       "source": "ethereum",
       "sourceChainId": 1,
       "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
-      "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300. Never BTC.b / LBTCv / 10d BTC redeem. Bitwise covered-call, not Babylon. Cap 0.05 LBTC.",
+      "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300 up or down. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap 0.05 LBTC (5e6). Peg cap 5e16 share units. INNER_SUPPLY_CEILING = live totalSupply + headroom. Bitwise covered-call, not Babylon.",
       "status": "mainnet-batch-3",
       "priority": 12
     },

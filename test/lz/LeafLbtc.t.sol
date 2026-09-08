@@ -69,9 +69,31 @@ contract LeafLbtcTest is PegReady {
         AssetCatalog.Listing memory a = AssetCatalog.get("hlbtc");
         assertEq(a.innerMainnet, LeafLbtcPolicy.LBTC);
         assertTrue(a.innerMainnet != LeafLbtcPolicy.BTCB);
+        assertTrue(a.innerMainnet != LeafLbtcPolicy.LBTCV);
+        assertTrue(a.innerMainnet != LeafLbtcPolicy.BTCE);
+        assertTrue(a.innerMainnet != LeafLbtcPolicy.BASE_LBTC);
         assertEq(a.defaultCap, 5e6);
+        assertEq(LeafLbtcPolicy.shareScaleOf("hlbtc"), LeafLbtcPolicy.SHARE_SCALE);
+        assertEq(a.defaultCap * LeafLbtcPolicy.shareScaleOf("hlbtc"), 5e16);
         assertEq(a.sourceChainIdMain, 1);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
+        assertEq(LeafLbtcPolicy.INNER_DECIMALS, 8);
+    }
+
+    function testRequireLbtcRejectsCousins() public {
+        vm.expectRevert(LeafLbtcPolicy.NotLbtc.selector);
+        this._require(LeafLbtcPolicy.BTCB);
+        vm.expectRevert(LeafLbtcPolicy.NotLbtc.selector);
+        this._require(LeafLbtcPolicy.LBTCV);
+        vm.expectRevert(LeafLbtcPolicy.NotLbtc.selector);
+        this._require(LeafLbtcPolicy.BTCE);
+        vm.expectRevert(LeafLbtcPolicy.NotLbtc.selector);
+        this._require(LeafLbtcPolicy.BASE_LBTC);
+        LeafLbtcPolicy.requireLbtc(LeafLbtcPolicy.LBTC);
+    }
+
+    function _require(address inner_) external pure {
+        LeafLbtcPolicy.requireLbtc(inner_);
     }
 
     function testEightDecSharesScale() public {
@@ -81,6 +103,34 @@ contract LeafLbtcTest is PegReady {
         vm.stopPrank();
         assertEq(adapter.totalLocked(), 5e6 * LeafLbtcPolicy.SHARE_SCALE);
         assertEq(inner.balanceOf(address(adapter)), 5e6);
+    }
+
+    function testShareScaleFrozenAfterDeposit() public {
+        vm.startPrank(user);
+        inner.approve(address(adapter), 5e6);
+        adapter.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 5e6, user);
+        vm.stopPrank();
+        vm.startPrank(owner);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
+        adapter.setShareScale(1);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
+        adapter.setMaxRateJumpBps(1);
+        vm.stopPrank();
+    }
+
+    function testLombardSelectorsForbidden() public {
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(bytes4(0x42966c68));
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(bytes4(0xbcf64e05));
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(bytes4(0x6bc63893));
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(bytes4(0x8340f549));
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(bytes4(0xe5c1bf6e));
+        vm.stopPrank();
     }
 
     function testRateJumpStopsMintNotRedeem() public {
@@ -104,6 +154,49 @@ contract LeafLbtcTest is PegReady {
         vm.stopPrank();
     }
 
+    function testDownwardJumpStopsMintNoFee() public {
+        vm.startPrank(user);
+        inner.approve(address(adapter), 5e6);
+        adapter.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 5e6, user);
+        vm.stopPrank();
+        uint256 before = inner.balanceOf(address(adapter));
+        router.setRate(address(inner), 0.96e18);
+        adapter.pokeRate();
+        assertTrue(adapter.rateJumped());
+        assertEq(adapter.lastRate(), 1e18);
+        assertEq(inner.balanceOf(address(adapter)), before);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        adapter.pullYield(inner, converter);
+        vm.startPrank(user);
+        inner.approve(address(adapter), 5e6);
+        vm.expectRevert(LeafOApp.NotHealthy.selector);
+        adapter.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 5e6, user);
+        vm.stopPrank();
+    }
+
+    function testSmallDownDoesNotTrip() public {
+        vm.startPrank(user);
+        inner.approve(address(adapter), 5e6);
+        adapter.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 5e6, user);
+        vm.stopPrank();
+        router.setRate(address(inner), 0.98e18);
+        adapter.pokeRate();
+        assertFalse(adapter.rateJumped());
+        assertEq(adapter.lastRate(), 0.98e18);
+    }
+
+    function testJumpIsNotHarvested() public {
+        vm.startPrank(user);
+        inner.approve(address(adapter), 5e6);
+        adapter.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 5e6, user);
+        vm.stopPrank();
+        router.setRate(address(inner), 1.1e18);
+        adapter.pokeRate();
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        adapter.pullYield(inner, converter);
+        assertEq(inner.balanceOf(address(adapter)), 5e6);
+    }
+
     function testSmallRateBumpSkimsOnePercent() public {
         vm.startPrank(user);
         inner.approve(address(adapter), 5e6);
@@ -112,7 +205,8 @@ contract LeafLbtcTest is PegReady {
         router.setRate(address(inner), 1.01e18);
         uint256 before = inner.balanceOf(converter);
         adapter.pullYield(inner, converter);
-        assertTrue(inner.balanceOf(converter) > before);
-        assertTrue(inner.balanceOf(address(adapter)) < 5e6);
+        // add = 5e6 * 0.01e18 / 1.01e18 = 49504; fee = 495
+        assertEq(inner.balanceOf(converter) - before, 495);
+        assertEq(inner.balanceOf(address(adapter)), 5e6 - 495);
     }
 }

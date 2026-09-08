@@ -7,6 +7,8 @@ import {IVeNft} from "src/lz/IVeNft.sol";
 contract MockVeNft is ERC721 {
     mapping(uint256 => IVeNft.LockedBalance) internal _locked;
     mapping(uint256 => IVeNft.EscrowType) public escrowType;
+    mapping(uint256 => bool) public voted;
+    mapping(uint256 => uint256) public attachments;
 
     constructor() ERC721("veAERO", "veAERO") {}
 
@@ -22,6 +24,18 @@ contract MockVeNft is ERC721 {
 
     function setType(uint256 id, IVeNft.EscrowType t) external {
         escrowType[id] = t;
+    }
+
+    function setVoted(uint256 id, bool v) external {
+        voted[id] = v;
+    }
+
+    function setAttachments(uint256 id, uint256 n) external {
+        attachments[id] = n;
+    }
+
+    function burn(uint256 id) external {
+        _burn(id);
     }
 
     function locked(uint256 id) external view returns (IVeNft.LockedBalance memory) {

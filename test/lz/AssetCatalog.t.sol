@@ -10,6 +10,7 @@ import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
+import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -155,6 +156,8 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);
         assertEq(AssetCatalog.get("hlbtc").defaultCap, 5e6);
+        assertEq(LeafLbtcPolicy.shareScaleOf("hlbtc"), 1e10);
+        assertEq(LeafLbtcPolicy.shareScaleOf("hcbeth"), 1);
         assertEq(MainnetBatches.batchOf("bluai4y"), 4);
         assertEq(MainnetBatches.batchOf("horder"), 4);
         assertEq(MainnetBatches.batchOf("hjitosol"), 5);

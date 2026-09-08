@@ -64,6 +64,14 @@ contract LeafNftLockboxTest is PegReady {
         vm.deal(user, 1 ether);
     }
 
+    function _wrap(uint256 id, uint256 amt) internal {
+        ve.mint(user, id, int128(uint128(amt)), true, 0);
+        vm.startPrank(user);
+        ve.approve(address(box), id);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), id, user);
+        vm.stopPrank();
+    }
+
     function testCatalogNotADeployBatch() public {
         AssetCatalog.Listing memory a = AssetCatalog.get("hveaero");
         assertEq(a.innerMainnet, LeafVePolicy.VE);
@@ -77,11 +85,7 @@ contract LeafNftLockboxTest is PegReady {
     }
 
     function testPermanentMintsPrincipal() public {
-        ve.mint(user, 7, int128(uint128(100e18)), true, 0);
-        vm.startPrank(user);
-        ve.approve(address(box), 7);
-        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 7, user);
-        vm.stopPrank();
+        _wrap(7, 100e18);
         assertEq(ve.ownerOf(7), address(box));
         assertEq(box.totalLocked(), 100e18);
         assertEq(box.principalOf(7), 100e18);
@@ -107,26 +111,66 @@ contract LeafNftLockboxTest is PegReady {
         vm.stopPrank();
     }
 
-    function testCannotPullNftAsYield() public {
-        ve.mint(user, 1, int128(uint128(10e18)), true, 0);
+    function testRejectsLocked() public {
+        ve.mint(user, 11, int128(uint128(50e18)), true, 0);
+        ve.setType(11, IVeNft.EscrowType.LOCKED);
         vm.startPrank(user);
-        ve.approve(address(box), 1);
-        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 1, user);
+        ve.approve(address(box), 11);
+        vm.expectRevert(LeafNftLockbox.BadNft.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 11, user);
         vm.stopPrank();
+    }
+
+    function testRejectsVoted() public {
+        ve.mint(user, 12, int128(uint128(10e18)), true, 0);
+        ve.setVoted(12, true);
+        vm.startPrank(user);
+        ve.approve(address(box), 12);
+        vm.expectRevert(LeafNftLockbox.BadNft.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 12, user);
+        vm.stopPrank();
+    }
+
+    function testRejectsAttached() public {
+        ve.mint(user, 13, int128(uint128(10e18)), true, 0);
+        ve.setAttachments(13, 1);
+        vm.startPrank(user);
+        ve.approve(address(box), 13);
+        vm.expectRevert(LeafNftLockbox.BadNft.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 13, user);
+        vm.stopPrank();
+    }
+
+    function testRejectsOversizeNft() public {
+        ve.mint(user, 14, int128(uint128(100_001e18)), true, 0);
+        vm.startPrank(user);
+        ve.approve(address(box), 14);
+        vm.expectRevert(LeafNftLockbox.CapExceeded.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 14, user);
+        vm.stopPrank();
+    }
+
+    function testCannotPullNftAsYield() public {
+        _wrap(1, 10e18);
         vm.startPrank(owner);
         box.setConvertYieldToHype(true);
         box.setHarvester(address(this));
-        vm.expectRevert(LeafNftLockbox.BadNft.selector);
+        vm.expectRevert(LeafVePolicy.ForbiddenVeCall.selector);
         box.pullYield(IERC20(address(ve)), address(0xC0));
         vm.stopPrank();
     }
 
-    function testBribeIsYieldNotPrincipal() public {
-        ve.mint(user, 2, int128(uint128(10e18)), true, 0);
-        vm.startPrank(user);
-        ve.approve(address(box), 2);
-        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 2, user);
+    function testCannotPullAero() public {
+        _wrap(21, 10e18);
+        vm.startPrank(owner);
+        box.setConvertYieldToHype(true);
         vm.stopPrank();
+        vm.expectRevert(LeafVePolicy.ForbiddenVeCall.selector);
+        box.pullYield(IERC20(LeafVePolicy.AERO), address(0xC0));
+    }
+
+    function testBribeIsYieldNotPrincipal() public {
+        _wrap(2, 10e18);
         bribe.mint(address(box), 5e18);
         vm.startPrank(owner);
         box.setConvertYieldToHype(true);
@@ -148,11 +192,7 @@ contract LeafNftLockboxTest is PegReady {
     }
 
     function testUnlockDegrades() public {
-        ve.mint(user, 3, int128(uint128(10e18)), true, 0);
-        vm.startPrank(user);
-        ve.approve(address(box), 3);
-        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 3, user);
-        vm.stopPrank();
+        _wrap(3, 10e18);
         ve.setLocked(3, int128(uint128(10e18)), false, block.timestamp + 30 days);
         box.reportNftHealth();
         assertEq(uint8(box.health()), uint8(LeafOApp.Health.Degraded));
@@ -162,6 +202,38 @@ contract LeafNftLockboxTest is PegReady {
         vm.expectRevert(LeafOApp.NotHealthy.selector);
         box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 4, user);
         vm.stopPrank();
+    }
+
+    function testAmountDropDegrades() public {
+        _wrap(31, 10e18);
+        ve.setLocked(31, int128(uint128(9e18)), true, 0);
+        box.reportNftHealth();
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Degraded));
+    }
+
+    function testBurnedNftDegrades() public {
+        _wrap(32, 10e18);
+        ve.burn(32);
+        box.reportNftHealth();
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Degraded));
+    }
+
+    function testRebaseDoesNotDegrade() public {
+        _wrap(33, 10e18);
+        ve.setLocked(33, int128(uint128(11e18)), true, 0);
+        box.reportNftHealth();
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Normal));
+        assertEq(box.principalOf(33), 10e18);
+        assertEq(box.totalLocked(), 10e18);
+    }
+
+    function testCannotRestoreWhileUnhealthy() public {
+        _wrap(34, 10e18);
+        ve.setLocked(34, int128(uint128(10e18)), false, block.timestamp + 30 days);
+        box.reportNftHealth();
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.NotSolvent.selector);
+        box.restoreHealth(LeafOApp.Health.Normal);
     }
 
     function testDestMarketOnly() public {

@@ -42,6 +42,7 @@ contract DeployClosed is Script {
             if (bytes(id).length != 0) {
                 AssetCatalog.Listing memory a = AssetCatalog.get(id);
                 require(a.kind == AssetCatalog.Kind.Closed, "not C1");
+                MainnetBatches.requireBatch(id, MainnetBatches.CLOSED);
                 name = a.name;
                 symbol = a.symbol;
                 lockSeconds = a.lockSeconds;

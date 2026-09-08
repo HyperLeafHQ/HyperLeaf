@@ -20,4 +20,8 @@ interface IVeNft {
     function ownerOf(uint256 tokenId) external view returns (address);
     function transferFrom(address from, address to, uint256 tokenId) external;
     function safeTransferFrom(address from, address to, uint256 tokenId) external;
+    /// @dev Voted this epoch — transfer reverts on Aerodrome. Reject before take.
+    function voted(uint256 tokenId) external view returns (bool);
+    /// @dev Gauge attachments. Transfer reverts if non-zero.
+    function attachments(uint256 tokenId) external view returns (uint256);
 }

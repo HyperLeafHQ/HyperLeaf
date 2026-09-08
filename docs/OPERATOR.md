@@ -19,8 +19,8 @@ Set these to **your** wallets before any mainnet broadcast. Do not leave a grok 
 See [`PEG.md`](PEG.md). Liquid 7 Sep 2026: unbacked receipts took a real peg-out.
 
 1. `setListingTag` (frozen). Same tag on source and OFT.
-2. `setLimits(maxPerTx, maxPerDay)` and OFT `setSupplyCap` = source `depositCap`.
-2b. Source `setInnerSupplyCeiling` to a number **above** today's `inner.totalSupply()` with headroom for honest mint, not a flash print.
+2. `setLimits(maxPerTx, maxPerDay)` and OFT `setSupplyCap` = dest **share** units. For 18-dec 1:1 this equals source `depositCap`. For **hLBTC** (8-dec) `depositCap` is inner satoshis (`5e6`) and peg/share cap is `depositCap * 1e10`. `OpenPeg` already multiplies `defaultCap` by `shareScaleOf`. Do not pass `PEG_CAP=5000000`.
+2b. Source `setInnerSupplyCeiling` to a number **above** today's `inner.totalSupply()` with headroom for honest mint, not a flash print. For hLBTC that is live LBTC supply in 8-dec, never the 0.05 cap.
 3. Wire peers. Mainnet: `SetSecurityStack` (2-of-3 + HyperLeaf required DVN).
 4. Read the live config on-chain. Then `openBridge` on **both** sides.
 5. Guardian is a different key. `closeBridge` pauses and keeps mint closed after unpause.

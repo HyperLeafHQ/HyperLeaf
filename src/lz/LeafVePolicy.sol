@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {IVeNft} from "./IVeNft.sol";
+
 /// @notice hveAERO pins. Permanent NORMAL veNFTs only. Never liquid AERO.
 library LeafVePolicy {
     address internal constant VE = 0xeBf418Fe2512e7E6bd9b87a8F0f294aCDC67e6B4;
@@ -14,4 +16,30 @@ library LeafVePolicy {
     error NotNormal();
     error ZeroLock();
     error ForbiddenVeCall();
+
+    function wrapPrincipal(IVeNft ve, uint256 tokenId) internal view returns (uint256 principal) {
+        if (tokenId == 0) revert ForbiddenVeCall();
+        if (ve.escrowType(tokenId) != IVeNft.EscrowType.NORMAL) revert NotNormal();
+        IVeNft.LockedBalance memory L = ve.locked(tokenId);
+        if (!L.isPermanent) revert NotPermanent();
+        if (L.amount <= 0) revert ZeroLock();
+        if (ve.voted(tokenId) || ve.attachments(tokenId) != 0) revert ForbiddenVeCall();
+        principal = uint256(int256(L.amount));
+        if (principal == 0) revert ZeroLock();
+    }
+
+    /// @dev Owner is `box`, still permanent NORMAL, amount ≥ wrap principal. Burned NFT → false.
+    function heldOk(IVeNft ve, address box, uint256 tokenId, uint256 principal) internal view returns (bool) {
+        address o;
+        try ve.ownerOf(tokenId) returns (address got) {
+            o = got;
+        } catch {
+            return false;
+        }
+        if (o != box) return false;
+        IVeNft.LockedBalance memory L = ve.locked(tokenId);
+        if (!L.isPermanent || ve.escrowType(tokenId) != IVeNft.EscrowType.NORMAL) return false;
+        if (L.amount <= 0) return false;
+        return uint256(int256(L.amount)) >= principal;
+    }
 }

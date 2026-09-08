@@ -103,11 +103,11 @@ One listing at a time. Empty books and mixed exits do not help the ecosystem. Wr
 | Canary | **hCANARY** | L | Base | Toy token on the real LZ stack. Not a product |
 | Batch 1 | **hxSQUID**, **hAVNT** | L | Base | Trade xSQUID / stkAVNT here; QUID or AVNT surplus → HYPE |
 | Batch 2 | **hcbETH**, **hgSOON**, **hsWBERA** | L | Base / BSC / Bera | Rate surplus 1% protocol / 99% stays in the receipt |
-| Batch 3 | **hsAVAX**, **hsETHFI**, **hstkwaUSDC** | L | Avax / Ethereum | BENQI; ether.fi receipt; Umbrella USDC |
+| Batch 3 | **hsAVAX**, **hsETHFI**, **hstkwaUSDC**, **hLBTC** | L | Avax / Ethereum | BENQI; ether.fi receipt; Umbrella USDC; LBTC 8-dec rate |
 | Batch 4 | **BLUAI4Y**, **hORDER** | C1 | BSC / Arbitrum | Market exit. No protocol redeem. No CREATE2 twin |
 | Morpho vaults | **hsteakUSDC**, **hsteakUSDG** | L | Base / Robinhood | Wrap the ERC-4626 **share**. Never deposit/redeem USDC/USDG. Never Morpho Blue positions |
-| Later C1 | hB3, PTSMAX | C1 | Base / BSC | Address-keyed farm or NFT. Market exit |
-| Needs new lockbox | **hJitoSOL**, veAERO, veUP, JupSOL, stDYDX | L / ve-NFT | Solana / Base / Robinhood / Cosmos | JitoSOL dest+math is BATCH=5; Solana program next. NFT/IBC later |
+| Later C1 | hB3, PTSMAX, **hveAERO** | C1 / ve-NFT | Base / BSC | Address-keyed farm or permanent veNFT. Market exit. hveAERO is not a BATCH |
+| Needs new lockbox | **hJitoSOL**, veUP, JupSOL, stDYDX | L / ve-NFT | Solana / Robinhood / Cosmos | JitoSOL dest+math is BATCH=5; Solana program next. IBC later |
 | Not now | hKAITO, hVIRTUALMAX, hSKY, hGMX, hUNCX, hSNX, hLIT, **stkAAVE**, SLVR, TWO, StonkBrokers | | | Omnichain / frozen / tax / NFT TBA. Legacy stkAAVE stays HOLD — Umbrella is hstkwaUSDC. Full order: [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 
 Out of scope: another HYPE LST, wrapping official RAM/HYBR receipts, ENA (already on HyperCore).

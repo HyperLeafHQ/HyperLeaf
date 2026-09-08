@@ -140,6 +140,10 @@ abstract contract LeafYieldFee {
     ///      Tx 0x24398d72 is that combined redeem *hash*, not a selector — do not
     ///      blacklist the hash prefix.
     function _forbiddenRewardsSelector(bytes4 s) internal pure returns (bool) {
+        return _forbiddenExitSelector(s) || _forbiddenLbtcSelector(s);
+    }
+
+    function _forbiddenExitSelector(bytes4 s) internal pure returns (bool) {
         return s == bytes4(0x1e9a6950) // redeem(address,uint256)
             || s == bytes4(0xeab52318) // claimRewardsAndRedeem(address,uint256,uint256) — Avantis
             || s == bytes4(0x787a08a6) // cooldown()
@@ -163,8 +167,15 @@ abstract contract LeafYieldFee {
             || s == bytes4(0x397a1b28) // requestWithdraw(address,uint256) — ether.fi DelayedWithdraw arity
             || s == bytes4(0x0efe6a8b) // deposit(address,uint256,uint256) — sETHFI teller, never poke
             || s == bytes4(0x1d7d4ebc) // KING merkle claim(address,uint256,bytes32,bytes32[])
-            || s == bytes4(0x2e7ba6ef) // ETHFI/EIGEN merkle claim(uint256,address,uint256,bytes32[])
-            || s == bytes4(0x42966c68); // burn(uint256) — LBTC / never poke
+            || s == bytes4(0x2e7ba6ef); // ETHFI/EIGEN merkle claim(uint256,address,uint256,bytes32[])
+    }
+
+    function _forbiddenLbtcSelector(bytes4 s) internal pure returns (bool) {
+        return s == bytes4(0x42966c68) // burn(uint256)
+            || s == bytes4(0xbcf64e05) // burn(uint256,bytes32)
+            || s == bytes4(0x6bc63893) // mint(bytes,bytes)
+            || s == bytes4(0x8340f549) // deposit(address,address,uint256) — AssetRouter BTC.b→LBTC
+            || s == bytes4(0xe5c1bf6e); // redeem(bytes,bytes) — 10d BTC
     }
 
     function _setRewardsTarget(address t) internal {
@@ -256,7 +267,7 @@ abstract contract LeafYieldFee {
         }
         uint256 backing = _backingInner(token, reserved);
         uint256 prev = backing > assets ? backing - assets : 0;
-        if (prev == 0) return assets;
+        if (prev == 0) return 0;
         return (assets * totalShares) / prev;
     }
 
@@ -330,15 +341,30 @@ abstract contract LeafYieldFee {
         if (rate == 0) revert BadRateFeed();
     }
 
+    /// @dev |Δrate|/lastRate in bps. 0 if unset or equal.
+    function _rateJumpBps(uint256 rate) internal view returns (uint256) {
+        if (lastRate == 0 || rate == lastRate) return 0;
+        uint256 delta = rate > lastRate ? rate - lastRate : lastRate - rate;
+        return (delta * BPS_DENOMINATOR) / lastRate;
+    }
+
+    function _tripIfRateJump(uint256 rate) internal returns (bool) {
+        if (maxRateJumpBps == 0) return false;
+        uint256 jump = _rateJumpBps(rate);
+        if (jump > maxRateJumpBps) {
+            rateJumped = true;
+            emit RateJump(lastRate, rate);
+            return true;
+        }
+        return false;
+    }
+
     /// @dev Unrealized surplus on principal only. Floor so dust stays in lastAccounted.
     function _unaccruedRateYield(IERC20 token) internal view returns (uint256 add, uint256 rate) {
         if (rateKind == RateKind.None) return (0, 0);
         rate = _readRate(token);
         if (lastRate == 0 || lastAccounted == 0 || rate <= lastRate) return (0, rate);
-        if (maxRateJumpBps != 0) {
-            uint256 jump = ((rate - lastRate) * BPS_DENOMINATOR) / lastRate;
-            if (jump > maxRateJumpBps) return (0, rate);
-        }
+        if (maxRateJumpBps != 0 && _rateJumpBps(rate) > maxRateJumpBps) return (0, rate);
         add = (lastAccounted * (rate - lastRate)) / rate;
     }
 
@@ -364,18 +390,11 @@ abstract contract LeafYieldFee {
             lastRate = rate;
             return;
         }
+        if (rate == lastRate) return;
+        if (_tripIfRateJump(rate)) return;
         if (rate < lastRate) {
             lastRate = rate;
             return;
-        }
-        if (rate == lastRate) return;
-        if (maxRateJumpBps != 0) {
-            uint256 jump = ((rate - lastRate) * BPS_DENOMINATOR) / lastRate;
-            if (jump > maxRateJumpBps) {
-                rateJumped = true;
-                emit RateJump(lastRate, rate);
-                return;
-            }
         }
         uint256 add = (lastAccounted * (rate - lastRate)) / rate;
         lastAccounted -= add;
@@ -391,18 +410,11 @@ abstract contract LeafYieldFee {
             lastRate = rate;
             return;
         }
+        if (rate == lastRate || lastAccounted == 0) return;
+        if (_tripIfRateJump(rate)) return;
         if (rate < lastRate) {
             lastRate = rate;
             return;
-        }
-        if (rate == lastRate || lastAccounted == 0) return;
-        if (maxRateJumpBps != 0) {
-            uint256 jump = ((rate - lastRate) * BPS_DENOMINATOR) / lastRate;
-            if (jump > maxRateJumpBps) {
-                rateJumped = true;
-                emit RateJump(lastRate, rate);
-                return;
-            }
         }
         uint256 add = (lastAccounted * (rate - lastRate)) / rate;
         lastRate = rate;

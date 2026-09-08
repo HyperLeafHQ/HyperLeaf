@@ -7,6 +7,7 @@ import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
@@ -56,13 +57,17 @@ contract ConfigureMainnetListing is Script {
             box.setRetainRateYield(true);
         }
         if (keccak256(bytes(a.id)) == keccak256("hlbtc")) {
-            require(address(box.innerToken()) == LeafLbtcPolicy.LBTC, "not LBTC");
-            require(address(box.innerToken()) != LeafLbtcPolicy.BTCB, "BTC.b");
+            LeafLbtcPolicy.requireLbtc(address(box.innerToken()));
+            require(IERC20Metadata(address(box.innerToken())).decimals() == LeafLbtcPolicy.INNER_DECIMALS, "not 8-dec");
+            require(box.rewardsSelector() == bytes4(0), "lbtc poke");
             box.setRewardsTarget(LeafLbtcPolicy.ASSET_ROUTER);
             box.setShareScale(LeafLbtcPolicy.SHARE_SCALE);
             box.setMaxRateJumpBps(LeafLbtcPolicy.MAX_RATE_JUMP_BPS);
             box.setRateKind(LeafYieldFee.RateKind.RouterGetRate);
             box.setRetainRateYield(true);
+            require(box.shareScale() == LeafLbtcPolicy.SHARE_SCALE, "scale");
+            require(box.maxRateJumpBps() == LeafLbtcPolicy.MAX_RATE_JUMP_BPS, "jump");
+            require(box.rewardsSelector() == bytes4(0), "lbtc poke after");
         }
         if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
