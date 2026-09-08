@@ -20,7 +20,7 @@ contract LeafOFT is LeafOApp, ERC20 {
     bytes32 public listingId;
     uint256 public supplyCap;
     uint256 private _gate;
-    /// @dev Monotonic rewarder lifecycle: UNSET -> ACTIVE -> PERMANENTLY_DISABLED.
+    /// @dev Monotonic lifecycle: UNSET -> ACTIVE -> PERMANENTLY_DISABLED.
     bool public rewarderDisabled;
 
     modifier oftLock() {
@@ -41,9 +41,9 @@ contract LeafOFT is LeafOApp, ERC20 {
         ERC20(name_, symbol_)
     {}
 
-    /// @notice Bind listing id (one-shot). Rewarder is initially configurable while UNSET.
-    ///         Setting it to zero while ACTIVE permanently disables reward hooks; it can
-    ///         never be rebound, preventing historical accumulator replay after an outage.
+    /// @notice Configure the rewarder while UNSET. Passing zero retires the active
+    ///         rewarder permanently; the historical contract stays attached so its
+    ///         existing holders can settle/claim, while re-binding is impossible.
     function setHypeRewarder(address rewarder, bytes32 listingId_) external onlyOwner {
         if (listingId_ == bytes32(0)) revert ZeroAddress();
         if (listingId != bytes32(0) && listingId != listingId_) revert ListingIdFrozen();
@@ -51,11 +51,13 @@ contract LeafOFT is LeafOApp, ERC20 {
 
         address current = address(hypeRewarder);
         if (rewarder == address(0)) {
-            if (current != address(0)) {
-                rewarderDisabled = true;
+            if (current == address(0)) {
+                listingId = listingId_;
+                emit HypeRewarderSet(address(0), listingId_);
+                return;
             }
+            rewarderDisabled = true;
             listingId = listingId_;
-            hypeRewarder = ILeafHypeRewarder(address(0));
             emit HypeRewarderSet(address(0), listingId_);
             return;
         }
@@ -64,6 +66,11 @@ contract LeafOFT is LeafOApp, ERC20 {
         listingId = listingId_;
         hypeRewarder = ILeafHypeRewarder(rewarder);
         emit HypeRewarderSet(rewarder, listingId_);
+    }
+
+    /// @notice Rewarder-facing lifecycle bit. Once false, no new distributions may be notified.
+    function rewardsActive() external view returns (bool) {
+        return !rewarderDisabled && address(hypeRewarder) != address(0) && listingId != bytes32(0);
     }
 
     function setSupplyCap(uint256 cap) public onlyOwner {
@@ -122,7 +129,8 @@ contract LeafOFT is LeafOApp, ERC20 {
 
     function _update(address from, address to, uint256 value) internal override {
         // Rewards must not brick ERC20 liveness. Failed settle/debt is skipped.
-        // Do not auto-disable the hook: a tight gas stipend would grief every holder.
+        // Keep the retired rewarder attached so existing accumulator/debt can settle,
+        // while rewardsActive() prevents new distributions after retirement.
         if (address(hypeRewarder) != address(0) && listingId != bytes32(0)) {
             if (from != address(0) && to != address(0)) {
                 _trySettle(from);
