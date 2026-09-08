@@ -11,6 +11,8 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     ILayerZeroEndpointV2 public immutable endpoint;
     address public guardian;
     mapping(uint32 eid => bytes32 peer) public peers;
+    /// @dev First wired EID. New EIDs revert. Extra chains = new deploy.
+    uint32 public remoteEid;
 
     error ZeroAddress();
     error OnlyEndpoint();
@@ -41,8 +43,11 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     }
 
     function setPeer(uint32 eid, bytes32 peer) public onlyOwner {
+        if (peer == bytes32(0)) revert ZeroAddress();
+        if (remoteEid != 0 && eid != remoteEid) revert PeerFrozen();
         if (peers[eid] != bytes32(0) && peers[eid] != peer) revert PeerFrozen();
         peers[eid] = peer;
+        remoteEid = eid;
         emit PeerSet(eid, peer);
     }
 

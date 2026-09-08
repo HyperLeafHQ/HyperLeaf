@@ -123,6 +123,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         Market memory m = markets[leaf][wantToken];
         if (!m.allowed) revert NotAllowed();
         if (leafAmount == 0 || wantAmount == 0) revert BadOrder();
+        if (leafAmount > type(uint128).max || wantAmount > type(uint128).max) revert BadOrder();
         if (sourceRecipient == address(0)) revert ZeroAddress();
         if (expiry <= block.timestamp) revert BadOrder();
 
@@ -191,10 +192,11 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         emit AckRetried(id);
     }
 
-    /// @notice Resend REFUND (cancel/expire/abort with inner still on source).
+    /// @notice Resend REFUND. Anyone may pay LZ. Uses the frozen source peer if
+    ///         dest never saw the FILL (`cancel` without gas).
     function retryRefund(uint256 id) external payable nonReentrant {
         Order storage o = orders[id];
-        uint32 srcEid = fillSrcEid[id];
+        uint32 srcEid = fillSrcEid[id] != 0 ? fillSrcEid[id] : remoteEid;
         if (srcEid == 0) revert BadOrder();
         if (o.status == Status.Filled) revert NotOpen();
         _lzSend(srcEid, abi.encode(OP_REFUND, id), msg.sender);

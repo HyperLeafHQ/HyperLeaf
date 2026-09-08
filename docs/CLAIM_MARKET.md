@@ -147,6 +147,9 @@ retryAck / retryRefund if a return message is dropped
 ```
 
 Inner never moves until ACK / REFUND / ABORT_OK. Fill does not mint.
+One LZ peer per deploy (`remoteEid` frozen). Extra chains = new escrow.
+`list`/`fill` reject amounts above uint128 before transfer. `retryRefund`
+is permissionless — seller cancel does not need to pay LZ.
 
 1. `list` — Leaf to escrow. Face = SOLVENCY unit.
 2. Source `fill` — exact `wantAmount` of canonical inner.

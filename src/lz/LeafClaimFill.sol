@@ -98,8 +98,10 @@ contract LeafClaimFill is LeafClaimPeer, ReentrancyGuard {
         nonReentrant
     {
         if (!allowedInner[wantToken]) revert NotAllowed();
-        if (wantAmount == 0 || seller == address(0) || seller == msg.sender) revert BadFill();
+        if (wantAmount == 0 || wantAmount > type(uint128).max) revert BadFill();
+        if (seller == address(0) || seller == msg.sender) revert BadFill();
         if (fills[id].status != FillStatus.None) revert Busy();
+        if (destEid != remoteEid) revert NoPeer();
 
         IERC20(wantToken).safeTransferFrom(msg.sender, address(this), wantAmount);
         fills[id] = Fill({
