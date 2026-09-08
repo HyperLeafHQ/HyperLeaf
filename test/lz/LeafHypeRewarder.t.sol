@@ -270,11 +270,11 @@ contract LeafHypeRewarderTest is PegReady {
         adapter.pullYield(inner, alice);
     }
 
-    function testOwnerCannotPull() public {
+    function testOwnerCannotPullToEoa() public {
         inner.mint(address(adapter), 1e18);
         vm.prank(owner);
-        vm.expectRevert(LeafYieldFee.NotHarvester.selector);
-        adapter.pullYield(inner, harvester);
+        vm.expectRevert(LeafYieldFee.BadConverter.selector);
+        adapter.pullYield(inner, alice);
     }
 
     function testConvertRedeemIsOneToOne() public {

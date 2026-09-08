@@ -163,7 +163,7 @@ contract LeafYieldConverterTest is PegReady {
 
     function _pullQuid(uint256 n) internal {
         quid.mint(address(adapter), n);
-        vm.prank(keeper);
+        vm.prank(alice);
         adapter.pullYield(IERC20(address(quid)), address(conv));
     }
 
@@ -304,7 +304,7 @@ contract LeafYieldConverterTest is PegReady {
         uint256 req = conv.requiredMinOut(address(quid), address(whype), 50e18);
         assertEq(req, 40e18);
         vm.prank(keeper);
-        vm.expectRevert(abi.encodeWithSelector(LeafYieldConverter.BelowMinOut.selector, 1, req));
+        vm.expectRevert(abi.encodeWithSelector(LeafYieldConverter.BelowMinOut.selector, 0, req));
         conv.execute(
             IERC20(address(quid)), 50e18, IERC20(address(whype)), 1, address(aero), abi.encodeCall(MockRoute.run, (50e18)), block.timestamp + 1
         );

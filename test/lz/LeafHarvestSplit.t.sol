@@ -131,10 +131,10 @@ contract LeafHarvestSplitTest is PegReady {
     function testHarvesterPullsQuidOnly() public {
         farm.seed(4e18);
         farm.harvest(address(adapter));
-        vm.prank(harvester);
+        vm.prank(alice);
         vm.expectRevert();
         adapter.pullYield(quid, harvester);
-        vm.prank(harvester);
+        vm.prank(alice);
         adapter.pullYield(quid, converter);
         assertEq(quid.balanceOf(converter), 4e18);
         assertEq(quid.balanceOf(address(adapter)), 0);

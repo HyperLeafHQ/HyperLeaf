@@ -4,9 +4,9 @@ Two steps. Do not merge them into one user button.
 
 ## 1. Permissionless `harvestRewards()` (source chain)
 
-Anyone pays gas. L: `pokeRewards` on the adapter (hxSQUID `claimRewards(this, max)`). C1: `pokeRewards` on the farm (`farmClaimSel`). No generic `pokeClaim`. No swap. No inner movement.
+Anyone pays gas. L: `pokeRewards` on the adapter (hxSQUID `claimRewards(this, max)`). C1: `pokeRewards` on the farm (`farmClaimSel`). Then anyone `pullYield(..., converter)` — no DEX, destination is the converter only. No generic `pokeClaim`. No swap. No inner movement.
 
-HyperEVM mempool: **8 pending txs per sender**. Harvest / `poke` / `notify` are permissionless so a single keeper key is not required. If you do run a bot: wallet pool, and **gas < 3M** (else the tx sits in the 1-minute big block). Weekly is enough.
+HyperEVM mempool: **8 pending txs per sender**. `poke` / `pullYield` are permissionless so a single keeper key is not required for harvest. `execute` / `notify` still need the keeper. If you do run a bot: wallet pool, and **gas < 3M** (else the tx sits in the 1-minute big block). Weekly is enough.
 
 - Settled BLUAI / QUID / airdrops land **in the lockbox**.
 - No swap. No inner receipt movement.
@@ -14,7 +14,7 @@ HyperEVM mempool: **8 pending txs per sender**. Harvest / `poke` / `notify` are 
 
 ## 2. Weekly (or size-gated) keeper — not 24/7
 
-Harvester-only `pullYield` **into `LeafYieldConverter`**, never an EOA. Then swap + bridge + `notify` on that contract.
+Harvester-only `execute` / `notify` on `LeafYieldConverter`. `pullYield` is already done. Swap + bridge + `notify` stay keyed because (1) bridge calldata has no price floor, (2) `notify(id)` chooses which listing gets the WHYPE.
 
 Converter rules:
 

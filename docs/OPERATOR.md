@@ -8,7 +8,7 @@ Not for users. README is the public product. This file is for whoever broadcasts
 | ---- | --- | -------- |
 | **OWNER** | `setPeer`, caps, pause/unpause, harvest config, ownership | A bot, a shared laptop, the harvester key |
 | **GUARDIAN** | `pause` | Unpause, setPeer, pullYield |
-| **HARVESTER** | `pullYield` | `setPeer`, ownership, pause policy |
+| **HARVESTER** | converter `execute` / `notify` | `setPeer`, ownership, pause policy. `notify` a listing that did not produce the WHYPE |
 | **CONVERTER** | Receive pulled surplus for swap → WHYPE | Custody of the lockbox |
 | **FEE_RECIPIENT** | 1% of yield | User deposits |
 

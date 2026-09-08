@@ -178,8 +178,8 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
 
     /// @notice Swap (`tokenOut` stays here) or bridge (`tokenOut` = 0, inventory leaves).
     ///         DEX, Relay, Portal, deBridge, Mayan are just allowlisted `route`s.
-    ///         Calldata is the route's own minAmount — we also enforce `minOut`
-    ///         on the balance delta when `tokenOut` is set.
+    ///         Caller `minOut` cannot go below `requiredMinOut`. Keeper still
+    ///         required: bridge calldata has no floor, and `notify` picks listing.
     function execute(
         IERC20 tokenIn,
         uint256 amountIn,
@@ -198,8 +198,8 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
         if (!bridging) {
             if (address(tokenOut) == address(tokenIn)) revert SameToken();
             if (!isOutput[address(tokenOut)]) revert BadToken();
-            uint256 req = requiredMinOut(address(tokenIn), address(tokenOut), amountIn);
-            if (minOut < req) revert BelowMinOut(minOut, req);
+            uint256 floor = requiredMinOut(address(tokenIn), address(tokenOut), amountIn);
+            if (minOut < floor) minOut = floor;
         }
 
         uint256 inBefore = tokenIn.balanceOf(address(this));

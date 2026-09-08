@@ -111,8 +111,8 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     /// @notice Pull side-token surplus, or rate-implied inner surplus, to converter.
+    ///         Anyone. `to` must be the converter. No DEX in this call.
     function pullYield(IERC20 token, address to) external nonReentrant {
-        if (msg.sender != harvester) revert NotHarvester();
         _requireConverter(to);
         if (address(token) == address(innerToken)) {
             if (rateKind == RateKind.None) revert CannotPullInner();

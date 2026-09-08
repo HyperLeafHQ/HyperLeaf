@@ -93,7 +93,7 @@ Luna: operational security is the weak score, not “delete owner.” Owner is a
 | ---- | ----- | --- | ------ |
 | **Owner** (multisig) | LZ delegate, restore, unpause, **lower** caps, DVN config while closed, `abortCredit`, rotate harvester/converter | Resume after halt. Rotate a burned keeper. Skip a stuck LZ nonce. | Replace an existing peer (ever). Raise caps. Change rate/retain after first deposit. Replace a live Rewarder while supply > 0. `pullYield`. `setEndpointConfig` while the bridge is live. Worsen health (guardian). |
 | **Guardian** | pause, `closeBridge`, `setHealth` worse, `reportLedgerPrincipal` | Halt mint in minutes | Unpause, restore Normal, skip LZ, pull yield, change peers |
-| **Harvester / keeper** | `pullYield`, converter `execute` / `notify` / `returnToLockbox` | Move surplus that is already yield | Point `to` anywhere but the converter. Change peers. Unpause |
+| **Harvester / keeper** | converter `execute` / `notify` / `returnToLockbox` | Move surplus that is already yield | Point `to` anywhere but the converter. Change peers. Unpause. `notify` a different listing than the WHYPE came from |
 | **Converter** | the contract, never an EOA | Hold inventory, minOut hops, halt pulls | Receive principal. Be the owner |
 
 Do **not** remove: `abortCredit`, `setEndpointConfig`, `restoreHealth`, `farmUnstake`, `setRedeemEnabled`. Those are incident tools. Bind them to the multisig. `restoreHealth(Normal)` already re-checks the ceiling and hORDER `ledgerPrincipal` — it is not a bare declaration.
