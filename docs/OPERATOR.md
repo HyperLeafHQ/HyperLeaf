@@ -66,4 +66,4 @@ forge test
 ```
 
 Wrap tests: `test/lz/`. Native: `test/NestVault.t.sol`.
-Deploy: `script/lz/` (`DeployCanarySource`, `DeployCanaryDest`, `DeployAdapter`, `DeployOFT`, `WirePeers`, `ConfigureMainnetListing`, `SetSecurityStack`, `OpenPeg`, `DeployHypeRewarder`). Copy-paste: `docs/GROK_BOT_MAINNET.md`.
+Deploy: `script/lz/` (`DeployCanarySource`, `DeployCanaryDest`, `DeployAdapter`, `DeployOFT`, `WirePeers`, `WireSolanaPeer`, `ConfigureMainnetListing`, `ConfigureJitoDest`, `SetSecurityStack`, `OpenPeg`, `DeployClosed`, `DeployHypeRewarder`). Task list: `docs/GROK_BOT_MAINNET.md`.

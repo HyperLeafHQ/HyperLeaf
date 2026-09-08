@@ -139,7 +139,8 @@ HyperLeaf **markets** lock and staking risk. It does not delete it.
 | Listing catalog | [`listings/catalog.json`](listings/catalog.json) |
 | Internal order | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | Deploy / keys | [`docs/OPERATOR.md`](docs/OPERATOR.md) |
-| Deploy / canary | [`docs/GROK_BOT_MAINNET.md`](docs/GROK_BOT_MAINNET.md) |
+| Grok bot — mainnet order (canary → Solana) | [`docs/GROK_BOT_MAINNET.md`](docs/GROK_BOT_MAINNET.md) |
+| Grok bot — Solana `.so` | [`docs/GROK_BOT_SOLANA.md`](docs/GROK_BOT_SOLANA.md) |
 
 ```bash
 git clone -b feat/lz-oft-wrap https://github.com/HyperLeafHQ/HyperLeaf

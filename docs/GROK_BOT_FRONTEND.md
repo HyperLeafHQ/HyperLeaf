@@ -1,6 +1,10 @@
 # Grok bot — frontend copy
 
-This file is for the **frontend** bot (hyperleaf.finance, landing, this preview). Not for Solidity. Not for testnet deploy.
+This file is for the **frontend** bot (hyperleaf.finance, landing, this preview). Not for Solidity. Not for mainnet deploy.
+
+Deploy / canary / Solana `.so` is the **other** bot: [`GROK_BOT_MAINNET.md`](GROK_BOT_MAINNET.md). Do not `forge script` from this file. Do not restyle because a listing shipped.
+
+`L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. If a user sees those strings, the frontend is wrong.
 
 `L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. If a user sees those strings, the frontend is wrong.
 

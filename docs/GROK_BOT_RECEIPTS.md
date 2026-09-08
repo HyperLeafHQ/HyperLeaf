@@ -1,6 +1,8 @@
 # Grok bot — listing harvest notes (after canary)
 
-Deploy copy-paste: [`GROK_BOT_MAINNET.md`](GROK_BOT_MAINNET.md). `BATCH` locks the ticker. Do not use deleted testnet scripts.
+**Deploy order and copy-paste:** [`GROK_BOT_MAINNET.md`](GROK_BOT_MAINNET.md).
+That file is the task list. This table is only harvest/never per ticker.
+`BATCH` locks the ticker. Do not use deleted testnet scripts.
 
 | ASSET | BATCH | Harvest | Never |
 | --- | --- | --- | --- |
@@ -11,5 +13,6 @@ Deploy copy-paste: [`GROK_BOT_MAINNET.md`](GROK_BOT_MAINNET.md). `BATCH` locks t
 | `hsethfi` | 3 | none this round (yield in share) | DelayedWithdraw / teller deposit / merkle poke |
 | `hstkwausdc` | 3 | 1% rate skim + `RewardsController` `0xbb492bf5` | `cooldown` on StakeToken |
 | `bluai4y` / `horder` | 4 | farm claim / ledger harvest | `setShareExit`; CREATE2 twin |
+| `hjitosol` | 5 | 1% of JitoSOL/SOL rate surplus (escrow → harvest ATA). Spec `solana/leaf-jito-rate` | NCN / VRT / stake-pool CPI / Rewarder / `WirePeers` |
 
 `pullYield(inner)` on rate L **is** the 1% skim. On hxSQUID it must revert `CannotPullInner`.

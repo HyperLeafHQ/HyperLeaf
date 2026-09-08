@@ -55,12 +55,12 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 **E** — veAERO / remaining Ethereum (not SKY).
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
-**5** — **hJitoSOL** dest OFT + rate math. Solana program (lock/unlock/harvest) next; Grok-bot EVM pass does not deploy this.
+**5** — hJitoSOL. Grok bot: Docker `anchor build -v` → deploy `.so` → Store PDA → HyperEVM dest OFT. Task list: `GROK_BOT_MAINNET.md` §5. NCN out.
 **Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.
 
-## Solana (after EVM batches)
+## Solana (batch 5, after EVM 0–4)
 
-No Solana lockbox in this repo. `LeafOFTAdapter` is EVM-only. First Solana listing needs a new program: escrow SPL → LZ message → HyperEVM OFT. Path is LayerZero (eid 30168), not Wormhole. DVN trio already includes Labs + Horizen + Canary on Solana; confirmations 32.
+Spec crate is in-repo (`solana/leaf-jito-rate`). Mainnet `.so` is Grok bot + Docker + LZ OApp template (`GROK_BOT_SOLANA.md`). `LeafOFTAdapter` is EVM-only. Path is LayerZero eid 30168, not Wormhole. Confirmations 32. Trio Labs + Horizen + Canary. Never Nethermind.
 
 Do **not** mock Solana inners on Base.
 
