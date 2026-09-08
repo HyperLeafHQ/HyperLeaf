@@ -126,18 +126,8 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setConverter(converter_);
     }
 
-    function setClaimTarget(address t, bool allowed) public virtual onlyOwner {
-        if (farm != address(0) && t == farm) revert BadClaimTarget();
-        _setClaimTarget(address(innerToken), t, allowed);
-    }
-
-    function setClaimCall(address t, bytes4 selector) public virtual onlyOwner {
-        if (farm != address(0) && t == farm) revert BadClaimTarget();
-        _setClaimCall(address(innerToken), t, selector);
-    }
-
     function setFarm(address farm_, bytes4 stakeSel, uint256 arg, bytes4 claimSel) external onlyOwner {
-        if (farm_ == address(innerToken)) revert BadClaimTarget();
+        if (farm_ == address(innerToken)) revert BadStake();
         farm = farm_;
         farmStakeSel = stakeSel;
         farmStakeArg = arg;
@@ -209,17 +199,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit RestakedIdle(idle);
     }
 
-    function pokeClaim(address t, bytes calldata data) external payable nonReentrant {
-        _pokeClaim(address(innerToken), t, data);
-    }
-
-    function setRewardsSelector(bytes4 s) external onlyOwner {
-        _setRewardsSelector(s);
-    }
-
     function pokeRewards() external payable virtual nonReentrant {
+        if (farm == address(0) || farmClaimSel == bytes4(0)) revert BadStake();
         _afterPokeRewards();
-        if (rewardsSelector != bytes4(0)) _pokeRewards(address(innerToken));
     }
 
     function _afterPokeRewards() internal virtual {
@@ -238,15 +220,6 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function harvest() external nonReentrant {
         _requireInnerSupplyOk(innerToken);
         _harvestInner(innerToken, 0);
-    }
-
-    function harvestToken(IERC20 token) external nonReentrant {
-        if (address(token) == address(innerToken)) {
-            _requireInnerSupplyOk(innerToken);
-            _harvestInner(innerToken, 0);
-        } else {
-            _harvestOther(token);
-        }
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {LeafOApp} from "./LeafOApp.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 import {ILeafHypeRewarder} from "./ILeafHypeRewarder.sol";
@@ -10,7 +9,7 @@ import {ILeafHypeRewarder} from "./ILeafHypeRewarder.sol";
 /// @title LeafOFT
 /// @notice HyperEVM-side receipt. Mint on verified LZ message, burn to send back.
 ///         C1 closed listings override send() so the only exit is the market.
-contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
+contract LeafOFT is LeafOApp, ERC20 {
     error ZeroAmount();
     error SupplyCapExceeded();
     error Reentrant();
@@ -38,7 +37,6 @@ contract LeafOFT is LeafOApp, ERC20, ERC20Permit {
     constructor(string memory name_, string memory symbol_, address endpoint_, address owner_, address guardian_)
         LeafOApp(endpoint_, owner_, guardian_)
         ERC20(name_, symbol_)
-        ERC20Permit(name_)
     {}
 
     /// @notice Bind listing id (one-shot). Rewarder may unhook to `address(0)` so

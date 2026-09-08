@@ -4,13 +4,13 @@ Two steps. Do not merge them into one user button.
 
 ## 1. Permissionless `harvestRewards()` (source chain)
 
-Anyone pays gas. `pokeClaim` / `pokeRewards` on the lockbox, or the farm’s own claim if it already pays the lockbox. No swap. No inner movement.
+Anyone pays gas. L: `pokeRewards` on the adapter (hxSQUID `claimRewards(this, max)`). C1: `pokeRewards` on the farm (`farmClaimSel`). No generic `pokeClaim`. No swap. No inner movement.
 
 HyperEVM mempool: **8 pending txs per sender**. Harvest / `poke` / `notify` are permissionless so a single keeper key is not required. If you do run a bot: wallet pool, and **gas < 3M** (else the tx sits in the 1-minute big block). Weekly is enough.
 
 - Settled BLUAI / QUID / airdrops land **in the lockbox**.
 - No swap. No inner receipt movement.
-- Owner sets `setClaimCall` / `setRewardsSelector`. Do not deploy a second harvest contract.
+- Owner sets `setRewardsSelector` (L) or `setFarm` claim selector (C1). Do not deploy a second harvest contract.
 
 ## 2. Weekly (or size-gated) keeper — not 24/7
 

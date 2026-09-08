@@ -2,6 +2,10 @@
 
 **Do not deploy mainnet. Do not set `INNER_TOKEN`.** Scripts revert if you point at live xSQUID / cbETH / BLUAI, or if you broadcast on 8453/999/56.
 
+`ASSET` this round is only `hxsquid` | `hcbeth` | `bluai4y` (`TestnetCatalog`). Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2.
+
+hxSQUID yield: `pokeRewards` (`0x9a99b4f0`) then `pullYield`. There is no `pokeClaim` / `harvestToken` on these lockboxes. C1: `pokeRewards` is farm `claimAll`, not a generic selector. Do not `setShareExit`. Cross-chain board: dest `LeafReleased` is not done; wait source `Paid`.
+
 Branch: `feat/lz-oft-wrap`. Faucets: Base Sepolia ETH, HyperEVM testnet HYPE ([testnet drip](https://app.hyperliquid-testnet.xyz)).
 
 Keys: `OWNER`, `GUARDIAN`, `HARVESTER`, `CONVERTER` — four different EOAs. `PRIVATE_KEY` is OWNER.
@@ -193,7 +197,9 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 
 ## Still not this pass
 
-- Mainnet inners, `SetSecurityStack`, WHYPE converter fills
-- hKAITO / hVIRTUALMAX / hSKY
-- NestVault v2
-- hgSOON / hsWBERA testnet: **`docs/GROK_BOT_RECEIPTS.md`** (same scripts, different source RPC)
+- Mainnet inners, `SetSecurityStack`, WHYPE converter fills, multi-DEX/bridge converter routes
+- hKAITO / hVIRTUALMAX / hSKY / hgSOON / hsWBERA (catalog exists; not this `ASSET` round)
+- NestVault / HNest / HevAdapter
+- LeafVirtualsLockbox / LeafOmnichainHolder / LeafCreate2
+- C1 `shareExit` / protocol redeem
+- generic `pokeClaim` / `harvestToken` (removed from wrap lockboxes)

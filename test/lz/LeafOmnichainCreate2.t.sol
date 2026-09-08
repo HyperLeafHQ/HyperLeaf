@@ -160,11 +160,13 @@ contract LeafOmnichainCreate2Test is PegReady {
     function testUsdcYieldIsNotPrincipal() public {
         usdc.mint(address(box), 1e18);
         uint256 locked = box.totalLocked();
-        vm.prank(user);
-        box.harvestToken(usdc);
+        vm.startPrank(owner);
+        box.setConvertYieldToHype(true);
+        box.setHarvester(address(this));
+        vm.stopPrank();
+        box.pullYield(usdc, address(0xC0));
         assertEq(box.totalLocked(), locked);
-        assertGt(usdc.balanceOf(feeTo), 0);
-        assertEq(usdc.balanceOf(address(box)) + usdc.balanceOf(feeTo), 1e18);
+        assertEq(usdc.balanceOf(address(0xC0)), 1e18);
     }
 
     function testBalanceIsNotSolvencyProof() public {

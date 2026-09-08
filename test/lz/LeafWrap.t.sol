@@ -120,16 +120,6 @@ contract LeafWrapTest is PegReady {
         assertEq(token.balanceOf(feeTo), 1e18);
     }
 
-    function testHarvestOtherTokenTakesOnePercent() public {
-        MockToken reward = new MockToken();
-        reward.mint(address(adapter), 100e18);
-        adapter.harvestToken(reward);
-        assertEq(reward.balanceOf(feeTo), 1e18);
-        assertEq(reward.balanceOf(address(adapter)), 99e18);
-        adapter.harvestToken(reward);
-        assertEq(reward.balanceOf(feeTo), 1e18);
-    }
-
     function testGuardianPause() public {
         vm.prank(guardian);
         adapter.pause();

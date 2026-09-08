@@ -105,18 +105,6 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setConverter(converter_);
     }
 
-    function setClaimTarget(address t, bool allowed) external onlyOwner {
-        _setClaimTarget(address(innerToken), t, allowed);
-    }
-
-    function setClaimCall(address t, bytes4 selector) external onlyOwner {
-        _setClaimCall(address(innerToken), t, selector);
-    }
-
-    function pokeClaim(address t, bytes calldata data) external payable nonReentrant {
-        _pokeClaim(address(innerToken), t, data);
-    }
-
     function setRewardsSelector(bytes4 s) external onlyOwner {
         _setRewardsSelector(s);
     }
@@ -143,15 +131,6 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function harvest() external nonReentrant {
         _requireInnerSupplyOk(innerToken);
         _harvestInner(innerToken, pendingTicketAssets);
-    }
-
-    function harvestToken(IERC20 token) external nonReentrant {
-        if (address(token) == address(innerToken)) {
-            _requireInnerSupplyOk(innerToken);
-            _harvestInner(innerToken, pendingTicketAssets);
-        } else {
-            _harvestOther(token);
-        }
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)

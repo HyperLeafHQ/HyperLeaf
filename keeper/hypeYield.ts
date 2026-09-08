@@ -1,7 +1,7 @@
 /**
  * Two-step harvest. Do not swap inside the lockbox.
  *
- * 1) Anyone, any time (source chain): pokeClaim / pokeRewards on the lockbox
+ * 1) Anyone, any time (source chain): pokeRewards on the lockbox
  *    or the farm's claim if it already pays the lockbox. Caller pays gas.
  *    — claims QUID / BLUAI into the box. Caller pays gas.
  * 2) Keeper weekly or when surplus > Relay min:

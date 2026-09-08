@@ -5,6 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
+import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
 
 /// @notice Source-chain owner ops after DeployTestnetSource + WirePeers.
 ///         HARVESTER and CONVERTER must not be OWNER.

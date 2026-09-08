@@ -8,7 +8,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {IBluaiStake} from "src/lz/IBluaiStake.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
-import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 
 contract MockBluai is ERC20 {
     constructor() ERC20("BLUAI", "BLUAI") {}
@@ -127,12 +126,6 @@ contract LeafBluaiLockboxTest is PegReady {
         assertEq(bluai.balanceOf(converter), 5 ether);
         assertEq(bluai.balanceOf(address(box)), 0);
         assertEq(stake.staked(address(box)), 40 ether);
-    }
-
-    function testCannotAllowlistStakeAsClaimTarget() public {
-        vm.prank(owner);
-        vm.expectRevert(LeafYieldFee.BadClaimTarget.selector);
-        box.setClaimTarget(address(stake), true);
     }
 
     function testUnstakeThenRestake() public {

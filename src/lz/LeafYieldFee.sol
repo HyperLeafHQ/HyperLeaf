@@ -12,14 +12,11 @@ abstract contract LeafYieldFee {
 
     address public feeRecipient;
     uint256 public lastAccounted;
-    mapping(address token => uint256 accounted) public lastAccountedToken;
 
     bool public convertYieldToHype;
     address public harvester;
     /// @dev pullYield destination. Harvester cannot redirect surplus to self.
     address public converter;
-    mapping(address target => bool) public claimTarget;
-    mapping(address target => bytes4 selector) public claimSelector;
     /// @dev e.g. xSQUID `claimRewards(address,uint256)` = 0x9a99b4f0. Forced args: (this, max).
     bytes4 public rewardsSelector;
 
@@ -44,8 +41,6 @@ abstract contract LeafYieldFee {
     event ConvertModeSet(bool enabled);
     event HarvesterSet(address indexed harvester);
     event ConverterSet(address indexed converter);
-    event ClaimTargetSet(address indexed target, bool allowed);
-    event ClaimCallSet(address indexed target, bytes4 selector);
     event RewardsSelectorSet(bytes4 selector);
     event RateFeedSet(RateKind kind, uint256 rate);
     event RateYieldAccrued(uint256 added, uint256 accrued, uint256 rate);
@@ -58,8 +53,6 @@ abstract contract LeafYieldFee {
     error NotHarvester();
     error NoYield();
     error BadConverter();
-    error BadClaimTarget();
-    error BadClaimSelector();
     error ClaimFailed();
     error ForbiddenRewardsSelector();
     error BadRateFeed();
@@ -116,30 +109,6 @@ abstract contract LeafYieldFee {
         _setConvertYieldToHype(false);
     }
 
-    function _setClaimTarget(address inner, address t, bool allowed) internal {
-        if (t == address(0) || t == inner) revert BadClaimTarget();
-        claimTarget[t] = allowed;
-        if (!allowed) claimSelector[t] = bytes4(0);
-        emit ClaimTargetSet(t, allowed);
-    }
-
-    function _setClaimCall(address inner, address t, bytes4 selector) internal {
-        if (selector == bytes4(0)) revert BadClaimSelector();
-        _setClaimTarget(inner, t, true);
-        claimSelector[t] = selector;
-        emit ClaimCallSet(t, selector);
-    }
-
-    /// @dev Anyone. Target + selector must match. Campaign must pay this lockbox.
-    function _pokeClaim(address inner, address t, bytes calldata data) internal {
-        if (!claimTarget[t] || t == inner) revert BadClaimTarget();
-        if (data.length < 4) revert BadClaimSelector();
-        bytes4 sel = bytes4(data[0:4]);
-        if (claimSelector[t] == bytes4(0) || sel != claimSelector[t]) revert BadClaimSelector();
-        (bool ok,) = t.call{value: msg.value}(data);
-        if (!ok) revert ClaimFailed();
-    }
-
     function _setRewardsSelector(bytes4 s) internal {
         if (s != bytes4(0) && _forbiddenRewardsSelector(s)) revert ForbiddenRewardsSelector();
         rewardsSelector = s;
@@ -163,7 +132,7 @@ abstract contract LeafYieldFee {
     ///      arity as Squid redeem, different 4 bytes (0x9a99b4f0 vs 0x1e9a6950).
     function _pokeRewards(address inner) internal {
         bytes4 s = rewardsSelector;
-        if (s == bytes4(0) || inner == address(0)) revert BadClaimTarget();
+        if (s == bytes4(0) || inner == address(0)) revert ClaimFailed();
         if (_forbiddenRewardsSelector(s)) revert ForbiddenRewardsSelector();
         (bool ok,) = inner.call{value: msg.value}(abi.encodeWithSelector(s, address(this), type(uint256).max));
         if (!ok) revert ClaimFailed();
@@ -186,18 +155,6 @@ abstract contract LeafYieldFee {
             free -= fee;
         }
         lastAccounted = free;
-        emit YieldHarvested(address(token), y, fee);
-    }
-
-    function _harvestOther(IERC20 token) internal returns (uint256 fee) {
-        if (convertYieldToHype) return 0;
-        uint256 bal = token.balanceOf(address(this));
-        uint256 last = lastAccountedToken[address(token)];
-        if (bal <= last) return 0;
-        uint256 y = bal - last;
-        fee = (y * YIELD_FEE_BPS) / BPS_DENOMINATOR;
-        if (fee > 0) token.safeTransfer(feeRecipient, fee);
-        lastAccountedToken[address(token)] = token.balanceOf(address(this));
         emit YieldHarvested(address(token), y, fee);
     }
 
@@ -252,7 +209,6 @@ abstract contract LeafYieldFee {
             lastAccounted = reserved;
         } else {
             amt = token.balanceOf(address(this));
-            lastAccountedToken[address(token)] = 0;
             if (amt == 0) revert NoYield();
         }
         token.safeTransfer(to, amt);

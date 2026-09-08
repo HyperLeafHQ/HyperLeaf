@@ -16,7 +16,7 @@ Outstanding Leaf claims ≤ **verified economically realizable** claims — not 
 
 A valid LayerZero message is **not** economic truth. Peer authenticity ≠ backing.
 
-`pokeClaim` is a **function template**: target + selector. Not “any calldata on an allowlisted contract.”
+Wrap lockboxes do not take arbitrary `pokeClaim` calldata. L uses a pinned `rewardsSelector` (Squid redeem 4-bytes denied). C1 uses `farmClaimSel` only.
 
 ## Origin
 

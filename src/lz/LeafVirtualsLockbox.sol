@@ -34,14 +34,4 @@ contract LeafVirtualsLockbox is LeafInboundLockbox {
         virtuals.stake(got, MAX_WEEKS, true);
         if (innerToken.balanceOf(address(this)) >= before) revert BadStake();
     }
-
-    function setClaimTarget(address t, bool allowed) public override onlyOwner {
-        if (t == address(virtuals)) revert BadClaimTarget();
-        _setClaimTarget(address(innerToken), t, allowed);
-    }
-
-    function setClaimCall(address t, bytes4 selector) public override onlyOwner {
-        if (t == address(virtuals)) revert BadClaimTarget();
-        _setClaimCall(address(innerToken), t, selector);
-    }
 }

@@ -160,25 +160,6 @@ contract LeafHarvestSplitTest is PegReady {
         assertEq(bluai.balanceOf(address(lockbox)), 50e18);
     }
 
-    function testPokeClaimMustBeAllowlistedAndPaysLockbox() public {
-        MockToken drop = new MockToken("DROP", "DROP");
-        MockSignClaim sign = new MockSignClaim(drop);
-        drop.mint(address(sign), 5e18);
-        vm.prank(alice);
-        vm.expectRevert();
-        adapter.pokeClaim(address(sign), abi.encodeWithSelector(MockSignClaim.claim.selector));
-        vm.prank(owner);
-        adapter.setClaimCall(address(sign), MockSignClaim.claim.selector);
-        vm.prank(owner);
-        vm.expectRevert();
-        adapter.setClaimTarget(address(xsquid), true);
-        adapter.pokeClaim(address(sign), abi.encodeWithSelector(MockSignClaim.claim.selector));
-        assertEq(drop.balanceOf(address(adapter)), 5e18);
-        vm.prank(harvester);
-        adapter.pullYield(drop, converter);
-        assertEq(drop.balanceOf(converter), 5e18);
-    }
-
     function testPokeRewardsClaimsQuidToLockbox() public {
         bytes4 sel = bytes4(keccak256("claimRewards(address,uint256)"));
         assertEq(sel, bytes4(0x9a99b4f0));
@@ -213,16 +194,5 @@ contract LeafHarvestSplitTest is PegReady {
         vm.prank(owner);
         adapter.setRewardsSelector(bytes4(0x9a99b4f0));
         assertEq(adapter.rewardsSelector(), bytes4(0x9a99b4f0));
-    }
-}
-
-contract MockSignClaim {
-    MockToken public immutable token;
-    constructor(MockToken t) {
-        token = t;
-    }
-    function claim() external {
-        uint256 b = token.balanceOf(address(this));
-        token.transfer(msg.sender, b);
     }
 }

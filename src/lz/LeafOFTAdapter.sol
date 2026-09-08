@@ -91,14 +91,6 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setConverter(converter_);
     }
 
-    function setClaimTarget(address t, bool allowed) external onlyOwner {
-        _setClaimTarget(address(innerToken), t, allowed);
-    }
-
-    function setClaimCall(address t, bytes4 selector) external onlyOwner {
-        _setClaimCall(address(innerToken), t, selector);
-    }
-
     function setRewardsSelector(bytes4 s) external onlyOwner {
         _setRewardsSelector(s);
     }
@@ -111,11 +103,6 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function setRetainRateYield(bool retain) external onlyOwner {
         if (totalLocked > 0) revert ConfigFrozen();
         _setRetainRateYield(retain);
-    }
-
-    /// @notice Anyone pays gas. Allowlisted Sign/TokenTable claim, as this lockbox.
-    function pokeClaim(address t, bytes calldata data) external payable nonReentrant {
-        _pokeClaim(address(innerToken), t, data);
     }
 
     /// @notice Squid-style: claimRewards(this, max) on the inner staking token.
@@ -143,15 +130,6 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function harvest() external nonReentrant {
         _requireInnerSupplyOk(innerToken);
         _harvestInner(innerToken, 0);
-    }
-
-    function harvestToken(IERC20 token) external nonReentrant {
-        if (address(token) == address(innerToken)) {
-            _requireInnerSupplyOk(innerToken);
-            _harvestInner(innerToken, 0);
-        } else {
-            _harvestOther(token);
-        }
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
