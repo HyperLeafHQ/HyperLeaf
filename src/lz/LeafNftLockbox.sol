@@ -27,6 +27,10 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     uint256 public maxPrincipalPerNft;
     mapping(uint256 => uint256) public principalOf;
 
+    address private _expectedSender;
+    uint256 private _expectedTokenId;
+    bool private _expectingNft;
+
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 tokenId, uint256 principal, bytes32 guid);
     event CapUpdated(uint256 cap);
     event NftUnhealthy(uint256 indexed tokenId);
@@ -37,6 +41,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     error BadNft();
     error AlreadyHeld();
     error TooManyNfts();
+    error UnexpectedNftTransfer();
 
     constructor(
         address ve_,
@@ -74,9 +79,9 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         maxPrincipalPerNft = n;
     }
 
-
     /// @notice Burned / left / unlocked / short of wrap principal → false.
     function nftHealthy(uint256 id) public view returns (bool) {
+        if (principalOf[id] == 0) return false;
         address o;
         try ve.ownerOf(id) returns (address got) {
             o = got;
@@ -173,8 +178,9 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         revert InboundOnly();
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata) external view returns (bytes4) {
+    function onERC721Received(address, address from, uint256 tokenId, bytes calldata) external view returns (bytes4) {
         if (msg.sender != address(ve)) revert BadNft();
+        if (!_expectingNft || from != _expectedSender || tokenId != _expectedTokenId) revert UnexpectedNftTransfer();
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -185,6 +191,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     function _takeNft(address from, uint256 tokenId) internal returns (uint256 principal) {
         if (tokenId == 0) revert BadNft();
         if (principalOf[tokenId] != 0) revert AlreadyHeld();
+        if (ids.length >= maxNfts) revert TooManyNfts();
         if (ve.escrowType(tokenId) != IVeNft.EscrowType.NORMAL) revert BadNft();
         IVeNft.LockedBalance memory L = ve.locked(tokenId);
         if (!L.isPermanent) revert BadNft();
@@ -193,7 +200,13 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         principal = uint256(int256(L.amount));
         if (principal == 0) revert ZeroAmount();
         if (maxPrincipalPerNft != 0 && principal > maxPrincipalPerNft) revert CapExceeded();
+        _expectedSender = from;
+        _expectedTokenId = tokenId;
+        _expectingNft = true;
         ve.safeTransferFrom(from, address(this), tokenId);
+        _expectingNft = false;
+        _expectedSender = address(0);
+        _expectedTokenId = 0;
         if (ve.ownerOf(tokenId) != address(this)) revert BadNft();
     }
 }
