@@ -227,12 +227,13 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
             return;
         }
         if (op != OP_FILL) revert BadOrder();
-        (, , address buyer, uint256 wantAmount, address payout) =
-            abi.decode(message, (uint8, uint256, address, uint256, address));
+        (, , address buyer, uint256 wantAmount, address payout, address wantToken) =
+            abi.decode(message, (uint8, uint256, address, uint256, address, address));
         Order storage o = orders[id];
         if (
             aborted[id] || o.status != Status.Open || block.timestamp >= o.expiry || buyer == address(0)
                 || buyer == o.seller || wantAmount != o.wantAmount || payout != o.sourceRecipient
+                || wantToken != o.wantToken
         ) {
             _lzSend(origin.srcEid, abi.encode(OP_REFUND, id), address(this));
             return;

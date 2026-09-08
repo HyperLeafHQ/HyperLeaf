@@ -231,7 +231,7 @@ contract LeafClaimEscrowTest is PegReady {
         assertEq(bluai.balanceOf(address(filler)), 70e18);
         assertEq(oft.balanceOf(address(escrow)), 100e18);
 
-        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice, address(bluai));
         ILayerZeroEndpointV2.Origin memory oFill = ILayerZeroEndpointV2.Origin({
             srcEid: SRC, sender: bytes32(uint256(uint160(address(filler)))), nonce: 1
         });
@@ -260,7 +260,7 @@ contract LeafClaimEscrowTest is PegReady {
         filler.fill{value: 0.01 ether}(id, DST, address(bluai), 1e18, alice);
         vm.stopPrank();
 
-        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(1e18), alice);
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(1e18), alice, address(bluai));
         ILayerZeroEndpointV2.Origin memory oFill = ILayerZeroEndpointV2.Origin({
             srcEid: SRC, sender: bytes32(uint256(uint160(address(filler)))), nonce: 1
         });
@@ -343,7 +343,7 @@ contract LeafClaimEscrowTest is PegReady {
         filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
         vm.stopPrank();
 
-        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice, address(bluai));
         vm.prank(address(epDst));
         escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(1)), fillMsg, address(0), "");
         assertEq(oft.balanceOf(bob), 100e18);
@@ -370,7 +370,7 @@ contract LeafClaimEscrowTest is PegReady {
         filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
         vm.stopPrank();
 
-        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice, address(bluai));
         vm.prank(address(epDst));
         escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(1)), fillMsg, address(0), "");
         assertEq(bluai.balanceOf(address(filler)), 70e18);
@@ -403,7 +403,7 @@ contract LeafClaimEscrowTest is PegReady {
         filler.lzReceive(_dstOrigin(), bytes32(uint256(5)), ok, address(0), "");
         assertEq(bluai.balanceOf(bob), 70e18);
 
-        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice, address(bluai));
         vm.prank(address(epDst));
         escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(6)), fillMsg, address(0), "");
         assertEq(oft.balanceOf(address(escrow)), 100e18);
@@ -473,7 +473,7 @@ contract LeafClaimEscrowTest is PegReady {
         vm.prank(alice);
         escrow.cancel(id, 0);
 
-        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice, address(bluai));
         vm.prank(address(epDst));
         escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(9)), fillMsg, address(0), "");
         assertEq(oft.balanceOf(alice), 100e18);
@@ -481,5 +481,55 @@ contract LeafClaimEscrowTest is PegReady {
         vm.prank(address(epSrc));
         filler.lzReceive(_dstOrigin(), bytes32(uint256(10)), refund, address(0), "");
         assertEq(bluai.balanceOf(bob), 70e18);
+    }
+
+    function testCannotSetPeerEidZero() public {
+        LeafClaimEscrow fresh = new LeafClaimEscrow(address(epDst), owner, guardian, owner);
+        vm.prank(owner);
+        vm.expectRevert(LeafClaimPeer.BadEid.selector);
+        fresh.setPeer(uint32(0), address(filler));
+    }
+
+    function testWrongWantTokenRefunds() public {
+        MockToken junk = new MockToken("JUNK", "JUNK");
+        vm.prank(owner);
+        filler.setInner(address(junk), true);
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        junk.mint(bob, 70e18);
+        vm.startPrank(bob);
+        junk.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(junk), 70e18, alice);
+        vm.stopPrank();
+
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice, address(junk));
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(11)), fillMsg, address(0), "");
+        assertEq(oft.balanceOf(address(escrow)), 100e18);
+        assertEq(oft.balanceOf(bob), 0);
+
+        bytes memory refund = abi.encode(uint8(3), id);
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(12)), refund, address(0), "");
+        assertEq(junk.balanceOf(bob), 70e18);
+        assertEq(bluai.balanceOf(alice), 0);
+    }
+
+    function testAckFromWrongEidIgnored() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
+        vm.stopPrank();
+        bytes memory ack = abi.encode(uint8(2), id);
+        ILayerZeroEndpointV2.Origin memory wrong = ILayerZeroEndpointV2.Origin({
+            srcEid: SRC, sender: bytes32(uint256(uint160(address(escrow)))), nonce: 1
+        });
+        vm.prank(address(epSrc));
+        vm.expectRevert(LeafClaimPeer.OnlyPeer.selector);
+        filler.lzReceive(wrong, bytes32(uint256(13)), ack, address(0), "");
+        assertEq(bluai.balanceOf(address(filler)), 70e18);
     }
 }

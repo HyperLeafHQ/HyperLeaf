@@ -20,6 +20,7 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     error NoPeer();
     error PeerFrozen();
     error NotGuardian();
+    error BadEid();
 
     event PeerSet(uint32 indexed eid, bytes32 peer);
     event GuardianUpdated(address indexed oldG, address indexed newG);
@@ -43,7 +44,7 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     }
 
     function setPeer(uint32 eid, bytes32 peer) public onlyOwner {
-        if (peer == bytes32(0)) revert ZeroAddress();
+        if (eid == 0 || peer == bytes32(0)) revert BadEid();
         if (remoteEid != 0 && eid != remoteEid) revert PeerFrozen();
         if (peers[eid] != bytes32(0) && peers[eid] != peer) revert PeerFrozen();
         peers[eid] = peer;

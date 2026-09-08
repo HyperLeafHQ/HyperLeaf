@@ -78,12 +78,12 @@ contract LeafClaimFill is LeafClaimPeer, ReentrancyGuard {
         emit ReturnNativeSet(value);
     }
 
-    function quoteFill(uint256 id, uint32 destEid, uint256 wantAmount, address seller, address buyer)
+    function quoteFill(uint256 id, uint32 destEid, address wantToken, uint256 wantAmount, address seller, address buyer)
         external
         view
         returns (uint256 nativeFee)
     {
-        bytes memory payload = abi.encode(OP_FILL, id, buyer, wantAmount, seller);
+        bytes memory payload = abi.encode(OP_FILL, id, buyer, wantAmount, seller, wantToken);
         return quote(destEid, payload, _optionsWithValue(returnNative));
     }
 
@@ -114,7 +114,7 @@ contract LeafClaimFill is LeafClaimPeer, ReentrancyGuard {
             status: FillStatus.Escrowed
         });
         emit Escrowed(id, msg.sender, wantAmount);
-        _lzSend(destEid, abi.encode(OP_FILL, id, msg.sender, wantAmount, seller), _optionsWithValue(returnNative), msg.sender);
+        _lzSend(destEid, abi.encode(OP_FILL, id, msg.sender, wantAmount, seller, wantToken), _optionsWithValue(returnNative), msg.sender);
     }
 
     /// @notice Buyer after `ABORT_DELAY`, or guardian/owner now. Dest decides:
@@ -138,12 +138,13 @@ contract LeafClaimFill is LeafClaimPeer, ReentrancyGuard {
         _lzSend(f.destEid, abi.encode(OP_ABORT, id), _optionsWithValue(returnNative), msg.sender);
     }
 
-    function _lzReceive(ILayerZeroEndpointV2.Origin calldata, bytes32, bytes calldata message, address, bytes calldata)
+    function _lzReceive(ILayerZeroEndpointV2.Origin calldata origin, bytes32, bytes calldata message, address, bytes calldata)
         internal
         override
     {
         (uint8 op, uint256 id) = abi.decode(message, (uint8, uint256));
         Fill storage f = fills[id];
+        if (f.destEid == 0 || origin.srcEid != f.destEid) return;
         if (op == OP_ACK) {
             if (f.status != FillStatus.Escrowed && f.status != FillStatus.Aborting) return;
             f.status = FillStatus.Paid;
