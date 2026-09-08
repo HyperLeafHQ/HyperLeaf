@@ -15,7 +15,7 @@ You do **not** need a VPS to go live.
 | Fee recipient | 1% of new staking yield. Set `FEE_RECIPIENT` (defaults to `OWNER`). | Yes |
 | ETH on Base / BNB on BSC + HYPE on HyperEVM | Deploy gas | Yes |
 | Executor | LayerZero mailman. User pays ~$0.25+/send | No setup |
-| DVN | Notaries. 2-of-3: LZ Labs, Nethermind, Horizen | Script sets them (Base/HyperEVM). BSC: fill from LZ metadata |
+| DVN | Notaries. 2-of-3: LZ Labs, Horizen, Canary | Script sets them (Base/HyperEVM/BSC/Bera). Nethermind left 2026-08-19. |
 | Hyperleaf DVN veto | Your extra notary | **Not at launch** |
 | VPS | Always-on PC | Only later if you run your own DVN |
 

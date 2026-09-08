@@ -7,6 +7,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafSecurity} from "src/lz/LeafSecurity.sol";
+import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockToken is ERC20 {
@@ -135,5 +136,20 @@ contract LeafWrapTest is PegReady {
         assertTrue(uint160(b[0]) < uint160(b[1]) && uint160(b[1]) < uint160(b[2]));
         address[] memory h = LeafSecurity.hyperevmOptionalDvns();
         assertTrue(uint160(h[0]) < uint160(h[1]) && uint160(h[1]) < uint160(h[2]));
+        address[] memory c = LeafSecurity.bscOptionalDvns();
+        assertTrue(uint160(c[0]) < uint160(c[1]) && uint160(c[1]) < uint160(c[2]));
+        address[] memory r = LeafSecurity.beraOptionalDvns();
+        assertTrue(uint160(r[0]) < uint160(r[1]) && uint160(r[1]) < uint160(r[2]));
+        // Labs + Horizen + Canary on every live source. Nethermind left 2026-08-19.
+        assertEq(b[0], A.DVN_CANARY_BASE);
+        assertEq(h[0], A.DVN_CANARY_HYPEREVM);
+        assertEq(A.CONFIRMATIONS_BASE, 15);
+        assertEq(A.CONFIRMATIONS_HYPEREVM, 5);
+        assertEq(A.CONFIRMATIONS_BSC, 15);
+        assertEq(A.CONFIRMATIONS_BERA, 15);
+        assertEq(A.CONFIRMATIONS_ARB, 15);
+        assertEq(A.CONFIRMATIONS_AVAX, 12);
+        assertEq(A.CONFIRMATIONS_ETH, 15);
+        assertEq(A.CONFIRMATIONS_SOLANA, 32);
     }
 }

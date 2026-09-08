@@ -8,9 +8,8 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
-/// @notice Mainnet 2-of-3. Skip on testnet.
+/// @notice Mainnet 2-of-3 Labs + Horizen + Canary. Skip on testnet.
 ///         HyperEVM: ASSET sets remote eid (hgsoon→BSC, hswbera→Bera, default Base).
-///         BSC/Bera: set DVN0,DVN1,DVN2 from the LZ chain page (Labs+Horizen+Nethermind).
 contract SetSecurityStack is Script {
     function run() external {
         address oapp = vm.envAddress("OAPP");
@@ -49,14 +48,14 @@ contract SetSecurityStack is Script {
             receiveLib = A.RECEIVE_ULN_BSC;
             executor = A.EXECUTOR_BSC;
             confirms = A.CONFIRMATIONS_BSC;
-            optionalDvns = _envDvns();
+            optionalDvns = LeafSecurity.bscOptionalDvns();
         } else if (chainId == 80094) {
             remoteEid = A.EID_HYPEREVM;
             sendLib = A.SEND_ULN_BERA;
             receiveLib = A.RECEIVE_ULN_BERA;
             executor = A.EXECUTOR_BERA;
             confirms = A.CONFIRMATIONS_BERA;
-            optionalDvns = _envDvns();
+            optionalDvns = LeafSecurity.beraOptionalDvns();
         } else {
             revert("unsupported chain");
         }
@@ -73,12 +72,6 @@ contract SetSecurityStack is Script {
         console2.log("security set on", oapp);
         console2.log("remoteEid", remoteEid);
         console2.log("hyperleaf veto dvn", hyperleafDvn);
-    }
-
-    function _envDvns() internal view returns (address[] memory d) {
-        d = new address[](3);
-        d[0] = vm.envAddress("DVN0");
-        d[1] = vm.envAddress("DVN1");
-        d[2] = vm.envAddress("DVN2");
+        console2.log("confirmations", confirms);
     }
 }

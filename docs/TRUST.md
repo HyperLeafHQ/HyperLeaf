@@ -100,3 +100,5 @@ Do **not** remove: `abortCredit`, `setEndpointConfig`, `restoreHealth`, `farmUns
 
 Do **not** put owner, guardian, harvester on one EOA. Scripts already revert `split keys`.
 
+Mainnet ULN is optional 2-of-3: LayerZero Labs + Horizen + Canary. Nethermind left the DVN role 2026-08-19 — do not put it back. Google Cloud is on Base but not HyperEVM, so it is not in the trio. Confirmations are per-source, not a global 5: Base/OP/Arb/BSC/Bera/ETH 15, HyperEVM 5, Avax 12, Solana 32.
+

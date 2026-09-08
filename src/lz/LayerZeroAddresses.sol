@@ -3,8 +3,10 @@ pragma solidity ^0.8.24;
 
 /// @notice Canonical LayerZero V2 addresses used by Hyperleaf wrap.
 /// @dev Google Cloud DVN is on Base but NOT on HyperEVM. Optional 2-of-3 is
-///      LayerZero Labs + Nethermind + Horizen (present on both).
-///      BSC DVNs are not hardcoded - pull from metadata before SetSecurityStack.
+///      LayerZero Labs + Horizen + Canary (present on Base, HyperEVM, BSC,
+///      Bera, Arb, Avax). Nethermind left the LZ DVN role 2026-08-19 — do
+///      not put it back. Addresses from metadata.layerzero-api.com/v1/metadata/dvns
+///      (canonicalName, version 2, not lzRead).
 library LayerZeroAddresses {
     uint32 internal constant EID_BASE = 30184;
     uint32 internal constant EID_HYPEREVM = 30367;
@@ -15,6 +17,7 @@ library LayerZeroAddresses {
     uint32 internal constant EID_ORDERLY = 30213;
     uint32 internal constant EID_BERA = 30362;
     uint32 internal constant EID_ROBINHOOD = 30416;
+    uint32 internal constant EID_SOLANA = 30168;
     uint32 internal constant EID_BERA_TESTNET = 40371;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
@@ -69,22 +72,52 @@ library LayerZeroAddresses {
         revert("lz: no endpoint");
     }
 
+    // Optional 2-of-3. Sorted ascending per ULN requirement.
+    address internal constant DVN_CANARY_BASE = 0x554833698Ae0FB22ECC90B01222903fD62CA4B47;
     address internal constant DVN_LZ_LABS_BASE = 0x9e059a54699a285714207b43B055483E78FAac25;
     address internal constant DVN_HORIZEN_BASE = 0xa7b5189bcA84Cd304D8553977c7C614329750d99;
-    address internal constant DVN_NETHERMIND_BASE = 0xcd37CA043f8479064e10635020c65FfC005d36f6;
 
-    address internal constant DVN_NETHERMIND_HYPEREVM = 0x8E49eF1DfAe17e547CA0E7526FfDA81FbaCA810A;
+    address internal constant DVN_CANARY_HYPEREVM = 0x83342EC538dF0460e730a8F543Fe63063e2D44C4;
     address internal constant DVN_HORIZEN_HYPEREVM = 0xBB83Ecf372CbB6daa629ea9A9A53BEC6d601F229;
     address internal constant DVN_LZ_LABS_HYPEREVM = 0xc097ab8CD7b053326DFe9fB3E3a31a0CCe3B526f;
+
+    address internal constant DVN_HORIZEN_BSC = 0x247624e2143504730aeC22912ed41F092498bEf2;
+    address internal constant DVN_CANARY_BSC = 0xfA9bA83C102283958B997Adc8B44ED3A3CdB5dDa;
+    address internal constant DVN_LZ_LABS_BSC = 0xfD6865c841c2d64565562fCc7e05e619A30615f0;
+
+    address internal constant DVN_CANARY_BERA = 0x06e8042729CeF3aE6D6DB5350f48F9D736C3675d;
+    address internal constant DVN_LZ_LABS_BERA = 0x282b3386571f7f794450d5789911a9804FA346b4;
+    address internal constant DVN_HORIZEN_BERA = 0xeCbaA45c33ce6Fa284995e5F8314f5bC7F1C2008;
+
+    address internal constant DVN_HORIZEN_ARB = 0x19670Df5E16bEa2ba9b9e68b48C054C5bAEa06B8;
+    address internal constant DVN_LZ_LABS_ARB = 0x2f55C492897526677C5B68fb199ea31E2c126416;
+    address internal constant DVN_CANARY_ARB = 0xf2E380c90e6c09721297526dbC74f870e114dfCb;
+
+    address internal constant DVN_HORIZEN_AVAX = 0x07C05EaB7716AcB6f83ebF6268F8EECDA8892Ba1;
+    address internal constant DVN_LZ_LABS_AVAX = 0x962F502A63F5FBeB44DC9ab932122648E8352959;
+    address internal constant DVN_CANARY_AVAX = 0xcC49E6fca014c77E1Eb604351cc1E08C84511760;
+
+    address internal constant DVN_HORIZEN_ETH = 0x380275805876Ff19055EA900CDb2B46a94ecF20D;
+    address internal constant DVN_LZ_LABS_ETH = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;
+    address internal constant DVN_CANARY_ETH = 0xa4fE5A5B9A846458a70Cd0748228aED3bF65c2cd;
 
     uint32 internal constant CONFIG_TYPE_EXECUTOR = 1;
     uint32 internal constant CONFIG_TYPE_ULN = 2;
 
     uint128 internal constant LZ_RECEIVE_GAS = 200_000;
-    uint64 internal constant CONFIRMATIONS_BASE = 12;
+
+    /// @dev Source-side ULN confirmations. Not all 5.
+    ///      LZ production floor: ETH 15 (32 preferred), optimistic L2 15–30,
+    ///      Solana 32. HyperEVM is a ~1s L1 (Circle uses 1); 5 is above that.
+    uint64 internal constant CONFIRMATIONS_BASE = 15;
+    uint64 internal constant CONFIRMATIONS_OP = 15;
+    uint64 internal constant CONFIRMATIONS_ARB = 15;
     uint64 internal constant CONFIRMATIONS_HYPEREVM = 5;
     uint64 internal constant CONFIRMATIONS_BSC = 15;
-    uint64 internal constant CONFIRMATIONS_BERA = 12;
+    uint64 internal constant CONFIRMATIONS_BERA = 15;
+    uint64 internal constant CONFIRMATIONS_AVAX = 12;
+    uint64 internal constant CONFIRMATIONS_ETH = 15;
+    uint64 internal constant CONFIRMATIONS_SOLANA = 32;
 
     uint32 internal constant LOCK_4Y = 4 * 365 days;
 }

@@ -232,4 +232,4 @@ forge script script/lz/DeployOFT.s.sol:DeployOFT --rpc-url <hyperevm> --broadcas
 
 Wire `REMOTE_EID=30367` from source, `30362` from HyperEVM.
 
-`SetSecurityStack`: HyperEVM `ASSET=hswbera` (remote Bera). On Bera set `DVN0,DVN1,DVN2` from the LZ chain page (Labs + Horizen + Nethermind). `OPEN_BRIDGE=true` only after reading live tag/peers/caps. Do not call any forbidden selector on the inner.
+`SetSecurityStack`: HyperEVM `ASSET=hswbera` (remote Bera). Hardcoded 2-of-3 is Labs + Horizen + Canary (Nethermind left 2026-08-19). `OPEN_BRIDGE=true` only after reading live tag/peers/caps. Do not call any forbidden selector on the inner.
