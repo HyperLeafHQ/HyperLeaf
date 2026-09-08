@@ -117,7 +117,9 @@ abstract contract LeafYieldFee {
 
     /// @dev xSQUID / stkAVNT `claimRewards(address,uint256)` = 0x9a99b4f0.
     ///      Same arity as Squid/Avantis `redeem(address,uint256)` 0x1e9a6950.
-    ///      Avantis `claimRewardsAndRedeem` 0xeab52318 burns stkAVNT — never pin it.
+    ///      Avantis `claimRewardsAndRedeem` selector is 0xeab52318 (burns stkAVNT).
+    ///      Tx 0x24398d72 is that combined redeem *hash*, not a selector — do not
+    ///      blacklist the hash prefix.
     function _forbiddenRewardsSelector(bytes4 s) internal pure returns (bool) {
         return s == bytes4(0x1e9a6950) // redeem(address,uint256)
             || s == bytes4(0xeab52318) // claimRewardsAndRedeem(address,uint256,uint256) — Avantis

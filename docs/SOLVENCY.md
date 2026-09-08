@@ -138,7 +138,7 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Core invariant | L: `hAVNT ≤ totalLocked stkAVNT`. Slash (max 20%) is **in** the receipt |
 | Proof source | lockbox `totalLocked` + SM `balanceOf` |
 | Mint / redeem | wrap/unwrap **stkAVNT**. Instant. **Never** `cooldown()` `0x787a08a6` or `claimRewardsAndRedeem` `0xeab52318` |
-| Yield | extra AVNT → converter → WHYPE. `pokeRewards` = `claimRewards(address,uint256)` `0x9a99b4f0` (same as QUID). Claim pin `0x26f4ca90` (51.68 AVNT, stkAVNT untouched). `0x24398d72` is claim+redeem — do not call |
+| Yield | extra AVNT → converter → WHYPE. `pokeRewards` = `claimRewards(address,uint256)` **selector** `0x9a99b4f0`. Claim **tx** `0x26f4ca90` (51.68 AVNT, stkAVNT untouched). Combined-redeem **tx** `0x24398d72` uses selector `0xeab52318` — already forbidden. Do not treat a tx hash as a selector |
 | Failure | SM slash, AVNT `isBlackListed`, emission stop |
 | Auto-pause | health after slash; ceiling on stkAVNT supply |
 | Worst-case loss | 20% slash of locked stack + daily cap |

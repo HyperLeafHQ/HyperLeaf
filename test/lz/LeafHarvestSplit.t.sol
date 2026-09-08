@@ -199,6 +199,8 @@ contract LeafHarvestSplitTest is PegReady {
     function testRewardsSelectorRejectsAvntRedeemCombo() public {
         bytes4 combo = bytes4(keccak256("claimRewardsAndRedeem(address,uint256,uint256)"));
         assertEq(combo, bytes4(0xeab52318));
+        // Tx 0x24398d72… is that call's hash, not the selector.
+        assertTrue(combo != bytes4(0x24398d72));
         vm.prank(owner);
         vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
         adapter.setRewardsSelector(combo);

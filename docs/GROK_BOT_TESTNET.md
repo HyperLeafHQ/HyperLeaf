@@ -4,7 +4,7 @@
 
 `ASSET` this round is `hxsquid` | `havnt` | `hcbeth` | `bluai4y` (`TestnetCatalog`). Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2.
 
-hxSQUID and hAVNT share `pokeRewards` `0x9a99b4f0` (`claimRewards(this, max)`). Never pin Avantis `claimRewardsAndRedeem` `0xeab52318` — that burns stkAVNT. Claim pin `0x26f4ca90`. Combined redeem `0x24398d72` is the wrong function. Then `pullYield` QUID or AVNT. C1: `pokeRewards` is farm `claimAll`. Do not `setShareExit`. Cross-chain board: dest `LeafReleased` is not done; wait source `Paid`.
+hxSQUID and hAVNT share `pokeRewards` `0x9a99b4f0` (`claimRewards(this, max)`). Forbidden selector: Avantis `claimRewardsAndRedeem` **`0xeab52318`** (burns stkAVNT). Claim **tx** `0x26f4ca90`. Combined-redeem **tx** `0x24398d72` is the same function — its selector is `0xeab52318`, already blacklisted. Do not put a tx-hash prefix in `setRewardsSelector`. Then `pullYield` QUID or AVNT. C1: `pokeRewards` is farm `claimAll`. Do not `setShareExit`. Cross-chain board: dest `LeafReleased` is not done; wait source `Paid`.
 
 Branch: `feat/lz-oft-wrap`. Faucets: Base Sepolia ETH, HyperEVM testnet HYPE ([testnet drip](https://app.hyperliquid-testnet.xyz)).
 
