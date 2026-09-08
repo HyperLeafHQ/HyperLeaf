@@ -20,13 +20,15 @@ abstract contract LeafYieldFee {
     /// @dev e.g. xSQUID `claimRewards(address,uint256)` = 0x9a99b4f0. Forced args: (this, max).
     bytes4 public rewardsSelector;
 
-    /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`).
-    ///      Surplus is taken from `lastAccounted` only — donations are not yield.
+    /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`,
+    ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`). Surplus is taken from
+    ///      `lastAccounted` only — donations are not yield.
     ///      Floor: (lastAccounted * (rate - lastRate)) / rate. Dust stays principal.
     enum RateKind {
         None,
         ExchangeRate,
-        ConvertToAssets
+        ConvertToAssets,
+        GetPooledAvaxByShares
     }
 
     RateKind public rateKind;
@@ -130,7 +132,9 @@ abstract contract LeafYieldFee {
             || s == bytes4(0xcdac52ed) // cooldownAssets(uint256)
             || s == bytes4(0x1e83409a) // claim(address)
             || s == bytes4(0x9ad82aa0) // queueRedeem
-            || s == bytes4(0x50b3f984); // queueWithdraw
+            || s == bytes4(0x50b3f984) // queueWithdraw
+            || s == bytes4(0xc9d2ff9d) // requestUnlock(uint256) — BENQI sAVAX 15d
+            || s == bytes4(0x2e1a7d4d); // withdraw(uint256) — BENQI claim AVAX
     }
 
     /// @dev Claims as this lockbox. Selector must be rewards, not redeem — same
@@ -247,6 +251,11 @@ abstract contract LeafYieldFee {
         } else if (rateKind == RateKind.ConvertToAssets) {
             (bool ok, bytes memory ret) =
                 address(token).staticcall(abi.encodeWithSignature("convertToAssets(uint256)", uint256(1e18)));
+            if (!ok || ret.length < 32) revert BadRateFeed();
+            rate = abi.decode(ret, (uint256));
+        } else if (rateKind == RateKind.GetPooledAvaxByShares) {
+            (bool ok, bytes memory ret) =
+                address(token).staticcall(abi.encodeWithSignature("getPooledAvaxByShares(uint256)", uint256(1e18)));
             if (!ok || ret.length < 32) revert BadRateFeed();
             rate = abi.decode(ret, (uint256));
         }

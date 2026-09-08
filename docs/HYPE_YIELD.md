@@ -35,10 +35,11 @@ Same converter bytecode on source (swap/bridge) and HyperEVM (`setRewarder` + `n
 | **hKAITO** | L, return sKAITO | Eco airdrop ERC-20s (allowlisted) | **sKAITO** — PoS is already in the ERC-4626 rate |
 | **hxSQUID** | L, return xSQUID | **QUID** | **xSQUID** |
 | **hcbETH** | L, shares of remaining cbETH | **Rate surplus only** (`exchangeRate` × dRate / rate) | Principal. Coinbase unwrap. More than surplus |
+| **hsAVAX** | L, shares of remaining sAVAX | **Rate surplus only** (`getPooledAvaxByShares`) | Principal. BENQI `requestUnlock`. More than surplus |
 | **BLUAI4Y** | C1, market only | Extra **BLUAI** (`pullInnerEnabled = true`, surplus only) | Principal (`totalLocked`) |
 | **hVIRTUALMAX** | C1 | Agent airdrops | Staked VIRTUAL (Auto Max-lock) |
 
-`pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner` unless a **rate feed** is set. Then only the rate-implied surplus may leave (`setRateKind(ExchangeRate)` for cbETH; `ConvertToAssets` only if that listing's SOLVENCY row opts in). C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked` (C1) or `(lastAccounted * (rate - lastRate)) / rate` (rate L, floor, principal only). Donations are not surplus.
+`pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner` unless a **rate feed** is set. Then only the rate-implied surplus may leave (`setRateKind(ExchangeRate)` for cbETH; `GetPooledAvaxByShares` for sAVAX; `ConvertToAssets` only if that listing's SOLVENCY row opts in). C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked` (C1) or `(lastAccounted * (rate - lastRate)) / rate` (rate L, floor, principal only). Donations are not surplus.
 
 1% protocol / 99% holders at `notify` is **side-token yield only** (QUID, airdrops). Rate-bearing L (`retainRateYield`): 1% of surplus to converter, 99% stays in the receipt. Wrap/redeem do **not** transfer to the converter. `pullYield` is the only inner outflow for yield.
 

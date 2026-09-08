@@ -210,4 +210,17 @@ contract LeafHarvestSplitTest is PegReady {
         vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
         adapter.setRewardsSelector(cd);
     }
+
+    function testRewardsSelectorRejectsBenqiUnlock() public {
+        bytes4 unlock = bytes4(keccak256("requestUnlock(uint256)"));
+        assertEq(unlock, bytes4(0xc9d2ff9d));
+        bytes4 w = bytes4(keccak256("withdraw(uint256)"));
+        assertEq(w, bytes4(0x2e1a7d4d));
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(unlock);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(w);
+        vm.stopPrank();
+    }
 }

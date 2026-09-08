@@ -198,7 +198,7 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 ## Still not this pass
 
 - Mainnet inners, `SetSecurityStack`, WHYPE converter fills, multi-DEX/bridge converter routes
-- hKAITO / hVIRTUALMAX / hSKY / hgSOON / hsWBERA / **hstkwaUSDC** (catalog `next-testnet`; not this `ASSET` round)
+- hKAITO / hVIRTUALMAX / hSKY / hgSOON / hsWBERA / **hstkwaUSDC** / **hsAVAX** (catalog `next-testnet`; not this `ASSET` round)
 - NestVault / HNest / HevAdapter
 - LeafVirtualsLockbox / LeafOmnichainHolder / LeafCreate2
 - C1 `shareExit` / protocol redeem
@@ -223,4 +223,6 @@ Must prove before it joins a catalog lock:
 7. a `.v2` address is a different listing — this adapter refuses it
 
 Hybrid of hAVNT (side claim, different target) + hcbETH (retainRateYield). L exit is the receipt. Protocol never starts Aave's 20-day cooldown.
+
+hsAVAX (same batch): `RateKind.GetPooledAvaxByShares` + `retainRateYield=true`. Mock inner must implement `getPooledAvaxByShares(uint256)`, not `exchangeRate()`. Forbidden: `requestUnlock` `0xc9d2ff9d`, `withdraw(uint256)` `0x2e1a7d4d`. Unwrap returns sAVAX. Do not call BENQI unlock from the lockbox. Source later is Avalanche / Fuji (`eid` 30106 / 40106); this round's scripts stay Base Sepolia mocks.
 

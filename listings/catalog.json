@@ -246,14 +246,24 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uAVAX",
-      "note": "Testnet script deploys a mock on Base Sepolia until Fuji wiring is used.",
+      "note": "NEXT TESTNET BATCH with hstkwaUSDC. Same L/retainRateYield path as hcbETH; rate ABI is getPooledAvaxByShares not exchangeRate. Wrap sAVAX only, never AVAX, never start BENQI unlock. User who wants AVAX: unwrap hsAVAX to sAVAX, then BENQI or DEX. Source Avalanche 43114 LZ 30106. This round's TestnetCatalog stays four assets; mock on Base Sepolia or Fuji later.",
       "testnet": {
         "sourceChain": "base-sepolia",
         "mockInner": true,
-        "fujiLater": true
+        "fujiLater": true,
+        "batch": "next"
       },
-      "status": "testnet-ready-mock",
-      "priority": 5
+      "status": "next-testnet",
+      "priority": 11,
+      "yield": {
+        "inner": "benqi-pooled-avax",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "getPooledAvaxByShares",
+        "retainRateYield": true
+      },
+      "claim": "No side token. Rate is getPooledAvaxByShares(1e18). Never requestUnlock 0xc9d2ff9d, never withdraw 0x2e1a7d4d (15d + 2d AVAX claim). accrueRewards is permissionless on BENQI; HyperLeaf does not need it as pokeRewards."
     },
     {
       "id": "bonk12m",

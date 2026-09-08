@@ -251,6 +251,26 @@ Canonical economic owner is **the Orderly ledger account = CREATE2 lockbox addre
 Accounting unit is **sRIVER_V2 tokenId**, not `balanceOf(Pts)`. Do not ship on the ERC-20 adapter. Merkle weekly Pts is address-keyed, not NFT-keyed. Blocked on NFT lockbox + lockbox appearing in a weekly tree.
 
 
+
+### hsAVAX (next testnet — BENQI, same skim as hcbETH)
+
+Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche). Never AVAX. Never `requestUnlock` / `withdraw`.
+
+| | |
+| --- | --- |
+| Canonical backing | lockbox sAVAX |
+| Accounting unit | 1 hsAVAX share. Economic AVAX is `getPooledAvaxByShares` |
+| Core invariant | L: `supply ≤ totalLocked sAVAX`. Rate harvest 1% skim only |
+| Rate source | `getPooledAvaxByShares(1e18)` (`RateKind.GetPooledAvaxByShares`). Not `exchangeRate()` |
+| Mint / redeem | wrap/unwrap sAVAX, instant. Official 15d unlock + 2d redeem is the user's problem after unwrap |
+| Yield | Avalanche PoS already in the rate. BENQI takes 10% of validator rewards before that rate. HyperLeaf skims **1% of remaining surplus** (`retainRateYield`). Holders have no WHYPE claim |
+| Failure | BENQI rate lie; `requestUnlock` on the lockbox (forbidden). One cooldown per address — do not start it |
+| Auto-pause | inner supply ceiling; guardian |
+| Worst-case loss | min(depositCap, maxPerDay) on principal; 1% skim on converter |
+| Test | `testSavaxPooledAvaxRateSameMathAsCbeth`, `testRewardsSelectorRejectsBenqiUnlock` |
+
+Same math as hcbETH. Different 4-byte rate read. Not in this round's `TestnetCatalog`.
+
 ### hstkwaUSDC (next testnet — Umbrella StakeToken, not stkAAVE)
 
 Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6` (Ethereum). `.v1` is a factory suffix. A later `.v2` is a different ERC-20 → new listing. Pin the address.

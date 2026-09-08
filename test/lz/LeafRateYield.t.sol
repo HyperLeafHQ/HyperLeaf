@@ -303,5 +303,50 @@ contract LeafRateYieldTest is PegReady {
         assertLe(harvested, 100e18);
         assertLe(accounted, 100e18);
     }
+
+    function testSavaxPooledAvaxRateSameMathAsCbeth() public {
+        MockSAVAX savax = new MockSAVAX();
+        vm.startPrank(owner);
+        LeafOFTAdapter box = new LeafOFTAdapter(address(savax), address(epSrc), owner, guardian, feeTo, 1_000e18);
+        LeafOFT dest = new LeafOFT("hsAVAX", "hsAVAX", address(epDst), owner, guardian);
+        box.setPeer(DST, address(dest));
+        dest.setPeer(SRC, address(box));
+        box.setRateKind(LeafYieldFee.RateKind.GetPooledAvaxByShares);
+        box.setRetainRateYield(true);
+        box.setConvertYieldToHype(true);
+        box.setConverter(converter);
+        box.setHarvester(owner);
+        vm.stopPrank();
+        _openPair(box, dest, owner, 1_000e18);
+        savax.mint(user, 100e18);
+        vm.startPrank(user);
+        savax.approve(address(box), 100e18);
+        box.sendTo{value: 0.01 ether}(DST, user, 100e18);
+        vm.stopPrank();
+        savax.setPooled(11e17);
+        vm.prank(owner);
+        box.pullYield(savax, converter);
+        uint256 surplus = _surplus(100e18, 1e18, 11e17);
+        assertEq(savax.balanceOf(converter), _fee(surplus));
+        assertEq(box.totalLocked(), 100e18);
+    }
+}
+
+contract MockSAVAX is ERC20 {
+    uint256 public pooledPerShare = 1e18;
+
+    constructor() ERC20("sAVAX", "sAVAX") {}
+
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
+    }
+
+    function setPooled(uint256 r) external {
+        pooledPerShare = r;
+    }
+
+    function getPooledAvaxByShares(uint256 shareAmount) external view returns (uint256) {
+        return shareAmount * pooledPerShare / 1e18;
+    }
 }
 

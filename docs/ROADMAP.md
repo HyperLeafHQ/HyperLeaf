@@ -11,6 +11,7 @@ One path at a time. Same chain + same Kind can batch after that path is proven.
 | 1b | **hAVNT** | L | Base | Same adapter + `0x9a99b4f0`. Never `0xeab52318` |
 | 2 | hcbETH | L | Base | PoS in the rate |
 | **next testnet** | **hstkwaUSDC** | L | Ethereum | Wrap **stkwaEthUSDC.v1** `0x6bf1…8Aa6` only. Dual harvest: 4626 rate + RewardsController. Never cooldown / v2 auto-migrate. After current 4-asset round. |
+| **next testnet** | **hsAVAX** | L | Avalanche | BENQI sAVAX `0x2b2C…a4bE`. Same 1% rate skim as hcbETH via `getPooledAvaxByShares`. Never `requestUnlock`. |
 | later | **hsETHFI** | L | Ethereum | Receipt only. Never 10d DelayedWithdraw |
 | later | **hgSOON** | L | **BSC** `0xcC48…` | ERC-4626. Never `cooldownShares` 0x9343d9e1 / `claim` 0x1e83409a. Never 90d lock `0x6601` |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
@@ -44,7 +45,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 ## Phases
 
 **A** — testnet hxSQUID / hAVNT then hcbETH, then mock BLUAI4Y (`GROK_BOT_TESTNET.md`). Do not add assets to `TestnetCatalog` this round.
-**A2** — next testnet: **hstkwaUSDC** (Ethereum Umbrella StakeToken). Hybrid of hAVNT (side claim) + hcbETH (rate). Still L: unwrap the receipt, never Aave cooldown.
+**A2** — next testnet: **hstkwaUSDC** + **hsAVAX**. hsAVAX is hcbETH with a different rate ABI. hstkwaUSDC is the hybrid. Do not add either to this round's `TestnetCatalog`.
 **A′** — do **not** seed a HyperEVM AMM to fake spot. C1 / queued listings get a peer **claim board** later (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **B** — mainnet hxSQUID, tiny cap.
 **C** — hcbETH.
