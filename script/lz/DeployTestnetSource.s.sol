@@ -16,7 +16,7 @@ import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
 /// @notice Source-chain half of a testnet wrap.
-///         ASSET=hxsquid|hcbeth|bluai4y  (this round only)
+///         ASSET=hxsquid|havnt|hcbeth|bluai4y  (this round)
 ///         INNER_TOKEN unset → deploys a mintable mock (always, on testnet).
 contract DeployTestnetSource is Script {
     function run() external {
@@ -45,12 +45,13 @@ contract DeployTestnetSource is Script {
             revert("do not point testnet at mainnet inner");
         }
         if (inner == address(0)) {
-            if (keccak256(bytes(id)) == keccak256("hxsquid")) {
-                MockERC20 quid = new MockERC20("QUID", "QUID");
-                MockClaimInner mock = new MockClaimInner(a.innerSymbol, a.innerSymbol, address(quid));
+            if (keccak256(bytes(id)) == keccak256("hxsquid") || keccak256(bytes(id)) == keccak256("havnt")) {
+                string memory side = keccak256(bytes(id)) == keccak256("havnt") ? "AVNT" : "QUID";
+                MockERC20 extra = new MockERC20(side, side);
+                MockClaimInner mock = new MockClaimInner(a.innerSymbol, a.innerSymbol, address(extra));
                 mock.mint(owner, 1_000_000 ether);
                 inner = address(mock);
-                console2.log("MockQUID", address(quid));
+                console2.log("MockSideToken", address(extra));
             } else if (keccak256(bytes(id)) == keccak256("hcbeth")) {
                 MockRateERC20 mock = new MockRateERC20(a.innerSymbol, a.innerSymbol);
                 mock.mint(owner, 1_000_000 ether);
@@ -67,7 +68,7 @@ contract DeployTestnetSource is Script {
         if (a.kind == AssetCatalog.Kind.Liquid) {
             source = address(new LeafOFTAdapter(inner, endpoint, owner, guardian, feeRecipient, cap));
             console2.log("LeafOFTAdapter", source);
-            if (keccak256(bytes(id)) == keccak256("hxsquid")) {
+            if (keccak256(bytes(id)) == keccak256("hxsquid") || keccak256(bytes(id)) == keccak256("havnt")) {
                 LeafOFTAdapter(source).setRewardsSelector(bytes4(0x9a99b4f0));
             }
         } else if (a.kind == AssetCatalog.Kind.Closed) {

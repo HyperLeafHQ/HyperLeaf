@@ -285,6 +285,9 @@ contract LeafClaimEscrowTest is PegReady {
         filler.lzReceive(oRef, bytes32(uint256(3)), refund, address(0), "");
         assertEq(bluai.balanceOf(bob), 1e18);
         assertEq(oft.balanceOf(address(escrow)), 100e18);
+        vm.prank(address(epSrc));
+        filler.lzReceive(oRef, bytes32(uint256(4)), refund, address(0), "");
+        assertEq(bluai.balanceOf(bob), 1e18);
     }
 
     function testC1CannotRedeemThroughOFT() public {

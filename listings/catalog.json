@@ -761,12 +761,13 @@
       "infra": "evm",
       "yield": { "inner": "keep-stkavnt", "pullInner": false, "toHype": ["AVNT"] },
       "stakeSelector": "0xadc9772e",
+      "rewardsSelector": "0x9a99b4f0",
       "cooldownSeconds": 64800,
       "unstakeWindow": 259200,
       "maxSlashBps": 2000,
-      "note": "Accept transferable stkAVNT only — never deposit AVNT. SM 0xd546 stake(to,amount) 0xadc9772e. Never cooldown() (live COOLDOWN_SECONDS=64800, not the 5d docs figure) or unstake window. Slash max 20% is the cost of AVNT emissions — marketed, not stripped. Fee discounts stay on the lockbox. AVNT 0x696F9436 has isBlackListed. Your pin: 0x7aaf51e8 2025-10-02 6.1 AVNT → 6.1 stkAVNT to 0x113561. 400 AVNT stake not yet pinned.",
-      "status": "research",
-      "priority": 11
+      "note": "Accept transferable stkAVNT only — never AVNT. pokeRewards = claimRewards(this,max) 0x9a99b4f0, same 4 bytes as QUID. NEVER claimRewardsAndRedeem 0xeab52318 (burns stkAVNT) or cooldown() 0x787a08a6. Pin claim-only: 0x24398d72 is the user's combined redeem — do not copy that selector. Slash max 20% stays in the receipt. AVNT 0x696F9436 isBlackListed. Stake pin 0x7aaf51e8.",
+      "status": "ready",
+      "priority": 2
     }
   ]
 }

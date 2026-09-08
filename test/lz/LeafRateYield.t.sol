@@ -117,6 +117,25 @@ contract LeafRateYieldTest is PegReady {
         return (surplus * 100) / 10_000;
     }
 
+    function testDepositRatePartialRedeemRateFinalRedeem() public {
+        _mintLeaf(100e18);
+        inner.setRate(11e17);
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        uint256 fee1 = inner.balanceOf(converter);
+        _redeem(40e18);
+        inner.setRate(12e17);
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        assertGt(inner.balanceOf(converter), fee1);
+        uint256 remaining = inner.balanceOf(address(adapter));
+        _redeem(60e18);
+        assertEq(oft.totalSupply(), 0);
+        assertEq(inner.balanceOf(address(adapter)), 0);
+        assertEq(inner.balanceOf(user) + inner.balanceOf(converter), 200e18);
+        assertGt(remaining, 0);
+    }
+
     function testRateSurplusGoesToConverterNotPrincipal() public {
         _mintLeaf(100e18);
         assertEq(adapter.totalLocked(), 100e18);

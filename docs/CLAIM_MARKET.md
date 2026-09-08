@@ -21,6 +21,12 @@ Three things the contracts must keep:
 
 If ACK is late: dest already gave the buyer the Leaf; seller still waits. Show **票已交给买方，等源链付款**. `retryAck`. Do not show 已完成.
 
+`abortFill` is **not** “refund guaranteed”. Two outcomes:
+- dest still `Open` → `ABORT_OK` → buyer wantToken back
+- dest already `LeafReleased` → dest sends `ACK` → source **pays** 99/1
+
+Do not show 中止中 as 已退款. Replay of ACK / REFUND / ABORT_OK after terminal status is a no-op (no second transfer).
+
 C1 is the **only** protocol exit. hNEST on this board is an *early* exit before the official window — different product, same contracts, `fillLocal`. Do not market them as the same “spot sell”.
 
 Internal name: **Claim Market**. Never “debt”, never “HyperLeaf lends”,

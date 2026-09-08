@@ -65,6 +65,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("havnt")) {
+            return Listing(
+                Kind.Liquid,
+                "havnt",
+                "Hyperleaf stkAVNT",
+                "hAVNT",
+                "stkAVNT",
+                8453,
+                30184,
+                40245,
+                0,
+                0,
+                0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9,
+                1_000 ether,
+                true
+            );
+        }
         if (k == keccak256("hcbeth")) {
             return Listing(
                 Kind.Liquid,

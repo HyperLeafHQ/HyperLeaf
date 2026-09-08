@@ -129,20 +129,20 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 
 
 
-### hAVNT (research → L wrap of stkAVNT, not raw AVNT)
+### hAVNT (L wrap of stkAVNT, not raw AVNT)
 
 | | |
 | --- | --- |
 | Canonical backing | transferable stkAVNT from Avantis SM `0xd546040F…d9e9` (Base). **Never** raw AVNT |
 | Accounting unit | 1 hAVNT = 1 stkAVNT |
-| Core invariant | L: `hAVNT ≤ totalLocked stkAVNT`. Slash (max 20%) is **in** the yield, not stripped |
-| Proof source | lockbox `totalLocked` + SM `balanceOf`. `stake(to,amount)` 0xadc9772e mints stkAVNT to `to` |
-| Mint / redeem | wrap/unwrap **stkAVNT**. Instant. **Never** `cooldown()` / unstake window. Live `COOLDOWN_SECONDS` = 64800 (18h); do not use the old 5d docs figure as a call we make |
-| Yield | extra AVNT emissions → HYPE. Fee discounts / XP stay on the lockbox (occupancy) |
-| Failure | SM slash, AVNT blacklist (`isBlackListed` on the token), emission stop |
-| Auto-pause | health after a slash event; ceiling on AVNT/stkAVNT supply |
-| Worst-case loss | 20% slash of locked stack + daily cap on residual |
-| Test | L suite + “we never call cooldown”. Your pin: Base `0x7aaf51e8` (2025-10-02 17:59 UTC / 10-03 01:59 HKT) `stake(self, 6.1e18)` — 6.1 AVNT in, 6.1 stkAVNT minted to `0x113561…`. 400 AVNT stake not in ±3d of this tx |
+| Core invariant | L: `hAVNT ≤ totalLocked stkAVNT`. Slash (max 20%) is **in** the receipt |
+| Proof source | lockbox `totalLocked` + SM `balanceOf` |
+| Mint / redeem | wrap/unwrap **stkAVNT**. Instant. **Never** `cooldown()` `0x787a08a6` or `claimRewardsAndRedeem` `0xeab52318` |
+| Yield | extra AVNT → converter → WHYPE. `pokeRewards` = `claimRewards(address,uint256)` `0x9a99b4f0` (same as QUID). User pin `0x24398d72` is **claim+redeem** — we do not call that |
+| Failure | SM slash, AVNT `isBlackListed`, emission stop |
+| Auto-pause | health after slash; ceiling on stkAVNT supply |
+| Worst-case loss | 20% slash of locked stack + daily cap |
+| Test | `testRewardsSelectorRejectsAvntRedeemCombo`. Stake pin `0x7aaf51e8` |
 
 ### hveUP (watch — not L, no adapter)
 

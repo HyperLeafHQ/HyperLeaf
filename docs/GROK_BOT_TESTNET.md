@@ -1,10 +1,10 @@
-# Grok bot — hxSQUID then hcbETH testnet
+# Grok bot — hxSQUID / hAVNT then hcbETH / BLUAI4Y testnet
 
 **Do not deploy mainnet. Do not set `INNER_TOKEN`.** Scripts revert if you point at live xSQUID / cbETH / BLUAI, or if you broadcast on 8453/999/56.
 
-`ASSET` this round is only `hxsquid` | `hcbeth` | `bluai4y` (`TestnetCatalog`). Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2.
+`ASSET` this round is `hxsquid` | `havnt` | `hcbeth` | `bluai4y` (`TestnetCatalog`). Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2.
 
-hxSQUID yield: `pokeRewards` (`0x9a99b4f0`) then `pullYield`. There is no `pokeClaim` / `harvestToken` on these lockboxes. C1: `pokeRewards` is farm `claimAll`, not a generic selector. Do not `setShareExit`. Cross-chain board: dest `LeafReleased` is not done; wait source `Paid`.
+hxSQUID and hAVNT share `pokeRewards` `0x9a99b4f0` (`claimRewards(this, max)`). Never pin Avantis `claimRewardsAndRedeem` `0xeab52318` — that burns stkAVNT. User tx `0x24398d72` is that combined redeem; we only take the claim half. Then `pullYield` QUID or AVNT. C1: `pokeRewards` is farm `claimAll`. Do not `setShareExit`. Cross-chain board: dest `LeafReleased` is not done; wait source `Paid`.
 
 Branch: `feat/lz-oft-wrap`. Faucets: Base Sepolia ETH, HyperEVM testnet HYPE ([testnet drip](https://app.hyperliquid-testnet.xyz)).
 
@@ -31,10 +31,10 @@ forge script script/lz/DeployTestnetSource.s.sol:DeployTestnetSource \
 Copy logs:
 
 - `MockInner` → `INNER`
-- `MockQUID` (hxSQUID only)
+- `MockSideToken` (hxSQUID = QUID, hAVNT = AVNT)
 - `LeafOFTAdapter` → `SOURCE`
 
-hcbETH later: same command with `ASSET=hcbeth` (no MockQUID).
+Same command with `ASSET=havnt` (same chain, same selector). hcbETH: `ASSET=hcbeth` (no side token).
 
 ## 2. Dest — HyperEVM 998
 

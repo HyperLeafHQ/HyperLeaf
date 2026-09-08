@@ -22,7 +22,7 @@ Burning a Leaf does not move inner tokens by itself. The source `_lzReceive` / `
 
 ## 5. Per-tx and per-day caps
 
-`maxPerTx` and `maxPerDay` (rolling 24h). One order cannot empty the reserve. Required before `openBridge`.
+`maxPerTx` and `maxPerDay` (rolling 24h) are **per OApp**, not a protocol-wide cap. A source send of 100 and the dest mint of 100 each consume 100 on **that** contract. Set source and dest equal if you want the same bound on both legs. Required before `openBridge`.
 
 ## 6. Isolate listings
 

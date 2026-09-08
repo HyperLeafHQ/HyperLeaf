@@ -115,10 +115,13 @@ abstract contract LeafYieldFee {
         emit RewardsSelectorSet(s);
     }
 
-    /// @dev xSQUID `redeem(address,uint256)` is 0x1e9a6950 — same arity as
-    ///      `claimRewards` 0x9a99b4f0. A wrong selector burns locked principal.
+    /// @dev xSQUID / stkAVNT `claimRewards(address,uint256)` = 0x9a99b4f0.
+    ///      Same arity as Squid/Avantis `redeem(address,uint256)` 0x1e9a6950.
+    ///      Avantis `claimRewardsAndRedeem` 0xeab52318 burns stkAVNT — never pin it.
     function _forbiddenRewardsSelector(bytes4 s) internal pure returns (bool) {
-        return s == bytes4(0x1e9a6950) // redeem(address,uint256) — Squid
+        return s == bytes4(0x1e9a6950) // redeem(address,uint256)
+            || s == bytes4(0xeab52318) // claimRewardsAndRedeem(address,uint256,uint256) — Avantis
+            || s == bytes4(0x787a08a6) // cooldown()
             || s == bytes4(0xb460af94) // withdraw(uint256,address,address)
             || s == bytes4(0xba087652) // redeem(uint256,address,address)
             || s == bytes4(0x9343d9e1) // cooldownShares(uint256)
