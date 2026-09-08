@@ -24,6 +24,7 @@ contract DeployTestnetDest is Script {
         if (a.kind == AssetCatalog.Kind.Closed) {
             oft = address(new LeafClosedOFT(a.name, a.symbol, a.lockSeconds, endpoint, owner, guardian));
             console2.log("LeafClosedOFT", oft);
+            console2.log("redeemEnabled", LeafClosedOFT(oft).redeemEnabled());
         } else {
             oft = address(new LeafOFT(a.name, a.symbol, endpoint, owner, guardian));
             console2.log("LeafOFT", oft);

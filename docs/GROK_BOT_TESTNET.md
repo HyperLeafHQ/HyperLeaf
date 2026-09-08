@@ -121,7 +121,7 @@ Wait. `INNER.balanceOf(OWNER)` on Base should rise.
 
 hcbETH after a rate harvest: inner returned is **remaining**, not the minted amount. Do not assert 1:1.
 
-C1 (`bluai4y`) step 6 **must revert** `ExitViaMarketOnly`. Do bluai4y only after both L paths pass.
+C1 (`bluai4y`) dest is `LeafClosedOFT`. After deploy check `redeemEnabled == false`. Do not `setRedeemEnabled(true)` this round. Step 6 **must revert** `ExitViaMarketOnly`. Do bluai4y only after both L paths pass.
 
 ---
 
@@ -130,7 +130,7 @@ C1 (`bluai4y`) step 6 **must revert** `ExitViaMarketOnly`. Do bluai4y only after
 | Check | hxsquid | hcbeth | bluai4y |
 | --- | --- | --- | --- |
 | Deposit mints dest ticker | yes | yes | yes |
-| Burn dest returns inner | 1:1 xSQUID | remaining cbETH (not 1:1 after harvest) | **no** |
+| Burn dest returns inner | 1:1 xSQUID | remaining cbETH (not 1:1 after harvest) | **no** (`redeemEnabled` false) |
 | `pullYield(inner)` | revert `CannotPullInner` | **1% of** rate surplus; 99% stays | surplus BLUAI ok |
 | pokeRewards on mock xSQUID | mints 1 mock QUID to lockbox | n/a | n/a |
 

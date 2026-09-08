@@ -21,7 +21,7 @@ contract ConfigureTestnetListing is Script {
         require(harvester != owner && converter != owner, "split keys");
 
         string memory id = vm.envOr("ASSET", string("hxsquid"));
-        AssetCatalog.Listing memory a = AssetCatalog.get(id);
+        AssetCatalog.Listing memory a = TestnetCatalog.get(id);
 
         vm.startBroadcast();
         LeafOFTAdapter box = LeafOFTAdapter(source);
