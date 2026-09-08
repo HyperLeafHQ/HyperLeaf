@@ -151,5 +151,17 @@ contract LeafWrapTest is PegReady {
         assertEq(A.CONFIRMATIONS_AVAX, 12);
         assertEq(A.CONFIRMATIONS_ETH, 15);
         assertEq(A.CONFIRMATIONS_SOLANA, 32);
+        // Send A == Receive B. Local depth must not be copied onto inbound.
+        assertEq(A.confirmationsForEid(A.EID_BASE), 15);
+        assertEq(A.confirmationsForEid(A.EID_HYPEREVM), 5);
+        assertTrue(A.confirmationsForEid(A.EID_BASE) != A.confirmationsForEid(A.EID_HYPEREVM));
+        address[] memory dvns = LeafSecurity.hyperevmOptionalDvns();
+        SetConfigParam[] memory sendP =
+            LeafSecurity.paramsForPathway(A.EID_BASE, A.confirmationsForEid(A.EID_HYPEREVM), address(0), dvns, address(1));
+        SetConfigParam[] memory recvP =
+            LeafSecurity.receiveParamsForPathway(A.EID_BASE, A.confirmationsForEid(A.EID_BASE), address(0), dvns);
+        assertEq(sendP.length, 2);
+        assertEq(recvP.length, 1);
+        assertTrue(keccak256(sendP[0].config) != keccak256(recvP[0].config));
     }
 }

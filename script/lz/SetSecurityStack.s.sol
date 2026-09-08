@@ -9,6 +9,9 @@ import {SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
 /// @notice Mainnet 2-of-3 Labs + Horizen + Canary. Skip on testnet.
+///         Send ULN confirmations = this chain. Receive ULN confirmations =
+///         the remote chain (source depth of inbound messages). Copying the
+///         local number onto both libs is a DVN mismatch.
 ///         HyperEVM: ASSET sets remote eid (hgsoon→BSC, hswbera→Bera, default Base).
 contract SetSecurityStack is Script {
     function run() external {
@@ -21,7 +24,6 @@ contract SetSecurityStack is Script {
         address sendLib;
         address receiveLib;
         address executor;
-        uint64 confirms;
         address[] memory optionalDvns;
 
         if (chainId == 8453) {
@@ -29,7 +31,6 @@ contract SetSecurityStack is Script {
             sendLib = A.SEND_ULN_BASE;
             receiveLib = A.RECEIVE_ULN_BASE;
             executor = A.EXECUTOR_BASE;
-            confirms = A.CONFIRMATIONS_BASE;
             optionalDvns = LeafSecurity.baseOptionalDvns();
         } else if (chainId == 999) {
             if (bytes(id).length != 0) {
@@ -40,30 +41,30 @@ contract SetSecurityStack is Script {
             sendLib = A.SEND_ULN_HYPEREVM;
             receiveLib = A.RECEIVE_ULN_HYPEREVM;
             executor = A.EXECUTOR_HYPEREVM;
-            confirms = A.CONFIRMATIONS_HYPEREVM;
             optionalDvns = LeafSecurity.hyperevmOptionalDvns();
         } else if (chainId == 56) {
             remoteEid = A.EID_HYPEREVM;
             sendLib = A.SEND_ULN_BSC;
             receiveLib = A.RECEIVE_ULN_BSC;
             executor = A.EXECUTOR_BSC;
-            confirms = A.CONFIRMATIONS_BSC;
             optionalDvns = LeafSecurity.bscOptionalDvns();
         } else if (chainId == 80094) {
             remoteEid = A.EID_HYPEREVM;
             sendLib = A.SEND_ULN_BERA;
             receiveLib = A.RECEIVE_ULN_BERA;
             executor = A.EXECUTOR_BERA;
-            confirms = A.CONFIRMATIONS_BERA;
             optionalDvns = LeafSecurity.beraOptionalDvns();
         } else {
             revert("unsupported chain");
         }
 
+        uint64 sendConfirms = A.confirmationsForEid(A.eidForChainId(chainId));
+        uint64 recvConfirms = A.confirmationsForEid(remoteEid);
+
         SetConfigParam[] memory sendParams =
-            LeafSecurity.paramsForPathway(remoteEid, confirms, hyperleafDvn, optionalDvns, executor);
-        SetConfigParam[] memory recvParams = new SetConfigParam[](1);
-        recvParams[0] = sendParams[0];
+            LeafSecurity.paramsForPathway(remoteEid, sendConfirms, hyperleafDvn, optionalDvns, executor);
+        SetConfigParam[] memory recvParams =
+            LeafSecurity.receiveParamsForPathway(remoteEid, recvConfirms, hyperleafDvn, optionalDvns);
 
         vm.startBroadcast();
         LeafOApp(oapp).setEndpointConfig(sendLib, sendParams);
@@ -71,7 +72,8 @@ contract SetSecurityStack is Script {
         vm.stopBroadcast();
         console2.log("security set on", oapp);
         console2.log("remoteEid", remoteEid);
+        console2.log("sendConfirms", sendConfirms);
+        console2.log("recvConfirms", recvConfirms);
         console2.log("hyperleaf veto dvn", hyperleafDvn);
-        console2.log("confirmations", confirms);
     }
 }

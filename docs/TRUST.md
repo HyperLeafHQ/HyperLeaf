@@ -100,5 +100,5 @@ Do **not** remove: `abortCredit`, `setEndpointConfig`, `restoreHealth`, `farmUns
 
 Do **not** put owner, guardian, harvester on one EOA. Scripts already revert `split keys`.
 
-Mainnet ULN is optional 2-of-3: LayerZero Labs + Horizen + Canary. Nethermind left the DVN role 2026-08-19 — do not put it back. Google Cloud is on Base but not HyperEVM, so it is not in the trio. Confirmations are per-source, not a global 5: Base/OP/Arb/BSC/Bera/ETH 15, HyperEVM 5, Avax 12, Solana 32.
+Mainnet ULN is optional 2-of-3: LayerZero Labs + Horizen + Canary. Nethermind left the DVN role 2026-08-19 — do not put it back. Google Cloud is on Base but not HyperEVM, so it is not in the trio. Confirmations are per-pathway, not one number per chain: Send ULN on A uses A's depth; Receive ULN on B for messages from A must use the same A-depth. Base→HyperEVM is 15 on both Base send and HyperEVM receive. HyperEVM→Base is 5 on both HyperEVM send and Base receive. Depths: Base/OP/Arb/BSC/Bera/ETH 15, HyperEVM 5, Avax 12, Solana 32.
 

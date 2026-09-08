@@ -8,6 +8,7 @@ pragma solidity ^0.8.24;
 ///      not put it back. Addresses from metadata.layerzero-api.com/v1/metadata/dvns
 ///      (canonicalName, version 2, not lzRead).
 library LayerZeroAddresses {
+    uint32 internal constant EID_ETH = 30101;
     uint32 internal constant EID_BASE = 30184;
     uint32 internal constant EID_HYPEREVM = 30367;
     uint32 internal constant EID_BSC = 30102;
@@ -106,9 +107,12 @@ library LayerZeroAddresses {
 
     uint128 internal constant LZ_RECEIVE_GAS = 200_000;
 
-    /// @dev Source-side ULN confirmations. Not all 5.
-    ///      LZ production floor: ETH 15 (32 preferred), optimistic L2 15–30,
-    ///      Solana 32. HyperEVM is a ~1s L1 (Circle uses 1); 5 is above that.
+    /// @dev Source-side ULN confirmations. Pathway is asymmetric:
+    ///      Send ULN on A (dst=B) uses A's depth; Receive ULN on B (src=A)
+    ///      must use the SAME number (blocks on A). Never copy local depth
+    ///      onto the receive side of the other chain.
+    ///      LZ floor: ETH 15 (32 preferred), optimistic L2 15–30, Solana 32.
+    ///      HyperEVM is a ~1s L1 (Circle uses 1); 5 is above that.
     uint64 internal constant CONFIRMATIONS_BASE = 15;
     uint64 internal constant CONFIRMATIONS_OP = 15;
     uint64 internal constant CONFIRMATIONS_ARB = 15;
@@ -118,6 +122,30 @@ library LayerZeroAddresses {
     uint64 internal constant CONFIRMATIONS_AVAX = 12;
     uint64 internal constant CONFIRMATIONS_ETH = 15;
     uint64 internal constant CONFIRMATIONS_SOLANA = 32;
+
+    function confirmationsForEid(uint32 eid) internal pure returns (uint64) {
+        if (eid == EID_BASE || eid == EID_OP) return CONFIRMATIONS_BASE;
+        if (eid == EID_ARB) return CONFIRMATIONS_ARB;
+        if (eid == EID_HYPEREVM) return CONFIRMATIONS_HYPEREVM;
+        if (eid == EID_BSC) return CONFIRMATIONS_BSC;
+        if (eid == EID_BERA) return CONFIRMATIONS_BERA;
+        if (eid == EID_AVALANCHE) return CONFIRMATIONS_AVAX;
+        if (eid == EID_ETH) return CONFIRMATIONS_ETH;
+        if (eid == EID_SOLANA) return CONFIRMATIONS_SOLANA;
+        revert("lz: no confirmations");
+    }
+
+    function eidForChainId(uint256 chainId) internal pure returns (uint32) {
+        if (chainId == 8453) return EID_BASE;
+        if (chainId == 999) return EID_HYPEREVM;
+        if (chainId == 56) return EID_BSC;
+        if (chainId == 80094) return EID_BERA;
+        if (chainId == 42161) return EID_ARB;
+        if (chainId == 43114) return EID_AVALANCHE;
+        if (chainId == 10) return EID_OP;
+        if (chainId == 1) return EID_ETH;
+        revert("lz: no eid");
+    }
 
     uint32 internal constant LOCK_4Y = 4 * 365 days;
 }

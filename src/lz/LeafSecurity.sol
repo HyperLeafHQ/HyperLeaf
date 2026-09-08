@@ -103,4 +103,16 @@ library LeafSecurity {
         params[0] = SetConfigParam(remoteEid, A.CONFIG_TYPE_ULN, ulnConfig(confirmations, hyperleafDvn, optionalDvns));
         params[1] = SetConfigParam(remoteEid, A.CONFIG_TYPE_EXECUTOR, executorConfig(executor));
     }
+
+    /// @dev Receive ULN has no executor. `confirmations` is the REMOTE chain's
+    ///      depth (blocks on the source of inbound messages).
+    function receiveParamsForPathway(
+        uint32 remoteEid,
+        uint64 confirmations,
+        address hyperleafDvn,
+        address[] memory optionalDvns
+    ) internal pure returns (SetConfigParam[] memory params) {
+        params = new SetConfigParam[](1);
+        params[0] = SetConfigParam(remoteEid, A.CONFIG_TYPE_ULN, ulnConfig(confirmations, hyperleafDvn, optionalDvns));
+    }
 }
