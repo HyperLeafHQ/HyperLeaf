@@ -27,7 +27,8 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | watch | **hliSLVR** | L | Robinhood | Wrap **liSLVR only**. Never taxed SLVR. Lottery rake. Confirm tax-free share |
 | watch | **hTWO** | C2 | Robinhood | Twofold. No receipt; 1h/7d stake vaults. Do not wrap TWO or vTWO |
 | watch | **hSB** | ve-NFT | Robinhood | StonkBrokers. Wrap **activated NFT**, never $STONKBROKER. TBA + geo. Skip until NFT lockbox |
-| **5** | **hJitoSOL** | L | Solana | Rate LST. PDA lockbox + dest `LeafOFT`. Math in `LeafJitoRate`. Not this grok-bot EVM pass |
+| **5** | **hJitoSOL** | L | Solana | Rate LST. Not NCN VRT |
+| watch | **hfragSOL** / **hkySOL** / **hezSOL** | L/C2 | Solana | Jito Vault **VRT**. Receipt exists. Slash + unstake queue. After hJitoSOL, not instead of it |
 | later | **hANSEM** | L? | Solana | Watch. Memecoin + launchpad airdrops, not an LST receipt |
 | later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |
 | last | BONK12M / hMET | C1/C2 | Solana | After the LST lockbox exists |

@@ -1025,6 +1025,53 @@
         "tiprouterRestake": "no \u2014 vault. Pool TOV already in JitoSOL rate",
         "holderAirdropAta": "yes if pushed to PDA ATA; harvest_other, never restake"
       }
+    },
+    {
+      "id": "hfragsol",
+      "kind": "C2",
+      "symbol": "hfragSOL",
+      "name": "Hyperleaf fragSOL",
+      "innerSymbol": "fragSOL",
+      "innerMint": "FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "infra": "solana-pending",
+      "slashable": true,
+      "note": "WATCH. Jito Vault VRT (Fragmetric). Switchboard NCN path. Token-2022 transfer hooks. Operator slashing + epoch unstake. Not hJitoSOL. Do not restake the JitoSOL lockbox into this.",
+      "status": "watchlist-slash",
+      "priority": 80
+    },
+    {
+      "id": "hkysol",
+      "kind": "C2",
+      "symbol": "hkySOL",
+      "name": "Hyperleaf kySOL",
+      "innerSymbol": "kySOL",
+      "innerMint": "kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B",
+      "vault": "CQpvXgoaaawDCLh8FwMZEwQqnPakRUZ5BnzhjnEBPJv",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "infra": "solana-pending",
+      "slashable": true,
+      "note": "WATCH. Kyros Jito VRT. Enqueue withdrawal + epoch. Slashable. After hJitoSOL.",
+      "status": "watchlist-slash",
+      "priority": 81
+    },
+    {
+      "id": "hezsol",
+      "kind": "C2",
+      "symbol": "hezSOL",
+      "name": "Hyperleaf ezSOL",
+      "innerSymbol": "ezSOL",
+      "innerMint": "ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC",
+      "vault": "CugziSqZXcUStNPXbtRmq6atsrHqWY2fH2tAhsyApQrV",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "infra": "solana-pending",
+      "slashable": true,
+      "note": "WATCH. Renzo Jito VRT. Same vault program. Slashable. After hJitoSOL.",
+      "status": "watchlist-slash",
+      "priority": 82
     }
   ]
 }

@@ -28,6 +28,18 @@ fee     = 1% of surplus   → harvest ATA → later WHYPE
 
 ## Yield we **do not** capture: NCN / restaking
 
+There **is** a receipt if you deposit into NCN vaults. It is a **Vault Receipt Token (VRT)**, not JitoSOL:
+
+| VRT | Issuer | Mint | Notes |
+| --- | --- | --- | --- |
+| **fragSOL** | Fragmetric | `FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo` | Switchboard path. Token-2022 + transfer hooks |
+| **kySOL** | Kyros | `kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B` | TipRouter-class vault. Unstake = enqueue + epoch |
+| **ezSOL** | Renzo | `ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC` | Same Jito Vault program |
+
+Watchlist tickers: `hfragSOL` / `hkySOL` / `hezSOL`. **Not this listing.** Slashing is per-NCN (operator misbehavior). Withdrawal is a ticket, not instant. A restaked product is a different solvency row (VRT + slash + queue), never “turn on restake” inside hJitoSOL.
+
+Frontend must say this was a choice: [`GROK_BOT_FRONTEND.md`](GROK_BOT_FRONTEND.md) § Why hJitoSOL.
+
 Holding JitoSOL in the PDA is **not** (re)staking.
 
 | Source | Lands in our PDA? | Why |

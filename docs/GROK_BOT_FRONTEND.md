@@ -67,9 +67,33 @@ Required EN:
 
 > Yield is the inner protocol’s own emissions or revenue. HyperLeaf does not add yield, points, or incentives. The 1% take is of realized yield only.
 
-Show a “HYPE 从哪来” table with the productive listings (hxSQUID, hAVNT, hcbETH, hgSOON, hsAVAX, hstkwaUSDC, hsETHFI, Morpho, hORDER, BLUAI4Y). Each row: origin + how the user sees it (钱包领取 vs 留在收据). Parked tickers with frozen rewards stay off that table.
+Show a “HYPE 从哪来” table with the productive listings (hxSQUID, hAVNT, hcbETH, hgSOON, hsAVAX, hstkwaUSDC, hsETHFI, Morpho, hORDER, BLUAI4Y, and later **hJitoSOL**). Each row: origin + how the user sees it (钱包领取 vs 留在收据). Parked tickers with frozen rewards stay off that table.
+
+When hJitoSOL is on the UI, the HYPE row is:
+
+| 票 | 收益从哪来 | 用户看到 |
+| --- | --- | --- |
+| hJitoSOL | Jito 质押池：通胀 + 已经进池子的 MEV/TOV，写在 JitoSOL/SOL 汇率里 | 99% 留在收据（赎回的 JitoSOL 更少、代表的 SOL 仍在），协议抽 1% 换成 HYPE |
 
 Do **not** write “HyperLeaf APR”, “我们发 HYPE”, “积分季节”, “存入送分”.
+
+## Why hJitoSOL, not the NCN restaked token
+
+Users will ask why we wrap **JitoSOL** instead of fragSOL / kySOL / ezSOL (Jito restaking VRTs that earn Switchboard SWTCH etc.). This is a **product choice**, not a gap we missed. Say it on the ticker page (ZH + EN). Do not hide NCN.
+
+Required ZH (hJitoSOL 金库 / 规则):
+
+> 我们收的是 JitoSOL 本身：Solana 上最大的流动性质押收据，收益在汇率里，没有额外罚没。
+>
+> Jito 还有一层 Restaking（NCN）：把 JitoSOL 再存进 Vault，会拿到 **fragSOL / kySOL / ezSOL** 这种凭证，并可能拿到 Switchboard 等网络的额外奖励。那些凭证我们列在观察名单，**这期不做**。原因不是不知道，而是：再质押会把底仓暴露给节点罚没，赎回还要排队，fragSOL 还带 Token-2022 转账钩子。HyperLeaf 这期只把「已经在生息、可即时赎回的 JitoSOL」引进 HyperEVM。想拿 NCN 奖励的人，解开 hJitoSOL 之后可以自己去 Jito Vault 做。
+
+Required EN:
+
+> hJitoSOL wraps JitoSOL — the liquid staking receipt. Staking and MEV already sit in its exchange rate. No extra slashing.
+>
+> Jito restaking (NCNs) mints a **different** receipt (fragSOL, kySOL, ezSOL) if you deposit JitoSOL into a Vault. Those can earn Switchboard and other NCN rewards. We know they exist; they are on the watchlist, not this listing. Restaking adds operator slashing and an unstake queue. fragSOL also uses Token-2022 transfer hooks. If you want NCN yield, unwrap to JitoSOL and restake on Solana yourself.
+
+Do **not** write: “Jito 没有额外奖励”, “我们不支持 restaking 因为还没做”, “fragSOL 和 JitoSOL 是同一个东西”.
 
 ## What the protocol does not do
 

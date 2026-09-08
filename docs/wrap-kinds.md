@@ -60,7 +60,7 @@ Deploy: `docs/GROK_BOT_MAINNET.md`. Ids: `src/lz/AssetCatalog.sol`. `MainnetBatc
 
 **Morpho vault shares (L family):** wrap the **ERC-4626 vault token**, not USDC/USDG, not a Morpho Blue market position. Blue supply is address-keyed — that is ORDER-class, skip. Each vault is its own listing (curator + markets ≠ shared backing). Never `deposit`/`mint`/`withdraw`/`redeem` on the vault. Yield in `convertToAssets`. Base and Robinhood both have LZ. Do not auto-list every Morpho vault; each needs a SOLVENCY row.
 
-Later: hAEVO (C1), hJupSOL / hANSEM (Solana), hwstETH (own ticker).
+Later: hAEVO (C1), hJupSOL / hANSEM (Solana), hwstETH (own ticker). Jito VRTs (fragSOL/kySOL/ezSOL) are watchlist-slash, not hJitoSOL.
 
 **Parked:** **hSKY** — stake-only (~4%) strips LockStake borrow. Min 30k USDS / ~1.44M SKY. If revived: C1 only-in, disclose liquidation. **hGMX** — stake yield frozen until $90; GLP V1 retired 2025-07-16. **hUNCX** — stake rewards + buybacks paused 2026-08-21; locker fees continue, not paid to stakers. **hSNX** — 420 staking closed Jun 2026; SIP-423 Phase 4 deferred. **hveUP** — veUP NFT on Robinhood Chain; wait NFT lockbox (with hveAERO). Never wrap liquid UP.
 
