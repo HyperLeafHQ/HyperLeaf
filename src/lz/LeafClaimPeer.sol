@@ -5,7 +5,6 @@ import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 import {OptionsBuilder} from "./OptionsBuilder.sol";
-import {LayerZeroAddresses} from "./LayerZeroAddresses.sol";
 
 /// @dev Thin LZ peer for the claim board. Not a wrap OApp: no mint, no caps, no listingTag.
 abstract contract LeafClaimPeer is Ownable2Step, Pausable {
@@ -71,18 +70,41 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
         _lzReceive(origin, guid, message, executor, extraData);
     }
 
+    function quote(uint32 dstEid, bytes memory message, bytes memory options) public view returns (uint256 nativeFee) {
+        bytes32 peer = peers[dstEid];
+        if (peer == bytes32(0)) revert NoPeer();
+        ILayerZeroEndpointV2.MessagingFee memory fee = endpoint.quote(
+            ILayerZeroEndpointV2.MessagingParams(dstEid, peer, message, options, false), address(this)
+        );
+        return fee.nativeFee;
+    }
+
     function _lzSend(uint32 dstEid, bytes memory message, address refund)
+        internal
+        returns (ILayerZeroEndpointV2.MessagingReceipt memory)
+    {
+        return _lzSend(dstEid, message, _defaultOptions(), refund);
+    }
+
+    function _lzSend(uint32 dstEid, bytes memory message, bytes memory options, address refund)
         internal
         returns (ILayerZeroEndpointV2.MessagingReceipt memory)
     {
         bytes32 peer = peers[dstEid];
         if (peer == bytes32(0)) revert NoPeer();
         return endpoint.send{value: msg.value}(
-            ILayerZeroEndpointV2.MessagingParams(
-                dstEid, peer, message, OptionsBuilder.lzReceiveOption(LayerZeroAddresses.LZ_RECEIVE_GAS), false
-            ),
-            refund
+            ILayerZeroEndpointV2.MessagingParams(dstEid, peer, message, options, false), refund
         );
+    }
+
+    uint128 internal constant CLAIM_LZ_GAS = 400_000;
+
+    function _defaultOptions() internal pure returns (bytes memory) {
+        return OptionsBuilder.lzReceiveOption(CLAIM_LZ_GAS);
+    }
+
+    function _optionsWithValue(uint128 value) internal pure returns (bytes memory) {
+        return OptionsBuilder.lzReceiveOption(CLAIM_LZ_GAS, value);
     }
 
     function _lzReceive(

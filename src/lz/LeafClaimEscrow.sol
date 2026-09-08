@@ -33,6 +33,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     uint8 public constant OP_FILL = 1;
     uint8 public constant OP_ACK = 2;
     uint8 public constant OP_REFUND = 3;
+    uint8 public constant OP_ABORT = 4;
+    uint8 public constant OP_ABORT_OK = 5;
 
     address public feeRecipient;
     IClaimHype public rewarder;
@@ -65,6 +67,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     mapping(uint256 id => Order) public orders;
     /// @dev leaf → wantToken (source inner address) → market
     mapping(address leaf => mapping(address wantToken => Market)) public markets;
+    mapping(uint256 id => bool) public aborted;
+    mapping(uint256 id => uint32) public fillSrcEid;
 
     event MarketSet(address indexed leaf, address indexed wantToken, bytes32 rewardId, bool allowed);
     event Listed(uint256 indexed id, address indexed seller, address leaf, uint256 leafAmount, address wantToken, uint256 wantAmount);
@@ -72,6 +76,9 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     event Expired(uint256 indexed id);
     event Filled(uint256 indexed id, address indexed buyer, uint256 toSeller, uint256 buyerReward);
     event OccupancyClaimed(bytes32 indexed rewardId, uint256 amount);
+    event Aborted(uint256 indexed id);
+    event AckRetried(uint256 indexed id);
+    event RefundRetried(uint256 indexed id);
 
     error NotAllowed();
     error BadOrder();
@@ -134,8 +141,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         emit Listed(id, msg.sender, leaf, leafAmount, wantToken, wantAmount);
     }
 
-    /// @notice Seller rescue. No cancel fee. Occupancy HYPE already notified
-    ///         stays with this contract (protocol). Sends REFUND if a source fill is in flight.
+    /// @notice Seller rescue. No cancel fee. In-flight FILL sees NotOpen and refunds.
     function cancel(uint256 id, uint32 srcEid) external payable nonReentrant {
         Order storage o = orders[id];
         if (o.seller != msg.sender) revert NotSeller();
@@ -175,6 +181,25 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         emit Filled(id, msg.sender, toSeller, reward);
     }
 
+    /// @notice Resend ACK if dest filled but source never got paid.
+    function retryAck(uint256 id) external payable nonReentrant {
+        Order storage o = orders[id];
+        if (o.status != Status.Filled) revert NotOpen();
+        uint32 srcEid = fillSrcEid[id];
+        if (srcEid == 0) revert BadOrder();
+        _lzSend(srcEid, abi.encode(OP_ACK, id), msg.sender);
+        emit AckRetried(id);
+    }
+
+    /// @notice Resend REFUND (cancel/expire/abort with inner still on source).
+    function retryRefund(uint256 id) external payable nonReentrant {
+        Order storage o = orders[id];
+        uint32 srcEid = fillSrcEid[id];
+        if (srcEid == 0) revert BadOrder();
+        if (o.status == Status.Filled) revert NotOpen();
+        _lzSend(srcEid, abi.encode(OP_REFUND, id), msg.sender);
+        emit RefundRetried(id);
+    }
     /// @notice Occupancy HYPE while this contract holds Leaf. Permissionless.
     function claimOccupancy(bytes32 rewardId) external nonReentrant {
         if (address(rewarder) == address(0) || rewardId == bytes32(0)) revert BadOrder();
@@ -187,13 +212,25 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         internal
         override
     {
-        (uint8 op, uint256 id, address buyer, uint256 wantAmount, address payout) =
-            abi.decode(message, (uint8, uint256, address, uint256, address));
+        (uint8 op, uint256 id) = abi.decode(message, (uint8, uint256));
+        fillSrcEid[id] = origin.srcEid;
+        if (op == OP_ABORT) {
+            aborted[id] = true;
+            emit Aborted(id);
+            if (orders[id].status == Status.Filled) {
+                _lzSend(origin.srcEid, abi.encode(OP_ACK, id), address(this));
+            } else {
+                _lzSend(origin.srcEid, abi.encode(OP_ABORT_OK, id), address(this));
+            }
+            return;
+        }
         if (op != OP_FILL) revert BadOrder();
+        (, , address buyer, uint256 wantAmount, address payout) =
+            abi.decode(message, (uint8, uint256, address, uint256, address));
         Order storage o = orders[id];
         if (
-            o.status != Status.Open || block.timestamp >= o.expiry || buyer == address(0) || buyer == o.seller
-                || wantAmount != o.wantAmount || payout != o.sourceRecipient
+            aborted[id] || o.status != Status.Open || block.timestamp >= o.expiry || buyer == address(0)
+                || buyer == o.seller || wantAmount != o.wantAmount || payout != o.sourceRecipient
         ) {
             _lzSend(origin.srcEid, abi.encode(OP_REFUND, id), address(this));
             return;

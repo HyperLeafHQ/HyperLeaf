@@ -78,10 +78,13 @@ contract LeafClaimEscrowTest is PegReady {
         escrow.setMarket(address(oft), address(bluai), ID, true);
         escrow.setRewarder(address(rewarder));
         filler.setInner(address(bluai), true);
+        filler.setReturnNative(0.01 ether);
         vm.stopPrank();
         _openPair(adapter, oft, owner, 10_000e18);
         vm.deal(alice, 1 ether);
         vm.deal(bob, 1 ether);
+        vm.deal(guardian, 1 ether);
+        vm.deal(owner, 1 ether);
         vm.deal(address(escrow), 1 ether);
         vm.deal(address(filler), 1 ether);
         vm.deal(address(this), 1 ether);
@@ -280,5 +283,132 @@ contract LeafClaimEscrowTest is PegReady {
         vm.prank(alice);
         vm.expectRevert(LeafClosedOFT.ExitViaMarketOnly.selector);
         oft.sendTo{value: 0.01 ether}(SRC, alice, 1e18);
+    }
+
+    function _srcOrigin() internal view returns (ILayerZeroEndpointV2.Origin memory) {
+        return ILayerZeroEndpointV2.Origin({
+            srcEid: SRC, sender: bytes32(uint256(uint160(address(filler)))), nonce: 1
+        });
+    }
+
+    function _dstOrigin() internal view returns (ILayerZeroEndpointV2.Origin memory) {
+        return ILayerZeroEndpointV2.Origin({
+            srcEid: DST, sender: bytes32(uint256(uint160(address(escrow)))), nonce: 1
+        });
+    }
+
+    function testBuyerAbortTooEarly() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
+        vm.expectRevert(LeafClaimFill.TooEarly.selector);
+        filler.abortFill{value: 0.01 ether}(id);
+        vm.stopPrank();
+    }
+
+    function testGuardianAbortRefunds() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
+        vm.stopPrank();
+        vm.prank(guardian);
+        filler.abortFill{value: 0.01 ether}(id);
+
+        bytes memory abortMsg = abi.encode(uint8(4), id);
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(4)), abortMsg, address(0), "");
+        assertEq(oft.balanceOf(address(escrow)), 100e18);
+
+        bytes memory ok = abi.encode(uint8(5), id);
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(5)), ok, address(0), "");
+        assertEq(bluai.balanceOf(bob), 70e18);
+        (,,,,,, LeafClaimFill.FillStatus st) = filler.fills(id);
+        assertEq(uint8(st), uint8(LeafClaimFill.FillStatus.Refunded));
+    }
+
+    function testAbortLosesToFill() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
+        vm.stopPrank();
+
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(1)), fillMsg, address(0), "");
+        assertEq(oft.balanceOf(bob), 100e18);
+
+        vm.prank(guardian);
+        filler.abortFill{value: 0.01 ether}(id);
+        bytes memory abortMsg = abi.encode(uint8(4), id);
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(4)), abortMsg, address(0), "");
+
+        bytes memory ack = abi.encode(uint8(2), id);
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(2)), ack, address(0), "");
+        assertEq(bluai.balanceOf(alice), 69.3e18);
+        assertEq(bluai.balanceOf(bob), 0.7e18);
+    }
+
+    function testRetryAckPaysSeller() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
+        vm.stopPrank();
+
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(1)), fillMsg, address(0), "");
+        assertEq(bluai.balanceOf(address(filler)), 70e18);
+
+        escrow.retryAck{value: 0.01 ether}(id);
+        bytes memory ack = abi.encode(uint8(2), id);
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(2)), ack, address(0), "");
+        assertEq(bluai.balanceOf(alice), 69.3e18);
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(3)), ack, address(0), "");
+        assertEq(bluai.balanceOf(alice), 69.3e18);
+    }
+
+    function testLateFillAfterAbortRefunds() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
+        vm.stopPrank();
+        vm.prank(guardian);
+        filler.abortFill{value: 0.01 ether}(id);
+        bytes memory abortMsg = abi.encode(uint8(4), id);
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(4)), abortMsg, address(0), "");
+        bytes memory ok = abi.encode(uint8(5), id);
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(5)), ok, address(0), "");
+        assertEq(bluai.balanceOf(bob), 70e18);
+
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice);
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(_srcOrigin(), bytes32(uint256(6)), fillMsg, address(0), "");
+        assertEq(oft.balanceOf(address(escrow)), 100e18);
+        bytes memory refund = abi.encode(uint8(3), id);
+        vm.prank(address(epSrc));
+        filler.lzReceive(_dstOrigin(), bytes32(uint256(7)), refund, address(0), "");
+        assertEq(bluai.balanceOf(bob), 70e18);
     }
 }

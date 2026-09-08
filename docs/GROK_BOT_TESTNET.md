@@ -40,7 +40,7 @@ forge script script/lz/DeployTestnetDest.s.sol:DeployTestnetDest \
   --rpc-url hyperevm_testnet --broadcast --private-key $PRIVATE_KEY
 ```
 
-Copy: `LeafOFT` → `OFT`. Do **not** deploy a wrap registry. Do **not** deploy `LeafClaimEscrow` / `LeafClaimFill` until abort/skip exists.
+Copy: `LeafOFT` → `OFT`. Do **not** deploy a wrap registry.
 
 ## 3. Peers both ways
 
@@ -162,6 +162,34 @@ Then answer only:
 Do **not** add more assets until this page has those three answers logged in the PR.
 
 ---
+
+## 8. Claim board (C1 / hNEST) — after wrap smoke
+
+LZ fee on fill/abort is LayerZero’s, not ours. Abort handshake must exist before this deploy.
+
+Dest (998), after OFT + optional Rewarder:
+
+```
+LEAF=$OFT WANT=$INNER OWNER=$OWNER GUARDIAN=$GUARDIAN REWARDER=$REWARDER \
+forge script script/lz/DeployClaimDest.s.sol:DeployClaimDest \
+  --rpc-url hyperevm_testnet --broadcast --private-key $PRIVATE_KEY
+```
+
+Source (same chain as wrap source):
+
+```
+WANT=$INNER OWNER=$OWNER GUARDIAN=$GUARDIAN RETURN_NATIVE=10000000000000000 \
+forge script script/lz/DeployClaimSource.s.sol:DeployClaimSource \
+  --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
+Wire both ways (`OAPP`/`PEER` = escrow ↔ fill). `WirePeers` `setPeer(address)` matches.
+
+hNEST: dest-only, `fillLocal`, no Fill contract.
+
+If ACK is lost: `escrow.retryAck{value}(id)`. Guardian may `abortFill` without waiting 3 days. Buyer waits `ABORT_DELAY`. Stuck FILL nonce: owner `Endpoint.skip` (delegate), then `retryRefund` / `abortFill`.
+
+Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3 to seller, 0.7 to buyer. `totalLocked` unchanged.
 
 ## Still not this pass
 

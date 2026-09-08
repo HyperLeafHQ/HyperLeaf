@@ -47,7 +47,7 @@ Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary boa
 
 > 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** HYPE 收益，也 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励，不是协议抽成）。相当于让出 1% 换更简单的撮合。
 
-Copy: 没人出价就不成交。协议不接盘。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
+Copy: 没人出价就不成交。协议不接盘。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。ACK 丢了会重试，不会铸新的 Leaf。买方中止要等三天（guardian 可立刻中止）。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
 
 
 **One line that must survive every rewrite:**

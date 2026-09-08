@@ -136,7 +136,17 @@ retro-credit them.
 
 Status: `OPEN → FILLED | CANCELLED | EXPIRED`
 
-### Fill path
+Handshake (C1):
+
+```
+fill → dest FILL (+ prepaid native for return) → ACK → pay 99/1
+fill mismatch / cancelled → REFUND
+abort (buyer after 3d, guardian now) → dest still Open: ABORT_OK
+                                 → dest already Filled: ACK
+retryAck / retryRefund if a return message is dropped
+```
+
+Inner never moves until ACK / REFUND / ABORT_OK. Fill does not mint.
 
 1. `list` — Leaf to escrow. Face = SOLVENCY unit.
 2. Source `fill` — exact `wantAmount` of canonical inner.
