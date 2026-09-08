@@ -186,11 +186,12 @@ contract EpochHNestGateTest is Test {
         vm.prank(keeper);
         gate.allocateHype(0, 15 ether);
 
+        // Latest deposit was at t=1d, so the combined epoch claim unlocks at t=9d.
         vm.prank(alice);
         vm.expectRevert();
         gate.claim(0);
 
-        vm.warp(block.timestamp + 1 days + 1);
+        vm.warp(block.timestamp + 2 days + 1);
         vm.prank(alice);
         gate.claim(0);
         assertEq(hNest.balanceOf(alice), 150 ether);
