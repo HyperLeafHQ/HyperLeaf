@@ -272,7 +272,7 @@ Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche). Never A
 | Failure | BENQI rate lie; `requestUnlock` on the lockbox (forbidden). One cooldown per address — do not start it |
 | Auto-pause | inner supply ceiling; guardian |
 | Worst-case loss | min(depositCap, maxPerDay) on principal; 1% skim on converter |
-| Test | `testSavaxPooledAvaxRateSameMathAsCbeth`, `testRewardsSelectorRejectsBenqiUnlock` |
+| Test | `testSavaxPooledAvaxRateSameMathAsCbeth`, `testRewardsSelectorRejectsBenqiUnlock`. NextTestnetCatalog `ASSET=hsavax` (Fuji 43113) |
 
 Same math as hcbETH. Different 4-byte rate read. Not in this round's `TestnetCatalog`.
 
@@ -291,7 +291,7 @@ Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8
 | Failure | Aave USDC deficit slash; governance upgrades implementation at same proxy; `.v2` migration (pause mint, keep redeem of v1); RewardsController mis-set to cooldown/redeem |
 | Auto-pause | health on slash / inner supply ceiling; guardian pause mint if Aave announces v2 |
 | Worst-case loss | slash of locked stk (Umbrella max is `totalAssets - MIN_ASSETS_REMAINING`) + converter slippage on side rewards |
-| Test | cooldown/redeem selectors forbidden; donation waUSDC not treated as rate yield; slash lowers watermark; claimAllRewards does not move stk |
+| Test | cooldown/redeem selectors forbidden; `test/lz/LeafUmbrella.t.sol` claimAllRewards does not move stk; donation not yield; slash lowers watermark |
 
 Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner. Do **not** put it in this round's `TestnetCatalog`.
 

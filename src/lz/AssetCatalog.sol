@@ -269,6 +269,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("hstkwausdc") || k == keccak256("hstkwaUSDC")) {
+            return Listing(
+                Kind.Liquid,
+                "hstkwausdc",
+                "Hyperleaf stkwaEthUSDC.v1",
+                "hstkwaUSDC",
+                "stkwaUSDC",
+                1,
+                30101,
+                40161,
+                0,
+                0,
+                0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6,
+                1_000 ether,
+                true
+            );
+        }
         revert UnknownAsset();
     }
 
@@ -281,7 +298,7 @@ library AssetCatalog {
         return keccak256(bytes(id)) == keccak256("horder");
     }
 
-    function allIds() internal pure returns (string[13] memory ids) {
+    function allIds() internal pure returns (string[14] memory ids) {
         ids = [
             string("hkaito"),
             string("hxsquid"),
@@ -295,7 +312,8 @@ library AssetCatalog {
             string("hwsteth"),
             string("horder"),
             string("hgsoon"),
-            string("hswbera")
+            string("hswbera"),
+            string("hstkwausdc")
         ];
     }
 }

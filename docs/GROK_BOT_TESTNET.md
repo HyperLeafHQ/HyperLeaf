@@ -198,7 +198,7 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 ## Still not this pass
 
 - Mainnet inners, `SetSecurityStack`, WHYPE converter fills, multi-DEX/bridge converter routes
-- hKAITO / hVIRTUALMAX / hSKY / hsWBERA / **hstkwaUSDC** / **hsAVAX** (not this `ASSET` round)
+- hKAITO / hVIRTUALMAX / hSKY / hsWBERA (not this `ASSET` round)
 - NestVault / HNest / HevAdapter
 - LeafVirtualsLockbox / LeafOmnichainHolder / LeafCreate2
 - C1 `shareExit` / protocol redeem
@@ -206,29 +206,17 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 
 ---
 
-## Next testnet batch — hgSOON first (do not mix with §7 of this round)
+## Next testnet batch — hgSOON / hsAVAX / hstkwaUSDC (do not mix with §7 of this round)
 
-`TestnetCatalog.get("hgsoon")` still reverts. Use `ASSET=hgsoon` with the same deploy scripts — they go through `TestnetListings` → `NextTestnetCatalog`. Source **BSC testnet 97**, dest 998. Mock inner implements `convertToAssets`. Configure sets `ConvertToAssets` + `retainRateYield`. **No** `setRewardsSelector`. After `setRate` on the mock, `pullYield(inner, converter)` skims **1%**.
+`TestnetCatalog.get` still reverts for these ids. Use `ASSET=hgsoon|hsavax|hstkwausdc` — scripts go through `TestnetListings` → `NextTestnetCatalog`. Round-1 four ids stay locked.
 
-Copy-paste: `docs/GROK_BOT_RECEIPTS.md` section A.
+| ASSET | Source testnet | Mock | Configure |
+| --- | --- | --- | --- |
+| `hgsoon` | BSC 97 (eid 40102) | `convertToAssets` | ConvertToAssets + retain. No rewards selector |
+| `hsavax` | Fuji 43113 (eid 40106) | `getPooledAvaxByShares` | GetPooledAvaxByShares + retain. No rewards selector |
+| `hstkwausdc` | Sepolia 11155111 (eid 40161) | `convertToAssets` + MockRewardsController | ConvertToAssets + retain + `REWARDS_CONTROLLER` + selector `0xbb492bf5` |
 
-Then, still not script-unlocked: **hstkwaUSDC** / **hsAVAX** (need mocks). Do not pass those ids; they revert.
+Copy-paste: `docs/GROK_BOT_RECEIPTS.md`. Do **not** point `INNER_TOKEN` at mainnet. Do **not** add these to `TestnetCatalog`.
 
-Not in `TestnetCatalog`. Do not pass `ASSET=hstkwaUSDC` to current scripts; they will revert.
-
-Source: Ethereum (Sepolia mock). Inner = mock of `stkwaEthUSDC.v1` (ERC-4626 + slash). Rewards poke target = mock RewardsController, **not** inner.
-
-Must prove before it joins a catalog lock:
-
-1. `claimAllRewards([stk], lockbox)` credits side token; stk `totalLocked` unchanged
-2. `cooldown` / `redeem` / `withdraw` on inner revert (blacklist)
-3. rate up → pullYield inner = 1% surplus only (hcbETH path)
-4. slash / rate down → watermark down, pull 0
-5. donation of inner is not rate yield
-6. unwrap returns the **v1 receipt**; no v2 migrate in the lockbox
-7. a `.v2` address is a different listing — this adapter refuses it
-
-Hybrid of hAVNT (side claim, different target) + hcbETH (retainRateYield). L exit is the receipt. Protocol never starts Aave's 20-day cooldown.
-
-hsAVAX (same batch): `RateKind.GetPooledAvaxByShares` + `retainRateYield=true`. Mock inner must implement `getPooledAvaxByShares(uint256)`, not `exchangeRate()`. Forbidden: `requestUnlock` `0xc9d2ff9d`, `withdraw(uint256)` `0x2e1a7d4d`. Unwrap returns sAVAX. Do not call BENQI unlock from the lockbox. Source later is Avalanche / Fuji (`eid` 30106 / 40106); this round's scripts stay Base Sepolia mocks.
+`claimAllRewards` is **on the controller**, never on the StakeToken. `cooldown` / `requestUnlock` stay blacklisted. Unwrap is the receipt (gSOON / sAVAX / stk v1). Protocol never starts Aave cooldown or BENQI unlock.
 

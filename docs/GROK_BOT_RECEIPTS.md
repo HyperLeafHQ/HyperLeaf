@@ -1,21 +1,20 @@
-# Grok bot — hgSOON + hsWBERA testnet
+# Grok bot — next-batch L receipts (hgSOON / hsAVAX / hstkwaUSDC)
 
-Copy-paste after you have read `docs/SOLVENCY.md` (hgSOON, hsWBERA) and `test/lz/LeafReceiptOnly.t.sol`. **Do not deploy mainnet.** **Do not set `INNER_TOKEN`.** Scripts revert if the inner is the live gSOON / sWBERA.
+Copy-paste after `docs/SOLVENCY.md` and `test/lz/LeafRateYield.t.sol` / `test/lz/LeafUmbrella.t.sol`. **Do not deploy mainnet.** **Do not set `INNER_TOKEN`.** Scripts revert if the inner is the live token.
 
-`ASSET=hgsoon` is on `NextTestnetCatalog` / `TestnetListings`. Round-1 `TestnetCatalog.get("hgsoon")` still reverts. Same scripts as hxSQUID.
+Round-1 `TestnetCatalog.get` still reverts for these ids. `ASSET=…` goes through `TestnetListings` → `NextTestnetCatalog`.
 
-Source testnet is the **same family as mainnet**. Do not put Bera or BSC assets on Base Sepolia.
+Source testnet is the **same family as mainnet**. Do not put Fuji/Sepolia/BSC assets on Base Sepolia.
 
 | ASSET | Mainnet source | Testnet source | Dest |
 | --- | --- | --- | --- |
 | `hgsoon` | BSC 56 | **BSC testnet 97** (LZ eid 40102) | HyperEVM 998 |
-| `hswbera` | Berachain 80094 | **Bepolia 80069** (eid 40371 reserved) | HyperEVM 998 |
-
-**hsWBERA is blocked on testnet until LayerZero deploys EndpointV2 on Bepolia.** On 2026-09-08, `0x6EDC…` / `0x6F47…` / `0x1a44…` all have **empty code** on 80069. `A.endpoint(80069)` reverts. Unit tests still run. Do **not** substitute Base Sepolia.
+| `hsavax` | Avalanche 43114 | **Fuji 43113** (eid 40106) | HyperEVM 998 |
+| `hstkwausdc` | Ethereum 1 | **Sepolia 11155111** (eid 40161) | HyperEVM 998 |
 
 Skip `SetSecurityStack` on testnet. Same four keys as `docs/GROK_BOT_TESTNET.md`.
 
-Yield is **cbETH-class**: `setRateKind(ConvertToAssets)` + `setRetainRateYield(true)`. Anyone `pullYield(inner, converter)` after the mock rate rises — converter gets **1% of surplus**, ~99% stays. Wrap itself must **not** move surplus. Donation is not yield. Redeem remaining gSOON, not 1:1 after the skim. Never call vault unbond/cooldown on the inner.
+Rate listings: `retainRateYield`. Wrap/redeem settle the 1% first. `pullYield(inner, converter)` after `setRate` on the mock — converter gets **1% of surplus**. Donation is not yield. Never call vault unbond / cooldown / `requestUnlock` on the inner.
 
 ---
 
@@ -97,7 +96,52 @@ Harvest smoke: `cast send $INNER "setRate(uint256)" 1100000000000000000` then an
 
 ---
 
-## B. hsWBERA — Bepolia 80069 → 998 (blocked)
+## B. hsAVAX — Fuji 43113 → HyperEVM 998
+
+Same scripts, `ASSET=hsavax`. Mock is `getPooledAvaxByShares`. **No** `setRewardsSelector`. Never `requestUnlock`.
+
+```
+ASSET=hsavax OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
+forge script script/lz/DeployTestnetSource.s.sol:DeployTestnetSource \
+  --rpc-url fuji --broadcast --private-key $PRIVATE_KEY
+```
+
+Dest 998 `ASSET=hsavax`. Wire source `REMOTE_EID=40362`, dest `REMOTE_EID=40106`.
+
+```
+ASSET=hsavax SOURCE=$SOURCE OWNER=$OWNER HARVESTER=$HARVESTER CONVERTER=$CONVERTER \
+forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
+  --rpc-url fuji --broadcast --private-key $PRIVATE_KEY
+```
+
+Harvest: `cast send $INNER "setRate(uint256)" 1100000000000000000` then `pullYield`. Unwrap returns sAVAX mock, not AVAX.
+
+---
+
+## C. hstkwaUSDC — Sepolia 11155111 → HyperEVM 998
+
+Dual harvest. Log `MockRewardsController` from deploy → `REWARDS_CONTROLLER`.
+
+```
+ASSET=hstkwausdc OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
+forge script script/lz/DeployTestnetSource.s.sol:DeployTestnetSource \
+  --rpc-url sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
+Dest 998 `ASSET=hstkwausdc`. Wire dest `REMOTE_EID=40161`.
+
+```
+ASSET=hstkwausdc SOURCE=$SOURCE OWNER=$OWNER HARVESTER=$HARVESTER CONVERTER=$CONVERTER \
+REWARDS_CONTROLLER=$REWARDS_CONTROLLER \
+forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
+  --rpc-url sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
+Rate smoke: same `setRate` + `pullYield(inner)` 1%. Side-token smoke: seed the mock controller for the lockbox, `pokeRewards` — GHO lands in lockbox, stk balance unchanged, then `pullYield(gho, converter)`. Never `cooldown` on the mock inner.
+
+---
+
+## D. hsWBERA — Bepolia 80069 → 998 (blocked)
 
 Do not run until `eth_getCode` of the Bepolia EndpointV2 is non-empty. Then add `ENDPOINT_BEPOLIA` to `LayerZeroAddresses` and:
 

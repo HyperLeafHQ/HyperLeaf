@@ -246,11 +246,10 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uAVAX",
-      "note": "NEXT TESTNET BATCH with hstkwaUSDC. Same L/retainRateYield path as hcbETH; rate ABI is getPooledAvaxByShares not exchangeRate. Wrap sAVAX only, never AVAX, never start BENQI unlock. User who wants AVAX: unwrap hsAVAX to sAVAX, then BENQI or DEX. Source Avalanche 43114 LZ 30106. This round's TestnetCatalog stays four assets; mock on Base Sepolia or Fuji later.",
+      "note": "NEXT TESTNET BATCH (Fuji 43113, NextTestnetCatalog). Same L/retainRateYield path as hcbETH; rate ABI is getPooledAvaxByShares not exchangeRate. Wrap sAVAX only, never AVAX, never start BENQI unlock. User who wants AVAX: unwrap hsAVAX to sAVAX, then BENQI or DEX. Source Avalanche 43114 LZ 30106 / Fuji 40106. This round's TestnetCatalog stays four assets.",
       "testnet": {
-        "sourceChain": "base-sepolia",
+        "sourceChain": "fuji",
         "mockInner": true,
-        "fujiLater": true,
         "batch": "next"
       },
       "status": "next-testnet",
@@ -794,7 +793,7 @@
         "sideClaim": "RewardsController.claimAllRewards"
       },
       "claim": "poke RewardsController.claimAllRewards([stkwaEthUSDC.v1], lockbox) \u2014 pin 4-byte from the live controller ABI before deploy, never from a tx hash. Then pullYield side tokens. Rate surplus (aToken interest in convertToAssets) uses hcbETH retainRateYield 1% skim. Never poke inner. Never cooldown/redeem/withdraw on the StakeToken.",
-      "note": "NEXT TESTNET BATCH after hxSQUID/hAVNT/hcbETH/BLUAI4Y. Wrap ONLY stkwaEthUSDC.v1 at this address \u2014 pin address, not ticker. .v1 is a factory suffix; a .v2 is a new ERC-20 and a new listing. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks this round. Never start cooldown (20d, one record per address \u2014 lockbox would freeze everyone). Never auto-migrate to v2. Users exit by unwrapping the v1 receipt and migrating on Aave themselves. Slash lowers convertToAssets (watermark must drop). Dual harvest: rate (cbETH path) + RewardsController (QUID-like, different target). Not in TestnetCatalog this round.",
+      "note": "NEXT TESTNET BATCH (Sepolia 11155111, NextTestnetCatalog, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 at this address \u2014 pin address, not ticker. .v1 is a factory suffix; a .v2 is a new ERC-20 and a new listing. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks this round. Never start cooldown (20d, one record per address \u2014 lockbox would freeze everyone). Never auto-migrate to v2. Users exit by unwrapping the v1 receipt and migrating on Aave themselves. Slash lowers convertToAssets (watermark must drop). Dual harvest: rate (cbETH path) + RewardsController.claimAllRewards 0xbb492bf5 on 0x4655\u2026, never inner. Round-1 TestnetCatalog stays four assets.",
       "testnet": {
         "sourceChain": "sepolia",
         "mockInner": true,

@@ -20,6 +20,7 @@ library LayerZeroAddresses {
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
     uint32 internal constant EID_BSC_TESTNET = 40102;
     uint32 internal constant EID_AVALANCHE_FUJI = 40106;
+    uint32 internal constant EID_SEPOLIA = 40161;
 
     address internal constant ENDPOINT_BASE = 0x1a44076050125825900e736c501f859c50fE728c;
     address internal constant SEND_ULN_BASE = 0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2;
@@ -55,6 +56,8 @@ library LayerZeroAddresses {
         if (chainId == 84532) return ENDPOINT_BASE_SEPOLIA;
         if (chainId == 56) return ENDPOINT_BSC;
         if (chainId == 97) return ENDPOINT_BSC_TESTNET;
+        if (chainId == 43113) return ENDPOINT_BASE_SEPOLIA; // Fuji V2 endpoint, same CREATE2
+        if (chainId == 11155111) return ENDPOINT_BASE_SEPOLIA; // Sepolia V2 endpoint
         if (chainId == 42161 || chainId == 10) return ENDPOINT_BSC; // canonical V2, same as Base
         if (chainId == 80094) return ENDPOINT_BERA;
         if (chainId == 4663) return ENDPOINT_BERA; // Robinhood mainnet: same CREATE2 as Bera (LZ docs)

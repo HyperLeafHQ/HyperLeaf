@@ -35,9 +35,19 @@ contract ConfigureTestnetListing is Script {
             box.setRateKind(LeafYieldFee.RateKind.ExchangeRate);
             box.setRetainRateYield(true);
         }
-        if (keccak256(bytes(a.id)) == keccak256("hgsoon")) {
+        if (keccak256(bytes(a.id)) == keccak256("hgsoon") || keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hsavax")) {
+            box.setRateKind(LeafYieldFee.RateKind.GetPooledAvaxByShares);
+            box.setRetainRateYield(true);
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
+            address controller = vm.envAddress("REWARDS_CONTROLLER");
+            require(controller != address(0) && controller != source, "umbrella controller");
+            box.setRewardsTarget(controller);
+            box.setRewardsSelector(bytes4(0xbb492bf5));
         }
         vm.stopBroadcast();
 

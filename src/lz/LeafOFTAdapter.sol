@@ -95,6 +95,11 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRewardsSelector(s);
     }
 
+    function setRewardsTarget(address t) external onlyOwner {
+        if (totalLocked > 0) revert ConfigFrozen();
+        _setRewardsTarget(t);
+    }
+
     function setRateKind(RateKind kind) external onlyOwner {
         if (totalLocked > 0) revert ConfigFrozen();
         _setRateKind(innerToken, kind);

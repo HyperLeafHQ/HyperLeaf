@@ -6,6 +6,8 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockClaimInner} from "test/mocks/MockClaimInner.sol";
 import {MockRateERC20} from "test/mocks/MockRateERC20.sol";
 import {MockConvertERC20} from "test/mocks/MockConvertERC20.sol";
+import {MockPooledAvaxERC20} from "test/mocks/MockPooledAvaxERC20.sol";
+import {MockRewardsController} from "test/mocks/MockRewardsController.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
@@ -18,7 +20,7 @@ import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
 /// @notice Source-chain half of a testnet wrap.
 ///         ASSET=hxsquid|havnt|hcbeth|bluai4y  (this round)
-///         ASSET=hgsoon (next: BSC testnet 97, same L adapter, no claim selector)
+///         ASSET=hgsoon|hsavax|hstkwausdc (next: TestnetListings → NextTestnetCatalog)
 ///         INNER_TOKEN unset → deploys a mintable mock (always, on testnet).
 contract DeployTestnetSource is Script {
     function run() external {
@@ -36,6 +38,12 @@ contract DeployTestnetSource is Script {
         }
         if (keccak256(bytes(id)) == keccak256("bluai4y") || keccak256(bytes(id)) == keccak256("hgsoon")) {
             require(block.chainid == 97, "hgsoon/bluai4y source is BSC testnet 97");
+        }
+        if (keccak256(bytes(id)) == keccak256("hsavax")) {
+            require(block.chainid == 43113, "hsavax source is Fuji 43113, not Base Sepolia");
+        }
+        if (keccak256(bytes(id)) == keccak256("hstkwausdc") || keccak256(bytes(id)) == keccak256("hstkwaUSDC")) {
+            require(block.chainid == 11155111, "hstkwausdc source is Sepolia 11155111");
         }
         if (keccak256(bytes(id)) == keccak256("hswbera")) {
             require(block.chainid == 80069, "hswbera testnet source is Bepolia 80069, not Base Sepolia");
@@ -58,8 +66,18 @@ contract DeployTestnetSource is Script {
                 MockRateERC20 mock = new MockRateERC20(a.innerSymbol, a.innerSymbol);
                 mock.mint(owner, 1_000_000 ether);
                 inner = address(mock);
-            } else if (keccak256(bytes(id)) == keccak256("hgsoon")) {
+            } else if (keccak256(bytes(id)) == keccak256("hgsoon") || keccak256(bytes(id)) == keccak256("hstkwausdc")) {
                 MockConvertERC20 mock = new MockConvertERC20(a.innerSymbol, a.innerSymbol);
+                mock.mint(owner, 1_000_000 ether);
+                inner = address(mock);
+                if (keccak256(bytes(id)) == keccak256("hstkwausdc")) {
+                    MockERC20 side = new MockERC20("GHO", "GHO");
+                    MockRewardsController ctl = new MockRewardsController(side);
+                    console2.log("MockSideToken", address(side));
+                    console2.log("MockRewardsController", address(ctl));
+                }
+            } else if (keccak256(bytes(id)) == keccak256("hsavax")) {
+                MockPooledAvaxERC20 mock = new MockPooledAvaxERC20(a.innerSymbol, a.innerSymbol);
                 mock.mint(owner, 1_000_000 ether);
                 inner = address(mock);
             } else {
@@ -111,7 +129,7 @@ contract DeployTestnetSource is Script {
     }
 
     function _isTestnet(uint256 chainId) internal pure returns (bool) {
-        return chainId == 84532 || chainId == 998 || chainId == 97 || chainId == 40161 || chainId == 43113
+        return chainId == 84532 || chainId == 998 || chainId == 97 || chainId == 43113 || chainId == 11155111
             || chainId == 80069;
     }
 }

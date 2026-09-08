@@ -6,6 +6,8 @@ Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
 
 **Rate-bearing L (hcbETH, hgSOON, hsAVAX, later same class):** `setRateKind` + `setRetainRateYield(true)`. Wrap and redeem **settle the 1% first** (flush to converter if convert is on; book only if halted — mint/redeem stay live). Harvest pulls **1% of** `(lastAccounted * (rate - lastRate)) / rate`. **99% stays in the lockbox.** New deposits mint at post-fee NAV, so they are not taxed for a move they missed. Redeemers cannot skip the 1% by leaving before a keeper harvest. Do not swap inside wrap. Donations are not yield.
 
+**Umbrella L (hstkwaUSDC):** same 1% rate skim via `convertToAssets` **plus** `pokeRewards` → `RewardsController.claimAllRewards([inner], lockbox)` (`0xbb492bf5`). Target is the controller, never the StakeToken. Never `cooldown`.
+
 xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). **hgSOON** uses `ConvertToAssets` + `retainRateYield` (cbETH-class 1% skim). hsWBERA / Morpho stay yield-in-share until their row opts in.
 
 

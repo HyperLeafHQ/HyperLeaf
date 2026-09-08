@@ -50,7 +50,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[13] memory ids = AssetCatalog.allIds();
+        string[14] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
@@ -117,6 +117,10 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hswbera").sourceEidMain, 30362);
         assertEq(AssetCatalog.get("hswbera").sourceEidTest, 40371);
         assertEq(AssetCatalog.get("hswbera").lockSeconds, 0);
+        assertEq(AssetCatalog.get("hstkwausdc").innerMainnet, 0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6);
+        assertEq(AssetCatalog.get("hstkwaUSDC").id, "hstkwausdc");
+        assertEq(AssetCatalog.get("hstkwausdc").sourceChainIdMain, 1);
+        assertEq(AssetCatalog.get("hstkwausdc").sourceEidTest, 40161);
     }
 
     function testRound1CatalogStillLocksHgsoon() public {
@@ -124,6 +128,8 @@ contract AssetCatalogTest is Test {
         this._round1("hgsoon");
         vm.expectRevert(TestnetCatalog.NotThisRound.selector);
         this._round1("hsavax");
+        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
+        this._round1("hstkwausdc");
         AssetCatalog.Listing memory a = TestnetCatalog.get("hxsquid");
         assertEq(a.id, "hxsquid");
     }
@@ -135,9 +141,11 @@ contract AssetCatalogTest is Test {
         assertEq(uint8(g.kind), uint8(AssetCatalog.Kind.Liquid));
         vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
         this._next("hxsquid");
-        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
-        this._next("hsavax");
+        assertEq(NextTestnetCatalog.get("hsavax").sourceEidTest, 40106);
+        assertEq(NextTestnetCatalog.get("hstkwausdc").innerMainnet, 0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6);
         assertEq(TestnetListings.get("hgsoon").id, "hgsoon");
+        assertEq(TestnetListings.get("hsavax").id, "hsavax");
+        assertEq(TestnetListings.get("hstkwausdc").id, "hstkwausdc");
         assertEq(TestnetListings.get("bluai4y").id, "bluai4y");
     }
 
@@ -152,6 +160,8 @@ contract AssetCatalogTest is Test {
     function testBepoliaHasNoLzEndpoint() public {
         vm.expectRevert(bytes("lz: Bepolia EndpointV2 not deployed"));
         this._endpoint(80069);
+        assertEq(this._endpoint(43113), A.ENDPOINT_BASE_SEPOLIA);
+        assertEq(this._endpoint(11155111), A.ENDPOINT_BASE_SEPOLIA);
     }
 
     function _endpoint(uint256 chainId) external pure returns (address) {

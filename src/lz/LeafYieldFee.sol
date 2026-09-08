@@ -19,6 +19,10 @@ abstract contract LeafYieldFee {
     address public converter;
     /// @dev e.g. xSQUID `claimRewards(address,uint256)` = 0x9a99b4f0. Forced args: (this, max).
     bytes4 public rewardsSelector;
+    /// @dev Umbrella: RewardsController. Zero = poke inner (Squid/Avantis).
+    address public rewardsTarget;
+    /// @dev RewardsController.claimAllRewards(address[],address)
+    bytes4 public constant CLAIM_ALL_REWARDS = 0xbb492bf5;
 
     /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`,
     ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`). Surplus is taken from
@@ -44,6 +48,7 @@ abstract contract LeafYieldFee {
     event HarvesterSet(address indexed harvester);
     event ConverterSet(address indexed converter);
     event RewardsSelectorSet(bytes4 selector);
+    event RewardsTargetSet(address indexed target);
     event RateFeedSet(RateKind kind, uint256 rate);
     event RateYieldAccrued(uint256 added, uint256 accrued, uint256 rate);
     event RateYieldPulled(address indexed to, uint256 surplus, uint256 rate);
@@ -57,6 +62,7 @@ abstract contract LeafYieldFee {
     error BadConverter();
     error ClaimFailed();
     error ForbiddenRewardsSelector();
+    error BadRewardsTarget();
     error BadRateFeed();
     error FeeRecipientZero();
     error ConvertHalted();
@@ -137,15 +143,31 @@ abstract contract LeafYieldFee {
             || s == bytes4(0x2e1a7d4d) // withdraw(uint256) — BENQI claim AVAX / SOON 90d unlock
             || s == bytes4(0x1338736f) // lock(uint256,uint256) — SOON occupancy 0x6601, not gSOON vault
             || s == bytes4(0x6e553f65) // deposit(uint256,address) — ERC-4626; poke arity matches
-            || s == bytes4(0x94bf804d); // mint(uint256,address)
+            || s == bytes4(0x94bf804d) // mint(uint256,address)
+            || s == bytes4(0x250201db); // cooldownOnBehalfOf(address) — Umbrella StakeToken
     }
 
-    /// @dev Claims as this lockbox. Selector must be rewards, not redeem — same
-    ///      arity as Squid redeem, different 4 bytes (0x9a99b4f0 vs 0x1e9a6950).
+    function _setRewardsTarget(address t) internal {
+        rewardsTarget = t;
+        emit RewardsTargetSet(t);
+    }
+
+    /// @dev Squid/Avantis: (this, max) on inner.
+    ///      Umbrella: claimAllRewards([inner], this) on RewardsController — never inner.
     function _pokeRewards(address inner) internal {
         bytes4 s = rewardsSelector;
         if (s == bytes4(0) || inner == address(0)) revert ClaimFailed();
         if (_forbiddenRewardsSelector(s)) revert ForbiddenRewardsSelector();
+        if (s == CLAIM_ALL_REWARDS) {
+            address t = rewardsTarget;
+            if (t == address(0) || t == inner) revert BadRewardsTarget();
+            address[] memory assets = new address[](1);
+            assets[0] = inner;
+            (bool claimed,) = t.call{value: msg.value}(abi.encodeWithSelector(s, assets, address(this)));
+            if (!claimed) revert ClaimFailed();
+            return;
+        }
+        if (rewardsTarget != address(0)) revert BadRewardsTarget();
         (bool ok,) = inner.call{value: msg.value}(abi.encodeWithSelector(s, address(this), type(uint256).max));
         if (!ok) revert ClaimFailed();
     }

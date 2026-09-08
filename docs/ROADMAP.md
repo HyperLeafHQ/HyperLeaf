@@ -45,7 +45,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 ## Phases
 
 **A** — testnet hxSQUID / hAVNT then hcbETH, then mock BLUAI4Y (`GROK_BOT_TESTNET.md`). Do not add assets to `TestnetCatalog` this round.
-**A2** — next testnet: **hgSOON** (BSC 97, cbETH-class 1% skim via `convertToAssets`) then **hstkwaUSDC** + **hsAVAX**. Do not add any of them to this round's four-id `TestnetCatalog`. hsteakUSDC later — Umbrella already covers USDC.
+**A2** — next testnet: **hgSOON** (BSC 97) + **hsAVAX** (Fuji 43113) + **hstkwaUSDC** (Sepolia). `NextTestnetCatalog` / `TestnetListings`. Do not add them to this round's four-id `TestnetCatalog`. hsteakUSDC later — Umbrella already covers USDC.
 **A′** — do **not** seed a HyperEVM AMM to fake spot. C1 / queued listings get a peer **claim board** later (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **B** — mainnet hxSQUID, tiny cap.
 **C** — hcbETH.
