@@ -147,24 +147,26 @@ contract EpochHNestGateTest is Test {
         vm.prank(alice);
         gate.deposit(100 ether);
 
+        // Epoch 0 ends one day later. Its HYPE can be finalized after the weekly cycle,
+        // but Alice's hNEST cannot circulate before a full 8 days from her deposit.
         vm.warp(block.timestamp + 1 days + 1);
         vm.prank(keeper);
         gate.rollEpoch();
         vm.prank(keeper);
         gate.allocateHype(0, 10 ether);
 
-        // Deposit was made near the end of the 7-day epoch; it must still remain
-        // locked for a full 8 days from the deposit, not merely until epoch end+1d.
+        // Deposit at t=6d => unlock at t=14d.
+        vm.warp(1 days + 1);
         vm.prank(alice);
         vm.expectRevert();
         gate.claim(0);
 
-        vm.warp(block.timestamp + 6 days - 1);
+        vm.warp(6 days - 2);
         vm.prank(alice);
         vm.expectRevert();
         gate.claim(0);
 
-        vm.warp(block.timestamp + 1 days + 1);
+        vm.warp(2);
         vm.prank(alice);
         gate.claim(0);
         assertEq(hNest.balanceOf(alice), 100 ether);
