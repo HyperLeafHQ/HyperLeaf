@@ -39,13 +39,31 @@ Face value for any 转让 board is that ticker’s SOLVENCY accounting unit (rem
 
 Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf**：想退出的人把 Leaf 挂进托管，下一个本来要存入的人用底仓买走，协议不铸新的 Leaf、不成交对手方。
 
-挂单确认必须写（整段，不要拆掉）：
+挂单确认（后两段永远写。第一段按 listing 选）：
+
+**有 Rewarder 的票（hxSQUID 类、以及会摊 WHYPE 的 Closed OFT）：**
 
 > 挂进转让板之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。挂单价格按挂单时锁定，不会跟着账面价值变。折价是有人接盘的价格，不是底仓没了。
 
+**hNEST / 没有 Rewarder 的票：不要写「挂单期间 HYPE 归协议」。改写：**
+
+> 这条没有 HyperLeaf 的 HYPE 领取。挂单只是把票交给托管，没人买可以取消，不另扣费。挂单价格按挂单时锁定，不会跟着账面价值变。折价是有人接盘的价格，不是底仓没了。
+
+然后两段共用：
+
 > 出货有两条路。我们这条：挂单等下一个本来要存入的人来买，操作简单。你也可以自己去 DEX 做**单边 LP**（只放 Leaf、自己定价格），那是给会做深度 DeFi 的人用的，我们不代操作。
 
-> 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** HYPE 收益，也 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励 / buyer incentive，不是协议抽成）。相当于让出 1% 换更简单的撮合。
+> 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励 / buyer incentive，不是协议抽成）。相当于让出 1% 换更简单的撮合。
+
+成交状态（Indexer / UI 必须分开）：
+
+| 链上看到 | 用户看到 |
+| -------- | -------- |
+| dest `LeafReleased`，源链还是 Escrowed | 票已交给买方，等源链付款。不要写已完成。 |
+| 源链 `Paid` | 成交完成。卖方 99%，买方 1%。 |
+| `fillLocal` 的 `Filled` | 同链，这一笔已经完成。 |
+
+ACK 丢了：重试，不铸新票。买方中止要等三天。
 
 C1（没有官方赎回）和 hNEST（有窗口、只是提前走）**不要做成同一个「卖出现货」入口**。C1：这是协议里唯一的退出。hNEST：官方窗口仍在，这是提前找人接。
 
@@ -172,7 +190,7 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Always | 跨链费是 LayerZero 收的最低标准，付给 LZ，不是付给 HyperLeaf。协议不从中获利。送达不是即时到账。 |
 | Caps / pause live | 有上限，可暂停。 |
 | Sell-only ticker | 可以长期低于账面价。那是流动性价格，除非底仓没了。 |
-| Claim board (if it exists) | 转让，不是现货，不是债。没人买就不成交。协议不接盘。挂单期间 HYPE 归协议。 |
+| Claim board (if it exists) | 转让，不是现货，不是债。没人买就不成交。协议不接盘。1% 给买方，不是协议抽成。有 Rewarder 的票：挂单期间 HYPE 归协议。hNEST：不要写这条。跨链成交看源链 Paid，不要看目的链放票。 |
 | Instant-receipt ticker | 赎回的是收据，不是现货。官方解押要你自己去点。 |
 | Window ticker (hNEST, queued) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
 | Redeem confirm (every listing that burns) | 赎回会烧掉这份 Leaf，不能取消。 |

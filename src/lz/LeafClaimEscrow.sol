@@ -15,13 +15,14 @@ interface IClaimHype {
 /// @title LeafClaimEscrow
 /// @notice Exit board. Protocol is never the counterparty. No mint. Execution
 ///         fee is 0. 1% of ask is a **buyer incentive**. Occupancy HYPE while
-///         listed → `feeRecipient`. Cancel / expire returns Leaf; no cancel fee.
+///         listed → `feeRecipient` **only if** this listing's Rewarder is set.
+///         hNEST has no Rewarder; do not invent occupancy HYPE for it.
 ///
-/// Filled(id) means all of:
-///   buyer got exact `leafAmount`
-///   seller got exact `wantToken` × 99%
-///   buyer got exact `wantToken` × 1%
-///   no mint, no lockbox change, no second claim, no other token
+/// Settlement events (do not treat dest `Status.Filled` as cash settled):
+///   `fillLocal` — atomic. Emits `Filled` = Leaf + 99/1 want moved.
+///   cross-chain — dest emits `LeafReleased` when the Leaf leaves escrow.
+///                 source emits `Paid` when 99% seller / 1% buyer actually move.
+///                 UI completion signal is `Paid`, not dest `Filled`.
 /// Ask is frozen at `list`. Expiry ≤ 90 days. No matching engine.
 ///
 /// Allowlist (owner `setMarket`):
@@ -83,6 +84,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     event Cancelled(uint256 indexed id);
     event Expired(uint256 indexed id);
     event Filled(uint256 indexed id, address indexed buyer, uint256 toSeller, uint256 buyerReward);
+    /// @dev Dest Leaf left escrow. Source `Paid` is still pending on LZ.
+    event LeafReleased(uint256 indexed id, address indexed buyer, uint256 leafAmount);
     event OccupancyClaimed(bytes32 indexed rewardId, uint256 amount);
     event Aborted(uint256 indexed id);
     event AckRetried(uint256 indexed id);
@@ -247,8 +250,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
             return;
         }
         _payoutLeaf(o, buyer);
-        (uint256 toSeller, uint256 reward) = _split(o.wantAmount);
-        emit Filled(id, buyer, toSeller, reward);
+        emit LeafReleased(id, buyer, o.leafAmount);
         _lzSend(origin.srcEid, abi.encode(OP_ACK, id), address(this));
     }
 

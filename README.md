@@ -28,7 +28,7 @@ You already hold something that earns — xSQUID, cbETH, a four-year farm, veNES
 | A book you can sell into | The protocol taking lock or borrow risk for you |
 | An exit board for claims that cannot unwrap today | An AMM, a treasury bid, or a promised 1:1 dump |
 
-Protocol take is **1% of staking yield only**. You still pay gas and LayerZero. There is no fee to lock or unlock.
+Protocol take is **1% of staking yield only**. You still pay gas and LayerZero. There is no fee to lock or unlock. The exit board's 1% is a **buyer incentive from the seller's ask** — it is not HyperLeaf revenue.
 
 **Four words that are not synonyms**
 
@@ -41,7 +41,7 @@ Protocol take is **1% of staking yield only**. You still pay gas and LayerZero. 
 
 If the source cannot unstake freely, the ticker says so (`BLUAI4Y`, `BONK12M`). A discount to NAV on those names is a **liquidity price**, not a depeg — unless the backing is gone.
 
-Early books will be thin. HyperLeaf will **not** seed an AMM or buy the other side. C1 (no protocol redeem) and long-window names like hNEST use a **peer-to-peer exit board**: you list a Leaf at a fixed ask, someone who was going to deposit inner buys it, 1% of the ask is a **buyer incentive** (not a protocol fee). No bid, no trade. Occupancy HYPE while listed goes to the protocol. Price does not follow NAV after you list.
+Early books will be thin. HyperLeaf will **not** seed an AMM or buy the other side. C1 (no protocol redeem) and long-window names like hNEST use a **peer-to-peer exit board**: you list a Leaf at a fixed ask, someone who was going to deposit inner buys it, 1% of the ask is a **buyer incentive** (not a protocol fee). No bid, no trade. Occupancy HYPE while listed goes to the protocol **only on Rewarder tickers** (not hNEST). Price does not follow NAV after you list. Cross-chain fill is done when source emits `Paid`, not when dest releases the Leaf.
 
 C1 is the only protocol exit. hNEST on the board is an *early* exit before the official window — do not mix the two in copy.
 

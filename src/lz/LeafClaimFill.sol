@@ -55,6 +55,7 @@ contract LeafClaimFill is LeafClaimPeer, ReentrancyGuard {
     event InnerSet(address indexed wantToken, bool allowed);
     event ReturnNativeSet(uint128 value);
     event Escrowed(uint256 indexed id, address indexed buyer, uint256 wantAmount);
+    /// @dev User-facing completion for the LZ path. Dest already emitted LeafReleased.
     event Paid(uint256 indexed id, uint256 toSeller, uint256 buyerReward);
     event Refunded(uint256 indexed id, address indexed buyer, uint256 amount);
     event Aborting(uint256 indexed id);

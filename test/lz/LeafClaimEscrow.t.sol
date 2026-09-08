@@ -235,15 +235,23 @@ contract LeafClaimEscrowTest is PegReady {
         ILayerZeroEndpointV2.Origin memory oFill = ILayerZeroEndpointV2.Origin({
             srcEid: SRC, sender: bytes32(uint256(uint160(address(filler)))), nonce: 1
         });
+        vm.expectEmit(true, true, false, true, address(escrow));
+        emit LeafClaimEscrow.LeafReleased(id, bob, 100e18);
         vm.prank(address(epDst));
         escrow.lzReceive{value: 0.01 ether}(oFill, bytes32(uint256(1)), fillMsg, address(0), "");
         assertEq(oft.balanceOf(bob), 100e18);
         assertEq(oft.totalSupply(), supply);
+        assertEq(bluai.balanceOf(alice), 0);
+        assertEq(bluai.balanceOf(address(filler)), 70e18);
+        (,,,,,, LeafClaimFill.FillStatus srcSt) = filler.fills(id);
+        assertEq(uint8(srcSt), uint8(LeafClaimFill.FillStatus.Escrowed));
 
         bytes memory ack = abi.encode(uint8(2), id);
         ILayerZeroEndpointV2.Origin memory oAck = ILayerZeroEndpointV2.Origin({
             srcEid: DST, sender: bytes32(uint256(uint160(address(escrow)))), nonce: 1
         });
+        vm.expectEmit(true, false, false, true, address(filler));
+        emit LeafClaimFill.Paid(id, 69.3e18, 0.7e18);
         vm.prank(address(epSrc));
         filler.lzReceive(oAck, bytes32(uint256(2)), ack, address(0), "");
         assertEq(bluai.balanceOf(alice), 69.3e18);

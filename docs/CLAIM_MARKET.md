@@ -9,8 +9,17 @@ that id. No RFQ, no oracle, no keeper matching.
 Three things the contracts must keep:
 
 1. **Protocol never bids.** `OPEN → FILLED | CANCELLED | EXPIRED`. No fill, no trade.
-2. **The order is an unambiguous swap.** `Filled(id)` means buyer got exact `leafAmount`, seller got exact `wantToken × 99%`, buyer got exact `wantToken × 1%` (buyer incentive, not a protocol fee). No mint, no lockbox change, no second claim, no other token.
-3. **Ask is frozen at `list`.** Expiry ≤ 90 days. Occupancy HYPE while listed → protocol. Seller keeps already-accrued HYPE.
+2. **The order is an unambiguous swap.** After **settlement**: buyer got exact `leafAmount`, seller got exact `wantToken × 99%`, buyer got exact `wantToken × 1%` (buyer incentive from the ask, **not** HyperLeaf revenue). No mint, no lockbox change, no second claim, no other token.
+3. **Ask is frozen at `list`.** Expiry ≤ 90 days. Occupancy HYPE while listed → protocol **only if that listing uses `LeafHypeRewarder`**. hNEST does not. Seller keeps already-accrued HYPE on Rewarder tickers.
+
+**Events — do not treat dest `Filled` status as cash settled.**
+
+| Path | Leaf left escrow | Cash 99/1 moved | User-facing “成交” |
+| ---- | ---------------- | --------------- | ------------------ |
+| `fillLocal` (hNEST / same chain) | same tx | same tx | `Filled` |
+| Cross-chain C1 | dest `LeafReleased` | source `Paid` (after ACK) | **`Paid`**, not dest `LeafReleased` |
+
+If ACK is late: dest already gave the buyer the Leaf; seller still waits. Show **票已交给买方，等源链付款**. `retryAck`. Do not show 已完成.
 
 C1 is the **only** protocol exit. hNEST on this board is an *early* exit before the official window — different product, same contracts, `fillLocal`. Do not market them as the same “spot sell”.
 
