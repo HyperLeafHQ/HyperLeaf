@@ -39,11 +39,15 @@ Face value for any 转让 board is that ticker’s SOLVENCY accounting unit (rem
 
 Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf**：想退出的人把 Leaf 挂进托管，下一个本来要存入的人用底仓买走，协议不铸新的 Leaf、不成交对手方。
 
-挂单确认必须写：
+挂单确认必须写（整段，不要拆掉）：
 
-> 挂进转让板之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。折价是有人接盘的价格，不是底仓没了。成交价里 1% 是买方奖励，不是协议手续费。
+> 挂进转让板之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。折价是有人接盘的价格，不是底仓没了。
 
-Copy: 没人出价就不成交。协议不接盘。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票 v1 不上板。Details: `docs/CLAIM_MARKET.md`.
+> 出货有两条路。我们这条：挂单等下一个本来要存入的人来买，操作简单。你也可以自己去 DEX 做**单边 LP**（只放 Leaf、自己定价格），那是给会做深度 DeFi 的人用的，我们不代操作。
+
+> 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** HYPE 收益，也 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励，不是协议抽成）。相当于让出 1% 换更简单的撮合。
+
+Copy: 没人出价就不成交。协议不接盘。Not 债务, not 借贷, not 官方收单. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
 
 
 **One line that must survive every rewrite:**
@@ -59,7 +63,7 @@ English:
 | GitHub | User-facing badge | How-to-exit (detail) |
 | ------ | ----------------- | -------------------- |
 | L | 烧掉就能拿回 | 烧掉 Leaf，马上拿回原来那份收据。想变现货，自己去官方解押。 |
-| C1 | 只能卖掉 | 协议不赎回。想出去，在 HyperEVM 卖掉。低于账面价是有人接盘的价格，不是底仓没了。 |
+| C1 | 只能卖掉 | 协议不赎回。可以挂转让板（简单，成交扣 1% 给买方），或自己去 DEX 单边 LP（有交易费、没 HYPE）。低于账面价是有人接盘的价格，不是底仓没了。 |
 | C2 | 烧掉后等几天 | 烧掉 Leaf，等窗口，再去源链领。金库不会因为排队而亏净值。 |
 | hNEST | 按窗口取出 | 按 Nest 自己的窗口拿回 NEST，大约六个月，不是随时 1:1。也可以把 hNEST 挂到转让板，用折价提前走（成交才走，协议不接盘）。 |
 | blocked / parked | 暂不做 | Do not offer a deposit. Say why in one sentence from ROADMAP. |

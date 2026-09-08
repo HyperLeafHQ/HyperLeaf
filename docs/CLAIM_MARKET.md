@@ -42,8 +42,9 @@ fees, not HyperLeaf HYPE. That is accepted.
    standing discount is information, not a bug, and not a reason to
    print protocol-owned inventory.
 3. **The sold object is the Leaf (or a C2 ticket), already transferable.**
-   The board is matching, not a new claim token. Do not wrap a second
-   “claim receipt” on top of hAsset.
+   The board is matching, not a new claim token. DEX one-sided LP is the
+   advanced DIY path (fees, no HYPE). The board is the simple path (no
+   fees, no HYPE, 1% of ask to the buyer). Do not wrap a second receipt.
 
 ## What we are not building in this commit
 

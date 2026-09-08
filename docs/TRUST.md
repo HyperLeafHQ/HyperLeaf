@@ -28,6 +28,25 @@ hKAITO → totalLocked sKAITO in the lockbox → that ERC-20 → its issuer
 
 If any link is unknown, do not mint.
 
+## Claim board vs mint ledger
+
+The wrap path is the only mint. `LeafClaimEscrow` / `LeafClaimFill` **must not**
+raise `totalLocked`, dest `totalSupply`, or tickets.
+
+```
+list   = ERC20 transfer of already-minted Leaf into escrow
+fill   = inner moves seller ← buyer; Leaf moves escrow → buyer
+cancel = Leaf back to seller
+```
+
+Fill is a wrap *redirect*, not a wrap. Inner paid on fill **never** enters the
+lockbox. A 70 BLUAI fill against 100 Leaf does not mean 70 new backing.
+
+Tests: `testFillDoesNotTouchLockbox`, `testFillLocalBuyerRewardNoMint`,
+`testLzWrongAskRefunds`. If a fill mints or bumps `totalLocked`, the board is
+broken — pause it, do not “fix” by minting the other side.
+
+
 Address-keyed externals (hORDER): CREATE2 same lockbox on Arb and Base is **identity**, not a shared balance. Solvency is the foreign ledger’s stake for that address (`ledgerPrincipal`), never `balanceOf(lockbox)` after the token has left.
 
 ## Health

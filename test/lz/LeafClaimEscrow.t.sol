@@ -128,6 +128,33 @@ contract LeafClaimEscrowTest is PegReady {
         assertEq(uint8(st), uint8(LeafClaimEscrow.Status.Filled));
     }
 
+    function testFillDoesNotTouchLockbox() public {
+        _mintAlice(100e18);
+        assertEq(adapter.totalLocked(), 100e18);
+        uint256 supply = oft.totalSupply();
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(escrow), 70e18);
+        escrow.fillLocal(id);
+        vm.stopPrank();
+        assertEq(adapter.totalLocked(), 100e18);
+        assertEq(oft.totalSupply(), supply);
+        assertEq(bluai.balanceOf(address(adapter)), 100e18);
+    }
+
+    function testCannotFillTwice() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 140e18);
+        vm.startPrank(bob);
+        bluai.approve(address(escrow), 140e18);
+        escrow.fillLocal(id);
+        vm.expectRevert(LeafClaimEscrow.NotOpen.selector);
+        escrow.fillLocal(id);
+        vm.stopPrank();
+    }
+
     function testCancelReturnsLeafNoFee() public {
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
