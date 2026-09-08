@@ -17,25 +17,11 @@ abstract contract LeafYieldFee {
 
     bool public convertYieldToHype;
     address public harvester;
-    /// @dev pullYield destination. Harvester cannot redirect surplus to self.
     address public converter;
-    /// @dev e.g. xSQUID `claimRewards(address,uint256)` = 0x9a99b4f0. Forced args: (this, max).
     bytes4 public rewardsSelector;
-    /// @dev Umbrella: RewardsController. Zero = poke inner (Squid/Avantis).
     address public rewardsTarget;
-    /// @dev RewardsController.claimAllRewards(address[],address)
     bytes4 public constant CLAIM_ALL_REWARDS = 0xbb492bf5;
 
-    /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`,
-    ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`).
-    ///
-    ///      Rate yield is accounted in two units:
-    ///      - lastAccounted / accruedRateYield remain inner-token units for cash accounting;
-    ///      - rateCostBasis is normalized economic value at the asset's 1e18 rate scale.
-    ///
-    ///      Keeping an economic cost basis instead of moving the rate watermark downward is
-    ///      what makes `1.00 -> 0.90 -> 1.00` a zero-yield recovery while also preventing
-    ///      deposits made during the drawdown from inheriting the old loss.
     enum RateKind {
         None,
         ExchangeRate,
@@ -47,15 +33,9 @@ abstract contract LeafYieldFee {
     RateKind public rateKind;
     /// @dev Last observed feed rate. Used for jump detection/telemetry, not as the economic HWM.
     uint256 public lastRate;
-    /// @dev Identified rate yield, not yet pulled. Not principal. Not a donation.
     uint256 public accruedRateYield;
-    /// @dev true = wstETH-style: 99% of rate surplus stays in the box (NAV in inner).
-    ///      Only 1% is pulled to the converter (protocol fee -> HYPE).
-    ///      false = sell the whole surplus to WHYPE and split 99/1 at notify.
     bool public retainRateYield;
-    /// @dev Inner wei -> dest shares. 1 for 18-dec. 1e10 for LBTC 8-dec.
     uint256 public shareScale;
-    /// @dev 0 = off. Else mint stops if getRate jumps more than this in one accrue.
     uint16 public maxRateJumpBps;
     bool public rateJumped;
 
@@ -63,7 +43,6 @@ abstract contract LeafYieldFee {
     ///      Stored in the feed's normalized underlying-value units.
     uint256 public rateCostBasis;
     /// @dev Snapshot of total destination shares used by pending-rate-yield views.
-    ///      Derived contracts must sync this after total share changes.
     uint256 public rateReferenceShares;
 
     event ConvertModeSet(bool enabled);
@@ -91,7 +70,6 @@ abstract contract LeafYieldFee {
     error BadRateFeed();
     error FeeRecipientZero();
     error ConvertHalted();
-
     error RateJumpErr();
 
     function _initFee(address recipient) internal {
@@ -138,7 +116,6 @@ abstract contract LeafYieldFee {
         if (!convertYieldToHype) revert ConvertHalted();
     }
 
-    /// @notice Only the converter contract. Owner uses `setConvertYieldToHype(false)`.
     function haltConvert() external {
         if (msg.sender != converter) revert BadConverter();
         _setConvertYieldToHype(false);
@@ -150,48 +127,43 @@ abstract contract LeafYieldFee {
         emit RewardsSelectorSet(s);
     }
 
-    /// @dev xSQUID / stkAVNT `claimRewards(address,uint256)` = 0x9a99b4f0.
-    ///      Same arity as Squid/Avantis `redeem(address,uint256)` 0x1e9a6950.
-    ///      Avantis `claimRewardsAndRedeem` selector is 0xeab52318 (burns stkAVNT).
-    ///      Tx 0x24398d72 is that combined redeem *hash*, not a selector — do not
-    ///      blacklist the hash prefix.
     function _forbiddenRewardsSelector(bytes4 s) internal pure returns (bool) {
         return _forbiddenExitSelector(s) || _forbiddenLbtcSelector(s);
     }
 
     function _forbiddenExitSelector(bytes4 s) internal pure returns (bool) {
-        return s == bytes4(0x1e9a6950) // redeem(address,uint256)
-            || s == bytes4(0xeab52318) // claimRewardsAndRedeem(address,uint256,uint256) — Avantis
-            || s == bytes4(0x787a08a6) // cooldown()
-            || s == bytes4(0xb460af94) // withdraw(uint256,address,address)
-            || s == bytes4(0xba087652) // redeem(uint256,address,address)
-            || s == bytes4(0x9343d9e1) // cooldownShares(uint256)
-            || s == bytes4(0xcdac52ed) // cooldownAssets(uint256)
-            || s == bytes4(0x1e83409a) // claim(address)
-            || s == bytes4(0x9ad82aa0) // queueRedeem
-            || s == bytes4(0x50b3f984) // queueWithdraw
-            || s == bytes4(0x38248a0c) // completeWithdrawal(bool) — sWBERA 7d NFT
-            || s == bytes4(0x06866fdc) // completeWithdrawal(bool,uint256)
-            || s == bytes4(0x1b0aed2c) // cancelQueuedWithdrawal (vault)
-            || s == bytes4(0x041d5408) // cancelQueuedWithdrawal()
-            || s == bytes4(0xc9d2ff9d) // requestUnlock(uint256) — BENQI sAVAX 15d
-            || s == bytes4(0x2e1a7d4d) // withdraw(uint256) — BENQI claim AVAX / SOON 90d unlock
-            || s == bytes4(0x1338736f) // lock(uint256,uint256) — SOON occupancy 0x6601, not gSOON vault
-            || s == bytes4(0x6e553f65) // deposit(uint256,address) — ERC-4626; poke arity matches
-            || s == bytes4(0x94bf804d) // mint(uint256,address)
-            || s == bytes4(0x250201db) // cooldownOnBehalfOf(address) — Umbrella StakeToken
-            || s == bytes4(0x397a1b28) // requestWithdraw(address,uint256) — ether.fi DelayedWithdraw arity
-            || s == bytes4(0x0efe6a8b) // deposit(address,uint256,uint256) — sETHFI teller, never poke
-            || s == bytes4(0x1d7d4ebc) // KING merkle claim(address,uint256,bytes32,bytes32[])
-            || s == bytes4(0x2e7ba6ef); // ETHFI/EIGEN merkle claim(uint256,address,uint256,bytes32[])
+        return s == bytes4(0x1e9a6950)
+            || s == bytes4(0xeab52318)
+            || s == bytes4(0x787a08a6)
+            || s == bytes4(0xb460af94)
+            || s == bytes4(0xba087652)
+            || s == bytes4(0x9343d9e1)
+            || s == bytes4(0xcdac52ed)
+            || s == bytes4(0x1e83409a)
+            || s == bytes4(0x9ad82aa0)
+            || s == bytes4(0x50b3f984)
+            || s == bytes4(0x38248a0c)
+            || s == bytes4(0x06866fdc)
+            || s == bytes4(0x1b0aed2c)
+            || s == bytes4(0x041d5408)
+            || s == bytes4(0xc9d2ff9d)
+            || s == bytes4(0x2e1a7d4d)
+            || s == bytes4(0x1338736f)
+            || s == bytes4(0x6e553f65)
+            || s == bytes4(0x94bf804d)
+            || s == bytes4(0x250201db)
+            || s == bytes4(0x397a1b28)
+            || s == bytes4(0x0efe6a8b)
+            || s == bytes4(0x1d7d4ebc)
+            || s == bytes4(0x2e7ba6ef);
     }
 
     function _forbiddenLbtcSelector(bytes4 s) internal pure returns (bool) {
-        return s == bytes4(0x42966c68) // burn(uint256)
-            || s == bytes4(0xbcf64e05) // burn(uint256,bytes32)
-            || s == bytes4(0x6bc63893) // mint(bytes,bytes)
-            || s == bytes4(0x8340f549) // deposit(address,address,uint256) — AssetRouter BTC.b→LBTC
-            || s == bytes4(0xe5c1bf6e); // redeem(bytes,bytes) — 10d BTC
+        return s == bytes4(0x42966c68)
+            || s == bytes4(0xbcf64e05)
+            || s == bytes4(0x6bc63893)
+            || s == bytes4(0x8340f549)
+            || s == bytes4(0xe5c1bf6e);
     }
 
     function _setRewardsTarget(address t) internal {
@@ -199,8 +171,6 @@ abstract contract LeafYieldFee {
         emit RewardsTargetSet(t);
     }
 
-    /// @dev Squid/Avantis: (this, max) on inner.
-    ///      Umbrella: claimAllRewards([inner], this) on RewardsController — never inner.
     function _pokeRewards(address inner) internal {
         bytes4 s = rewardsSelector;
         if (s == bytes4(0) || inner == address(0)) revert ClaimFailed();
@@ -229,7 +199,6 @@ abstract contract LeafYieldFee {
         uint256 free = bal - reserved;
         if (free <= lastAccounted) return 0;
         uint256 y = free - lastAccounted;
-        // 1% of y. y < 100 => fee 0, dust stays with holders (not the protocol).
         fee = (y * YIELD_FEE_BPS) / BPS_DENOMINATOR;
         if (fee > 0) {
             token.safeTransfer(feeRecipient, fee);
@@ -239,8 +208,6 @@ abstract contract LeafYieldFee {
         emit YieldHarvested(address(token), y, fee);
     }
 
-    /// @dev Inner that backs shares: balance minus reserved minus identified fee/yield.
-    ///      Donations sit in here (gift to holders). Accrued protocol take does not.
     function _backingInner(IERC20 token, uint256 reserved) internal view returns (uint256) {
         uint256 bal = token.balanceOf(address(this));
         uint256 free = bal > reserved ? bal - reserved : 0;
@@ -262,7 +229,6 @@ abstract contract LeafYieldFee {
             return (shares * backing) / totalShares;
         }
         if (rateKind != RateKind.None && convertYieldToHype && !retainRateYield) {
-            // Last exit: pay everything left, including unharvested yield in kind.
             if (shares == totalShares) return free;
             uint256 backing = _backingInner(token, reserved);
             return (shares * backing) / totalShares;
@@ -270,7 +236,6 @@ abstract contract LeafYieldFee {
         return (shares * free) / totalShares;
     }
 
-    /// @dev After a new deposit of `assets` is already in the box.
     function _sharesForAssets(IERC20 token, uint256 assets, uint256 totalShares, uint256 reserved)
         internal
         view
@@ -287,7 +252,6 @@ abstract contract LeafYieldFee {
         return (assets * totalShares) / prev;
     }
 
-    /// @dev Inner surplus = balance - reserved principal. Side tokens: full balance.
     function _pullYield(IERC20 token, IERC20 inner, uint256 reserved, address to) internal returns (uint256 amt) {
         if (address(token) == address(inner)) {
             uint256 bal = token.balanceOf(address(this));
@@ -361,7 +325,6 @@ abstract contract LeafYieldFee {
         if (rate == 0) revert BadRateFeed();
     }
 
-    /// @dev |Δrate|/lastRate in bps. 0 if unset or equal.
     function _rateJumpBps(uint256 rate) internal view returns (uint256) {
         if (lastRate == 0 || rate == lastRate) return 0;
         uint256 delta = rate > lastRate ? rate - lastRate : lastRate - rate;
@@ -379,8 +342,6 @@ abstract contract LeafYieldFee {
         return false;
     }
 
-    /// @dev Convert destination shares into normalized economic value using the current rate.
-    ///      shareScale cancels the inner-token decimal conversion between deposits and shares.
     function _rateValue(uint256 shares, uint256 rate) internal view returns (uint256) {
         if (shares == 0) return 0;
         if (shareScale == 0 || shareScale > type(uint256).max / RATE_SCALE) revert BadRateFeed();
@@ -403,9 +364,6 @@ abstract contract LeafYieldFee {
         return gross > reservedValue ? gross - reservedValue : 0;
     }
 
-    /// @notice Record the economic cost of a new rate-bearing deposit at the live feed rate.
-    ///      A deposit during a drawdown therefore gets its own lower cost basis and cannot
-    ///      inherit the historical loss carried by earlier shares.
     function _recordRateDeposit(IERC20 token, uint256 assets) internal {
         if (rateKind == RateKind.None || assets == 0) return;
         uint256 rate = _readRate(token);
@@ -416,8 +374,6 @@ abstract contract LeafYieldFee {
         rateReferenceShares = totalShares;
     }
 
-    /// @dev Unrealized *fee-bearing* rate yield in inner-token units.
-    ///      Existing accruedRateYield is already reserved and is included in the result.
     function _unaccruedRateYield(IERC20 token) internal view returns (uint256 add, uint256 rate) {
         if (rateKind == RateKind.None) return (0, 0);
         rate = _readRate(token);
@@ -441,9 +397,6 @@ abstract contract LeafYieldFee {
         return accruedRateYield + add;
     }
 
-    /// @dev Book rate growth against a fixed economic cost basis.
-    ///      A rate decline never lowers the cost basis. Recovery is only fee-bearing after
-    ///      the total user value exceeds that cost basis again.
     function _accrueRateYield(IERC20 token) internal {
         if (rateKind == RateKind.None) return;
         uint256 rate = _readRate(token);
@@ -473,6 +426,7 @@ abstract contract LeafYieldFee {
             accruedRateYield += feeTokens;
             rateCostBasis = userValue - feeValueBooked;
             emit RateYieldAccrued(feeTokens, accruedRateYield, rate);
+            _flushAccrued(token, 0, converter);
             return;
         }
 
@@ -487,9 +441,6 @@ abstract contract LeafYieldFee {
         emit RateYieldAccrued(add, accruedRateYield, rate);
     }
 
-    /// @dev Retain mode uses the same cost-basis model but books only the 1% protocol fee.
-    ///      The remaining 99% becomes part of the holders' economic basis, so it is never
-    ///      charged again at the same rate.
     function _bookRetainFee(IERC20 token) internal {
         uint256 rate = _readRate(token);
         if (lastRate == 0) {
@@ -529,8 +480,6 @@ abstract contract LeafYieldFee {
         emit RateYieldPulled(to, amt, lastRate);
     }
 
-    /// @dev retain: pull 1% of surplus (protocol). 99% stays, so LP/lend keep the yield.
-    ///      sell-all: pull 100% of surplus to converter; 99/1 is WHYPE at notify.
     function _tryPullRateYield(IERC20 token, uint256 reserved, address to) internal returns (uint256 surplus) {
         if (rateKind == RateKind.None || to == address(0)) return 0;
         if (retainRateYield) {
@@ -565,7 +514,6 @@ abstract contract LeafYieldFee {
         if (shares == totalShares) {
             lastAccounted = 0;
             rateReferenceShares = 0;
-            // Retain: leftover accrued is protocol 1% still in the box (flush later).
             if (!retainRateYield) accruedRateYield = 0;
             return;
         }
