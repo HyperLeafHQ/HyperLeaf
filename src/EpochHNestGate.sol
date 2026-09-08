@@ -15,38 +15,26 @@ interface INestVaultDeposit {
 
 /**
  * @title EpochHNestGate
- * @notice Mint-delay in front of NestVault. Circulating hNEST stays a standard ERC-20.
+ * @notice Mint-delay gate in front of NestVault. Circulating hNEST stays a standard ERC-20.
  *
- * Why this exists (Nest HYPE rule, NOT generic MasterChef):
- *   Nest pays weekly HYPE to veNEST that *increased this epoch* (new deposits +
- *   compound increment). Fungible hNEST cannot remember "I am this week's new
- *   principal". If we MasterChef that HYPE to every current holder, DEX buyers of
- *   old hNEST steal the new-depositor HYPE and new deposits get diluted.
+ * Nest's economic reward epoch is fixed at 7 days. The gate deliberately adds one extra
+ * settlement day and also enforces an 8-day minimum delay from the user's latest deposit.
+ * This separates the Nest accounting epoch from the user-facing mint-release delay.
  *
- * What this contract is NOT:
- *   - It does NOT freeze hNEST transfers.
- *   - It does NOT make hNEST a non-standard ERC-20.
- *   - DEX pools still trade ordinary hNEST.
- *
- * Flow:
- *   1. User deposits NEST here. Vault mints hNEST to THIS contract.
- *   2. After the Nest week, keeper sends that week's *new-deposit* HYPE and
- *      calls allocateHype. Protocol takes feeBps (default 1%); rest is pro-rata
- *      to this epoch's depositors.
- *   3. User claims: transferable hNEST + that week's HYPE. From then on they
- *      hold seasoned hNEST (old principal) like everyone else.
- *
- * Compound-increment HYPE (the small slice on already-seasoned principal) is
- * NOT allocated here — NestVault MasterChef residual path / a later splitter
- * handles that. Keeper must not dump the whole Nest HYPE blob into this gate.
- *
- * 1% protocol fee: staking yield only. No fee on NEST in/out besides gas.
+ * The 4-day HEV detachment lock is a different mechanism and is NOT the hNEST mint delay.
  */
 contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     uint256 public constant BASIS_POINTS = 10_000;
     uint256 public constant MAX_FEE_BPS = 500;
+
+    /// @notice Nest's canonical reward/accounting period.
+    uint256 public constant NEST_EPOCH_LENGTH = 7 days;
+    /// @notice Minimum user-facing time before an epoch deposit can mint circulating hNEST.
+    uint256 public constant HNEST_MINT_DELAY = 8 days;
+    /// @notice Extra settlement buffer after the 7-day Nest epoch closes.
+    uint256 public constant SETTLEMENT_BUFFER = 1 days;
 
     IERC20 public immutable nestToken;
     IERC20 public immutable hypeToken;
@@ -56,13 +44,13 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     address public keeper;
     address public feeRecipient;
     uint256 public feeBps = 100; // 1%
-    uint256 public epochLength = 7 days;
     uint256 public currentEpochId;
     uint256 public currentEpochStart;
 
     struct Epoch {
         uint256 start;
         uint256 end;
+        uint256 claimableAt;
         uint256 totalNest;
         uint256 totalHNest;
         uint256 hypeAllocated; // net of protocol fee
@@ -74,15 +62,16 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     mapping(uint256 => Epoch) public epochs;
     mapping(uint256 => mapping(address => uint256)) public nestIn;
     mapping(uint256 => mapping(address => uint256)) public hNestOwed;
+    mapping(uint256 => mapping(address => uint256)) public userClaimableAt;
     mapping(uint256 => mapping(address => bool)) public hNestTaken;
     mapping(uint256 => mapping(address => bool)) public hypeTaken;
 
     event KeeperUpdated(address indexed oldKeeper, address indexed newKeeper);
     event FeeRecipientUpdated(address indexed oldRecipient, address indexed newRecipient);
     event FeeUpdated(uint256 oldFee, uint256 newFee);
-    event EpochOpened(uint256 indexed epochId, uint256 start, uint256 end);
+    event EpochOpened(uint256 indexed epochId, uint256 start, uint256 end, uint256 claimableAt);
     event EpochClosed(uint256 indexed epochId);
-    event Deposited(uint256 indexed epochId, address indexed user, uint256 nestAmount, uint256 hNestMinted);
+    event Deposited(uint256 indexed epochId, address indexed user, uint256 nestAmount, uint256 hNestMinted, uint256 claimableAt);
     event HypeAllocated(uint256 indexed epochId, uint256 gross, uint256 fee, uint256 net);
     event Claimed(uint256 indexed epochId, address indexed user, uint256 hNestAmount, uint256 hypeAmount);
 
@@ -91,10 +80,10 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     error NotKeeper();
     error EpochNotOpen();
     error EpochStillOpen();
+    error MintDelayActive(uint256 claimableAt);
     error AlreadyTaken();
     error NothingOwed();
     error HypeAlreadyFinal();
-    error BadEpochLength();
     error FeeTooHigh();
 
     modifier onlyKeeper() {
@@ -114,9 +103,7 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
         feeRecipient = _feeRecipient;
         nestToken.forceApprove(_vault, type(uint256).max);
         currentEpochStart = block.timestamp;
-        epochs[0].start = block.timestamp;
-        epochs[0].end = block.timestamp + epochLength;
-        emit EpochOpened(0, epochs[0].start, epochs[0].end);
+        _openEpoch(0, block.timestamp);
     }
 
     function setKeeper(address _keeper) external onlyOwner {
@@ -137,11 +124,6 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
         feeBps = _feeBps;
     }
 
-    function setEpochLength(uint256 _len) external onlyOwner {
-        if (_len < 1 days || _len > 30 days) revert BadEpochLength();
-        epochLength = _len;
-    }
-
     function pause() external onlyOwner {
         _pause();
     }
@@ -150,21 +132,21 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    /// @notice Roll to a new epoch. Old epoch stops accepting deposits.
+    /// @notice Roll only after the full fixed 7-day Nest epoch has elapsed.
     function rollEpoch() external onlyKeeper {
         Epoch storage cur = epochs[currentEpochId];
-        if (block.timestamp < cur.end && cur.totalNest > 0) revert EpochStillOpen();
+        if (block.timestamp < cur.end) revert EpochStillOpen();
+        if (cur.closed) revert EpochNotOpen();
+
         cur.closed = true;
         emit EpochClosed(currentEpochId);
 
         currentEpochId += 1;
         currentEpochStart = block.timestamp;
-        epochs[currentEpochId].start = block.timestamp;
-        epochs[currentEpochId].end = block.timestamp + epochLength;
-        emit EpochOpened(currentEpochId, epochs[currentEpochId].start, epochs[currentEpochId].end);
+        _openEpoch(currentEpochId, currentEpochStart);
     }
 
-    /// @notice Deposit NEST for the CURRENT epoch. hNEST stays in this contract until claim.
+    /// @notice Deposit NEST for the current epoch. hNEST remains in this gate until the 8-day delay expires.
     function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
         if (nestAmount == 0) revert ZeroAmount();
         Epoch storage ep = epochs[currentEpochId];
@@ -182,11 +164,18 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
         ep.totalNest += nestAmount;
         ep.totalHNest += minted;
 
-        emit Deposited(currentEpochId, msg.sender, nestAmount, minted);
+        // A user's last deposit in this epoch determines the minimum user-level 8-day delay.
+        uint256 unlockAt = block.timestamp + HNEST_MINT_DELAY;
+        if (unlockAt < ep.claimableAt) unlockAt = ep.claimableAt;
+        if (unlockAt > userClaimableAt[currentEpochId][msg.sender]) {
+            userClaimableAt[currentEpochId][msg.sender] = unlockAt;
+        }
+
+        emit Deposited(currentEpochId, msg.sender, nestAmount, minted, userClaimableAt[currentEpochId][msg.sender]);
     }
 
-    /// @notice After Nest week settles, keeper sends THIS EPOCH's new-deposit HYPE.
-    ///         Protocol takes feeBps; remainder is pro-rata to nestIn of this epoch only.
+    /// @notice After the 7-day Nest epoch settles, keeper sends this epoch's new-deposit HYPE.
+    ///         Protocol takes feeBps; remainder is pro-rata to this epoch's depositors.
     function allocateHype(uint256 epochId, uint256 amount) external onlyKeeper nonReentrant {
         Epoch storage ep = epochs[epochId];
         if (!ep.closed && block.timestamp < ep.end) revert EpochStillOpen();
@@ -209,7 +198,7 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
         emit HypeAllocated(epochId, amount, fee, net);
     }
 
-    /// @notice After hypeFinal, user receives standard transferable hNEST + pro-rata HYPE.
+    /// @notice Once the epoch is final and the user's 8-day delay has expired, release hNEST + HYPE.
     function claim(uint256 epochId) external nonReentrant {
         Epoch storage ep = epochs[epochId];
         if (!ep.hypeFinal) revert EpochNotOpen();
@@ -217,6 +206,9 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
         uint256 owedH = hNestOwed[epochId][msg.sender];
         if (owedH == 0) revert NothingOwed();
         if (hNestTaken[epochId][msg.sender]) revert AlreadyTaken();
+
+        uint256 claimableAt = userClaimableAt[epochId][msg.sender];
+        if (block.timestamp < claimableAt) revert MintDelayActive(claimableAt);
 
         hNestTaken[epochId][msg.sender] = true;
 
@@ -244,6 +236,18 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
         if (ep.hypeFinal && ep.totalNest > 0 && !hypeTaken[epochId][user]) {
             hypeAmount = (nestIn[epochId][user] * ep.hypeAllocated) / ep.totalNest;
         }
-        claimable = ep.hypeFinal && !hNestTaken[epochId][user] && hNestOwed[epochId][user] > 0;
+        claimable = ep.hypeFinal
+            && !hNestTaken[epochId][user]
+            && hNestOwed[epochId][user] > 0
+            && block.timestamp >= userClaimableAt[epochId][user];
+    }
+
+    function _openEpoch(uint256 epochId, uint256 start) internal {
+        uint256 end = start + NEST_EPOCH_LENGTH;
+        uint256 claimableAt = start + HNEST_MINT_DELAY;
+        epochs[epochId].start = start;
+        epochs[epochId].end = end;
+        epochs[epochId].claimableAt = claimableAt;
+        emit EpochOpened(epochId, start, end, claimableAt);
     }
 }
