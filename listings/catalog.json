@@ -765,7 +765,8 @@
       "cooldownSeconds": 64800,
       "unstakeWindow": 259200,
       "maxSlashBps": 2000,
-      "note": "Accept transferable stkAVNT only — never AVNT. pokeRewards = claimRewards(this,max) 0x9a99b4f0, same 4 bytes as QUID. NEVER claimRewardsAndRedeem 0xeab52318 (burns stkAVNT) or cooldown() 0x787a08a6. Pin claim-only: 0x24398d72 is the user's combined redeem — do not copy that selector. Slash max 20% stays in the receipt. AVNT 0x696F9436 isBlackListed. Stake pin 0x7aaf51e8.",
+      "note": "Accept transferable stkAVNT only — never AVNT. pokeRewards = claimRewards(this,max) 0x9a99b4f0, same 4 bytes as QUID. NEVER claimRewardsAndRedeem 0xeab52318 (burns stkAVNT) or cooldown() 0x787a08a6. Claim pin: 0x26f4ca90 (2026-07-03, 51.68 AVNT, no stkAVNT moved). Combined redeem 0x24398d72 is the wrong function. Slash max 20% stays in the receipt. AVNT 0x696F9436 isBlackListed. Stake pin 0x7aaf51e8.",
+      "claimRewardsTx": "0x26f4ca907a874d263e3f2bea18906f33559a21c9e68fe5c585a72e81cfc5e31b",
       "status": "ready",
       "priority": 2
     }
