@@ -319,6 +319,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) {
+            return Listing(
+                Kind.Liquid,
+                "hjitosol",
+                "Hyperleaf JitoSOL",
+                "hJitoSOL",
+                "JitoSOL",
+                0,
+                30168,
+                40168,
+                0,
+                0,
+                address(0),
+                10 ether,
+                false
+            );
+        }
         revert UnknownAsset();
     }
 

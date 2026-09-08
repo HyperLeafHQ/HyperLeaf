@@ -16,7 +16,7 @@ Keys: `OWNER`, `GUARDIAN`, `HARVESTER` — three EOAs. `PRIVATE_KEY` is OWNER. C
 | 3 | `hsavax`, `hsethfi`, `hstkwausdc` | Rate / yield-in-share / Umbrella dual harvest | Avax / ETH / ETH |
 | 4 | `bluai4y`, `horder` | C1 lockbox + closed OFT. Market exit | BSC / Arb |
 
-Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Claim board only after batch 4’s first C1.
+Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Claim board only after batch 4’s first C1. **hJitoSOL is BATCH=5** — dest OFT only if the owner says so; source is Solana (`docs/SOLANA_JITOSOL.md`), not this EVM pass.
 
 Branch: `feat/lz-oft-wrap`. Copy-paste below. Log every address in the PR.
 

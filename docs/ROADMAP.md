@@ -27,7 +27,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | watch | **hliSLVR** | L | Robinhood | Wrap **liSLVR only**. Never taxed SLVR. Lottery rake. Confirm tax-free share |
 | watch | **hTWO** | C2 | Robinhood | Twofold. No receipt; 1h/7d stake vaults. Do not wrap TWO or vTWO |
 | watch | **hSB** | ve-NFT | Robinhood | StonkBrokers. Wrap **activated NFT**, never $STONKBROKER. TBA + geo. Skip until NFT lockbox |
-| later | **hJitoSOL** then **hJupSOL** | L | Solana | First Solana listings. Rate LSTs. Need a Solana escrow program — not LeafOFTAdapter |
+| **5** | **hJitoSOL** | L | Solana | Rate LST. PDA lockbox + dest `LeafOFT`. Math in `LeafJitoRate`. Not this grok-bot EVM pass |
 | later | **hANSEM** | L? | Solana | Watch. Memecoin + launchpad airdrops, not an LST receipt |
 | later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |
 | last | BONK12M / hMET | C1/C2 | Solana | After the LST lockbox exists |
@@ -54,6 +54,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 **E** — veAERO / remaining Ethereum (not SKY).
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
+**5** — **hJitoSOL** dest OFT + rate math. Solana program (lock/unlock/harvest) next; Grok-bot EVM pass does not deploy this.
 **Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.
 
 ## Solana (after EVM batches)

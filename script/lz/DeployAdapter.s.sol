@@ -17,6 +17,7 @@ contract DeployAdapter is Script {
         MainnetBatches.requireBatch(id, batch);
         require(batch != MainnetBatches.CANARY, "use DeployCanarySource");
         require(batch != MainnetBatches.CLOSED, "C1: DeployClosed");
+        require(batch != MainnetBatches.SOLANA_L, "Solana: not LeafOFTAdapter");
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
         require(a.kind == AssetCatalog.Kind.Liquid, "not L");
         require(a.productionEvm, "not production evm");

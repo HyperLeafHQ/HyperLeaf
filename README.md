@@ -107,7 +107,7 @@ One listing at a time. Empty books and mixed exits do not help the ecosystem. Wr
 | Batch 4 | **BLUAI4Y**, **hORDER** | C1 | BSC / Arbitrum | Market exit. No protocol redeem. No CREATE2 twin |
 | Morpho vaults | **hsteakUSDC**, **hsteakUSDG** | L | Base / Robinhood | Wrap the ERC-4626 **share**. Never deposit/redeem USDC/USDG. Never Morpho Blue positions |
 | Later C1 | hB3, PTSMAX | C1 | Base / BSC | Address-keyed farm or NFT. Market exit |
-| Needs new lockbox | veAERO, veUP, JupSOL, stDYDX | ve-NFT / L | Base / Robinhood / Solana / Cosmos | NFT or IBC first. Never wrap liquid UP or ethDYDX |
+| Needs new lockbox | **hJitoSOL**, veAERO, veUP, JupSOL, stDYDX | L / ve-NFT | Solana / Base / Robinhood / Cosmos | JitoSOL dest+math is BATCH=5; Solana program next. NFT/IBC later |
 | Not now | hKAITO, hVIRTUALMAX, hSKY, hGMX, hUNCX, hSNX, hLIT, **stkAAVE**, SLVR, TWO, StonkBrokers | | | Omnichain / frozen / tax / NFT TBA. Legacy stkAAVE stays HOLD — Umbrella is hstkwaUSDC. Full order: [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 
 Out of scope: another HYPE LST, wrapping official RAM/HYBR receipts, ENA (already on HyperCore).

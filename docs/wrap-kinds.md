@@ -54,7 +54,7 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 2. **hcbETH** / **hgSOON** / **hsWBERA** (L, rate skim)
 3. **hsAVAX** / **hsETHFI** / **hstkwaUSDC**
 4. **BLUAI4Y** / **hORDER** (C1, market exit)
-5. **hveAERO** (ve-NFT, Base — later)
+5. **hJitoSOL** (L, Solana PDA — dest OFT + `LeafJitoRate`; program next)
 
 Deploy: `docs/GROK_BOT_MAINNET.md`. Ids: `src/lz/AssetCatalog.sol`. `MainnetBatches` locks `BATCH`.
 

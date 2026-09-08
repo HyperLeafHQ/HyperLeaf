@@ -1014,9 +1014,12 @@
         "pullInner": "rate-surplus-1pct",
         "toHype": []
       },
-      "note": "First Solana L once a Solana escrow program exists. Yield is SOL per JitoSOL (cbETH-class), plus MEV in that rate. Wrap JitoSOL only, never SOL. LZ eid 30168, confirmations 32. Not bnSOL. Not LeafOFTAdapter.",
-      "status": "later-solana-lockbox",
-      "priority": 30
+      "note": "BATCH=5. First Solana L. Wrap JitoSOL mint J1toso1u\u2026 only. Rate = pool total_lamports/pool_token_supply. 1% retain skim same as hcbETH. Dest LeafOFT 18dp. Source is a Solana PDA, not LeafOFTAdapter. WireSolanaPeer 32-byte PDA. Recv confirms 32. Never stake-pool CPI. Spec docs/SOLANA_JITOSOL.md.",
+      "status": "solana-lockbox-wip",
+      "priority": 30,
+      "decimalsInner": 9,
+      "decimalsShare": 18,
+      "jitoPool": "Jito4APyf642JPZPx3hGc6WWJ8zPKtRbRs4P815Awbb"
     }
   ]
 }

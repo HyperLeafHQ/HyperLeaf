@@ -1,6 +1,7 @@
-# Compiler / forge
-cache/
-out/
+# Solana crates
+solana/**/target/
+solana/**/Cargo.lock
+
 
 # Logs
 .logs/

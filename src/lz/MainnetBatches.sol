@@ -13,6 +13,7 @@ library MainnetBatches {
     uint8 internal constant RATE_L = 2;
     uint8 internal constant ETH_L = 3;
     uint8 internal constant CLOSED = 4;
+    uint8 internal constant SOLANA_L = 5;
 
     function batchOf(string memory id) internal pure returns (uint8) {
         bytes32 k = keccak256(bytes(id));
@@ -24,6 +25,7 @@ library MainnetBatches {
                 || k == keccak256("hsETHFI") || k == keccak256("hstkwausdc") || k == keccak256("hstkwaUSDC")
         ) return ETH_L;
         if (k == keccak256("bluai4y") || k == keccak256("horder") || k == keccak256("hORDER")) return CLOSED;
+        if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) return SOLANA_L;
         revert NotThisBatch();
     }
 

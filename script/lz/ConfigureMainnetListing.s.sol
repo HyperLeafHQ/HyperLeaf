@@ -24,6 +24,7 @@ contract ConfigureMainnetListing is Script {
         uint8 batch = uint8(vm.envOr("BATCH", uint256(1)));
         MainnetBatches.requireBatch(id, batch);
         require(batch != MainnetBatches.CLOSED, "C1: ConfigureClosedListing");
+        require(batch != MainnetBatches.SOLANA_L, "Solana lockbox is not EVM");
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
         require(a.kind == AssetCatalog.Kind.Liquid, "not L");
         require(a.productionEvm, "not production evm");

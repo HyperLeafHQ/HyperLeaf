@@ -103,6 +103,9 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hvirtualmax").symbol, "hVIRTUALMAX");
         assertTrue(AssetCatalog.get("bluai4y").innerMainnet != address(0));
         assertEq(AssetCatalog.get("bonk12m").innerMainnet, address(0));
+        assertEq(AssetCatalog.get("hjitosol").innerMainnet, address(0));
+        assertEq(AssetCatalog.get("hjitosol").sourceEidMain, 30168);
+        assertFalse(AssetCatalog.get("hjitosol").productionEvm);
         assertEq(AssetCatalog.get("hmet").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hshmon").innerMainnet, address(0));
         assertTrue(AssetCatalog.get("hkaito").productionEvm);
@@ -151,6 +154,7 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
         assertEq(MainnetBatches.batchOf("bluai4y"), 4);
         assertEq(MainnetBatches.batchOf("horder"), 4);
+        assertEq(MainnetBatches.batchOf("hjitosol"), 5);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._batch("hkaito");
         MainnetBatches.requireBatch("hxsquid", 1);

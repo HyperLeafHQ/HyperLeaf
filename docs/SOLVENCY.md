@@ -63,7 +63,29 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 | Worst-case loss | min(depositCap, source maxPerDay) |
 | Test | `test/lz/LeafSolvency.t.sol` |
 
-### hcbETH (next L)
+### hJitoSOL (Solana L — first non-EVM, rate skim)
+
+| | |
+| --- | --- |
+| Canonical backing | JitoSOL **pulled** into a Solana PDA (`J1toso1u…GCPn`). Never SOL. Never the stake pool |
+| Accounting unit | hJitoSOL **shares** (18 dp). `shares = atoms * 1e9`. Remaining JitoSOL per share moves only by the 1% skim |
+| Core invariant | dest `totalSupply` ≤ Solana `total_shares`. PDA JitoSOL ≥ `lastAccounted`. `pool_mint` on the rate account is the JitoSOL mint |
+| Rate source | Jito stake pool `Jito4APyf642…Awbb`: `total_lamports / pool_token_supply`. Same class as cbETH `exchangeRate` |
+| Rate trust | SPL stake-pool program + Jito manager. Anomalous jump/drop/upgrade |
+| Rate anomaly | jump → 1% of surplus, floor, cannot sell donations. drop → watermark down, pull 0 |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate`. 99% stays in the PDA |
+| Proof source | PDA token balance + pool account + `LeafJitoRate` |
+| Mint / redeem | lock JitoSOL / unlock remaining JitoSOL. **Never** `depositSol` / `withdrawSol` / `depositStake` |
+| Yield | staking + MEV inside the rate, left in remaining JitoSOL. Protocol skims 1% JitoSOL → harvest ATA → WHYPE. Holders have **no** WHYPE claim |
+| Donation | extra JitoSOL into the PDA is extra backing, not yield |
+| Failure | Solana program upgrade; pool_mint mismatch; EVM `WirePeers(address)` instead of 32-byte PDA; confirmations < 32 |
+| Auto-pause | guardian halt on dest OFT; source pause |
+| Worst-case loss | dest `supplyCap` / `maxPerDay`. Yield path loss is converter on the 1% skim only |
+| Test | `test/lz/LeafJitoRate.t.sol` + `solana/leaf-jito-rate` `cargo test`. Spec: `docs/SOLANA_JITOSOL.md` |
+
+Not batch 0–4. `BATCH=5`. Dest `DeployOFT`. Source is not `DeployAdapter`.
+
+### hcbETH (rate L)
 
 | | |
 | --- | --- |
