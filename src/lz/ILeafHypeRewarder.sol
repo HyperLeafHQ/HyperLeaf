@@ -5,6 +5,7 @@ pragma solidity ^0.8.24;
 interface ILeafOFTRewardBind {
     function hypeRewarder() external view returns (address);
     function listingId() external view returns (bytes32);
+    function rewardsActive() external view returns (bool);
 }
 
 interface ILeafHypeRewarder {
