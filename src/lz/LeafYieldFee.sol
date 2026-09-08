@@ -3,12 +3,14 @@ pragma solidity ^0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract LeafYieldFee {
     using SafeERC20 for IERC20;
 
     uint16 public constant YIELD_FEE_BPS = 100;
     uint16 public constant BPS_DENOMINATOR = 10_000;
+    uint256 public constant RATE_SCALE = 1e18;
 
     address public feeRecipient;
     uint256 public lastAccounted;
@@ -25,9 +27,15 @@ abstract contract LeafYieldFee {
     bytes4 public constant CLAIM_ALL_REWARDS = 0xbb492bf5;
 
     /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`,
-    ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`). Surplus is taken from
-    ///      `lastAccounted` only — donations are not yield.
-    ///      Floor: (lastAccounted * (rate - lastRate)) / rate. Dust stays principal.
+    ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`).
+    ///
+    ///      Rate yield is accounted in two units:
+    ///      - lastAccounted / accruedRateYield remain inner-token units for cash accounting;
+    ///      - rateCostBasis is normalized economic value at the asset's 1e18 rate scale.
+    ///
+    ///      Keeping an economic cost basis instead of moving the rate watermark downward is
+    ///      what makes `1.00 -> 0.90 -> 1.00` a zero-yield recovery while also preventing
+    ///      deposits made during the drawdown from inheriting the old loss.
     enum RateKind {
         None,
         ExchangeRate,
@@ -37,18 +45,26 @@ abstract contract LeafYieldFee {
     }
 
     RateKind public rateKind;
+    /// @dev Last observed feed rate. Used for jump detection/telemetry, not as the economic HWM.
     uint256 public lastRate;
     /// @dev Identified rate yield, not yet pulled. Not principal. Not a donation.
     uint256 public accruedRateYield;
     /// @dev true = wstETH-style: 99% of rate surplus stays in the box (NAV in inner).
-    ///      Only 1% is pulled to the converter (protocol fee → HYPE).
+    ///      Only 1% is pulled to the converter (protocol fee -> HYPE).
     ///      false = sell the whole surplus to WHYPE and split 99/1 at notify.
     bool public retainRateYield;
-    /// @dev Inner wei → dest shares. 1 for 18-dec. 1e10 for LBTC 8-dec.
+    /// @dev Inner wei -> dest shares. 1 for 18-dec. 1e10 for LBTC 8-dec.
     uint256 public shareScale;
     /// @dev 0 = off. Else mint stops if getRate jumps more than this in one accrue.
     uint16 public maxRateJumpBps;
     bool public rateJumped;
+
+    /// @dev Economic cost basis for the user-owned rate-bearing position.
+    ///      Stored in the feed's normalized underlying-value units.
+    uint256 public rateCostBasis;
+    /// @dev Snapshot of total destination shares used by pending-rate-yield views.
+    ///      Derived contracts must sync this after total share changes.
+    uint256 public rateReferenceShares;
 
     event ConvertModeSet(bool enabled);
     event HarvesterSet(address indexed harvester);
@@ -308,11 +324,15 @@ abstract contract LeafYieldFee {
             lastAccounted += accruedRateYield;
             accruedRateYield = 0;
             lastRate = 0;
+            rateCostBasis = 0;
+            rateReferenceShares = 0;
             emit RateFeedSet(kind, 0);
             return;
         }
         uint256 rate = _readRate(token);
         lastRate = rate;
+        rateCostBasis = 0;
+        rateReferenceShares = 0;
         emit RateFeedSet(kind, rate);
     }
 
@@ -359,13 +379,61 @@ abstract contract LeafYieldFee {
         return false;
     }
 
-    /// @dev Unrealized surplus on principal only. Floor so dust stays in lastAccounted.
+    /// @dev Convert destination shares into normalized economic value using the current rate.
+    ///      shareScale cancels the inner-token decimal conversion between deposits and shares.
+    function _rateValue(uint256 shares, uint256 rate) internal view returns (uint256) {
+        if (shares == 0) return 0;
+        if (shareScale == 0 || shareScale > type(uint256).max / RATE_SCALE) revert BadRateFeed();
+        return Math.mulDiv(shares, rate, RATE_SCALE * shareScale);
+    }
+
+    function _rateValueOfTokens(uint256 assets, uint256 rate) internal pure returns (uint256) {
+        if (assets == 0) return 0;
+        return Math.mulDiv(assets, rate, RATE_SCALE);
+    }
+
+    function _reservedRateValue(uint256 rate) internal view returns (uint256) {
+        if (accruedRateYield == 0) return 0;
+        return _rateValueOfTokens(accruedRateYield, rate);
+    }
+
+    function _userRateValue(uint256 totalShares, uint256 rate) internal view returns (uint256) {
+        uint256 gross = _rateValue(totalShares, rate);
+        uint256 reservedValue = _reservedRateValue(rate);
+        return gross > reservedValue ? gross - reservedValue : 0;
+    }
+
+    /// @notice Record the economic cost of a new rate-bearing deposit at the live feed rate.
+    ///      A deposit during a drawdown therefore gets its own lower cost basis and cannot
+    ///      inherit the historical loss carried by earlier shares.
+    function _recordRateDeposit(uint256 assets) internal {
+        if (rateKind == RateKind.None || assets == 0) return;
+        uint256 rate = _readRate(IERC20(address(this)));
+        rateCostBasis += _rateValueOfTokens(assets, rate);
+    }
+
+    function _syncRateShares(uint256 totalShares) internal {
+        rateReferenceShares = totalShares;
+    }
+
+    /// @dev Unrealized *fee-bearing* rate yield in inner-token units.
+    ///      Existing accruedRateYield is already reserved and is included in the result.
     function _unaccruedRateYield(IERC20 token) internal view returns (uint256 add, uint256 rate) {
         if (rateKind == RateKind.None) return (0, 0);
         rate = _readRate(token);
-        if (lastRate == 0 || lastAccounted == 0 || rate <= lastRate) return (0, rate);
+        if (lastRate == 0 || rateReferenceShares == 0 || rateCostBasis == 0) return (0, rate);
         if (maxRateJumpBps != 0 && _rateJumpBps(rate) > maxRateJumpBps) return (0, rate);
-        add = (lastAccounted * (rate - lastRate)) / rate;
+
+        uint256 userValue = _userRateValue(rateReferenceShares, rate);
+        if (userValue <= rateCostBasis) return (0, rate);
+
+        uint256 growth = userValue - rateCostBasis;
+        if (retainRateYield) {
+            uint256 feeValue = (growth * YIELD_FEE_BPS) / BPS_DENOMINATOR;
+            add = Math.mulDiv(feeValue, RATE_SCALE, rate);
+        } else {
+            add = Math.mulDiv(growth, RATE_SCALE, rate);
+        }
     }
 
     function pendingRateYield(IERC20 token) public view returns (uint256) {
@@ -373,18 +441,11 @@ abstract contract LeafYieldFee {
         return accruedRateYield + add;
     }
 
-    /// @dev Move rate delta on `lastAccounted` into `accruedRateYield`.
-    ///      Retain: book 1% of surplus, pin watermark, then flush to converter if convert is on.
-    ///      Halt (convert off): book only — wrap/redeem stay live, new deposits mint at post-fee NAV.
-    ///      Slash lowers the watermark and pulls nothing. Donations never enter lastAccounted.
+    /// @dev Book rate growth against a fixed economic cost basis.
+    ///      A rate decline never lowers the cost basis. Recovery is only fee-bearing after
+    ///      the total user value exceeds that cost basis again.
     function _accrueRateYield(IERC20 token) internal {
         if (rateKind == RateKind.None) return;
-        if (retainRateYield) {
-            _bookRetainFee(token);
-            _flushAccrued(token, 0, converter);
-            return;
-        }
-        if (!convertYieldToHype) return;
         uint256 rate = _readRate(token);
         if (lastRate == 0) {
             lastRate = rate;
@@ -392,38 +453,68 @@ abstract contract LeafYieldFee {
         }
         if (rate == lastRate) return;
         if (_tripIfRateJump(rate)) return;
-        if (rate < lastRate) {
-            lastRate = rate;
+        lastRate = rate;
+
+        if (rateReferenceShares == 0 || rateCostBasis == 0) return;
+
+        uint256 userValue = _userRateValue(rateReferenceShares, rate);
+        if (userValue <= rateCostBasis) return;
+
+        uint256 growth = userValue - rateCostBasis;
+        if (retainRateYield) {
+            uint256 feeValue = (growth * YIELD_FEE_BPS) / BPS_DENOMINATOR;
+            uint256 feeTokens = Math.mulDiv(feeValue, RATE_SCALE, rate);
+            if (feeTokens == 0) return;
+            if (feeTokens > lastAccounted) feeTokens = lastAccounted;
+            if (feeTokens == 0) return;
+
+            uint256 feeValueBooked = Math.mulDiv(feeTokens, rate, RATE_SCALE);
+            lastAccounted -= feeTokens;
+            accruedRateYield += feeTokens;
+            rateCostBasis = userValue - feeValueBooked;
+            emit RateYieldAccrued(feeTokens, accruedRateYield, rate);
             return;
         }
-        uint256 add = (lastAccounted * (rate - lastRate)) / rate;
+
+        if (!convertYieldToHype) return;
+        uint256 add = Math.mulDiv(growth, RATE_SCALE, rate);
+        if (add == 0) return;
+        if (add > lastAccounted) add = lastAccounted;
+        if (add == 0) return;
+
         lastAccounted -= add;
         accruedRateYield += add;
-        lastRate = rate;
         emit RateYieldAccrued(add, accruedRateYield, rate);
     }
 
-    /// @dev Pin lastRate. On increase, 1% of surplus → accrued (not 100%). Dust fee stays with holders.
+    /// @dev Retain mode uses the same cost-basis model but books only the 1% protocol fee.
+    ///      The remaining 99% becomes part of the holders' economic basis, so it is never
+    ///      charged again at the same rate.
     function _bookRetainFee(IERC20 token) internal {
         uint256 rate = _readRate(token);
         if (lastRate == 0) {
             lastRate = rate;
             return;
         }
-        if (rate == lastRate || lastAccounted == 0) return;
+        if (rate == lastRate || rateReferenceShares == 0 || rateCostBasis == 0) return;
         if (_tripIfRateJump(rate)) return;
-        if (rate < lastRate) {
-            lastRate = rate;
-            return;
-        }
-        uint256 add = (lastAccounted * (rate - lastRate)) / rate;
         lastRate = rate;
-        uint256 fee = (add * YIELD_FEE_BPS) / BPS_DENOMINATOR;
-        if (fee == 0) return;
-        if (fee > lastAccounted) fee = lastAccounted;
-        lastAccounted -= fee;
-        accruedRateYield += fee;
-        emit RateYieldAccrued(fee, accruedRateYield, rate);
+
+        uint256 userValue = _userRateValue(rateReferenceShares, rate);
+        if (userValue <= rateCostBasis) return;
+
+        uint256 growth = userValue - rateCostBasis;
+        uint256 feeValue = (growth * YIELD_FEE_BPS) / BPS_DENOMINATOR;
+        uint256 feeTokens = Math.mulDiv(feeValue, RATE_SCALE, rate);
+        if (feeTokens == 0) return;
+        if (feeTokens > lastAccounted) feeTokens = lastAccounted;
+        if (feeTokens == 0) return;
+
+        uint256 feeValueBooked = Math.mulDiv(feeTokens, rate, RATE_SCALE);
+        lastAccounted -= feeTokens;
+        accruedRateYield += feeTokens;
+        rateCostBasis = userValue - feeValueBooked;
+        emit RateYieldAccrued(feeTokens, accruedRateYield, rate);
     }
 
     function _flushAccrued(IERC20 token, uint256 reserved, address to) internal returns (uint256 amt) {
@@ -462,13 +553,24 @@ abstract contract LeafYieldFee {
 
     function _reducePrincipal(uint256 shares, uint256 totalShares) internal {
         if (shares == 0 || totalShares == 0) return;
+        if (rateKind != RateKind.None && rateCostBasis > 0) {
+            uint256 basisOut = Math.mulDiv(rateCostBasis, shares, totalShares);
+            if (basisOut >= rateCostBasis || shares == totalShares) {
+                rateCostBasis = 0;
+            } else {
+                rateCostBasis -= basisOut;
+            }
+        }
+
         if (shares == totalShares) {
             lastAccounted = 0;
+            rateReferenceShares = 0;
             // Retain: leftover accrued is protocol 1% still in the box (flush later).
             if (!retainRateYield) accruedRateYield = 0;
             return;
         }
         uint256 principalOut = (shares * lastAccounted) / totalShares;
         lastAccounted -= principalOut;
+        rateReferenceShares = totalShares - shares;
     }
 }
