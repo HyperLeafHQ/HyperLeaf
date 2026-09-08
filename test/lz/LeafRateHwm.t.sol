@@ -60,6 +60,7 @@ contract LeafRateHwmTest is Test {
         adapter.setRateKind(LeafYieldFee.RateKind.RouterGetRate);
         adapter.setRetainRateYield(true);
         adapter.setConvertYieldToHype(true);
+        adapter.setInnerSupplyCeiling(1_000_000_000 ether);
         adapter.setPeer(30367, address(1));
         adapter.openBridge();
         vm.stopPrank();
