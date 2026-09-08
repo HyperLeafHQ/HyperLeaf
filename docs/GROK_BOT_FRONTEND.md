@@ -18,6 +18,31 @@ HyperLeaf is infrastructure. It is responsible for:
 
 It is **not** a market maker, not a DEX, not an AMM, not a lending pool.
 
+## Yield is never HyperLeaf-made
+
+Landing, ticker cards, vault, and 规则 must say this. All HYPE (or remaining-receipt NAV) comes from:
+
+1. the inner asset’s own token emissions, or
+2. that protocol’s real revenue share (staking, fees, safety-module rewards).
+
+HyperLeaf does **not**:
+
+- print extra HYPE as a subsidy
+- run points / seasons / quests / airdrop campaigns
+- match deposits with protocol-owned yield
+
+Required ZH (landing + 规则 + 金库 intro):
+
+> 所有收益来自资产本身的代币经济排放，或协议已经在分的真实收入。HyperLeaf 不额外提供任何收益、积分或激励。协议只从已经产生的收益里抽 1%。
+
+Required EN:
+
+> Yield is the inner protocol’s own emissions or revenue. HyperLeaf does not add yield, points, or incentives. The 1% take is of realized yield only.
+
+Show a “HYPE 从哪来” table with the productive listings (hxSQUID, hAVNT, hcbETH, hgSOON, hsAVAX, hstkwaUSDC, hsETHFI, Morpho, hORDER, BLUAI4Y). Each row: origin + how the user sees it (钱包领取 vs 留在收据). Parked tickers with frozen rewards stay off that table.
+
+Do **not** write “HyperLeaf APR”, “我们发 HYPE”, “积分季节”, “存入送分”.
+
 ## What the protocol does not do
 
 Do not write, imply, or let a tooltip say any of these:
