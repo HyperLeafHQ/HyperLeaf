@@ -50,7 +50,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[14] memory ids = AssetCatalog.allIds();
+        string[15] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
@@ -121,6 +121,12 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hstkwaUSDC").id, "hstkwausdc");
         assertEq(AssetCatalog.get("hstkwausdc").sourceChainIdMain, 1);
         assertEq(AssetCatalog.get("hstkwausdc").sourceEidTest, 40161);
+        assertEq(AssetCatalog.get("hsethfi").innerMainnet, 0x86B5780b606940Eb59A062aA85a07959518c0161);
+        assertEq(AssetCatalog.get("hethfi").id, "hsethfi");
+        assertEq(AssetCatalog.get("hsETHFI").symbol, "hsETHFI");
+        assertEq(AssetCatalog.get("hsethfi").sourceChainIdMain, 1);
+        assertEq(AssetCatalog.get("hsethfi").sourceEidTest, 40161);
+        assertEq(uint8(AssetCatalog.get("hsethfi").kind), uint8(AssetCatalog.Kind.Liquid));
     }
 
     function testRound1CatalogStillLocksHgsoon() public {
@@ -130,6 +136,8 @@ contract AssetCatalogTest is Test {
         this._round1("hsavax");
         vm.expectRevert(TestnetCatalog.NotThisRound.selector);
         this._round1("hstkwausdc");
+        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
+        this._round1("hsethfi");
         AssetCatalog.Listing memory a = TestnetCatalog.get("hxsquid");
         assertEq(a.id, "hxsquid");
     }
@@ -143,9 +151,12 @@ contract AssetCatalogTest is Test {
         this._next("hxsquid");
         assertEq(NextTestnetCatalog.get("hsavax").sourceEidTest, 40106);
         assertEq(NextTestnetCatalog.get("hstkwausdc").innerMainnet, 0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6);
+        assertEq(NextTestnetCatalog.get("hsethfi").innerMainnet, 0x86B5780b606940Eb59A062aA85a07959518c0161);
         assertEq(TestnetListings.get("hgsoon").id, "hgsoon");
         assertEq(TestnetListings.get("hsavax").id, "hsavax");
         assertEq(TestnetListings.get("hstkwausdc").id, "hstkwausdc");
+        assertEq(TestnetListings.get("hsethfi").id, "hsethfi");
+        assertEq(TestnetListings.get("hethfi").id, "hsethfi");
         assertEq(TestnetListings.get("bluai4y").id, "bluai4y");
     }
 

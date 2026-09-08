@@ -97,20 +97,20 @@ Same L invariant on **sKAITO**, not KAITO. Official 7d unstake is never called. 
 
 Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opened**. No protocol peg-out until `shareExit`. Accounting unit is the ticker, not a random ERC-20 balance. Max protocol loss on a fake inner is “we stop minting”; we do not pay BTC-style redeem.
 
-### hsETHFI (research → L, Ethereum)
+### hsETHFI (next testnet — wrap sETHFI, yield-in-share L, Ethereum)
 
 | | |
 | --- | --- |
-| Canonical backing | sETHFI **pulled** (BoringGovernance share `0x86B5780b…c0161`), not ETHFI |
+| Canonical backing | sETHFI **pulled** (BoringGovernance share `0x86B5780b606940Eb59A062aA85a07959518c0161` on **Ethereum**). Same address exists on Base/OP/Arb/Scroll — **do not open a second source**. ~90M sETHFI / ~80–96% of ETHFI backing sit on ETH. |
 | Accounting unit | 1 hsETHFI = 1 sETHFI |
 | Core invariant | same L: `supply ≤ totalLocked ≤ cap` + sETHFI supply ceiling |
 | Proof source | lockbox `totalLocked` + ether.fi vault share supply |
-| Mint / redeem | `send` / burn → sETHFI. **Never** `DelayedWithdraw` (~10d to ETHFI) or the teller `deposit` |
-| Yield | sETHFI NAV in the share (do not pull inner). Extra: merkle ERC-20s — ETHFI/EIGEN seasons empty; live is **KING** (`0x8F08B704`) via `0x6Db24` `claim` 0x1d7d4ebc. Leaf must be the lockbox |
-| Failure | vault upgrade; merkle paid to EOA; KING campaign replaced again |
+| Mint / redeem | `send` / burn → sETHFI. **Never** `DelayedWithdraw` (`0x1509b1fd…`, ~10d to ETHFI) or the teller `deposit` `0x0efe6a8b`. User who wants ETHFI: unwrap hsETHFI, then official queue. |
+| Yield | sETHFI NAV stays in the share (no `retainRateYield` — sETHFI is not ERC-4626 / no `convertToAssets`). Extra merkle ERC-20s: ETHFI/EIGEN seasons empty; live is **KING** (`0x8F08B704`) via `0x6Db24` `claim` `0x1d7d4ebc`. Merkle is KAITO-class: lockbox must be the leaf. **This round does not set a rewardsSelector** — poke would send `(this, max)` which is the wrong ABI. Do not block L. |
+| Failure | vault upgrade; merkle paid to EOA; KING campaign replaced; wrapping Base/OP copies into the same dest OFT |
 | Auto-pause | ceiling / health |
 | Worst-case loss | min(cap, maxPerDay) on principal. KING/ETHFI/EIGEN are yield, not backing |
-| Test | L suite. Deposit 0x24a993c9. Do not treat empty ETHFI/EIGEN distributors as current yield |
+| Test | `testRewardsSelectorRejectsSethfiDelayedWithdrawAndMerkle`. Deposit `0x24a993c9`. NextTestnetCatalog `ASSET=hsethfi` (Sepolia 11155111). Do not treat empty ETHFI/EIGEN distributors as current yield |
 
 ### hgSOON (next testnet — wrap gSOON, cbETH-class 1% skim)
 

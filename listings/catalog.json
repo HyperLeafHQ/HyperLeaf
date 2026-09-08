@@ -692,9 +692,9 @@
           "note": "King Protocol compound ERC-20; distributor still holds ~2461 KING"
         }
       ],
-      "note": "L wrap of transferable sETHFI, not ETHFI. Deposit path: 0x24a993c9 on Teller 0xe2acf9. Yield is extra merkle ERC-20s, not sETHFI NAV (NAV stays in the share). 2024-10-12: ETHFI season 0xbd4569 claim() 0x2e7ba6ef (~21 ETHFI) and EIGEN season 0x2Ec90e same selector (~3.89 EIGEN) \u2014 both distributors now empty. 2025-03-16: replaced by King Protocol KING 0x8F08B704 via 0x6Db24 claim(address,uint256,bytes32,bytes32[]) 0x1d7d4ebc (~0.0067 KING that tx); distributor still funded. Same class as KAITO: per-campaign merkle, leaf = wallet. Lockbox must appear in the tree or this yield is stripped. Do not block L. Never DelayedWithdraw. Alias hsETHFI.",
-      "status": "research",
-      "priority": 12
+      "note": "NEXT TESTNET BATCH (Sepolia 11155111, NextTestnetCatalog, ASSET=hsethfi). L wrap of transferable sETHFI on Ethereum only, not ETHFI, not Base/OP copies of the same address. Deposit path: 0x24a993c9 on Teller 0xe2acf9. Yield is extra merkle ERC-20s, not a convertToAssets skim (NAV stays in the share). 2024-10-12: ETHFI season 0xbd4569 claim() 0x2e7ba6ef (~21 ETHFI) and EIGEN season 0x2Ec90e same selector (~3.89 EIGEN) \u2014 both distributors now empty. 2025-03-16: replaced by King Protocol KING 0x8F08B704 via 0x6Db24 claim(address,uint256,bytes32,bytes32[]) 0x1d7d4ebc (~0.0067 KING that tx); distributor still funded. Same class as KAITO: per-campaign merkle, leaf = wallet. Lockbox must appear in the tree or this yield is stripped. Do not block L. Never DelayedWithdraw. This round: no rewardsSelector (poke ABI is (this,max)). Alias hsETHFI / hethfi.",
+      "status": "next-testnet",
+      "priority": 11
     },
     {
       "id": "hsnx",

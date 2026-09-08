@@ -8,14 +8,14 @@ Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
 
 **Umbrella L (hstkwaUSDC):** same 1% rate skim via `convertToAssets` **plus** `pokeRewards` → `RewardsController.claimAllRewards([inner], lockbox)` (`0xbb492bf5`). Target is the controller, never the StakeToken. Never `cooldown`.
 
-xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). **hgSOON** uses `ConvertToAssets` + `retainRateYield` (cbETH-class 1% skim). hsWBERA / Morpho stay yield-in-share until their row opts in.
+xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). **hgSOON** uses `ConvertToAssets` + `retainRateYield` (cbETH-class 1% skim). **hsETHFI** is yield-in-share (sETHFI NAV stays in the receipt; no `convertToAssets`; extra KING merkle is not this round's poke). hsWBERA / Morpho stay yield-in-share until their row opts in.
 
 
 HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset, keep the extra income of the source position.
 
 | Kind | Source | HyperEVM | Exit | Ticker |
 | ---- | ------ | -------- | ---- | ------ |
-| L | `LeafOFTAdapter` | `LeafOFT` | Instant inner receipt | `hKAITO`, `hxSQUID`, `hcbETH`, `hwstETH`, `hsAVAX`, `hshMON` |
+| L | `LeafOFTAdapter` | `LeafOFT` | Instant inner receipt | `hKAITO`, `hxSQUID`, `hcbETH`, `hwstETH`, `hsAVAX`, `hsETHFI`, `hshMON` |
 | C1 | `LeafInboundLockbox` / `LeafVirtualsLockbox` | `LeafClosedOFT` | Sell on HyperEVM only | `hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`, `hORDER` |
 | C2 | `LeafRedeemQueue` | `LeafOFT` | Burn, wait, `claim` | `hMET` |
 

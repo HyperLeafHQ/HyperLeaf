@@ -33,6 +33,7 @@ Grok bot: follow **`docs/GROK_BOT_TESTNET.md`** (hxSQUID then hcbETH, then bluai
 | `hcbeth` | L | Base Sepolia | 998 |
 | `hsavax` | L | Fuji 43113 | 998 |
 | `hstkwausdc` | L | Sepolia 11155111 | 998 |
+| `hsethfi` | L | Sepolia 11155111 | 998 |
 | `hvirtualmax` | C1 | Base Sepolia | 998 |
 | `bluai4y` | C1 | BSC testnet | 998 |
 | `bonk12m` | C1 | Base Sepolia mock | 998 |

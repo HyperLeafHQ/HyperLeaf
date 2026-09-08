@@ -11,7 +11,8 @@ library TestnetListings {
         bytes32 k = keccak256(bytes(id));
         if (
             k == keccak256("hgsoon") || k == keccak256("hsavax") || k == keccak256("hstkwausdc")
-                || k == keccak256("hstkwaUSDC")
+                || k == keccak256("hstkwaUSDC") || k == keccak256("hsethfi") || k == keccak256("hethfi")
+                || k == keccak256("hsETHFI")
         ) return NextTestnetCatalog.get(id);
         return TestnetCatalog.get(id);
     }

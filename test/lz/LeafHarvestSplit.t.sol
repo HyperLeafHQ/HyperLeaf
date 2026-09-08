@@ -268,4 +268,25 @@ contract LeafHarvestSplitTest is PegReady {
         vm.expectRevert(LeafYieldFee.BadRewardsTarget.selector);
         adapter.pokeRewards();
     }
+
+    function testRewardsSelectorRejectsSethfiDelayedWithdrawAndMerkle() public {
+        bytes4 req = bytes4(keccak256("requestWithdraw(address,uint256)"));
+        assertEq(req, bytes4(0x397a1b28));
+        bytes4 teller = bytes4(keccak256("deposit(address,uint256,uint256)"));
+        assertEq(teller, bytes4(0x0efe6a8b));
+        bytes4 king = bytes4(keccak256("claim(address,uint256,bytes32,bytes32[])"));
+        assertEq(king, bytes4(0x1d7d4ebc));
+        bytes4 ethfiSeason = bytes4(keccak256("claim(uint256,address,uint256,bytes32[])"));
+        assertEq(ethfiSeason, bytes4(0x2e7ba6ef));
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(req);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(teller);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(king);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(ethfiSeason);
+        vm.stopPrank();
+    }
 }

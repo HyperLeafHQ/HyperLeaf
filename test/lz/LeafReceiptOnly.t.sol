@@ -180,9 +180,13 @@ contract LeafReceiptOnlyTest is PegReady {
     function testCatalogReceiptListingsAreLiquid() public pure {
         AssetCatalog.Listing memory g = AssetCatalog.get("hgsoon");
         AssetCatalog.Listing memory s = AssetCatalog.get("hswbera");
+        AssetCatalog.Listing memory e = AssetCatalog.get("hsethfi");
         assertEq(uint8(g.kind), uint8(AssetCatalog.Kind.Liquid));
         assertEq(uint8(s.kind), uint8(AssetCatalog.Kind.Liquid));
+        assertEq(uint8(e.kind), uint8(AssetCatalog.Kind.Liquid));
         assertEq(g.lockSeconds, 0);
         assertEq(s.lockSeconds, 0);
+        assertEq(e.lockSeconds, 0);
+        assertEq(e.innerMainnet, 0x86B5780b606940Eb59A062aA85a07959518c0161);
     }
 }

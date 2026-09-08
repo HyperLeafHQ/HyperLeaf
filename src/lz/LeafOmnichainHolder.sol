@@ -89,7 +89,9 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
             || s == bytes4(0x9343d9e1) || s == bytes4(0xcdac52ed) || s == bytes4(0x1e83409a)
             || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984)
             || s == bytes4(0xc9d2ff9d) || s == bytes4(0x2e1a7d4d)
-            || s == bytes4(0x1338736f) || s == bytes4(0x6e553f65) || s == bytes4(0x94bf804d))) revert ForbiddenRewardsSelector();
+            || s == bytes4(0x1338736f) || s == bytes4(0x6e553f65) || s == bytes4(0x94bf804d)
+            || s == bytes4(0x397a1b28) || s == bytes4(0x0efe6a8b) || s == bytes4(0x1d7d4ebc)
+            || s == bytes4(0x2e7ba6ef))) revert ForbiddenRewardsSelector();
         rewardsSelector = s;
         emit RewardsSelectorSet(s);
     }

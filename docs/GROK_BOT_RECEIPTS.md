@@ -1,4 +1,4 @@
-# Grok bot — next-batch L receipts (hgSOON / hsAVAX / hstkwaUSDC)
+# Grok bot — next-batch L receipts (hgSOON / hsAVAX / hstkwaUSDC / hsETHFI)
 
 Copy-paste after `docs/SOLVENCY.md` and `test/lz/LeafRateYield.t.sol` / `test/lz/LeafUmbrella.t.sol`. **Do not deploy mainnet.** **Do not set `INNER_TOKEN`.** Scripts revert if the inner is the live token.
 
@@ -11,6 +11,7 @@ Source testnet is the **same family as mainnet**. Do not put Fuji/Sepolia/BSC as
 | `hgsoon` | BSC 56 | **BSC testnet 97** (LZ eid 40102) | HyperEVM 998 |
 | `hsavax` | Avalanche 43114 | **Fuji 43113** (eid 40106) | HyperEVM 998 |
 | `hstkwausdc` | Ethereum 1 | **Sepolia 11155111** (eid 40161) | HyperEVM 998 |
+| `hsethfi` | Ethereum 1 | **Sepolia 11155111** (eid 40161) | HyperEVM 998 |
 
 Skip `SetSecurityStack` on testnet. Same four keys as `docs/GROK_BOT_TESTNET.md`.
 
@@ -141,7 +142,29 @@ Rate smoke: same `setRate` + `pullYield(inner)` 1%. Side-token smoke: seed the m
 
 ---
 
-## D. hsWBERA — Bepolia 80069 → 998 (blocked)
+## D. hsETHFI — Sepolia 11155111 → HyperEVM 998
+
+Yield-in-share L. **Do not** `setRateKind` / `setRetainRateYield` / `setRewardsSelector`. KING merkle `0x1d7d4ebc` is blacklisted as a poke selector (wrong ABI). Lockbox is not in the live tree this round.
+
+```
+ASSET=hsethfi OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
+forge script script/lz/DeployTestnetSource.s.sol:DeployTestnetSource \
+  --rpc-url sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
+Dest 998 `ASSET=hsethfi`. Wire dest `REMOTE_EID=40161`.
+
+```
+ASSET=hsethfi SOURCE=$SOURCE OWNER=$OWNER HARVESTER=$HARVESTER CONVERTER=$CONVERTER \
+forge script script/lz/ConfigureTestnetListing.s.sol:ConfigureTestnetListing \
+  --rpc-url sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
+Smoke: wrap mock sETHFI → dest OFT → unwrap. `pullYield(inner)` must revert `CannotPullInner`. Never call DelayedWithdraw / teller `deposit`.
+
+---
+
+## E. hsWBERA — Bepolia 80069 → 998 (blocked)
 
 Do not run until `eth_getCode` of the Bepolia EndpointV2 is non-empty. Then add `ENDPOINT_BEPOLIA` to `LayerZeroAddresses` and:
 

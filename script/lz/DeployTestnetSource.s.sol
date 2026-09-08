@@ -20,7 +20,7 @@ import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
 /// @notice Source-chain half of a testnet wrap.
 ///         ASSET=hxsquid|havnt|hcbeth|bluai4y  (this round)
-///         ASSET=hgsoon|hsavax|hstkwausdc (next: TestnetListings → NextTestnetCatalog)
+///         ASSET=hgsoon|hsavax|hstkwausdc|hsethfi (next: TestnetListings → NextTestnetCatalog)
 ///         INNER_TOKEN unset → deploys a mintable mock (always, on testnet).
 contract DeployTestnetSource is Script {
     function run() external {
@@ -42,8 +42,12 @@ contract DeployTestnetSource is Script {
         if (keccak256(bytes(id)) == keccak256("hsavax")) {
             require(block.chainid == 43113, "hsavax source is Fuji 43113, not Base Sepolia");
         }
-        if (keccak256(bytes(id)) == keccak256("hstkwausdc") || keccak256(bytes(id)) == keccak256("hstkwaUSDC")) {
-            require(block.chainid == 11155111, "hstkwausdc source is Sepolia 11155111");
+        if (
+            keccak256(bytes(id)) == keccak256("hstkwausdc") || keccak256(bytes(id)) == keccak256("hstkwaUSDC")
+                || keccak256(bytes(id)) == keccak256("hsethfi") || keccak256(bytes(id)) == keccak256("hethfi")
+                || keccak256(bytes(id)) == keccak256("hsETHFI")
+        ) {
+            require(block.chainid == 11155111, "hstkwausdc/hsethfi source is Sepolia 11155111");
         }
         if (keccak256(bytes(id)) == keccak256("hswbera")) {
             require(block.chainid == 80069, "hswbera testnet source is Bepolia 80069, not Base Sepolia");

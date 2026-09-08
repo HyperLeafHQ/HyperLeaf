@@ -144,7 +144,11 @@ abstract contract LeafYieldFee {
             || s == bytes4(0x1338736f) // lock(uint256,uint256) — SOON occupancy 0x6601, not gSOON vault
             || s == bytes4(0x6e553f65) // deposit(uint256,address) — ERC-4626; poke arity matches
             || s == bytes4(0x94bf804d) // mint(uint256,address)
-            || s == bytes4(0x250201db); // cooldownOnBehalfOf(address) — Umbrella StakeToken
+            || s == bytes4(0x250201db) // cooldownOnBehalfOf(address) — Umbrella StakeToken
+            || s == bytes4(0x397a1b28) // requestWithdraw(address,uint256) — ether.fi DelayedWithdraw arity
+            || s == bytes4(0x0efe6a8b) // deposit(address,uint256,uint256) — sETHFI teller, never poke
+            || s == bytes4(0x1d7d4ebc) // KING merkle claim(address,uint256,bytes32,bytes32[])
+            || s == bytes4(0x2e7ba6ef); // ETHFI/EIGEN merkle claim(uint256,address,uint256,bytes32[])
     }
 
     function _setRewardsTarget(address t) internal {

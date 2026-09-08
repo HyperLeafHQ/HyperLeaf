@@ -206,17 +206,18 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 
 ---
 
-## Next testnet batch — hgSOON / hsAVAX / hstkwaUSDC (do not mix with §7 of this round)
+## Next testnet batch — hgSOON / hsAVAX / hstkwaUSDC / hsETHFI (do not mix with §7 of this round)
 
-`TestnetCatalog.get` still reverts for these ids. Use `ASSET=hgsoon|hsavax|hstkwausdc` — scripts go through `TestnetListings` → `NextTestnetCatalog`. Round-1 four ids stay locked.
+`TestnetCatalog.get` still reverts for these ids. Use `ASSET=hgsoon|hsavax|hstkwausdc|hsethfi` — scripts go through `TestnetListings` → `NextTestnetCatalog`. Round-1 four ids stay locked.
 
 | ASSET | Source testnet | Mock | Configure |
 | --- | --- | --- | --- |
 | `hgsoon` | BSC 97 (eid 40102) | `convertToAssets` | ConvertToAssets + retain. No rewards selector |
 | `hsavax` | Fuji 43113 (eid 40106) | `getPooledAvaxByShares` | GetPooledAvaxByShares + retain. No rewards selector |
 | `hstkwausdc` | Sepolia 11155111 (eid 40161) | `convertToAssets` + MockRewardsController | ConvertToAssets + retain + `REWARDS_CONTROLLER` + selector `0xbb492bf5` |
+| `hsethfi` | Sepolia 11155111 (eid 40161) | plain ERC-20 | **No** rateKind. **No** rewardsSelector. Wrap sETHFI 1:1 |
 
 Copy-paste: `docs/GROK_BOT_RECEIPTS.md`. Do **not** point `INNER_TOKEN` at mainnet. Do **not** add these to `TestnetCatalog`.
 
-`claimAllRewards` is **on the controller**, never on the StakeToken. `cooldown` / `requestUnlock` stay blacklisted. Unwrap is the receipt (gSOON / sAVAX / stk v1). Protocol never starts Aave cooldown or BENQI unlock.
+`claimAllRewards` is **on the controller**, never on the StakeToken. `cooldown` / `requestUnlock` / ether.fi `requestWithdraw` / teller `deposit` stay blacklisted. Unwrap is the receipt (gSOON / sAVAX / stk v1 / sETHFI). Protocol never starts Aave cooldown, BENQI unlock, or the 10d DelayedWithdraw.
 
