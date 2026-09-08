@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafHypeRewarder} from "src/lz/LeafHypeRewarder.sol";
-import {ILeafHypeRewarder} from "src/lz/ILeafHypeRewarder.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 
 contract RewardTransferToken is ERC20 {
     constructor() ERC20("WHYPE", "WHYPE") {}
@@ -23,7 +22,7 @@ contract RewardTransferEndpoint is ILayerZeroEndpointV2 {
     function skip(address, uint32, bytes32, uint64) external {}
 }
 
-contract LeafRewardTransferTest is Test {
+contract LeafRewardTransferTest is PegReady {
     RewardTransferToken hype;
     RewardTransferEndpoint endpoint;
     LeafOFT leaf;
@@ -35,6 +34,7 @@ contract LeafRewardTransferTest is Test {
     address alice = address(0xA1);
     address bob = address(0xB2);
     bytes32 constant ID = keccak256("transfer-test");
+    uint256 constant CAP = 1_000e18;
 
     function setUp() public {
         hype = new RewardTransferToken();
@@ -44,7 +44,10 @@ contract LeafRewardTransferTest is Test {
         rewarder = new LeafHypeRewarder(address(hype), owner, feeTo);
         leaf.setHypeRewarder(address(rewarder), ID);
         rewarder.register(ID, address(leaf));
+        leaf.setPeer(1, bytes32(uint256(1)));
+        leaf.setSupplyCap(CAP);
         vm.stopPrank();
+        _openSrc(leaf, owner, CAP);
         vm.deal(owner, 1 ether);
     }
 
