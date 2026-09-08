@@ -75,12 +75,13 @@ contract LeafOFT is LeafOApp, ERC20 {
     {
         if (amount == 0) revert ZeroAmount();
         if (to == bytes32(0)) revert ZeroAddress();
+        _requireRemoteTo(dstEid, to);
         _requireRedeem();
         _takeQuota(amount);
         _burn(msg.sender, amount);
         bytes memory payload = encodeBridge(to, amount);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
-            _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
+            _lzSend(dstEid, payload, _defaultOptions(dstEid), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, amount, receipt.guid);
         return receipt.guid;
     }

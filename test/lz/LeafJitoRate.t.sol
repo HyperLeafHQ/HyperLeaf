@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
 import {LeafJitoRate} from "src/lz/LeafJitoRate.sol";
 import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
@@ -9,8 +10,41 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {LeafJitoPolicy} from "src/lz/LeafJitoPolicy.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
+import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
+import {OptionsBuilder} from "src/lz/OptionsBuilder.sol";
 
-contract LeafJitoRateTest is Test {
+contract MockJitoEndpoint is ILayerZeroEndpointV2 {
+    bytes public lastOptions;
+    uint32 public lastDstEid;
+    bytes32 public lastPeer;
+    uint32 public eid = 30367;
+
+    function send(MessagingParams calldata p, address) external payable returns (MessagingReceipt memory r) {
+        lastOptions = p.options;
+        lastDstEid = p.dstEid;
+        lastPeer = p.receiver;
+        r.guid = keccak256(abi.encode(p, block.number));
+        r.nonce = 1;
+        r.fee = MessagingFee(msg.value, 0);
+    }
+
+    function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
+        return MessagingFee(0.01 ether, 0);
+    }
+
+    function setDelegate(address) external {}
+    function setConfig(address, address, SetConfigParam[] calldata) external {}
+    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) {
+        return "";
+    }
+    function skip(address, uint32, bytes32, uint64) external {}
+
+    function deliver(address oapp, Origin calldata origin, bytes calldata message) external {
+        LeafOFT(payable(oapp)).lzReceive(origin, bytes32(uint256(1)), message, address(this), "");
+    }
+}
+
+contract LeafJitoRateTest is Test, PegReady {
     function testRateMatchesPoolRatio() public pure {
         uint64 lamports = 10_254_350_600_000_000;
         uint64 supply = 7_889_287_950_000_000;
@@ -39,7 +73,6 @@ contract LeafJitoRateTest is Test {
     }
 
     function testDonationDoesNotCreateFee() public pure {
-        // lastAccounted unchanged if we never book extra atoms
         (uint256 fee,,) = LeafJitoRate.bookRetainFee(100e9, 1e18, 1e18);
         assertEq(fee, 0);
     }
@@ -96,11 +129,14 @@ contract LeafJitoRateTest is Test {
         assertEq(u, to);
         assertEq(n, amount);
         assertEq(payload.length, 96);
+        assertEq(bytes1(payload[95]), bytes1(0x00));
+        assertEq(uint8(payload[88]), 0x0d);
     }
 
     function testSolanaConfirmationsAre32() public pure {
         assertEq(A.confirmationsForEid(A.EID_SOLANA), 32);
         assertEq(A.confirmationsForEid(A.EID_HYPEREVM), 5);
+        assertEq(A.LZ_RECEIVE_SOLANA_CU, 400_000);
     }
 
     function testJupsolNotBatchFive() public {
@@ -110,5 +146,88 @@ contract LeafJitoRateTest is Test {
 
     function _batch(string calldata id) external pure returns (uint8) {
         return MainnetBatches.batchOf(id);
+    }
+
+    function testSolanaDvnTrioRejectsNethermind() public {
+        LeafJitoPolicy.requireSolanaDvn(LeafJitoPolicy.DVN_LABS_SOLANA);
+        LeafJitoPolicy.requireSolanaDvn(LeafJitoPolicy.DVN_HORIZEN_SOLANA);
+        LeafJitoPolicy.requireSolanaDvn(LeafJitoPolicy.DVN_CANARY_SOLANA);
+        vm.expectRevert(LeafJitoPolicy.BadSolanaDvn.selector);
+        this._dvn(LeafJitoPolicy.DVN_NETHERMIND_SOLANA);
+        vm.expectRevert(LeafJitoPolicy.NotSolanaPeer.selector);
+        this._peer(bytes32(uint256(uint160(address(0xBEEF)))));
+        LeafJitoPolicy.requireSolanaPeer(bytes32(uint256(1) << 255));
+    }
+
+    function _dvn(bytes32 d) external pure {
+        LeafJitoPolicy.requireSolanaDvn(d);
+    }
+
+    function _peer(bytes32 p) external pure {
+        LeafJitoPolicy.requireSolanaPeer(p);
+    }
+}
+
+contract LeafJitoDestOFTTest is PegReady {
+    MockJitoEndpoint ep;
+    LeafOFT oft;
+    address owner = address(0xA11CE);
+    address guardian = address(0xB0B);
+    address user = address(0xCAFE);
+    bytes32 solanaStore = bytes32(uint256(1) << 255);
+    bytes32 solanaWallet = bytes32(uint256(2) << 200);
+
+    function setUp() public {
+        ep = new MockJitoEndpoint();
+        vm.prank(owner);
+        oft = new LeafOFT("Hyperleaf JitoSOL", "hJitoSOL", address(ep), owner, guardian);
+        vm.startPrank(owner);
+        oft.setPeer(A.EID_SOLANA, solanaStore);
+        oft.setListingTag(LeafJitoPolicy.LISTING_TAG);
+        oft.setLimits(10 ether, 10 ether);
+        oft.setSupplyCap(10 ether);
+        oft.openBridge();
+        vm.stopPrank();
+        vm.deal(user, 1 ether);
+    }
+
+    function testMintFromSolanaPayload() public {
+        bytes memory payload = abi.encode(LeafJitoPolicy.LISTING_TAG, bytes32(uint256(uint160(user))), 1 ether);
+        ILayerZeroEndpointV2.Origin memory origin =
+            ILayerZeroEndpointV2.Origin({srcEid: A.EID_SOLANA, sender: solanaStore, nonce: 1});
+        ep.deliver(address(oft), origin, payload);
+        assertEq(oft.balanceOf(user), 1 ether);
+    }
+
+    function testWrongTagFromSolanaReverts() public {
+        bytes memory payload = abi.encode(keccak256("nope"), bytes32(uint256(uint160(user))), 1 ether);
+        ILayerZeroEndpointV2.Origin memory origin =
+            ILayerZeroEndpointV2.Origin({srcEid: A.EID_SOLANA, sender: solanaStore, nonce: 1});
+        vm.expectRevert(LeafOApp.WrongListing.selector);
+        ep.deliver(address(oft), origin, payload);
+    }
+
+    function testSendToSolanaRejectsEvmPadding() public {
+        // mint first
+        bytes memory payload = abi.encode(LeafJitoPolicy.LISTING_TAG, bytes32(uint256(uint160(user))), 2 ether);
+        ILayerZeroEndpointV2.Origin memory origin =
+            ILayerZeroEndpointV2.Origin({srcEid: A.EID_SOLANA, sender: solanaStore, nonce: 1});
+        ep.deliver(address(oft), origin, payload);
+
+        vm.startPrank(user);
+        vm.expectRevert(LeafOApp.NotSolanaRecipient.selector);
+        oft.sendTo{value: 0.01 ether}(A.EID_SOLANA, user, 1 ether);
+        oft.send{value: 0.01 ether}(A.EID_SOLANA, solanaWallet, 1 ether, user);
+        vm.stopPrank();
+        assertEq(oft.balanceOf(user), 1 ether);
+        assertEq(ep.lastDstEid(), A.EID_SOLANA);
+        assertEq(ep.lastOptions(), OptionsBuilder.lzReceiveOption(A.LZ_RECEIVE_SOLANA_CU));
+    }
+
+    function testQuoteSendSolanaNeedsPubkey() public {
+        vm.expectRevert(LeafOApp.NotSolanaRecipient.selector);
+        oft.quoteSend(A.EID_SOLANA, user, 1 ether);
+        uint256 fee = oft.quoteSend(A.EID_SOLANA, solanaWallet, 1 ether);
+        assertEq(fee, 0.01 ether);
     }
 }

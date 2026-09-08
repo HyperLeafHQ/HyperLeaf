@@ -66,8 +66,39 @@ NCN TVL is small vs the stake pool. Missing SWTCH is accepted. Do not "turn on r
 abi.encode(listingTag, bytes32(to), uint256 shares)  // 96 bytes, not Borsh
 ```
 
-## Program (state machine is `solana/leaf-jito-rate/src/lockbox.rs`)
+Solana → HyperEVM: `to` is a left-padded EVM address. HyperEVM → Solana: `to` is a 32-byte Solana pubkey (`bytes12(to) != 0`). Dest `LeafOFT.sendTo` reverts `NotSolanaRecipient`.
 
-`lock` / `unlock` / `harvest_rate` / `harvest_other` / `halt`. `cargo test --manifest-path solana/leaf-jito-rate/Cargo.toml`.
+## Program
 
-Constants: `src/lz/LeafJitoPolicy.sol`.
+Spec crate: `solana/leaf-jito-rate` (`cargo test --manifest-path solana/leaf-jito-rate/Cargo.toml`). No Anchor/runtime in this repo yet — instruction codec + state machine + stake-pool parser are the source of truth for the future native program.
+
+| ix | Who | Does |
+| --- | --- | --- |
+| `Init` | admin | cap, dest peer (padded OFT), tag |
+| `Lock` | user | harvest 1% first, pull JitoSOL, book shares, LZ send 96-byte payload |
+| `HarvestRate` | anyone | read pool, skim 1% JitoSOL to harvest ATA |
+| `HarvestOther` | anyone | non-JitoSOL ATA → 1% protocol / 99% harvest ATA. Never the Jito mint |
+| `Halt` | admin | blocks Lock, not LzReceive |
+| `LzReceive` | LZ executor only | harvest, unlock remaining JitoSOL to the Solana pubkey in the payload |
+
+There is **no user `Unlock`**. Burning hJitoSOL on HyperEVM is the only way shares leave.
+
+PDA: seeds `b"Store"` (this is the LZ OApp receiver / HyperEVM peer). Escrow ATA = Store's ATA for the JitoSOL mint. Rate account = Jito pool, read-only; `pool_mint` must equal JitoSOL.
+
+Forbidden CPI: stake-pool, interceptor, vault, restaking. Token program + LZ endpoint/ULN only.
+
+Solana LZ (eid 30168), pinned in `LeafJitoPolicy`:
+
+| | |
+| --- | --- |
+| Endpoint | `76y77prsiCMvXMjuoZ5VRrhG5qYBrUMYTE5WgHqgjEn6` |
+| ULN302 | `7a4WjyR8VZ7yZz5XJAKm39BUGn5iT9CKcv2pmG9tdXVH` |
+| Executor program | `6doghB248px58JSSwG4qejQ46kFMW4AMj7vzJnWZHNZn` |
+| DVNs (required 2-of-3 optional) | Labs `4VDjp6XQaxoZf5RGwiPU9NR1EXSZn2TP4ATMmiSzLfhb` · Horizen `HR9NQKK1ynW9NzgdM37dU5CBtqRHTukmbMKS7qkwSkHX` · Canary `7jMeX5mzXnSSKYd8DxBDP4xMnkNFZZZm5W28FWUTbwU3` |
+| Confirmations | send 32 (Solana slots) / receive 5 (HyperEVM blocks) |
+| Not in the stack | Nethermind `GPjyWr8vCotGuFubDpTxDxy9Vj1ZeEN4F2dwRmFiaGab` |
+
+HyperEVM `SetSecurityStack` with `ASSET=hjitosol` sets the EVM-side trio and `recvConfirms=32`. Solana-side ULN is configured by the program admin, same names, different pubkeys.
+
+Constants: `src/lz/LeafJitoPolicy.sol`. Stake-pool offsets: `solana/leaf-jito-rate/src/stake_pool.rs`.
+

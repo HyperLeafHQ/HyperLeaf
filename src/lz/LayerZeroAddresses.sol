@@ -121,6 +121,9 @@ library LayerZeroAddresses {
     uint32 internal constant CONFIG_TYPE_ULN = 2;
 
     uint128 internal constant LZ_RECEIVE_GAS = 200_000;
+    /// @dev Executor option for HyperEVM → Solana. Field is compute units, not EVM gas.
+    ///      SPL transfer + harvest + endpoint.clear needs headroom above 200k.
+    uint128 internal constant LZ_RECEIVE_SOLANA_CU = 400_000;
 
     /// @dev Source-side ULN confirmations. Pathway is asymmetric:
     ///      Send ULN on A (dst=B) uses A's depth; Receive ULN on B (src=A)

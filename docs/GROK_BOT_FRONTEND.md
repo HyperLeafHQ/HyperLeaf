@@ -95,6 +95,18 @@ Required EN:
 
 Do **not** write: “Jito 没有额外奖励”, “我们不支持 restaking 因为还没做”, “fragSOL 和 JitoSOL 是同一个东西”.
 
+Redeem / wrap for this ticker is **not** an EVM `sendTo`:
+
+Required ZH:
+
+> 赎回 hJitoSOL 必须填 **Solana 地址**（32 字节公钥），不是 EVM 地址。填错会把 JitoSOL 打到没人能用的账户。跨链费是 LayerZero 收的最低标准，HyperLeaf 不从中抽成。赎回拿到的是金库里剩下的 JitoSOL，不是当初那一枚；汇率涨出来的 99% 已经留在收据里。
+
+Required EN:
+
+> Redeem hJitoSOL to a **Solana pubkey**, never an EVM address. A 20-byte address would credit an ATA nobody owns. LZ fees are LayerZero’s floor, not ours. You get remaining JitoSOL, not the original count — 99% of rate yield stayed in the receipt.
+
+No wallet HYPE claim on this ticker. Do not show a Claim HYPE button.
+
 ## What the protocol does not do
 
 Do not write, imply, or let a tooltip say any of these:

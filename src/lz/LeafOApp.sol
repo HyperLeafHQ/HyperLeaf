@@ -71,6 +71,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     error PeerFrozen();
     error CapIncrease();
     error ConfigFrozen();
+    error NotSolanaRecipient();
 
     modifier onlyGuardian() {
         if (msg.sender != guardian && msg.sender != owner()) revert NotGuardian();
@@ -210,9 +211,16 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     }
 
     /// @notice Native fee for `sendTo(dstEid, to, amount)` with default lzReceive gas.
+    ///         Solana destinations must use `quoteSend(dstEid, bytes32, amount)` — a 20-byte
+    ///         EVM address would unlock JitoSOL to an ATA nobody owns.
     function quoteSend(uint32 dstEid, address to, uint256 amount) external view returns (uint256 nativeFee) {
-        bytes memory payload = encodeBridge(bytes32(uint256(uint160(to))), amount);
-        (nativeFee,) = quote(dstEid, payload, _defaultOptions(), false);
+        return quoteSend(dstEid, bytes32(uint256(uint160(to))), amount);
+    }
+
+    function quoteSend(uint32 dstEid, bytes32 to, uint256 amount) public view returns (uint256 nativeFee) {
+        _requireRemoteTo(dstEid, to);
+        bytes memory payload = encodeBridge(to, amount);
+        (nativeFee,) = quote(dstEid, payload, _defaultOptions(dstEid), false);
     }
 
     function lzReceive(
@@ -240,6 +248,20 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
 
     function _defaultOptions() internal pure returns (bytes memory) {
         return OptionsBuilder.lzReceiveOption(LayerZeroAddresses.LZ_RECEIVE_GAS);
+    }
+
+    function _defaultOptions(uint32 dstEid) internal pure returns (bytes memory) {
+        if (dstEid == LayerZeroAddresses.EID_SOLANA) {
+            return OptionsBuilder.lzReceiveOption(LayerZeroAddresses.LZ_RECEIVE_SOLANA_CU);
+        }
+        return _defaultOptions();
+    }
+
+    /// @dev Solana recipients are 32-byte pubkeys. Left-padded 20-byte EVM addresses
+    ///      would credit an ATA that no wallet controls.
+    function _requireRemoteTo(uint32 dstEid, bytes32 to) internal pure {
+        if (to == bytes32(0)) revert ZeroAddress();
+        if (dstEid == LayerZeroAddresses.EID_SOLANA && bytes12(to) == 0) revert NotSolanaRecipient();
     }
 
     function _takeQuota(uint256 amount) internal {

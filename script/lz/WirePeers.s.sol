@@ -12,6 +12,7 @@ contract WirePeers is Script {
         address oapp = vm.envAddress("OAPP");
         address peer = vm.envAddress("PEER");
         uint32 remoteEid = _remoteEid();
+        require(remoteEid != A.EID_SOLANA, "use WireSolanaPeer");
         vm.startBroadcast();
         LeafOApp(oapp).setPeer(remoteEid, peer);
         vm.stopBroadcast();

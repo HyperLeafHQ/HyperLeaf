@@ -16,7 +16,7 @@ Keys: `OWNER`, `GUARDIAN`, `HARVESTER` — three EOAs. `PRIVATE_KEY` is OWNER. C
 | 3 | `hsavax`, `hsethfi`, `hstkwausdc` | Rate / yield-in-share / Umbrella dual harvest | Avax / ETH / ETH |
 | 4 | `bluai4y`, `horder` | C1 lockbox + closed OFT. Market exit | BSC / Arb |
 
-Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Claim board only after batch 4’s first C1. **hJitoSOL is BATCH=5** — dest OFT only if the owner says so; source is Solana (`docs/SOLANA_JITOSOL.md`), not this EVM pass.
+Do not deploy NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Claim board only after batch 4’s first C1. **hJitoSOL is BATCH=5** — dest `LeafOFT` on HyperEVM is allowed after batch 4; source is Solana (`docs/SOLANA_JITOSOL.md`). Do not `DeployAdapter`. Do not `WirePeers` (that left-pads). Use `WireSolanaPeer`. No Rewarder on this dest OFT.
 
 Branch: `feat/lz-oft-wrap`. Copy-paste below. Log every address in the PR.
 
@@ -165,10 +165,51 @@ Do not open batch N+1 until batch N has those three answers.
 
 ---
 
+## 5. hJitoSOL dest OFT (after batch 4, dest only)
+
+Source lockbox is a Solana program. This pass only deploys HyperEVM `LeafOFT`.
+
+```
+BATCH=5 ASSET=hjitosol OWNER=$OWNER GUARDIAN=$GUARDIAN \
+forge script script/lz/DeployOFT.s.sol:DeployOFT \
+  --rpc-url hyperevm --broadcast --private-key $PRIVATE_KEY
+```
+
+Copy `LeafOFT` → `OFT`. **Do not** set a Rewarder. Rate yield stays in remaining JitoSOL.
+
+```
+OAPP=$OFT PEER=$SOLANA_STORE_PDA ASSET=hjitosol \
+forge script script/lz/WireSolanaPeer.s.sol:WireSolanaPeer \
+  --rpc-url hyperevm --broadcast --private-key $PRIVATE_KEY
+```
+
+`PEER` is the OApp **Store PDA** (32 bytes). Reverts if it looks left-padded. Never `WirePeers`.
+
+```
+OAPP=$OFT ASSET=hjitosol \
+forge script script/lz/SetSecurityStack.s.sol:SetSecurityStack \
+  --rpc-url hyperevm --broadcast --private-key $PRIVATE_KEY
+```
+
+Expect `remoteEid=30168` `sendConfirms=5` `recvConfirms=32`. Trio Labs + Horizen + Canary on HyperEVM. Solana-side DVN trio (same names, different pubkeys) is set by the Solana program, not this script. Nethermind is forbidden on both sides.
+
+```
+ASSET=hjitosol OAPP=$OFT \
+forge script script/lz/OpenPeg.s.sol:OpenPeg \
+  --rpc-url hyperevm --broadcast --private-key $PRIVATE_KEY
+```
+
+Do not `OPEN_BRIDGE=true` until the Solana Store is registered, peered to this OFT (20-byte left-padded), and the Solana ULN uses Labs+Horizen+Canary. `ConfigureMainnetListing` reverts on `BATCH=5`.
+
+Redeem from this OFT must call `send(30168, solanaPubkey, amount)` — `sendTo` reverts `NotSolanaRecipient`.
+
+---
+
 ## Still not this pass
 
 - HyperEVM AMM / treasury bids
-- hKAITO / hVIRTUALMAX / hSKY / ve-NFT / Solana
+- hKAITO / hVIRTUALMAX / hSKY / ve-NFT
 - NestVault v2
 - C1 protocol redeem
 - Reusing canary addresses as a real vault
+- Compiling/deploying the Solana program (spec is `solana/leaf-jito-rate`; needs Anchor + `anchor build` on a machine with the Solana toolchain)

@@ -28,6 +28,10 @@ pub enum Error {
     Insufficient,
     HarvestInner,
     ForbiddenCpi,
+    BadMint,
+    LzOnly,
+    BadPeer,
+    WrongListing,
 }
 
 impl Lockbox {
@@ -109,11 +113,35 @@ impl Lockbox {
     }
 
     /// Side-token ATA on the PDA (airdrop snapshot). Never JitoSOL.
+    /// Whole balance is yield: 1% protocol, 99% stays for converter → WHYPE.
     pub fn harvest_other(&self, mint: &str) -> Result<(), Error> {
         if mint == JITO_MINT {
             return Err(Error::HarvestInner);
         }
         Ok(())
+    }
+
+    pub fn harvest_other_amount(atoms: u128) -> Result<(u128, u128), Error> {
+        if atoms == 0 {
+            return Err(Error::Zero);
+        }
+        let fee = atoms * 100 / 10_000;
+        Ok((fee, atoms - fee))
+    }
+
+    /// Only path that may reduce `total_shares` on-chain. Executor after dest burn.
+    pub fn lz_receive(
+        &mut self,
+        tag: [u8; 32],
+        expected_tag: [u8; 32],
+        shares: u128,
+        total_lamports: u64,
+        pool_token_supply: u64,
+    ) -> Result<u128, Error> {
+        if tag != expected_tag || tag == [0u8; 32] {
+            return Err(Error::WrongListing);
+        }
+        self.unlock(shares, total_lamports, pool_token_supply)
     }
 
     pub fn require_no_cpi(&self, program: &str) -> Result<(), Error> {
@@ -191,6 +219,28 @@ mod tests {
         assert_eq!(b.require_no_cpi(STAKE_POOL_PROGRAM), Err(Error::ForbiddenCpi));
         assert_eq!(b.require_no_cpi(INTERCEPTOR), Err(Error::ForbiddenCpi));
         assert!(b.require_no_cpi("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").is_ok());
+    }
+
+    #[test]
+    fn lz_receive_wrong_tag() {
+        let mut b = Lockbox::new(1_000_000_000_000);
+        let (l, s) = pool(RATE_SCALE);
+        let shares = b.lock(1_000_000_000, l, s).unwrap();
+        assert_eq!(
+            b.lz_receive([1u8; 32], crate::LISTING_TAG, shares, l, s),
+            Err(Error::WrongListing)
+        );
+        let out = b
+            .lz_receive(crate::LISTING_TAG, crate::LISTING_TAG, shares, l, s)
+            .unwrap();
+        assert_eq!(out, 1_000_000_000);
+    }
+
+    #[test]
+    fn harvest_other_one_percent() {
+        let (fee, rest) = Lockbox::harvest_other_amount(10_000).unwrap();
+        assert_eq!(fee, 100);
+        assert_eq!(rest, 9_900);
     }
 
     #[test]
