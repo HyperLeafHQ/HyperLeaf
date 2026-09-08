@@ -198,7 +198,7 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 ## Still not this pass
 
 - Mainnet inners, `SetSecurityStack`, WHYPE converter fills, multi-DEX/bridge converter routes
-- hKAITO / hVIRTUALMAX / hSKY / hgSOON / hsWBERA / **hstkwaUSDC** / **hsAVAX** (catalog `next-testnet`; not this `ASSET` round)
+- hKAITO / hVIRTUALMAX / hSKY / hsWBERA / **hstkwaUSDC** / **hsAVAX** (not this `ASSET` round)
 - NestVault / HNest / HevAdapter
 - LeafVirtualsLockbox / LeafOmnichainHolder / LeafCreate2
 - C1 `shareExit` / protocol redeem
@@ -206,7 +206,13 @@ Smoke: list 100 Leaf / ask 70 inner → fill → dest Leaf to buyer, source 69.3
 
 ---
 
-## Next testnet batch — hstkwaUSDC (do not run until §7 of this round is logged)
+## Next testnet batch — hgSOON first (do not mix with §7 of this round)
+
+`TestnetCatalog.get("hgsoon")` still reverts. Use `ASSET=hgsoon` with the same deploy scripts — they go through `TestnetListings` → `NextTestnetCatalog`. Source **BSC testnet 97**, dest 998. Mock inner. **No** `setRewardsSelector`. `pullYield(inner)` must revert `CannotPullInner`.
+
+Copy-paste: `docs/GROK_BOT_RECEIPTS.md` section A.
+
+Then, still not script-unlocked: **hstkwaUSDC** / **hsAVAX** (need mocks). Do not pass those ids; they revert.
 
 Not in `TestnetCatalog`. Do not pass `ASSET=hstkwaUSDC` to current scripts; they will revert.
 

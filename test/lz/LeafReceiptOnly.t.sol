@@ -6,6 +6,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {PegReady} from "test/lz/PegReady.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
+import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -95,6 +96,7 @@ contract LeafReceiptOnlyTest is PegReady {
     bytes4 constant COOLDOWN_ASSETS = 0xcdac52ed;
     bytes4 constant CLAIM_ADDR = 0x1e83409a;
     bytes4 constant SQUID_REDEEM = 0x1e9a6950;
+    bytes4 constant LOCK90 = 0x1338736f;
 
     function setUp() public {
         epSrc = new MockEndpoint();
@@ -126,6 +128,7 @@ contract LeafReceiptOnlyTest is PegReady {
         assertEq(inner.hits(COOLDOWN_ASSETS), 0);
         assertEq(inner.hits(CLAIM_ADDR), 0);
         assertEq(inner.hits(SQUID_REDEEM), 0);
+        assertEq(inner.hits(LOCK90), 0);
     }
 
     function testWrapAndUnwrapNeverTouchesVaultExit() public {
@@ -157,6 +160,21 @@ contract LeafReceiptOnlyTest is PegReady {
         adapter.pullYield(inner, owner);
         vm.stopPrank();
         _noUnbond();
+    }
+
+    function testCannotSetGsoonForbiddenSelectors() public {
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(COOLDOWN_SHARES);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(COOLDOWN_ASSETS);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(CLAIM_ADDR);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(DEPOSIT);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(LOCK90);
+        vm.stopPrank();
     }
 
     function testCatalogReceiptListingsAreLiquid() public pure {

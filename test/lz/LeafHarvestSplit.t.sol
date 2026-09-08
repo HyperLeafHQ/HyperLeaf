@@ -223,4 +223,33 @@ contract LeafHarvestSplitTest is PegReady {
         adapter.setRewardsSelector(w);
         vm.stopPrank();
     }
+
+    function testRewardsSelectorRejectsGsoonCooldownAndLock() public {
+        bytes4 cooldownShares = bytes4(keccak256("cooldownShares(uint256)"));
+        assertEq(cooldownShares, bytes4(0x9343d9e1));
+        bytes4 cooldownAssets = bytes4(keccak256("cooldownAssets(uint256)"));
+        assertEq(cooldownAssets, bytes4(0xcdac52ed));
+        bytes4 claimAddr = bytes4(keccak256("claim(address)"));
+        assertEq(claimAddr, bytes4(0x1e83409a));
+        bytes4 lock90 = bytes4(keccak256("lock(uint256,uint256)"));
+        assertEq(lock90, bytes4(0x1338736f));
+        bytes4 deposit4626 = bytes4(keccak256("deposit(uint256,address)"));
+        assertEq(deposit4626, bytes4(0x6e553f65));
+        bytes4 mint4626 = bytes4(keccak256("mint(uint256,address)"));
+        assertEq(mint4626, bytes4(0x94bf804d));
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(cooldownShares);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(cooldownAssets);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(claimAddr);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(lock90);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(deposit4626);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(mint4626);
+        vm.stopPrank();
+    }
 }

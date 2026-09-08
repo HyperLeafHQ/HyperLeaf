@@ -112,20 +112,23 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Worst-case loss | min(cap, maxPerDay) on principal. KING/ETHFI/EIGEN are yield, not backing |
 | Test | L suite. Deposit 0x24a993c9. Do not treat empty ETHFI/EIGEN distributors as current yield |
 
-### hgSOON (research — wrap gSOON only)
+### hgSOON (next testnet — wrap gSOON only)
 
 | | |
 | --- | --- |
-| Canonical backing | transferable gSOON pulled (`0xcC48B55F…e0F7` on **BSC**, ERC-4626, vault=token) |
-| Accounting unit | 1 hgSOON = 1 gSOON. Rate vs SOON lives in gSOON (your deposit 1.122 → cooldown 1.434 → live ~1.744) |
+| Canonical backing | transferable gSOON pulled (`0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7` on **BSC**, ERC-4626, vault=token) |
+| Accounting unit | 1 hgSOON = 1 gSOON. Rate vs SOON lives in gSOON |
 | Core invariant | L: `supply ≤ totalLocked gSOON` + gSOON/SOON vault ceiling |
 | Proof source | lockbox `totalLocked` + `previewRedeem` / inner supply |
-| Mint / redeem | wrap/unwrap **gSOON**. Instant. **Never** `deposit` SOON. **Never** 7d unstake: `cooldownShares(uint256)` 0x9343d9e1 / `cooldownAssets(uint256)` 0xcdac52ed / V2 variants, then `claim(address)` 0x1e83409a after `cooldownDuration` = 604800. Silo is `agingPool` `0x64512C59…` |
-| Yield | in the gSOON/SOON rate. Do not pull gSOON as harvest. 90d lock on `0x660102f6` (`lock` 0x1338736f / `withdraw` 0x2e1a7d4d) is extra occupancy — no receipt. Do not enter it |
+| Mint / redeem | wrap/unwrap **gSOON**. Instant. **Never** `deposit` SOON `0x6e553f65`. **Never** 7d unstake: `cooldownShares(uint256)` 0x9343d9e1 / `cooldownAssets(uint256)` 0xcdac52ed, then `claim(address)` 0x1e83409a after 604800. Silo `agingPool` `0x64512C59…` |
+| Yield | in `convertToAssets`. **No** `rateKind` / **no** retainRateYield (unlike hcbETH). `pullYield(gSOON)` reverts `CannotPullInner`. No WHYPE claim |
+| 90d lock | occupancy on `0x660102f6` (`lock(uint256,uint256)` 0x1338736f / `withdraw(uint256)` 0x2e1a7d4d) — not backing, not harvest. Do not enter |
+| Pins (16ba) | deposit1 `0x246a12a4` 4998.4994 SOON → 4454.0268 gSOON @ **1.1222** (2025-05-29). deposit2 `0xc6559838` 3413 SOON → 2789.0880 gSOON @ **1.2237** (2025-06-22). lock/unlock 7243.1147 gSOON 1:1. cooldownShares `0x5a3c5441` burns 7243.1148 gSOON → 10390.2495 SOON @ **1.4345** (2025-09-22). Live ~1.7447. Share dust ~6.6e-6 left |
 | Failure | vault upgrade; someone calls cooldown on our lockbox (principal in silo 7d) |
 | Auto-pause | ceiling / health |
 | Worst-case loss | min(cap, maxPerDay) on gSOON principal. 90d lock APY is not backing |
-| Test | `test/lz/LeafReceiptOnly.t.sol` — adapter never hits cooldownShares/claim. Pins: deposit `0x246a12a4`; cooldownShares `0x5a3c5441`. Dust on `0x113561…` |
+| Test | `LeafReceiptOnly`, `testRewardsSelectorRejectsGsoonCooldownAndLock`. `TestnetCatalog.get("hgsoon")` reverts; `NextTestnetCatalog` / `TestnetListings` accept it |
+| Testnet | BSC testnet 97 mock inner. Same `LeafOFTAdapter` as hxSQUID, **no** `setRewardsSelector`. Not in this round's four-id `TestnetCatalog` |
 
 
 

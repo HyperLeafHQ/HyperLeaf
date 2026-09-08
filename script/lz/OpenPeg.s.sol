@@ -5,7 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
-import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
+import {TestnetListings} from "src/lz/TestnetListings.sol";
 
 /// @notice Set listingTag + per-tx/day caps. OFT also gets supplyCap.
 ///         Set OPEN_BRIDGE=true only after peers and DVN are verified on-chain.
@@ -35,7 +35,7 @@ contract OpenPeg is Script {
 
     function _listing(string memory id) internal view returns (AssetCatalog.Listing memory) {
         uint256 c = block.chainid;
-        if (c == 84532 || c == 998 || c == 97 || c == 80069) return TestnetCatalog.get(id);
+        if (c == 84532 || c == 998 || c == 97 || c == 80069) return TestnetListings.get(id);
         return AssetCatalog.get(id);
     }
 }

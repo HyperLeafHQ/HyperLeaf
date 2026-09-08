@@ -11,17 +11,18 @@ import {LeafVirtualsLockbox} from "src/lz/LeafVirtualsLockbox.sol";
 import {IBluaiStake} from "src/lz/IBluaiStake.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
-import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
+import {TestnetListings} from "src/lz/TestnetListings.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {HypeAddresses} from "src/lz/HypeAddresses.sol";
 
 /// @notice Source-chain half of a testnet wrap.
 ///         ASSET=hxsquid|havnt|hcbeth|bluai4y  (this round)
+///         ASSET=hgsoon (next: BSC testnet 97, same L adapter, no claim selector)
 ///         INNER_TOKEN unset → deploys a mintable mock (always, on testnet).
 contract DeployTestnetSource is Script {
     function run() external {
         string memory id = vm.envString("ASSET");
-        AssetCatalog.Listing memory a = TestnetCatalog.get(id);
+        AssetCatalog.Listing memory a = TestnetListings.get(id);
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
         require(owner != guardian, "OWNER == GUARDIAN");

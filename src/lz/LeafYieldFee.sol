@@ -134,7 +134,10 @@ abstract contract LeafYieldFee {
             || s == bytes4(0x9ad82aa0) // queueRedeem
             || s == bytes4(0x50b3f984) // queueWithdraw
             || s == bytes4(0xc9d2ff9d) // requestUnlock(uint256) — BENQI sAVAX 15d
-            || s == bytes4(0x2e1a7d4d); // withdraw(uint256) — BENQI claim AVAX
+            || s == bytes4(0x2e1a7d4d) // withdraw(uint256) — BENQI claim AVAX / SOON 90d unlock
+            || s == bytes4(0x1338736f) // lock(uint256,uint256) — SOON occupancy 0x6601, not gSOON vault
+            || s == bytes4(0x6e553f65) // deposit(uint256,address) — ERC-4626; poke arity matches
+            || s == bytes4(0x94bf804d); // mint(uint256,address)
     }
 
     /// @dev Claims as this lockbox. Selector must be rewards, not redeem — same

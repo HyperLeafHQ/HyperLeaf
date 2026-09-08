@@ -102,8 +102,8 @@ One listing at a time. Empty books and mixed exits do not help the ecosystem. Wr
 | Live | **hNEST** | Native | HyperEVM | NEST / veNEST as a HyperEVM ERC-20 |
 | Next | **hxSQUID** | L | Base | Trade xSQUID here; QUID surplus → HYPE |
 | Then | **hcbETH** | L | Base | ETH PoS harvested as rate surplus → HYPE 99/1. Redeem remaining cbETH, not 1:1 after harvest |
-| Next testnet | **hstkwaUSDC**, **hsAVAX** | L | Ethereum / Avalanche | Umbrella USDC receipt; BENQI sAVAX. Instant unwrap of the receipt. Never Aave cooldown / BENQI `requestUnlock` |
-| Same L adapter | **hgSOON**, **hAVNT**, **hsWBERA**, **hsETHFI** | L | BSC / Base / Bera / Ethereum | gSOON, stkAVNT, sWBERA, sETHFI. Instant unwrap of the receipt. Never cooldown / DelayedWithdraw |
+| Next testnet | **hgSOON**, **hstkwaUSDC**, **hsAVAX** | L | BSC / Ethereum / Avalanche | gSOON receipt (yield in share); Umbrella USDC; BENQI sAVAX. Instant unwrap. Never cooldown / `requestUnlock` |
+| Same L adapter | **hAVNT**, **hsWBERA**, **hsETHFI** | L | Base / Bera / Ethereum | stkAVNT, sWBERA, sETHFI. Instant unwrap of the receipt. Never cooldown / DelayedWithdraw |
 | Morpho vaults | **hsteakUSDC**, **hsteakUSDG** | L | Base / Robinhood | Wrap the ERC-4626 **share**. Never deposit/redeem USDC/USDG. Never Morpho Blue positions |
 | Later C1 | **hORDER**, hB3, PTSMAX | C1 | Arb+Base / Base / BSC | Address-keyed farm or NFT. Market exit until `shareExit` |
 | Needs new lockbox | veAERO, veUP, JupSOL, stDYDX | ve-NFT / L | Base / Robinhood / Solana / Cosmos | NFT or IBC first. Never wrap liquid UP or ethDYDX |

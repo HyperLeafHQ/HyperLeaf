@@ -5,14 +5,14 @@ import {Script, console2} from "forge-std/Script.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafClosedOFT} from "src/lz/LeafClosedOFT.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
-import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
+import {TestnetListings} from "src/lz/TestnetListings.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
 /// @notice HyperEVM testnet (998) half. Run after DeployTestnetSource.
 contract DeployTestnetDest is Script {
     function run() external {
         string memory id = vm.envString("ASSET");
-        AssetCatalog.Listing memory a = TestnetCatalog.get(id);
+        AssetCatalog.Listing memory a = TestnetListings.get(id);
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
         require(block.chainid == 998, "run on HyperEVM testnet 998");

@@ -87,7 +87,9 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
         // Keep in sync with LeafYieldFee._forbiddenRewardsSelector.
         if (s != bytes4(0) && (s == bytes4(0x1e9a6950) || s == bytes4(0xb460af94) || s == bytes4(0xba087652)
             || s == bytes4(0x9343d9e1) || s == bytes4(0xcdac52ed) || s == bytes4(0x1e83409a)
-            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984))) revert ForbiddenRewardsSelector();
+            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984)
+            || s == bytes4(0xc9d2ff9d) || s == bytes4(0x2e1a7d4d)
+            || s == bytes4(0x1338736f) || s == bytes4(0x6e553f65) || s == bytes4(0x94bf804d))) revert ForbiddenRewardsSelector();
         rewardsSelector = s;
         emit RewardsSelectorSet(s);
     }
@@ -113,7 +115,9 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
         if (p == address(0) || s == bytes4(0)) revert BadClaimTarget();
         if (s == bytes4(0x1e9a6950) || s == bytes4(0xb460af94) || s == bytes4(0xba087652)
             || s == bytes4(0x9343d9e1) || s == bytes4(0xcdac52ed) || s == bytes4(0x1e83409a)
-            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984)) revert ForbiddenRewardsSelector();
+            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984)
+            || s == bytes4(0xc9d2ff9d) || s == bytes4(0x2e1a7d4d)
+            || s == bytes4(0x1338736f) || s == bytes4(0x6e553f65) || s == bytes4(0x94bf804d)) revert ForbiddenRewardsSelector();
         (bool ok,) = p.call{value: msg.value}(abi.encodeWithSelector(s, address(this), type(uint256).max));
         if (!ok) revert ClaimFailed();
     }

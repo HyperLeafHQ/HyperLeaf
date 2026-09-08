@@ -430,9 +430,9 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Morpho MetaMorpho Steakhouse USDC on Base. Wrap steakUSDC only. Never deposit USDC, never 4626 withdraw/redeem. Same L adapter as hsteakUSDG. One vault = one listing. Do not wrap Morpho Blue market positions (no ERC-20 receipt).",
-      "status": "research",
-      "priority": 13
+      "note": "Later \u2014 USDC demand is covered by hstkwaUSDC this cycle. Morpho MetaMorpho Steakhouse USDC on Base. Wrap steakUSDC only. Never deposit USDC, never 4626 withdraw/redeem. Same L adapter as hsteakUSDG. One vault = one listing. Do not wrap Morpho Blue market positions (no ERC-20 receipt).",
+      "status": "later",
+      "priority": 25
     },
     {
       "id": "hlislvr",
@@ -868,9 +868,22 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Accept transferable gSOON only \u2014 never deposit SOON. ERC-4626 vault=token 0xcC48. Never 7d cooldown or 90d lock. LeafOFTAdapter, no new Kind. SOLVENCY filled.",
-      "status": "adapter-ready",
-      "priority": 7
+      "note": "NEXT TESTNET BATCH (BSC testnet 97, NextTestnetCatalog). Wrap transferable gSOON only \u2014 never SOON. 1 hgSOON = 1 gSOON; SOON NAV lives in convertToAssets (1.122 \u2192 1.224 \u2192 1.435 at cooldown; live ~1.745). Do not set rateKind / retainRateYield \u2014 yield stays in the share (unlike hcbETH). Never cooldownShares / claim / 90d lock. Users unwrap hgSOON then unstake at SOON themselves. This round's TestnetCatalog stays four assets. Deploy via ASSET=hgsoon on chain 97 using TestnetListings.",
+      "status": "next-testnet",
+      "priority": 10,
+      "claim": "No side token. Yield is convertToAssets on gSOON. Never setRewardsSelector. Never deposit/mint SOON, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f on 0x660102f6.",
+      "refs": {
+        "depositTx1": "0x246a12a44e1c761d2201a3bc14f50e77310f92204c14d2fd3d053454c194bec9",
+        "depositTx2": "0xc6559838645fc6c719a8bd26cce4e98d752ac4d854b47ae028d3176ce306dee2",
+        "lock90Tx": "0xcaa3905eae579b5f7f20e3caebaaa346ea3b72c415411d3e88153a9d14af9917",
+        "unlock90Tx": "0x37d70161c187f2ff05e2099916ad0088091cb699168c013b622ed206e55f949c",
+        "cooldownSharesTx": "0x5a3c5441602714036fafb3c2de2eebcbe95537d5c0432d484d17daf5e7c272ee"
+      },
+      "testnet": {
+        "sourceChain": "bsc-testnet",
+        "mockInner": true,
+        "batch": "next"
+      }
     },
     {
       "id": "hb3",

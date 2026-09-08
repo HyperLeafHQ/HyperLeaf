@@ -2,6 +2,8 @@
 
 Copy-paste after you have read `docs/SOLVENCY.md` (hgSOON, hsWBERA) and `test/lz/LeafReceiptOnly.t.sol`. **Do not deploy mainnet.** **Do not set `INNER_TOKEN`.** Scripts revert if the inner is the live gSOON / sWBERA.
 
+`ASSET=hgsoon` is on `NextTestnetCatalog` / `TestnetListings`. Round-1 `TestnetCatalog.get("hgsoon")` still reverts. Same scripts as hxSQUID.
+
 Source testnet is the **same family as mainnet**. Do not put Bera or BSC assets on Base Sepolia.
 
 | ASSET | Mainnet source | Testnet source | Dest |

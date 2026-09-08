@@ -9,6 +9,9 @@ import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
+import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
+import {NextTestnetCatalog} from "src/lz/NextTestnetCatalog.sol";
+import {TestnetListings} from "src/lz/TestnetListings.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -114,6 +117,36 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hswbera").sourceEidMain, 30362);
         assertEq(AssetCatalog.get("hswbera").sourceEidTest, 40371);
         assertEq(AssetCatalog.get("hswbera").lockSeconds, 0);
+    }
+
+    function testRound1CatalogStillLocksHgsoon() public {
+        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
+        this._round1("hgsoon");
+        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
+        this._round1("hsavax");
+        AssetCatalog.Listing memory a = TestnetCatalog.get("hxsquid");
+        assertEq(a.id, "hxsquid");
+    }
+
+    function testNextCatalogHgsoonOnly() public {
+        AssetCatalog.Listing memory g = NextTestnetCatalog.get("hgsoon");
+        assertEq(g.innerMainnet, 0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7);
+        assertEq(g.sourceEidTest, 40102);
+        assertEq(uint8(g.kind), uint8(AssetCatalog.Kind.Liquid));
+        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
+        this._next("hxsquid");
+        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
+        this._next("hsavax");
+        assertEq(TestnetListings.get("hgsoon").id, "hgsoon");
+        assertEq(TestnetListings.get("bluai4y").id, "bluai4y");
+    }
+
+    function _round1(string calldata id) external pure returns (AssetCatalog.Listing memory) {
+        return TestnetCatalog.get(id);
+    }
+
+    function _next(string calldata id) external pure returns (AssetCatalog.Listing memory) {
+        return NextTestnetCatalog.get(id);
     }
 
     function testBepoliaHasNoLzEndpoint() public {
