@@ -319,6 +319,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("hveaero") || k == keccak256("hveAERO")) {
+            return Listing(
+                Kind.Closed,
+                "hveaero",
+                "Hyperleaf veAERO",
+                "hveAERO",
+                "veAERO",
+                8453,
+                30184,
+                40245,
+                0,
+                0,
+                0xeBf418Fe2512e7E6bd9b87a8F0f294aCDC67e6B4,
+                1_000 ether,
+                true
+            );
+        }
         if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) {
             return Listing(
                 Kind.Liquid,

@@ -376,7 +376,7 @@
           "bribe-erc20s"
         ]
       },
-      "note": "Later. VotingEscrow ERC-721. After hSKY urn lockbox exists we can reuse NFT/position custody patterns. Not next.",
+      "note": "NFT lockbox LeafNftLockbox. Permanent NORMAL veNFT only. Shares = locked AERO amount. Not a MainnetBatches id. C1 market exit. No vote/merge/split.",
       "status": "later",
       "priority": 15
     },

@@ -52,7 +52,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 **3** — hsAVAX (Avax) + hsETHFI + hstkwaUSDC (Ethereum).
 **4** — C1: BLUAI4Y then hORDER. Claim board after the first C1 lists. No CREATE2 twin.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
-**E** — veAERO / remaining Ethereum (not SKY).
+**E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
 **5** — hJitoSOL. Grok bot: Docker `anchor build -v` → deploy `.so` → Store PDA → HyperEVM dest OFT. Task list: `GROK_BOT_MAINNET.md` §5. NCN out.

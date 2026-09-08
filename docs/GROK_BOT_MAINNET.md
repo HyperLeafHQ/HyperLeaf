@@ -360,4 +360,4 @@ Smoke: lock dust JitoSOL → LZ → hJitoSOL on 999 → send back to a Solana pu
 - NCN restake / VRT wrap
 - Compiling `.so` on the architect sandbox
 - Frontend restyle (`GROK_BOT_FRONTEND.md` is the other bot)
-- Preview updates
+- NFT lockbox (`LeafNftLockbox` / hveAERO). Code exists. **Not a BATCH.** Do not `DeployClosed` it this job.

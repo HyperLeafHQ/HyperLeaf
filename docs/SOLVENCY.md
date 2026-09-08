@@ -280,6 +280,27 @@ Canonical economic owner is **the Orderly ledger account = the Arb lockbox addre
 
 
 
+### hveAERO (later — NFT lockbox, not a grok-bot batch)
+
+Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decaying positions cannot share one ERC-20 (Alice 4y vs Bob 1 week would steal duration).
+
+| | |
+| --- | --- |
+| Canonical backing | veAERO NFTs in `LeafNftLockbox` on Base (`0xeBf418Fe…`). Principal = `locked(tokenId).amount` at wrap |
+| Accounting unit | 1 hveAERO = 1 AERO locked in a **permanent** NFT. Not voting power. Not liquid AERO |
+| Core invariant | dest supply ≤ sum of recorded `principalOf` ≤ on-chain `locked.amount` of held ids |
+| Mint / redeem | C1, market-only (`LeafClosedOFT`). No protocol NFT return. No `createLock` of AERO |
+| Accept | `escrowType == NORMAL` and `isPermanent`. Reject LOCKED / MANAGED / decaying |
+| Never | `merge` / `split` / `withdraw` / `unlockPermanent` / `vote` / wrap liquid AERO |
+| Yield | Rebase stays inside the NFT (NAV of the pool, no 1% skim until a split path exists). Bribe/fee ERC-20s on the lockbox → converter → HYPE 99/1. Never pull the NFT |
+| Failure | Aerodrome unlocks permanent; we accepted a decaying NFT (code rejects); mixing veUP into this listing |
+| Auto-pause | guardian. `canonicalInner` is 0 — VE `totalSupply` is NFT count, not AERO |
+| Worst-case loss | C1 cap. First-batch listing is **not** MainnetBatches (cannot `BATCH=n`) |
+| Test | `test/lz/LeafNftLockbox.t.sol` |
+| Same box later | hveUP (Robinhood) once veUP is the same permanent-lock shape. StonkBrokers / PTSMAX only if they have a comparable principal unit |
+
+
+
 ### PTSMAX
 
 Accounting unit is **sRIVER_V2 tokenId**, not `balanceOf(Pts)`. Do not ship on the ERC-20 adapter. Merkle weekly Pts is address-keyed, not NFT-keyed. Blocked on NFT lockbox + lockbox appearing in a weekly tree.
