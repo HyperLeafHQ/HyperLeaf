@@ -15,6 +15,8 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     ILayerZeroEndpointV2 public immutable endpoint;
     address public guardian;
     mapping(uint32 eid => bytes32 peer) public peers;
+    /// @dev Permanently frozen once the bridge is opened for the first time.
+    bool public peersFrozen;
 
     /// @dev Frozen after first set. Encoded in every LZ payload so a proof
     ///      cannot be replayed against a different listing (Liquid range-proof cache).
@@ -92,7 +94,9 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     }
 
     function setPeer(uint32 eid, bytes32 peer) public onlyOwner {
+        if (peersFrozen) revert PeerFrozen();
         if (peers[eid] != bytes32(0) && peers[eid] != peer) revert PeerFrozen();
+        if (peer == bytes32(0)) revert NoPeer();
         peers[eid] = peer;
         emit PeerSet(eid, peer);
     }
@@ -169,6 +173,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     function openBridge() public virtual onlyOwner {
         if (listingTag == bytes32(0)) revert NoListingTag();
         if (maxPerTx == 0 || maxPerDay == 0) revert LimitsUnset();
+        peersFrozen = true;
         bridgeOpen = true;
         emit BridgeOpened();
     }
