@@ -1,5 +1,9 @@
 //! PDA lockbox state machine. No Solana runtime — `cargo test` is the spec.
 //! On-chain program must implement these transitions and nothing else.
+//!
+//! Cash: `escrow_atoms` is the JitoSOL ATA of the Store. Harvest fee leaves
+//! escrow immediately (to the harvest ATA). Unlock pays `atoms`, never the
+//! whole ATA. Invariant: `escrow_atoms >= last_accounted`. Extra is donation.
 
 use crate::{atoms_from_shares, book_retain_fee, shares_from_atoms, JITO_MINT, STAKE_POOL_PROGRAM};
 
@@ -16,6 +20,8 @@ pub struct Lockbox {
     pub last_rate: u128,
     pub total_shares: u128,
     pub deposit_cap_atoms: u128,
+    pub escrow_atoms: u128,
+    pub harvest_atoms: u128,
     pub halted: bool,
 }
 
@@ -32,6 +38,7 @@ pub enum Error {
     LzOnly,
     BadPeer,
     WrongListing,
+    Underbacked,
 }
 
 impl Lockbox {
@@ -41,11 +48,21 @@ impl Lockbox {
             last_rate: 0,
             total_shares: 0,
             deposit_cap_atoms,
+            escrow_atoms: 0,
+            harvest_atoms: 0,
             halted: false,
         }
     }
 
-    /// Settle 1% before wrap/redeem. `pool_mint` must be JitoSOL (caller-checked).
+    fn require_cash(&self) -> Result<(), Error> {
+        if self.escrow_atoms < self.last_accounted {
+            return Err(Error::Underbacked);
+        }
+        Ok(())
+    }
+
+    /// Settle 1% before wrap/redeem. Moves fee atoms escrow → harvest ATA.
+    /// `pool_mint` must be JitoSOL (caller-checked).
     pub fn harvest_rate(&mut self, total_lamports: u64, pool_token_supply: u64) -> Result<u128, Error> {
         let rate = crate::rate(total_lamports, pool_token_supply).ok_or(Error::BadRate)?;
         if self.last_rate == 0 {
@@ -55,22 +72,32 @@ impl Lockbox {
         let (fee, next, nr) = book_retain_fee(self.last_accounted, self.last_rate, rate);
         self.last_accounted = next;
         self.last_rate = nr;
+        if fee > 0 {
+            if self.escrow_atoms < fee {
+                return Err(Error::Underbacked);
+            }
+            self.escrow_atoms -= fee;
+            self.harvest_atoms += fee;
+        }
+        self.require_cash()?;
         Ok(fee)
     }
 
+    /// Pull `atoms` JitoSOL into the escrow ATA, then mint shares.
+    /// Returns (shares, fee_moved_to_harvest).
     pub fn lock(
         &mut self,
         atoms: u128,
         total_lamports: u64,
         pool_token_supply: u64,
-    ) -> Result<u128, Error> {
+    ) -> Result<(u128, u128), Error> {
         if self.halted {
             return Err(Error::Halted);
         }
         if atoms == 0 {
             return Err(Error::Zero);
         }
-        self.harvest_rate(total_lamports, pool_token_supply)?;
+        let fee = self.harvest_rate(total_lamports, pool_token_supply)?;
         if self.total_shares != 0 && self.last_accounted == 0 {
             return Err(Error::Insufficient);
         }
@@ -85,21 +112,25 @@ impl Lockbox {
         if shares == 0 {
             return Err(Error::Zero);
         }
+        self.escrow_atoms += atoms;
         self.last_accounted += atoms;
         self.total_shares += shares;
-        Ok(shares)
+        self.require_cash()?;
+        Ok((shares, fee))
     }
 
+    /// Not a user ix. Pays remaining JitoSOL, never the whole ATA.
+    /// Returns (atoms_to_user, fee_moved_to_harvest).
     pub fn unlock(
         &mut self,
         shares: u128,
         total_lamports: u64,
         pool_token_supply: u64,
-    ) -> Result<u128, Error> {
+    ) -> Result<(u128, u128), Error> {
         if shares == 0 || shares > self.total_shares {
             return Err(Error::Insufficient);
         }
-        self.harvest_rate(total_lamports, pool_token_supply)?;
+        let fee = self.harvest_rate(total_lamports, pool_token_supply)?;
         if self.total_shares != 0 && self.last_accounted == 0 {
             return Err(Error::Insufficient);
         }
@@ -107,9 +138,19 @@ impl Lockbox {
         if atoms == 0 {
             return Err(Error::Zero);
         }
+        if self.escrow_atoms < atoms {
+            return Err(Error::Underbacked);
+        }
+        self.escrow_atoms -= atoms;
         self.last_accounted -= atoms;
         self.total_shares -= shares;
-        Ok(atoms)
+        self.require_cash()?;
+        Ok((atoms, fee))
+    }
+
+    /// Extra JitoSOL in the ATA without lock(). Backing, not yield.
+    pub fn donate(&mut self, atoms: u128) {
+        self.escrow_atoms += atoms;
     }
 
     /// Side-token ATA on the PDA (airdrop snapshot). Never JitoSOL.
@@ -137,7 +178,7 @@ impl Lockbox {
         shares: u128,
         total_lamports: u64,
         pool_token_supply: u64,
-    ) -> Result<u128, Error> {
+    ) -> Result<(u128, u128), Error> {
         if tag != expected_tag || tag == [0u8; 32] {
             return Err(Error::WrongListing);
         }
@@ -166,7 +207,6 @@ mod tests {
     use crate::RATE_SCALE;
 
     fn pool(rate_x: u128) -> (u64, u64) {
-        // total_lamports / supply = rate_x / 1e18. supply = 1e9 atoms (1 JitoSOL)
         let supply = 1_000_000_000u64;
         let lamports = ((rate_x * supply as u128) / RATE_SCALE) as u64;
         (lamports, supply)
@@ -176,29 +216,36 @@ mod tests {
     fn lock_mints_18dp_shares() {
         let mut b = Lockbox::new(1_000_000_000_000);
         let (l, s) = pool(RATE_SCALE);
-        let shares = b.lock(5_000_000_000, l, s).unwrap();
+        let (shares, fee) = b.lock(5_000_000_000, l, s).unwrap();
         assert_eq!(shares, 5_000_000_000_000_000_000);
+        assert_eq!(fee, 0);
         assert_eq!(b.last_accounted, 5_000_000_000);
+        assert_eq!(b.escrow_atoms, 5_000_000_000);
     }
 
     #[test]
     fn harvest_then_unlock_is_less_than_deposit() {
         let mut b = Lockbox::new(1_000_000_000_000);
         let (l0, s) = pool(RATE_SCALE);
-        let shares = b.lock(100_000_000_000, l0, s).unwrap();
+        let (shares, _) = b.lock(100_000_000_000, l0, s).unwrap();
         let (l1, _) = pool(RATE_SCALE * 11 / 10);
         let fee = b.harvest_rate(l1, s).unwrap();
         assert_eq!(fee, 90_909_090);
-        let out = b.unlock(shares, l1, s).unwrap();
+        assert_eq!(b.harvest_atoms, fee);
+        assert_eq!(b.escrow_atoms, 100_000_000_000 - fee);
+        let (out, fee2) = b.unlock(shares, l1, s).unwrap();
+        assert_eq!(fee2, 0);
         assert_eq!(out, 100_000_000_000 - fee);
         assert_eq!(b.total_shares, 0);
+        assert_eq!(b.escrow_atoms, 0);
+        assert_eq!(b.harvest_atoms, fee);
     }
 
     #[test]
     fn halt_blocks_lock_not_unlock() {
         let mut b = Lockbox::new(1_000_000_000_000);
         let (l, s) = pool(RATE_SCALE);
-        let shares = b.lock(1_000_000_000, l, s).unwrap();
+        let (shares, _) = b.lock(1_000_000_000, l, s).unwrap();
         b.halt();
         assert_eq!(b.lock(1, l, s), Err(Error::Halted));
         assert!(b.unlock(shares, l, s).is_ok());
@@ -225,12 +272,12 @@ mod tests {
     fn lz_receive_wrong_tag() {
         let mut b = Lockbox::new(1_000_000_000_000);
         let (l, s) = pool(RATE_SCALE);
-        let shares = b.lock(1_000_000_000, l, s).unwrap();
+        let (shares, _) = b.lock(1_000_000_000, l, s).unwrap();
         assert_eq!(
             b.lz_receive([1u8; 32], crate::LISTING_TAG, shares, l, s),
             Err(Error::WrongListing)
         );
-        let out = b
+        let (out, _) = b
             .lz_receive(crate::LISTING_TAG, crate::LISTING_TAG, shares, l, s)
             .unwrap();
         assert_eq!(out, 1_000_000_000);
@@ -248,10 +295,23 @@ mod tests {
         let mut b = Lockbox::new(1_000_000_000_000);
         let (l, s) = pool(RATE_SCALE);
         b.lock(100_000_000_000, l, s).unwrap();
-        // 10 JitoSOL show up in the token account without lock()
+        b.donate(10_000_000_000);
         let (l1, _) = pool(RATE_SCALE * 11 / 10);
         let fee = b.harvest_rate(l1, s).unwrap();
-        // fee is 1% of surplus on 100, not on 110
         assert_eq!(fee, 90_909_090);
+        assert_eq!(b.last_accounted, 100_000_000_000 - fee);
+        assert_eq!(b.escrow_atoms, 110_000_000_000 - fee);
+    }
+
+    #[test]
+    fn unlock_never_pays_whole_ata() {
+        let mut b = Lockbox::new(1_000_000_000_000);
+        let (l, s) = pool(RATE_SCALE);
+        let (shares, _) = b.lock(100_000_000_000, l, s).unwrap();
+        b.donate(7);
+        let (out, _) = b.unlock(shares, l, s).unwrap();
+        assert_eq!(out, 100_000_000_000);
+        assert_eq!(b.escrow_atoms, 7);
+        assert_eq!(b.last_accounted, 0);
     }
 }

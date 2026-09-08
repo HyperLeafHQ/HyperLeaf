@@ -87,6 +87,10 @@ There is **no user `Unlock`**. Burning hJitoSOL on HyperEVM is the only way shar
 
 PDA: seeds `b"Store"` (this is the LZ OApp receiver / HyperEVM peer). Escrow ATA = Store's ATA for the JitoSOL mint. Rate account = Jito pool, read-only; `pool_mint` must equal JitoSOL.
 
+Cash invariant: `escrow_atoms >= last_accounted`. Harvest fee **leaves** the escrow ATA (to harvest ATA) in the same instruction that books it — not an accounting-only flag. Unlock transfers the computed remaining atoms, never `ATA.amount`. Extra JitoSOL in the ATA is a donation (backing, not yield).
+
+Layout: `solana/leaf-jito-rate/src/store.rs` (167 bytes). Token account: `token.rs`. Payload decode: `decode_bridge` (96-byte abi.encode).
+
 Forbidden CPI: stake-pool, interceptor, vault, restaking. Token program + LZ endpoint/ULN only.
 
 Solana LZ (eid 30168), pinned in `LeafJitoPolicy`:

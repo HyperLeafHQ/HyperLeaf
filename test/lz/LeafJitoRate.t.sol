@@ -206,6 +206,7 @@ contract LeafJitoDestOFTTest is PegReady {
         oft.openBridge();
         vm.stopPrank();
         vm.deal(user, 1 ether);
+        assertEq(address(oft.hypeRewarder()), address(0));
     }
 
     function testMintFromSolanaPayload() public {

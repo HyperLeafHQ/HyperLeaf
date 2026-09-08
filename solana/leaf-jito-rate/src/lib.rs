@@ -79,9 +79,27 @@ pub fn encode_bridge(tag: [u8; 32], to: [u8; 32], amount: u128) -> [u8; 96] {
     out
 }
 
+pub fn decode_bridge(buf: &[u8]) -> Option<([u8; 32], [u8; 32], u128)> {
+    if buf.len() != 96 {
+        return None;
+    }
+    let mut tag = [0u8; 32];
+    let mut to = [0u8; 32];
+    tag.copy_from_slice(&buf[..32]);
+    to.copy_from_slice(&buf[32..64]);
+    if buf[64..80] != [0u8; 16] {
+        return None;
+    }
+    let mut amt = [0u8; 16];
+    amt.copy_from_slice(&buf[80..96]);
+    Some((tag, to, u128::from_be_bytes(amt)))
+}
+
 pub mod lockbox;
 pub mod stake_pool;
 pub mod ix;
+pub mod token;
+pub mod store;
 
 #[cfg(test)]
 mod tests {
@@ -112,6 +130,17 @@ mod tests {
         assert_eq!(&buf[..32], &tag);
         assert_eq!(buf[63], 0xef);
         assert_eq!(&buf[64 + 24..], &[0x0d, 0xe0, 0xb6, 0xb3, 0xa7, 0x64, 0x00, 0x00]);
+        let (t, u, n) = decode_bridge(&buf).unwrap();
+        assert_eq!(t, tag);
+        assert_eq!(u, to);
+        assert_eq!(n, 1_000_000_000_000_000_000);
+    }
+
+    #[test]
+    fn decode_rejects_over_u128() {
+        let mut buf = encode_bridge([0u8; 32], [0u8; 32], 1);
+        buf[64] = 1;
+        assert!(decode_bridge(&buf).is_none());
     }
 }
 

@@ -129,7 +129,7 @@ pub fn lock_payload(
     if evm_to[..12] != [0u8; 12] || evm_to[12..] == [0u8; 20] {
         return Err(Error::BadPeer);
     }
-    let shares = box_.lock(atoms, total_lamports, pool_token_supply)?;
+    let (shares, _fee) = box_.lock(atoms, total_lamports, pool_token_supply)?;
     Ok((encode_bridge(tag, evm_to, shares), shares))
 }
 

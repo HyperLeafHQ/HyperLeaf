@@ -199,6 +199,14 @@ forge script script/lz/OpenPeg.s.sol:OpenPeg \
   --rpc-url hyperevm --broadcast --private-key $PRIVATE_KEY
 ```
 
+Prefer `ConfigureJitoDest` (same caps, **reverts if a Rewarder is already set**):
+
+```
+OFT=$OFT \
+forge script script/lz/ConfigureJitoDest.s.sol:ConfigureJitoDest \
+  --rpc-url hyperevm --broadcast --private-key $PRIVATE_KEY
+```
+
 Do not `OPEN_BRIDGE=true` until the Solana Store is registered, peered to this OFT (20-byte left-padded), and the Solana ULN uses Labs+Horizen+Canary. `ConfigureMainnetListing` reverts on `BATCH=5`.
 
 Redeem from this OFT must call `send(30168, solanaPubkey, amount)` — `sendTo` reverts `NotSolanaRecipient`.
