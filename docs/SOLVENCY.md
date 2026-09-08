@@ -110,7 +110,7 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Failure | vault upgrade; merkle paid to EOA; KING campaign replaced; wrapping Base/OP copies into the same dest OFT |
 | Auto-pause | ceiling / health |
 | Worst-case loss | min(cap, maxPerDay) on principal. KING/ETHFI/EIGEN are yield, not backing |
-| Test | `testRewardsSelectorRejectsSethfiDelayedWithdrawAndMerkle`. Deposit `0x24a993c9`. NextTestnetCatalog `ASSET=hsethfi` (Sepolia 11155111). Do not treat empty ETHFI/EIGEN distributors as current yield |
+| Test | `testRewardsSelectorRejectsSethfiDelayedWithdrawAndMerkle`. Deposit `0x24a993c9`. `BATCH=3` `ASSET=hsethfi`. Do not treat empty ETHFI/EIGEN distributors as current yield |
 
 ### hgSOON (next testnet — wrap gSOON, cbETH-class 1% skim)
 
@@ -217,7 +217,7 @@ Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.7
 | Auto-pause | ceiling / health / inner paused |
 | Worst-case loss | min(cap, maxPerDay) on sWBERA. Unbond APY gap is not backing |
 | Test | `testSwberaConvertToAssetsSameMathAsCbeth`, `LeafReceiptOnly`. Adapter never calls the 7d queue selectors. `ConfigureMainnetListing` `ASSET=hswbera` |
-| Deploy | **Mainnet** `DeployAdapter` on 80094. Not `DeployTestnetSource`. Not Bepolia |
+| Deploy | **Mainnet** `DeployAdapter` on 80094. Not Bepolia |
 
 
 
@@ -253,7 +253,7 @@ Canonical economic owner is **the Orderly ledger account = the Arb lockbox addre
 | Auto-pause | `reportLedgerPrincipal < totalLocked` → Degraded, mint stops |
 | Worst-case loss | C1 TVL. First deposit after a gap is at-risk until the ledger report (bounded by `maxPerTx`) |
 | Test | `test/lz/LeafOmnichainCreate2.t.sol` (name is historical; listing is Arb-only). Pins: withdraw 1196 `0xdd65ff33`; USDC 1.156 `0x93ec1d61`; type 17 `0x7a9676a6` |
-| Testnet | `FourthTestnetCatalog` `ASSET=horder` on **Arb Sepolia 421614**. Mock ORDER + MockOrderlyProxy |
+| Deploy | `BATCH=4` `ASSET=horder` on Arb 42161. Mock ORDER + MockOrderlyProxy in forge tests |
 
 
 
@@ -278,9 +278,9 @@ Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche). Never A
 | Failure | BENQI rate lie; `requestUnlock` on the lockbox (forbidden). One cooldown per address — do not start it |
 | Auto-pause | inner supply ceiling; guardian |
 | Worst-case loss | min(depositCap, maxPerDay) on principal; 1% skim on converter |
-| Test | `testSavaxPooledAvaxRateSameMathAsCbeth`, `testRewardsSelectorRejectsBenqiUnlock`. NextTestnetCatalog `ASSET=hsavax` (Fuji 43113) |
+| Test | `testSavaxPooledAvaxRateSameMathAsCbeth`, `testRewardsSelectorRejectsBenqiUnlock`. `BATCH=3` `ASSET=hsavax` |
 
-Same math as hcbETH. Different 4-byte rate read. Not in this round's `TestnetCatalog`.
+Same math as hcbETH. Different 4-byte rate read.
 
 ### hstkwaUSDC (next testnet — Umbrella StakeToken, not stkAAVE)
 
@@ -299,7 +299,7 @@ Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8
 | Worst-case loss | slash of locked stk (Umbrella max is `totalAssets - MIN_ASSETS_REMAINING`) + converter slippage on side rewards |
 | Test | cooldown/redeem selectors forbidden; `test/lz/LeafUmbrella.t.sol` claimAllRewards does not move stk; donation not yield; slash lowers watermark |
 
-Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner. Do **not** put it in this round's `TestnetCatalog`.
+Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner.
 
 ### hSKY / hAAVE
 

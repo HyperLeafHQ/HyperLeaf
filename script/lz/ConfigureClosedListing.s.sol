@@ -4,10 +4,9 @@ pragma solidity ^0.8.24;
 import {Script, console2} from "forge-std/Script.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
-import {TestnetListings} from "src/lz/TestnetListings.sol";
+import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 
-/// @notice C1 source after DeployTestnetSource + WirePeers. Farm is set at deploy.
-///         ASSET=horder (batch 4) or bluai4y. Not for L adapters.
+/// @notice C1 source after DeployClosed + WirePeers. BATCH=4. Not for L adapters.
 contract ConfigureClosedListing is Script {
     function run() external {
         address source = vm.envAddress("SOURCE");
@@ -16,8 +15,11 @@ contract ConfigureClosedListing is Script {
         address owner = vm.envAddress("OWNER");
         require(harvester != owner && converter != owner, "split keys");
 
-        string memory id = vm.envOr("ASSET", string("horder"));
-        AssetCatalog.Listing memory a = TestnetListings.get(id);
+        string memory id = vm.envString("ASSET");
+        uint8 batch = uint8(vm.envOr("BATCH", uint256(4)));
+        MainnetBatches.requireBatch(id, batch);
+        require(batch == MainnetBatches.CLOSED, "not C1 batch");
+        AssetCatalog.Listing memory a = AssetCatalog.get(id);
         require(a.kind == AssetCatalog.Kind.Closed, "not C1");
 
         vm.startBroadcast();

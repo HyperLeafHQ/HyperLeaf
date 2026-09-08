@@ -2,8 +2,7 @@
 pragma solidity ^0.8.24;
 
 /// @notice Compile-time wrap listings. Scripts take ASSET=<id>.
-/// @dev Production Solana/Monad/Sui listings still deploy a mock inner on
-///      Base Sepolia so L/C1/C2 contracts can be exercised on testnet.
+/// @dev Solana/Monad listings have no EVM inner. Do not mock them on Base.
 library AssetCatalog {
     enum Kind {
         Liquid,

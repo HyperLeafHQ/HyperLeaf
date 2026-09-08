@@ -12,7 +12,7 @@ contract SmokeTestnetRedeem is Script {
         address oft = vm.envAddress("OFT");
         address to = vm.envOr("TO", vm.envAddress("OWNER"));
         uint256 amount = vm.envOr("AMOUNT", uint256(0.05 ether));
-        uint32 dstEid = uint32(vm.envOr("DST_EID", uint256(A.EID_BASE_SEPOLIA)));
+        uint32 dstEid = uint32(vm.envOr("DST_EID", uint256(A.EID_BASE)));
 
         uint256 fee = LeafOApp(oft).quoteSend(dstEid, to, amount);
         uint256 pay = fee + (fee / 5) + 0.002 ether;

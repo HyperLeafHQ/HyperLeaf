@@ -91,7 +91,7 @@ Rewarder.register(listingId, OFT)          // requires OFT.rewarder==this
 `ListingIdFrozen` prevents rewriting hKAITO’s OFT onto hSQUID’s id.
 
 This does **not** bind to `AssetCatalog` / `listingTag` on the source
-adapter. That remains an ops checklist (`GROK_BOT_TESTNET.md`). Owner can
+adapter. That remains an ops checklist (`GROK_BOT_MAINNET.md`). Owner can
 still point an OFT at a *new* rewarder with the same id (replace a bricked
 distributor). They cannot change the id.
 

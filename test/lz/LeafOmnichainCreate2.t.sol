@@ -11,9 +11,7 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 import {MockOrderlyProxy} from "test/mocks/MockOrderlyProxy.sol";
-import {FourthTestnetCatalog} from "src/lz/FourthTestnetCatalog.sol";
-import {TestnetListings} from "src/lz/TestnetListings.sol";
-import {NextTestnetCatalog} from "src/lz/NextTestnetCatalog.sol";
+import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 
 contract MockOft is ERC20 {
     constructor() ERC20("ORDER", "ORDER") {}
@@ -92,23 +90,18 @@ contract LeafOmnichainCreate2Test is PegReady {
         assertEq(a.sourceChainIdMain, 42161);
         assertEq(a.sourceEidMain, 30110);
         assertEq(a.sourceEidTest, 40231);
-        assertEq(TestnetListings.get("horder").id, "horder");
-        assertEq(FourthTestnetCatalog.get("hORDER").symbol, "hORDER");
+        assertEq(MainnetBatches.batchOf("horder"), 4);
     }
 
-    function testHorderNotInEarlierCatalogs() public {
-        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
-        this._next("horder");
-        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
-        this._listings("hswbera");
+    function testHorderNotInEarlierBatches() public {
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._requireBatch("horder", 1);
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._requireBatch("hswbera", 4);
     }
 
-    function _next(string calldata id) external pure returns (AssetCatalog.Listing memory) {
-        return NextTestnetCatalog.get(id);
-    }
-
-    function _listings(string calldata id) external pure returns (AssetCatalog.Listing memory) {
-        return TestnetListings.get(id);
+    function _requireBatch(string calldata id, uint8 batch) external pure {
+        MainnetBatches.requireBatch(id, batch);
     }
 
     /// @dev CREATE2 would give the same lockbox on Base. We do not deploy that

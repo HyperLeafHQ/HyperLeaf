@@ -9,10 +9,6 @@ import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
-import {TestnetCatalog} from "src/lz/TestnetCatalog.sol";
-import {NextTestnetCatalog} from "src/lz/NextTestnetCatalog.sol";
-import {FourthTestnetCatalog} from "src/lz/FourthTestnetCatalog.sol";
-import {TestnetListings} from "src/lz/TestnetListings.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
@@ -129,56 +125,6 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hsethfi").sourceChainIdMain, 1);
         assertEq(AssetCatalog.get("hsethfi").sourceEidTest, 40161);
         assertEq(uint8(AssetCatalog.get("hsethfi").kind), uint8(AssetCatalog.Kind.Liquid));
-    }
-
-    function testRound1CatalogStillLocksHgsoon() public {
-        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
-        this._round1("hgsoon");
-        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
-        this._round1("hsavax");
-        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
-        this._round1("hstkwausdc");
-        vm.expectRevert(TestnetCatalog.NotThisRound.selector);
-        this._round1("hsethfi");
-        AssetCatalog.Listing memory a = TestnetCatalog.get("hxsquid");
-        assertEq(a.id, "hxsquid");
-    }
-
-    function testNextCatalogHgsoonOnly() public {
-        AssetCatalog.Listing memory g = NextTestnetCatalog.get("hgsoon");
-        assertEq(g.innerMainnet, 0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7);
-        assertEq(g.sourceEidTest, 40102);
-        assertEq(uint8(g.kind), uint8(AssetCatalog.Kind.Liquid));
-        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
-        this._next("hxsquid");
-        assertEq(NextTestnetCatalog.get("hsavax").sourceEidTest, 40106);
-        assertEq(NextTestnetCatalog.get("hstkwausdc").innerMainnet, 0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6);
-        assertEq(NextTestnetCatalog.get("hsethfi").innerMainnet, 0x86B5780b606940Eb59A062aA85a07959518c0161);
-        assertEq(TestnetListings.get("hgsoon").id, "hgsoon");
-        assertEq(TestnetListings.get("hsavax").id, "hsavax");
-        assertEq(TestnetListings.get("hstkwausdc").id, "hstkwausdc");
-        assertEq(TestnetListings.get("hsethfi").id, "hsethfi");
-        assertEq(TestnetListings.get("hethfi").id, "hsethfi");
-        assertEq(TestnetListings.get("bluai4y").id, "bluai4y");
-        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
-        this._next("horder");
-        vm.expectRevert(NextTestnetCatalog.NotThisRound.selector);
-        this._listings("hswbera");
-        assertEq(FourthTestnetCatalog.get("horder").sourceEidTest, 40231);
-        assertEq(uint8(TestnetListings.get("horder").kind), uint8(AssetCatalog.Kind.Closed));
-        assertEq(TestnetListings.get("hORDER").innerMainnet, 0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8);
-    }
-
-    function _listings(string calldata id) external pure returns (AssetCatalog.Listing memory) {
-        return TestnetListings.get(id);
-    }
-
-    function _round1(string calldata id) external pure returns (AssetCatalog.Listing memory) {
-        return TestnetCatalog.get(id);
-    }
-
-    function _next(string calldata id) external pure returns (AssetCatalog.Listing memory) {
-        return NextTestnetCatalog.get(id);
     }
 
     function testBepoliaHasNoLzEndpoint() public {

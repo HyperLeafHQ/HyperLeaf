@@ -27,9 +27,10 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | watch | **hliSLVR** | L | Robinhood | Wrap **liSLVR only**. Never taxed SLVR. Lottery rake. Confirm tax-free share |
 | watch | **hTWO** | C2 | Robinhood | Twofold. No receipt; 1h/7d stake vaults. Do not wrap TWO or vTWO |
 | watch | **hSB** | ve-NFT | Robinhood | StonkBrokers. Wrap **activated NFT**, never $STONKBROKER. TBA + geo. Skip until NFT lockbox |
-| later | hJupSOL / hANSEM | L | Solana | Needs Solana lockbox |
+| later | **hJitoSOL** then **hJupSOL** | L | Solana | First Solana listings. Rate LSTs. Need a Solana escrow program — not LeafOFTAdapter |
+| later | **hANSEM** | L? | Solana | Watch. Memecoin + launchpad airdrops, not an LST receipt |
 | later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |
-| last | BONK12M / hMET | C1/C2 | Solana | |
+| last | BONK12M / hMET | C1/C2 | Solana | After the LST lockbox exists |
 | parked | hSKY | C1 | Ethereum | Stake-only strips LockStake borrow. Min 1.44M SKY / 30k USDS |
 | parked | hGMX | C1 | Arbitrum | Stake yield frozen until $90. GLP V1 retired 2025-07-16 |
 | parked | **hUNCX** | — | Ethereum | Stake rewards + buybacks paused 2026-08-21. Lockers still earn; not paid to stakers |
@@ -55,4 +56,23 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
 **Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.
 
+## Solana (after EVM batches)
+
+No Solana lockbox in this repo. `LeafOFTAdapter` is EVM-only. First Solana listing needs a new program: escrow SPL → LZ message → HyperEVM OFT. Path is LayerZero (eid 30168), not Wormhole. DVN trio already includes Labs + Horizen + Canary on Solana; confirmations 32.
+
+Do **not** mock Solana inners on Base.
+
+| Candidate | Kind | Why / why not |
+| --- | --- | --- |
+| **jitoSOL** | L rate | Deepest single LST (~14M SOL / ~$0.7–1.1B). Yield in the SOL/jitoSOL rate (cbETH-class). First Solana ticker once the program exists |
+| **jupSOL** | L rate | Already catalogued. Sanctum rails, Jupiter validator, part of APY is subsidy. Second, not first |
+| **mSOL** / **INF** | L rate | Same math. Smaller or basket. After jitoSOL |
+| **bnSOL** | skip | Binance-issued. Redemption is CEX-shaped |
+| **hANSEM** | watch | Spot memecoin + launchpad airdrops. No stake-pool rate. Not batch-1 Solana |
+| **BONK12M** | C1 | 12m lock. Needs the same escrow plus lock accounting |
+| **hMET** | C2 | ~21d unbond queue. After L |
+
+Harvest on Solana rate LSTs is the cbETH skim (`SOL per share` ↑), not a side token. That skim has to run in the Solana program or an EVM view of a rate oracle — design that with the lockbox, do not pretend `pokeRewards` exists on SPL.
+
 Catalog: [`listings/catalog.json`](../listings/catalog.json) · kinds: [`wrap-kinds.md`](wrap-kinds.md).
+

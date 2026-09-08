@@ -262,7 +262,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uAVAX",
-      "note": "NEXT TESTNET BATCH (Fuji 43113, NextTestnetCatalog). Same L/retainRateYield path as hcbETH; rate ABI is getPooledAvaxByShares not exchangeRate. Wrap sAVAX only, never AVAX, never start BENQI unlock. User who wants AVAX: unwrap hsAVAX to sAVAX, then BENQI or DEX. Source Avalanche 43114 LZ 30106 / Fuji 40106. This round's TestnetCatalog stays four assets.",
+      "note": "BATCH 3 mainnet (Avalanche 43114). Same L/retainRateYield as hcbETH; getPooledAvaxByShares. Wrap sAVAX only, never AVAX, never requestUnlock.",
       "testnet": {
         "sourceChain": "fuji",
         "mockInner": true,
@@ -297,7 +297,7 @@
         "mockInner": true,
         "purpose": "exercise C1 contracts"
       },
-      "status": "testnet-mock-only",
+      "status": "later-solana-lockbox",
       "priority": 6
     },
     {
@@ -316,7 +316,7 @@
         "mockInner": true,
         "purpose": "exercise C2 queue"
       },
-      "status": "testnet-mock-only",
+      "status": "later-solana-lockbox",
       "priority": 7
     },
     {
@@ -333,7 +333,7 @@
         "sourceChain": "base-sepolia",
         "mockInner": true
       },
-      "status": "testnet-mock-only",
+      "status": "later-non-evm",
       "priority": 9
     },
     {
@@ -352,7 +352,7 @@
           "launchpad-airdrops"
         ]
       },
-      "note": "Watchlist. ansem.io on Solana only \u2014 no extra-chain claims. Launch airdrops to $ANSEM holders. Confirm mint before design. Dust+filter like Virtuals, without the holder problem.",
+      "note": "Watch. ansem.io launchpad airdrops to $ANSEM holders. Not an LST. Do not queue ahead of jitoSOL/jupSOL.",
       "status": "watchlist",
       "priority": 12
     },
@@ -603,9 +603,9 @@
       "exit": "instant-receipt",
       "infra": "solana-pending",
       "pairsWithUnit": "uSOL",
-      "note": "Jupiter LST (rate). If you meant vote-locked JUP instead, that is a different listing. Solana lockbox required.",
-      "status": "later",
-      "priority": 9
+      "note": "Jupiter LST (rate, Sanctum rails). Second Solana L after hJitoSOL. Part of headline APY is validator subsidy. Solana lockbox required. If you meant vote-locked JUP, that is a different listing.",
+      "status": "later-solana-lockbox",
+      "priority": 31
     },
     {
       "id": "hstdrv",
@@ -886,7 +886,7 @@
         "rateKind": "convertToAssets",
         "retainRateYield": true
       },
-      "note": "NEXT TESTNET BATCH (BSC testnet 97, NextTestnetCatalog). Same L/retainRateYield path as hcbETH; rate ABI is convertToAssets not exchangeRate. Wrap gSOON only, never SOON, never cooldownShares / 90d lock. Harvest pulls 1% of (inner * dRate / rate) to converter; 99% stays so LP/lend keep SOON value. Holders do not claim WHYPE. Redeem remaining gSOON, not 1:1 after skim. This round's TestnetCatalog stays four assets.",
+      "note": "BATCH 2 mainnet (BSC 56). Same L/retainRateYield as hcbETH; convertToAssets not exchangeRate. Wrap gSOON only, never SOON, never cooldownShares / 90d lock. Harvest pulls 1% of (inner * dRate / rate); 99% stays.",
       "status": "mainnet-batch-2",
       "priority": 10,
       "claim": "No side token. Rate is convertToAssets(1e18). setRateKind(ConvertToAssets)+retainRateYield. Never setRewardsSelector. Never deposit/mint SOON 0x6e553f65, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f.",
@@ -949,7 +949,7 @@
       "sourceEid": 30110,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1. Arbitrum only. ORDER OFT 0x4E20\u2026 (not ETH ERC-20). Orderly proxy 0xC8A8\u2026 stakeOrder. farmPrincipalOut is location only; solvency is guardian reportLedgerPrincipal vs Orderly ledger. No CREATE2 twin \u2014 one lockbox address is the identity. Unstake 2/3/4 owner; harvest 10/17 public. USDC harvest \u2260 principal. FourthTestnetCatalog ASSET=horder Arb Sepolia 421614.",
+      "note": "C1. Arbitrum only. ORDER OFT 0x4E20\u2026 (not ETH ERC-20). Orderly proxy 0xC8A8\u2026 stakeOrder. farmPrincipalOut is location only; solvency is guardian reportLedgerPrincipal vs Orderly ledger. No CREATE2 twin \u2014 one lockbox address is the identity. Unstake 2/3/4 owner; harvest 10/17 public. USDC harvest \u2260 principal. BATCH=4 ASSET=horder Arbitrum 42161.",
       "status": "mainnet-batch-4",
       "priority": 4
     },
@@ -996,6 +996,27 @@
       "claimRewardsTx": "0x26f4ca907a874d263e3f2bea18906f33559a21c9e68fe5c585a72e81cfc5e31b",
       "status": "mainnet-batch-1",
       "priority": 2
+    },
+    {
+      "id": "hjitosol",
+      "kind": "L",
+      "symbol": "hJitoSOL",
+      "name": "Hyperleaf JitoSOL",
+      "innerSymbol": "JitoSOL",
+      "innerMint": "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+      "source": "solana",
+      "sourceEid": 30168,
+      "exit": "instant-receipt",
+      "infra": "solana-pending",
+      "pairsWithUnit": "uSOL",
+      "yield": {
+        "inner": "jitosol-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": []
+      },
+      "note": "First Solana L once a Solana escrow program exists. Yield is SOL per JitoSOL (cbETH-class), plus MEV in that rate. Wrap JitoSOL only, never SOL. LZ eid 30168, confirmations 32. Not bnSOL. Not LeafOFTAdapter.",
+      "status": "later-solana-lockbox",
+      "priority": 30
     }
   ]
 }

@@ -5,14 +5,12 @@ import {Script, console2} from "forge-std/Script.sol";
 import {LeafClaimEscrow} from "src/lz/LeafClaimEscrow.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
-/// @notice HyperEVM testnet (998) claim board. After OFT exists:
-///         LEAF=  WANT=  (source inner address, even if other chain)
-///         optional REWARDER=  REWARD_ID=
+/// @notice HyperEVM mainnet claim board. After OFT exists.
 contract DeployClaimDest is Script {
     function run() external {
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
-        require(block.chainid == 998, "run on HyperEVM testnet 998");
+        require(block.chainid == 999, "HyperEVM 999");
         require(owner != guardian, "OWNER == GUARDIAN");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
         address leaf = vm.envAddress("LEAF");
@@ -21,7 +19,7 @@ contract DeployClaimDest is Script {
         bytes32 rewardId = vm.envOr("REWARD_ID", bytes32(0));
 
         vm.startBroadcast();
-        LeafClaimEscrow escrow = new LeafClaimEscrow(A.ENDPOINT_HYPEREVM_TESTNET, owner, guardian, feeRecipient);
+        LeafClaimEscrow escrow = new LeafClaimEscrow(A.ENDPOINT_HYPEREVM, owner, guardian, feeRecipient);
         escrow.setMarket(leaf, want, rewardId, true);
         if (rewarder != address(0)) escrow.setRewarder(rewarder);
         vm.stopBroadcast();
@@ -29,6 +27,6 @@ contract DeployClaimDest is Script {
         console2.log("LeafClaimEscrow", address(escrow));
         console2.log("LEAF", leaf);
         console2.log("WANT", want);
-        console2.log("next: deploy Fill on source, then WirePeers OAPP=escrow PEER=fill REMOTE_EID=sourceEid");
+        console2.log("next: deploy Fill on source, then WirePeers OAPP=escrow PEER=fill ASSET=...");
     }
 }

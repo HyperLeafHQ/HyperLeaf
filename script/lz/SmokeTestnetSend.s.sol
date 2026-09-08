@@ -7,14 +7,14 @@ import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
-/// @notice Approve mock inner and sendTo HyperEVM testnet. Overpays LZ fee.
+/// @notice Approve inner and sendTo HyperEVM. Overpays LZ fee. Canary/L smoke.
 contract SmokeTestnetSend is Script {
     function run() external {
         address source = vm.envAddress("SOURCE");
         address inner = vm.envAddress("INNER");
         address to = vm.envOr("TO", vm.envAddress("OWNER"));
         uint256 amount = vm.envOr("AMOUNT", uint256(0.05 ether));
-        uint32 dstEid = uint32(vm.envOr("DST_EID", uint256(A.EID_HYPEREVM_TESTNET)));
+        uint32 dstEid = uint32(vm.envOr("DST_EID", uint256(A.EID_HYPEREVM)));
 
         uint256 fee = LeafOApp(source).quoteSend(dstEid, to, amount);
         uint256 pay = fee + (fee / 5) + 0.002 ether;
