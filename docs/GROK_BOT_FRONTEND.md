@@ -4,6 +4,34 @@ This file is for the **frontend** bot (hyperleaf.finance, landing, this preview)
 
 `L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. If a user sees those strings, the frontend is wrong.
 
+## Key narrative (landing first screen)
+
+Lead with this, in this order. Do not bury it under wrap mechanics.
+
+1. **What you do:** 用其他链的生息资产，在 HyperEVM 上赚 HYPE。
+2. **Where HYPE comes from:** 底层资产自己的代币排放，或源协议已经在分的真实收入。HyperLeaf 把它换成 HYPE。
+3. **What we do not do:** 不另发收益、不加积分、不做空投激励。只抽已产生收益的 1%。
+
+Hero ZH:
+
+> 用其他链的生息资产，赚 HYPE。
+>
+> 把 Base、以太坊、BSC、Avalanche 上已经在生息的收据锁进来，铸成 Leaf。多余的收益打成 HYPE。
+>
+> HYPE 从哪来：底层资产自己的代币经济排放，或那个协议已经在分的真实收入。HyperLeaf 不额外提供任何收益、积分或激励。
+
+Hero EN:
+
+> Earn HYPE from productive assets on other chains.
+> HYPE is those protocols’ own emissions or revenue, converted. HyperLeaf does not add yield, points, or incentives.
+
+Then the “HYPE 从哪来” table. Two ways to receive, not one:
+
+- extra token (QUID, Avantis rewards, GHO) → 换成 HYPE，钱包领取
+- rate / share (cbETH, gSOON, sAVAX) → 99% 留在收据，协议抽 1%
+
+Wrap / Leaf / 退出 are the *how*. HYPE from foreign yield is the *why*.
+
 ## What the protocol does
 
 HyperLeaf is infrastructure. It is responsible for:
