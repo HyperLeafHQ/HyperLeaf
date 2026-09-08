@@ -13,11 +13,18 @@ interface IClaimHype {
 }
 
 /// @title LeafClaimEscrow
-/// @notice Dest-side C1 exit board. Seller deposits Leaf; buyer pays inner
-///         (locally or via `LeafClaimFill` on source). Protocol is never the
-///         counterparty. No mint. Execution fee is 0. 1% of ask is a **buyer
-///         reward**, not a protocol fee. Occupancy HYPE while listed is claimed
-///         here → `feeRecipient`. Cancel / expire returns Leaf; no cancel fee.
+/// @notice Exit board. Protocol is never the counterparty. No mint. Execution
+///         fee is 0. 1% of ask is a **buyer reward**. Occupancy HYPE while
+///         listed → `feeRecipient`. Cancel / expire returns Leaf; no cancel fee.
+///
+/// Allowlist (owner `setMarket`):
+/// 1. **C1 Closed OFTs first** — no protocol redeem; this is the product.
+/// 2. **hNEST / same-chain window receipts** — `fillLocal` (NEST and hNEST
+///    both live on HyperEVM). No NestVault fork.
+/// 3. **Share-price Liquid** — same contracts, no extra yield split. NAV
+///    stays in the token; cancel may earn the seller the appreciation and
+///    protocol 0. Owner may allowlist later; do not build a second accounting
+///    model for it.
 contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -89,8 +96,9 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         rewarder = IClaimHype(r);
     }
 
-    /// @notice Owner allowlists a C1 Leaf against its source inner. Do not
-    ///         allowlist share-price tickers in v1.
+    /// @notice Allowlist a Leaf against the inner used as ask.
+///         C1 first. hNEST: same-chain `wantToken` = NEST. Share-price: only
+///         if you accept occupancy = 0 on cancel.
     function setMarket(address leaf, address wantToken, bytes32 rewardId, bool allowed) external onlyOwner {
         if (leaf == address(0) || wantToken == address(0)) revert ZeroAddress();
         markets[leaf][wantToken] = Market(allowed, rewardId);

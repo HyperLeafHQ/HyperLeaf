@@ -61,7 +61,7 @@ English:
 | L | 烧掉就能拿回 | 烧掉 Leaf，马上拿回原来那份收据。想变现货，自己去官方解押。 |
 | C1 | 只能卖掉 | 协议不赎回。想出去，在 HyperEVM 卖掉。低于账面价是有人接盘的价格，不是底仓没了。 |
 | C2 | 烧掉后等几天 | 烧掉 Leaf，等窗口，再去源链领。金库不会因为排队而亏净值。 |
-| hNEST | 按窗口取出 | 按 Nest 自己的窗口拿回 NEST，不是随时 1:1。 |
+| hNEST | 按窗口取出 | 按 Nest 自己的窗口拿回 NEST，大约六个月，不是随时 1:1。也可以把 hNEST 挂到转让板，用折价提前走（成交才走，协议不接盘）。 |
 | blocked / parked | 暂不做 | Do not offer a deposit. Say why in one sentence from ROADMAP. |
 
 Filters, nav, cards, toasts: the left column never appears. “同一套 L 适配器” is also forbidden.

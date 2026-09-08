@@ -21,10 +21,11 @@ is for claims that **cannot** come home today.
 
 | Exit (GitHub) | Face value | Maturity | Yield that transfers with the Leaf | Board useful? |
 | ------------- | ---------- | -------- | ---------------------------------- | ------------- |
-| instant-receipt, **share-price** (`hcbETH`, `hsWBERA`, `hgSOON`, Morpho) | remaining inner / shares (`SOLVENCY` row) | LZ + official unwrap, not HyperLeaf | **Yes** (in the receipt) | Optional RFQ. Discount ≈ LZ + wait. Do not seed an AMM to look busy. |
-| instant-receipt, **Rewarder** (`hxSQUID`, later hKAITO airdrops) | inner 1:1 (xSQUID) | same | **No** — pending HYPE stays with the seller address | Board can trade the Leaf. Publish that HYPE does **not** ride along. Do not invent a bundled “principal + future QUID” NFT until Rewarder ownership is explicit. |
-| 只能卖掉 / C1 (`hVIRTUALMAX`, `BLUAI4Y`, `hORDER`, parked `hSKY`) | `SOLVENCY` accounting unit (often not `balanceOf`) | **never** via protocol redeem | per that row | **This is the product.** Bid is a liquidity price, not a depeg. |
-| 烧掉后等几天 / C2 / hNEST | queued inner; ticket after burn | `eta` / Nest window | none after burn (Leaf is gone) | Board **before** burn (Leaf still exists). After burn there is a ticket, not a Leaf — different object, do not mix. |
+| 只能卖掉 / C1 (`hVIRTUALMAX`, `BLUAI4Y`, `hORDER`, parked `hSKY`) | `SOLVENCY` accounting unit (often not `balanceOf`) | **never** via protocol redeem | per that row | **Priority 1.** This is the product. |
+| hNEST (6-month window) | NEST (same chain) | `requestWithdraw` ~26w | residual HYPE follows address | **Priority 2.** Same escrow, `fillLocal`. Board **before** `requestWithdraw`. After burn there is a ticket, not hNEST — do not mix. |
+| 烧掉后等几天 / C2 | queued inner | `eta` | none after burn | Board **before** burn only. Same contracts as C1 if you allowlist. |
+| instant-receipt, **share-price** | remaining inner | LZ + official unwrap | in the receipt | **Plug only.** `setMarket` + existing fill. No escrow yield model. Cancel = seller keeps NAV. Skip if anyone would have to write extra code. |
+| instant-receipt, **Rewarder** (`hxSQUID`) | inner 1:1 | same | HYPE does not ride | Optional. Instant redeem is usually better than a 30% ask. |
 | ve-NFT / locked | position NAV for that tokenId | lock end / epoch | occupancy ≠ principal | Board only after NFT lockbox exists. |
 
 LP of a **share-price** Leaf already keeps intrinsic yield. LP of a
@@ -64,6 +65,12 @@ Luna `239ce2f` / wrap-fill:
 5. **Cancel is free.** Occupancy HYPE already notified stays with the board.
 6. **Ask mismatch refunds the buyer.** `testLzWrongAskRefunds`.
 
+
+**v1 allowlist**
+
+1. Closed C1 (`BLUAI4Y`, `hVIRTUALMAX`, `hORDER`, …) — `LeafClaimFill` on source.
+2. hNEST — `fillLocal` on HyperEVM (pay NEST, receive hNEST). No NestVault changes. Residual HYPE occupancy is whatever already follows the holder address; do not add a Nest-specific claim path until it is a one-line `claimOccupancy` plug.
+3. Share-price / other Liquid — **no new Solidity.** Owner `setMarket` if they want; otherwise leave off. Instant unwrap already exists.
 
 ## Wrap-fill (the actual product)
 
@@ -113,8 +120,9 @@ punishing a seller who did not consume a buyer.
 
 Share-price Leaf (hcbETH): NAV stays in the token. Cancel = seller takes
 the richer receipt; protocol gets 0. **Do not force a fee to “fix” that.**
-v1 allowlists **C1 only**. Escrow yield accounting for auto-compounding
-is a later model, not a Rewarder hack.
+No extra Solidity. Owner may `setMarket` later; default is off.
+
+hNEST uses `fillLocal` (same chain). Do not fork NestVault for occupancy.
 
 Rights freeze at `list`: seller accepts “收益停止”. Fill later does not
 retro-credit them.
