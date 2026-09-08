@@ -61,6 +61,8 @@ contract LeafRateHwmTest is Test {
         adapter.setRetainRateYield(true);
         adapter.setConvertYieldToHype(true);
         adapter.setInnerSupplyCeiling(1_000_000_000 ether);
+        adapter.setListingTag(keccak256("RATE-HWM"));
+        adapter.setLimits(1_000_000 ether, 1_000_000 ether);
         adapter.setPeer(30367, address(1));
         adapter.openBridge();
         vm.stopPrank();
@@ -105,8 +107,6 @@ contract LeafRateHwmTest is Test {
         router.setRate(address(inner), 1.05e18);
         adapter.pokeRate();
 
-        // Economic value = 105; original cost basis = 100; fee = 1% of 5 = 0.05.
-        // Fee is paid in inner-token units at the current 1.05 rate.
         uint256 expectedFeeTokens = (5 ether * 1e18) / (1.05e18 * 100);
         assertEq(inner.balanceOf(converter), expectedFeeTokens);
         assertEq(adapter.accruedRateYield(), 0);
@@ -119,13 +119,9 @@ contract LeafRateHwmTest is Test {
         router.setRate(address(inner), 0.90e18);
         adapter.pokeRate();
 
-        // New depositor enters at the lower rate and gets a separate cost basis.
         _deposit(bob, 100 ether);
         assertEq(adapter.rateCostBasis(), 190 ether);
 
-        // Recovery to 1.0 creates exactly 10 ether of aggregate new economic growth:
-        // the original position has recovered its 10 ether loss, while the new position
-        // has itself gained 10 ether from its 0.90 entry. No old loss is charged as yield.
         router.setRate(address(inner), 1e18);
         adapter.pokeRate();
 
@@ -140,8 +136,6 @@ contract LeafRateHwmTest is Test {
         router.setRate(address(inner), 0.90e18);
         adapter.pokeRate();
 
-        // Emergency partial redemption path exercises the same _reducePrincipal accounting
-        // used by normal inbound redemption. At 0.90, half the shares are worth 45 ether.
         vm.prank(guardian);
         adapter.setHealth(LeafOApp.Health.Insolvent);
 
@@ -152,14 +146,12 @@ contract LeafRateHwmTest is Test {
         assertEq(adapter.totalLocked(), halfShares);
         assertEq(adapter.rateCostBasis(), 50 ether);
 
-        // Full recovery to the original rate is exactly break-even for the remaining shares.
         router.setRate(address(inner), 1e18);
         adapter.pokeRate();
         assertEq(adapter.rateCostBasis(), 50 ether);
         assertEq(adapter.accruedRateYield(), 0);
         assertEq(adapter.pendingRateYield(address(inner)), 0);
 
-        // Only growth above that preserved basis is fee-bearing.
         router.setRate(address(inner), 1.10e18);
         adapter.pokeRate();
         uint256 expectedFeeTokens = (5 ether * 1e18) / (1.10e18 * 100);
