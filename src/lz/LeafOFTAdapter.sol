@@ -136,8 +136,11 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _pokeRewards(address(innerToken));
     }
 
-    /// @notice Pull side-token surplus, or rate-implied inner surplus, to converter.
-    ///         Anyone. `to` must be the converter. No DEX in this call.
+    /// @notice Pull harvestable surplus to the converter. Anyone. `to` must be converter.
+    ///         Inner, RateKind.None: revert (principal, including donations).
+    ///         Inner, rate-bearing: only rate-implied surplus on `lastAccounted`.
+    ///         Any other ERC20 (QUID, airdrops): entire balance. Not backing.
+    ///         Pulling a side token does not change `totalLocked` / `lastAccounted`.
     function pullYield(IERC20 token, address to) external nonReentrant {
         _requireConverter(to);
         if (address(token) == address(innerToken)) {

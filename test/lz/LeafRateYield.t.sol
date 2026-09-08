@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {PegReady} from "test/lz/PegReady.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafOApp} from "src/lz/LeafOApp.sol";
@@ -21,6 +22,13 @@ contract MockCbETH is ERC20 {
 
     function setRate(uint256 r) external {
         exchangeRate = r;
+    }
+}
+
+contract MockDust is ERC20 {
+    constructor() ERC20("DUST", "DUST") {}
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
     }
 }
 
@@ -253,6 +261,25 @@ contract LeafRateYieldTest is PegReady {
         // Donation remains as extra backing, not converted.
         assertEq(inner.balanceOf(address(adapter)), 200e18 - fee);
         assertEq(adapter.lastAccounted(), 100e18 - fee);
+    }
+
+    function testUnrelatedErc20PullLeavesRateBooks() public {
+        _mintLeaf(100e18);
+        inner.setRate(11e17);
+        MockDust dust = new MockDust();
+        dust.mint(address(adapter), 2e18);
+        uint256 accounted = adapter.lastAccounted();
+        uint256 rate = adapter.lastRate();
+        uint256 accrued = adapter.accruedRateYield();
+        uint256 innerBal = inner.balanceOf(address(adapter));
+        adapter.pullYield(IERC20(address(dust)), converter);
+        assertEq(dust.balanceOf(converter), 2e18);
+        assertEq(adapter.lastAccounted(), accounted);
+        assertEq(adapter.lastRate(), rate);
+        assertEq(adapter.accruedRateYield(), accrued);
+        assertEq(inner.balanceOf(address(adapter)), innerBal);
+        assertEq(adapter.totalLocked(), 100e18);
+        assertEq(inner.balanceOf(converter), 0);
     }
 
     function testRoundingFloorsSurplus() public {

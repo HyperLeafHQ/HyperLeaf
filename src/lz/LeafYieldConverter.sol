@@ -179,7 +179,8 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
     /// @notice Swap (`tokenOut` stays here) or bridge (`tokenOut` = 0, inventory leaves).
     ///         DEX, Relay, Portal, deBridge, Mayan are just allowlisted `route`s.
     ///         Caller `minOut` cannot go below `requiredMinOut`. Keeper still
-    ///         required: bridge calldata has no floor, and `notify` picks listing.
+    ///         required: bridge calldata has no recipient floor, and `notify`
+    ///         is not tagged per listing. Do not drop `onlyKeeper` until both exist.
     function execute(
         IERC20 tokenIn,
         uint256 amountIn,
@@ -231,6 +232,9 @@ contract LeafYieldConverter is Ownable2Step, ReentrancyGuard {
 
     /// @notice WHYPE already here (HyperEVM). Cannot notify more than balance,
     ///         cannot notify below `minAmount` (keeper quote / `minNotify`).
+    ///         `id` is keeper-trusted: inventory is not a per-listing bucket.
+    ///         A compromised keeper can credit the wrong pool. That is
+    ///         mis-attribution, not a lockbox drain. Keep `onlyKeeper`.
     function notify(bytes32 id, uint256 amount, uint256 minAmount) external onlyKeeper nonReentrant {
         if (address(rewarder) == address(0) || address(hype) == address(0)) revert NoRewarder();
         if (amount < minAmount) revert BelowMinOut(amount, minAmount);

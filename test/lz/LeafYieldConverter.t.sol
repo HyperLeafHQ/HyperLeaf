@@ -311,6 +311,56 @@ contract LeafYieldConverterTest is PegReady {
         assertEq(quid.balanceOf(address(conv)), 50e18);
     }
 
+    function testStrangerCannotExecuteOrNotify() public {
+        _pullQuid(1e18);
+        whype.mint(address(conv), 1e18);
+        vm.prank(alice);
+        vm.expectRevert(LeafYieldConverter.NotKeeper.selector);
+        conv.execute(
+            IERC20(address(quid)),
+            1e18,
+            IERC20(address(whype)),
+            1,
+            address(aero),
+            abi.encodeCall(MockRoute.run, (1e18)),
+            block.timestamp + 1
+        );
+        vm.prank(alice);
+        vm.expectRevert(LeafYieldConverter.NotKeeper.selector);
+        conv.notify(ID, 1e18, 1e18);
+        vm.prank(alice);
+        vm.expectRevert(LeafYieldConverter.NotKeeper.selector);
+        conv.returnToLockbox(address(adapter), IERC20(address(quid)), 1e18);
+    }
+
+    function testBridgeExecuteKeeperOnlyNoRecipientCheck() public {
+        _pullQuid(5e18);
+        aero.setBridge(true);
+        vm.prank(alice);
+        vm.expectRevert(LeafYieldConverter.NotKeeper.selector);
+        conv.execute(
+            IERC20(address(quid)),
+            5e18,
+            IERC20(address(0)),
+            0,
+            address(aero),
+            abi.encodeCall(MockRoute.run, (5e18)),
+            block.timestamp + 1
+        );
+        vm.prank(keeper);
+        conv.execute(
+            IERC20(address(quid)),
+            5e18,
+            IERC20(address(0)),
+            0,
+            address(aero),
+            abi.encodeCall(MockRoute.run, (5e18)),
+            block.timestamp + 1
+        );
+        assertEq(quid.balanceOf(address(0xDEAD)), 5e18);
+        assertEq(quid.balanceOf(address(conv)), 0);
+    }
+
     function testExpiredDeadlineReverts() public {
         _pullQuid(1e18);
         vm.prank(keeper);

@@ -182,6 +182,26 @@ contract LeafNftLockboxTest is PegReady {
         assertEq(ve.ownerOf(2), address(box));
     }
 
+    function testPrincipalFrozenAcrossRebaseSecondWrapAndBribe() public {
+        _wrap(41, 10e18);
+        ve.setLocked(41, int128(uint128(12e18)), true, 0);
+        _wrap(42, 20e18);
+        bribe.mint(address(box), 7e18);
+        vm.prank(owner);
+        box.setConvertYieldToHype(true);
+        box.pullYield(bribe, address(0xC0));
+        assertEq(box.principalOf(41), 10e18);
+        assertEq(box.principalOf(42), 20e18);
+        assertEq(box.totalLocked(), 30e18);
+        assertEq(ve.ownerOf(41), address(box));
+        assertEq(ve.ownerOf(42), address(box));
+        assertEq(bribe.balanceOf(address(0xC0)), 7e18);
+        IVeNft.LockedBalance memory L = ve.locked(41);
+        assertEq(uint256(int256(L.amount)), 12e18);
+        box.reportNftHealth();
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Normal));
+    }
+
     function testRejectsTokenIdZero() public {
         ve.mint(user, 0, int128(uint128(10e18)), true, 0);
         vm.startPrank(user);

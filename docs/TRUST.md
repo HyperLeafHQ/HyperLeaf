@@ -93,12 +93,28 @@ Luna: operational security is the weak score, not “delete owner.” Owner is a
 | ---- | ----- | --- | ------ |
 | **Owner** (multisig) | LZ delegate, restore, unpause, **lower** caps, DVN config while closed, `abortCredit`, rotate harvester/converter | Resume after halt. Rotate a burned keeper. Skip a stuck LZ nonce. | Replace an existing peer (ever). Raise caps. Change rate/retain after first deposit. Replace a live Rewarder while supply > 0. `pullYield`. `setEndpointConfig` while the bridge is live. Worsen health (guardian). |
 | **Guardian** | pause, `closeBridge`, `setHealth` worse, `reportLedgerPrincipal` | Halt mint in minutes | Unpause, restore Normal, skip LZ, pull yield, change peers |
-| **Harvester / keeper** | converter `execute` / `notify` / `returnToLockbox` | Move surplus that is already yield | Point `to` anywhere but the converter. Change peers. Unpause. `notify` a different listing than the WHYPE came from |
+| **Harvester / keeper** | converter `execute` / `notify` / `returnToLockbox` | Move surplus that is already yield | Point `pullYield` `to` anywhere but the converter. Change peers. Unpause. **Must not** `notify` a different listing than the WHYPE came from (ops; not an on-chain bucket) |
 | **Converter** | the contract, never an EOA | Hold inventory, minOut hops, halt pulls | Receive principal. Be the owner |
 
 Do **not** remove: `abortCredit`, `setEndpointConfig`, `restoreHealth`, `farmUnstake`, `setRedeemEnabled`. Those are incident tools. Bind them to the multisig. `restoreHealth(Normal)` already re-checks the ceiling and hORDER `ledgerPrincipal` — it is not a bare declaration.
 
 Do **not** put owner, guardian, harvester on one EOA. Scripts already revert `split keys`.
+
+## Harvest attribution
+
+`pullYield` is permissionless, destination-locked to the configured converter.
+
+| What sits on the lockbox | Harvestable? | Backing? |
+| --- | --- | --- |
+| Inner, `RateKind.None` (hxSQUID / stkAVNT) | never (`CannotPullInner`) | yes, including donations |
+| Inner, rate-bearing (cbETH, gSOON, jitoSOL) | only rate-implied surplus on `lastAccounted` | inner donations stay backing |
+| Inner, C1 ORDER (`AmountNative`) | never — whole box balance is reserved | yes (idle ORDER is in-transit principal) |
+| Inner, C1 BLUAI surplus over reserved | yes (farm rewards paid in inner) | reserved = `totalLocked`, or 0 while farmed |
+| Any other ERC20 (QUID, AVNT, bribes, airdrops) | yes, entire balance | no. Pulling it does not change `totalLocked` / `lastAccounted` |
+
+Unknown ERC20 is **airdrop capture**, not a second principal. That is why there is no yield-token allowlist. A donation of inner is the opposite: it stays with remaining holders.
+
+`notify(id)` and `execute(..., tokenOut=0)` stay `onlyKeeper`. WHYPE in the converter is not tagged per listing, and bridge calldata can name any recipient. A compromised keeper can mis-attribute or redirect inventory. That is not a lockbox drain. Do not make those two calls permissionless until per-listing buckets and a bridge-destination bind exist.
 
 Mainnet ULN is optional 2-of-3: LayerZero Labs + Horizen + Canary. Nethermind left the DVN role 2026-08-19 — do not put it back. Google Cloud is on Base but not HyperEVM, so it is not in the trio. Confirmations are per-pathway, not one number per chain: Send ULN on A uses A's depth; Receive ULN on B for messages from A must use the same A-depth. Base→HyperEVM is 15 on both Base send and HyperEVM receive. HyperEVM→Base is 5 on both HyperEVM send and Base receive. Depths: Base/OP/Arb/BSC/Bera/ETH 15, HyperEVM 5, Avax 12, Solana 32.
 

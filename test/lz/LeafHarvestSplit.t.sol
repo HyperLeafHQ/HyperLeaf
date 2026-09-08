@@ -140,12 +140,29 @@ contract LeafHarvestSplitTest is PegReady {
         assertEq(quid.balanceOf(address(adapter)), 0);
     }
 
-    function testUnknownSideTokenHarvesterCanSweepDust() public {
+    function testDustPullDoesNotTouchPrincipalOrInnerDonation() public {
+        vm.startPrank(alice);
+        xsquid.approve(address(adapter), 50e18);
+        adapter.sendTo{value: 0.01 ether}(30367, alice, 50e18);
+        vm.stopPrank();
+        xsquid.mint(address(adapter), 3e18);
         MockToken dust = new MockToken("DUST", "DUST");
         dust.mint(address(adapter), 1e18);
-        vm.prank(harvester);
+
+        uint256 locked = adapter.totalLocked();
+        uint256 accounted = adapter.lastAccounted();
+        uint256 innerBal = xsquid.balanceOf(address(adapter));
+
         adapter.pullYield(dust, converter);
+
         assertEq(dust.balanceOf(converter), 1e18);
+        assertEq(adapter.totalLocked(), locked);
+        assertEq(adapter.lastAccounted(), accounted);
+        assertEq(xsquid.balanceOf(address(adapter)), innerBal);
+        assertEq(xsquid.balanceOf(converter), 0);
+
+        vm.expectRevert(LeafOFTAdapter.CannotPullInner.selector);
+        adapter.pullYield(xsquid, converter);
     }
 
     function testBluaiPullsInnerSurplusNotPrincipal() public {
