@@ -22,15 +22,30 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     uint256 public depositCap;
     uint256 public totalLocked;
 
+    struct PendingCredit {
+        address sender;
+        uint32 dstEid;
+        bytes32 dstPeer;
+        bytes32 recipient;
+        uint256 shares;
+        bool consumed;
+    }
+
+    mapping(bytes32 guid => PendingCredit credit) public pendingCredits;
+
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
-    event CreditAborted(address indexed to, uint256 amount);
+    event CreditAborted(address indexed sender, bytes32 indexed guid, uint256 amount);
 
     error ZeroAmount();
     error CapExceeded();
     error InsufficientLocked();
     error CannotPullInner();
+    error CreditNotPending();
+    error CreditAlreadyConsumed();
+    error CreditSenderMismatch();
+    error CreditRecipientMismatch();
 
     constructor(
         address token_,
@@ -61,18 +76,27 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit CapUpdated(cap);
     }
 
-    /// @notice After dest `skipInbound`, return inner that never minted. Halt first.
-    function abortCredit(address to, uint256 amount) external onlyOwner nonReentrant {
-        if (to == address(0) || amount == 0) revert ZeroAmount();
+    /// @notice Return inner for one exact outbound credit that has not already been consumed.
+    ///         The record is created from the actual LayerZero send receipt and binds the
+    ///         sender, destination peer, remote recipient, and share amount to the GUID.
+    function abortCredit(bytes32 guid, address recipient) external onlyOwner nonReentrant {
+        PendingCredit storage credit = pendingCredits[guid];
+        if (credit.sender == address(0)) revert CreditNotPending();
+        if (credit.consumed) revert CreditAlreadyConsumed();
+        if (recipient != credit.sender) revert CreditRecipientMismatch();
+        if (peers[credit.dstEid] != credit.dstPeer) revert PeerFrozen();
         if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
-        if (amount > totalLocked) revert InsufficientLocked();
+        if (credit.shares == 0 || credit.shares > totalLocked) revert InsufficientLocked();
+
+        credit.consumed = true;
+        uint256 shares = credit.shares;
         _accrueRateYield(innerToken);
-        uint256 assetsOut = _assetsForShares(innerToken, amount, totalLocked, 0);
+        uint256 assetsOut = _assetsForShares(innerToken, shares, totalLocked, 0);
         _requireCash(innerToken, assetsOut, 0);
-        _reducePrincipal(amount, totalLocked);
-        totalLocked -= amount;
-        innerToken.safeTransfer(to, assetsOut);
-        emit CreditAborted(to, assetsOut);
+        _reducePrincipal(shares, totalLocked);
+        totalLocked -= shares;
+        innerToken.safeTransfer(recipient, assetsOut);
+        emit CreditAborted(recipient, guid, assetsOut);
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {
@@ -193,6 +217,16 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         bytes memory payload = encodeBridge(to, shares);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
             _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
+
+        pendingCredits[receipt.guid] = PendingCredit({
+            sender: msg.sender,
+            dstEid: dstEid,
+            dstPeer: peers[dstEid],
+            recipient: to,
+            shares: shares,
+            consumed: false
+        });
+
         emit BridgedOut(msg.sender, dstEid, to, shares, receipt.guid);
         return receipt.guid;
     }
