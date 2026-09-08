@@ -61,6 +61,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error InboundOnly();
     error BadStake();
     error InsufficientLocked();
+    error FarmConfigFrozen();
 
     constructor(
         address token_,
@@ -127,6 +128,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function setFarm(address farm_, bytes4 stakeSel, uint256 arg, bytes4 claimSel) external onlyOwner {
+        _requireFarmConfigMutable();
         if (farm_ == address(innerToken)) revert BadStake();
         farm = farm_;
         farmStakeSel = stakeSel;
@@ -136,28 +138,33 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function setFarmExit(bytes4 exitSel) external onlyOwner {
+        _requireFarmConfigMutable();
         farmExitSel = exitSel;
         emit FarmExitSel(exitSel);
     }
 
     function setShareExit(bool on) external onlyOwner {
+        _requireFarmConfigMutable();
         shareExitEnabled = on;
         emit ShareExitSet(on);
     }
 
     function setFarmStyle(FarmStyle style, uint256 nativeFee) external onlyOwner {
+        _requireFarmConfigMutable();
         farmStyle = style;
         farmNativeFee = nativeFee;
         emit FarmStyleSet(style, nativeFee);
     }
 
     function setFarmRequest(bytes4 sel) external onlyOwner {
+        _requireFarmConfigMutable();
         farmRequestSel = sel;
         emit FarmRequestSel(sel);
     }
 
     /// @dev Harvest types (Orderly 10/17) may be public. Unstake 2/3/4 stays owner.
     function setPublicRequestType(uint8 payloadType, bool ok) external onlyOwner {
+        _requireFarmConfigMutable();
         if (ok && farmStyle == FarmStyle.AmountNative && payloadType >= 2 && payloadType <= 4) revert BadStake();
         publicRequestType[payloadType] = ok;
     }
@@ -320,5 +327,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
             return innerToken.balanceOf(address(this));
         }
         return farmPrincipalOut ? 0 : totalLocked;
+    }
+
+    function _requireFarmConfigMutable() internal view {
+        if (totalLocked > 0) revert FarmConfigFrozen();
     }
 }
