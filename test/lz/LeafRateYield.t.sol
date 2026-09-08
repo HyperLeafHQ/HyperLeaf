@@ -193,18 +193,46 @@ contract LeafRateYieldTest is PegReady {
         adapter.pullYield(inner, converter);
     }
 
-    function testWrapDoesNotPullToConverter() public {
+    function testWrapAfterRateIncreaseSkimsThenMintsAtNav() public {
         _mintLeaf(100e18);
         inner.setRate(11e17);
+        uint256 surplus = _surplus(100e18, 1e18, 11e17);
+        uint256 fee = _fee(surplus);
+        uint256 shares2 = _mintLeaf(10e18);
+        assertEq(inner.balanceOf(converter), fee);
+        assertEq(adapter.accruedRateYield(), 0);
+        uint256 remaining = 100e18 - fee;
+        assertEq(shares2, (10e18 * 100e18) / remaining);
+        assertEq(adapter.lastRate(), 11e17);
+    }
+
+    function testRedeemAfterRateIncreasePaysAfterSkim() public {
+        _mintLeaf(100e18);
+        inner.setRate(11e17);
+        uint256 fee = _fee(_surplus(100e18, 1e18, 11e17));
+        _redeem(100e18);
+        assertEq(inner.balanceOf(converter), fee);
+        assertEq(oft.totalSupply(), 0);
+        assertEq(inner.balanceOf(address(adapter)), 0);
+        assertEq(inner.balanceOf(user), 200e18 - fee);
+    }
+
+    function testHaltBooksFeeNewDepositNotTaxedThenFlush() public {
+        _mintLeaf(100e18);
+        inner.setRate(11e17);
+        uint256 fee = _fee(_surplus(100e18, 1e18, 11e17));
+        vm.prank(converter);
+        adapter.haltConvert();
         uint256 shares2 = _mintLeaf(10e18);
         assertEq(inner.balanceOf(converter), 0);
-        assertEq(adapter.accruedRateYield(), 0);
-        // Retain: cbETH quantity NAV is still ~1:1 until the 1% skim.
-        assertEq(shares2, 10e18);
+        assertEq(adapter.accruedRateYield(), fee);
+        assertEq(shares2, (10e18 * 100e18) / (100e18 - fee));
+        vm.prank(owner);
+        adapter.setConvertYieldToHype(true);
         vm.prank(owner);
         adapter.pullYield(inner, converter);
-        uint256 surplus = _surplus(110e18, 1e18, 11e17);
-        assertEq(inner.balanceOf(converter), _fee(surplus));
+        assertEq(inner.balanceOf(converter), fee);
+        assertEq(adapter.accruedRateYield(), 0);
     }
 
     function testDonationIsNotYield() public {

@@ -145,7 +145,8 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _requireInnerSupplyOk(innerToken);
 
         _harvestInner(innerToken, 0);
-        // Accrue only. Do not transfer to converter — wrap must not depend on swap liveness.
+        // Retain: settle 1% (flush to converter if convert on; book only if halted).
+        // Wrap must not swap. Halt must not block mint.
         _accrueRateYield(innerToken);
 
         uint256 got = _pull(msg.sender, amount);

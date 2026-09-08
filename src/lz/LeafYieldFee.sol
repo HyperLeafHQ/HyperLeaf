@@ -170,12 +170,11 @@ abstract contract LeafYieldFee {
         emit YieldHarvested(address(token), y, fee);
     }
 
-    /// @dev Inner that backs shares: balance minus reserved minus identified rate yield.
-    ///      Donations sit in here (gift to holders). Accrued yield does not.
+    /// @dev Inner that backs shares: balance minus reserved minus identified fee/yield.
+    ///      Donations sit in here (gift to holders). Accrued protocol take does not.
     function _backingInner(IERC20 token, uint256 reserved) internal view returns (uint256) {
         uint256 bal = token.balanceOf(address(this));
         uint256 free = bal > reserved ? bal - reserved : 0;
-        if (rateKind == RateKind.None || !convertYieldToHype || retainRateYield) return free;
         if (accruedRateYield >= free) return 0;
         return free - accruedRateYield;
     }
@@ -189,6 +188,10 @@ abstract contract LeafYieldFee {
         uint256 bal = token.balanceOf(address(this));
         uint256 free = bal > reserved ? bal - reserved : 0;
         if (convertYieldToHype && rateKind == RateKind.None) return shares;
+        if (rateKind != RateKind.None && retainRateYield) {
+            uint256 backing = _backingInner(token, reserved);
+            return (shares * backing) / totalShares;
+        }
         if (rateKind != RateKind.None && convertYieldToHype && !retainRateYield) {
             // Last exit: pay everything left, including unharvested yield in kind.
             if (shares == totalShares) return free;
@@ -278,14 +281,15 @@ abstract contract LeafYieldFee {
         return accruedRateYield + add;
     }
 
-    /// @dev Move rate delta on `lastAccounted` into `accruedRateYield`. No transfer.
+    /// @dev Move rate delta on `lastAccounted` into `accruedRateYield`.
+    ///      Retain: book 1% of surplus, pin watermark, then flush to converter if convert is on.
+    ///      Halt (convert off): book only — wrap/redeem stay live, new deposits mint at post-fee NAV.
     ///      Slash lowers the watermark and pulls nothing. Donations never enter lastAccounted.
     function _accrueRateYield(IERC20 token) internal {
         if (rateKind == RateKind.None) return;
         if (retainRateYield) {
-            // Yield stays in the receipt. Only slash the watermark here.
-            uint256 r = _readRate(token);
-            if (lastRate == 0 || r < lastRate) lastRate = r;
+            _bookRetainFee(token);
+            _flushAccrued(token, 0, converter);
             return;
         }
         if (!convertYieldToHype) return;
@@ -306,33 +310,47 @@ abstract contract LeafYieldFee {
         emit RateYieldAccrued(add, accruedRateYield, rate);
     }
 
+    /// @dev Pin lastRate. On increase, 1% of surplus → accrued (not 100%). Dust fee stays with holders.
+    function _bookRetainFee(IERC20 token) internal {
+        uint256 rate = _readRate(token);
+        if (lastRate == 0) {
+            lastRate = rate;
+            return;
+        }
+        if (rate < lastRate) {
+            lastRate = rate;
+            return;
+        }
+        if (rate == lastRate || lastAccounted == 0) return;
+        uint256 add = (lastAccounted * (rate - lastRate)) / rate;
+        lastRate = rate;
+        uint256 fee = (add * YIELD_FEE_BPS) / BPS_DENOMINATOR;
+        if (fee == 0) return;
+        if (fee > lastAccounted) fee = lastAccounted;
+        lastAccounted -= fee;
+        accruedRateYield += fee;
+        emit RateYieldAccrued(fee, accruedRateYield, rate);
+    }
+
+    function _flushAccrued(IERC20 token, uint256 reserved, address to) internal returns (uint256 amt) {
+        if (to == address(0) || !convertYieldToHype || accruedRateYield == 0) return 0;
+        uint256 bal = token.balanceOf(address(this));
+        uint256 free = bal > reserved ? bal - reserved : 0;
+        amt = accruedRateYield;
+        if (amt > free) amt = free;
+        if (amt == 0) return 0;
+        accruedRateYield -= amt;
+        token.safeTransfer(to, amt);
+        emit RateYieldPulled(to, amt, lastRate);
+    }
+
     /// @dev retain: pull 1% of surplus (protocol). 99% stays, so LP/lend keep the yield.
     ///      sell-all: pull 100% of surplus to converter; 99/1 is WHYPE at notify.
     function _tryPullRateYield(IERC20 token, uint256 reserved, address to) internal returns (uint256 surplus) {
-        if (rateKind == RateKind.None || to == address(0) || !convertYieldToHype) return 0;
+        if (rateKind == RateKind.None || to == address(0)) return 0;
         if (retainRateYield) {
-            uint256 rate = _readRate(token);
-            if (lastRate == 0) {
-                lastRate = rate;
-                return 0;
-            }
-            if (rate < lastRate) {
-                lastRate = rate;
-                return 0;
-            }
-            uint256 add = (lastAccounted * (rate - lastRate)) / rate;
-            lastRate = rate;
-            uint256 fee = (add * YIELD_FEE_BPS) / BPS_DENOMINATOR;
-            if (fee == 0) return 0;
-            uint256 bal_ = token.balanceOf(address(this));
-            uint256 free_ = bal_ > reserved ? bal_ - reserved : 0;
-            if (fee > free_) fee = free_;
-            if (fee == 0) return 0;
-            if (fee > lastAccounted) fee = lastAccounted;
-            lastAccounted -= fee;
-            token.safeTransfer(to, fee);
-            emit RateYieldPulled(to, fee, lastRate);
-            return fee;
+            _bookRetainFee(token);
+            return _flushAccrued(token, reserved, to);
         }
         if (!convertYieldToHype) return 0;
         _accrueRateYield(token);
@@ -348,12 +366,12 @@ abstract contract LeafYieldFee {
         emit RateYieldPulled(to, surplus, lastRate);
     }
 
-
     function _reducePrincipal(uint256 shares, uint256 totalShares) internal {
         if (shares == 0 || totalShares == 0) return;
         if (shares == totalShares) {
             lastAccounted = 0;
-            accruedRateYield = 0;
+            // Retain: leftover accrued is protocol 1% still in the box (flush later).
+            if (!retainRateYield) accruedRateYield = 0;
             return;
         }
         uint256 principalOut = (shares * lastAccounted) / totalShares;

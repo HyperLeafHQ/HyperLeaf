@@ -126,7 +126,7 @@ Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty *
 | Ticker | UI |
 | ------ | -- |
 | hxSQUID | 领取 WHYPE. Does not burn the Leaf. Extra QUID, not the xSQUID. |
-| hcbETH | **No 领取 HYPE for holders.** PoS stays in cbETH. Protocol skims 1% of the rate surplus (sold to HYPE). Copy: 质押收益留在这份收据里，做市和借贷也能拿到。协议从增值里抽 1%。赎回拿回的是金库按份额能付的 cbETH。 |
+| hcbETH | **No 领取 HYPE for holders.** PoS stays in cbETH. Protocol skims 1% of the rate surplus (sold to HYPE). Copy: 质押收益留在这份收据里，做市和借贷也能拿到。协议从增值里抽 1%。存入或赎回会先结算这一刀，新用户不替旧涨幅付钱。赎回拿回的是金库按份额能付的 cbETH。 |
 | hgSOON | **Same as hcbETH.** No 领取 HYPE. gSOON/SOON rate stays in the receipt. Protocol skims 1% of surplus. Copy: 赎回拿回的是剩下的 gSOON，不是当初那一枚。永远不要帮用户冷却或 90 天锁。 |
 | hsWBERA, Morpho shares | **No claim button.** Yield-in-the-share until that listing opts into `rateKind`. Do not copy hcbETH skim onto them until SOLVENCY says so. |
 

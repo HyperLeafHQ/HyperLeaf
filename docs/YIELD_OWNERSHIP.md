@@ -21,8 +21,10 @@ Do **not**:
 - Give Uniswap a `claim()` (it cannot split to LP tokens).
 
 `hcbETH` is the share-price sample: `setRateKind(ExchangeRate)` +
-`setRetainRateYield(true)`. Pull only `surplus × 1%`. The rest never
-leaves the lockbox. `hxSQUID` is the Rewarder sample.
+`setRetainRateYield(true)`. Pull only `surplus × 1%`. Wrap/redeem settle
+that 1% before minting or paying out so new deposits are not taxed for a
+move they missed. The rest never leaves the lockbox. `hxSQUID` is the
+Rewarder sample.
 
 A wstETH-style `whAsset` wrapper (vault that holds Leaf + claims HYPE into
 share price) is the DeFi face for Rewarder listings. Not built yet. Do not

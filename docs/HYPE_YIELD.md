@@ -42,7 +42,7 @@ Same converter bytecode on source (swap/bridge) and HyperEVM (`setRewarder` + `n
 
 `pullInner` is **hardcoded by kind**: L / C2 adapters revert `CannotPullInner` unless a **rate feed** is set. Then only the rate-implied surplus may leave (`setRateKind(ExchangeRate)` for cbETH; `GetPooledAvaxByShares` for sAVAX; `ConvertToAssets` only if that listing's SOLVENCY row opts in). C1 lockbox may pull extra inner (BLUAI). Surplus = `balance - totalLocked` (C1) or `(lastAccounted * (rate - lastRate)) / rate` (rate L, floor, principal only). Donations are not surplus.
 
-1% protocol / 99% holders at `notify` is **side-token yield only** (QUID, airdrops). Rate-bearing L (`retainRateYield`): 1% of surplus to converter, 99% stays in the receipt. Wrap/redeem do **not** transfer to the converter. `pullYield` is the only inner outflow for yield.
+1% protocol / 99% holders at `notify` is **side-token yield only** (QUID, airdrops). Rate-bearing L (`retainRateYield`): 1% of surplus to converter, 99% stays in the receipt. Wrap/redeem **settle that 1% first** (flush to converter if convert on; book if halted). They do **not** swap. `pullYield` still flushes leftover accrued.
 
 
 ## Rate-bearing (hcbETH) — Lido-style, 1% skim

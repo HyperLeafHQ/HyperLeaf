@@ -73,7 +73,7 @@ Backed ≠ redeemable. A blacklist can freeze exit while backing is still there.
 | Rate source | Coinbase cbETH `exchangeRate()`. This is a solvency oracle, not a price feed we control |
 | Rate trust | upstream contract implementation / upgrade. Anomalous jump, drop, stale return, or malicious upgrade |
 | Rate anomaly | jump → surplus floors and caps at lastAccounted (cannot sell donations). drop → watermark down, pull 0. Never harvest a donated balance |
-| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box. Dust of the 1% stays with holders |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box. Dust of the 1% stays with holders. Wrap/redeem settle this 1% before minting or paying out (flush if convert on; book if halted) |
 | Proof source | `lastAccounted` + `exchangeRate()` + cash on redeem. `retainRateYield = true` |
 | Mint / redeem | wrap/unwrap cbETH. Later deposits mint at remaining-inner NAV. Last exit pays remaining inner. **Never** Coinbase unwrap |
 | Yield | ETH PoS inside `exchangeRate()`, **left in the receipt** (Lido/wstETH). Protocol skims 1% of surplus to converter → HYPE. Holders have **no** WHYPE claim. LP/lend keep the 99% |
@@ -120,7 +120,7 @@ Invariant: HyperEVM supply ≤ inbound `totalLocked` of the farm/lock **we opene
 | Accounting unit | hgSOON **shares**. Remaining gSOON per share moves only by the 1% protocol skim |
 | Core invariant | `oft.totalSupply() ≤ adapter.totalLocked()` (shares). Remaining inner ≥ lastAccounted |
 | Rate source | gSOON `convertToAssets(1e18)` (`RateKind.ConvertToAssets`). Not `exchangeRate()` |
-| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box |
+| Maximum harvest | **1% of** `(lastAccounted * (rate - lastRate)) / rate` (floor). 99% stays in the box. Wrap/redeem settle this 1% before mint/payout (flush if convert on; book if halted) |
 | Mint / redeem | wrap/unwrap **gSOON**. Instant. After skim, remaining gSOON is not 1:1. **Never** `deposit` SOON `0x6e553f65`. **Never** `cooldownShares` 0x9343d9e1 / `cooldownAssets` 0xcdac52ed / `claim` 0x1e83409a |
 | Yield | SOON staking already in the 4626 rate. Protocol skims 1% of surplus to converter → HYPE. Holders have **no** WHYPE claim. LP/lend keep the 99% |
 | Donation | extra gSOON transfer is backing, not yield |
@@ -268,7 +268,7 @@ Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche). Never A
 | Core invariant | L: `supply ≤ totalLocked sAVAX`. Rate harvest 1% skim only |
 | Rate source | `getPooledAvaxByShares(1e18)` (`RateKind.GetPooledAvaxByShares`). Not `exchangeRate()` |
 | Mint / redeem | wrap/unwrap sAVAX, instant. Official 15d unlock + 2d redeem is the user's problem after unwrap |
-| Yield | Avalanche PoS already in the rate. BENQI takes 10% of validator rewards before that rate. HyperLeaf skims **1% of remaining surplus** (`retainRateYield`). Holders have no WHYPE claim |
+| Yield | Avalanche PoS already in the rate. BENQI takes 10% of validator rewards before that rate. HyperLeaf skims **1% of remaining surplus** (`retainRateYield`). Wrap/redeem settle the 1% before mint/payout. Holders have no WHYPE claim |
 | Failure | BENQI rate lie; `requestUnlock` on the lockbox (forbidden). One cooldown per address — do not start it |
 | Auto-pause | inner supply ceiling; guardian |
 | Worst-case loss | min(depositCap, maxPerDay) on principal; 1% skim on converter |
