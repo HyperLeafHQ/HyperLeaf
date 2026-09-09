@@ -1,7 +1,7 @@
 {
   "chainId": 999,
   "network": "HyperEVM mainnet",
-  "updatedAt": "2026-09-06T19:37:00+08:00",
+  "updatedAt": "2026-09-09T02:00:00+09:00",
   "roles": {
     "owner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",
     "guardian": "0x12dF4528E7Cc3db07A509c966c6405b69A25Ef2e",
@@ -22,9 +22,12 @@
   "policy": {
     "depositsEnabledDefault": true,
     "recordCompound": "disabled",
-    "hypeSpring": "not wired \u2014 do not market liquid HYPE claims",
-    "exitAssumption": "Most exits via secondary market; protocol redeem is backstop",
-    "note": "depositsEnabled is on-chain; prefer live chain / app. depositCap Owner-adjustable."
+    "hypeSpring": "not wired — do not market liquid HYPE claims",
+    "productExit": "C1-market-exit-first",
+    "userRedeemUi": false,
+    "protocolRedeemBackstop": true,
+    "exitAssumption": "hNEST is served as a C1-style market-exit asset. The existing NestVault redeem path remains available on-chain only as a backstop and is not presented as the primary user exit.",
+    "note": "The deployed mainnet NestVault is an immutable legacy deployment. Do not deploy or depend on a new NestVaultC1 for the current product. Frontend/app integrations should omit a redeem/withdraw window while preserving direct contract access for emergency/backstop use."
   },
   "contracts": {
     "NestVault": "0x4f6615761A772e10d7f802B1C29654ABD90fF30d",
@@ -47,6 +50,8 @@
     "note": "Prefer live chain / app."
   },
   "actionRequired": [
+    "Frontend: do not expose a protocol redeem/withdraw window for hNEST; position hNEST as a market-exit / C1-style asset.",
+    "Operations: keep the existing on-chain requestWithdraw backstop documented for emergency/manual use; do not market it as an instant or preferred exit.",
     "Prefer live chain / app for depositsEnabled, depositCap, idle, and TVL."
   ]
 }
