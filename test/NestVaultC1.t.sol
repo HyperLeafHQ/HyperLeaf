@@ -50,7 +50,6 @@ contract NestVaultC1Test is Test {
     function test_DepositMintsTransferableHNestAndLocksFullPrincipal() public {
         vm.prank(alice);
         vault.deposit(100 ether);
-
         assertEq(hNest.balanceOf(alice), 100 ether);
         assertEq(vault.totalNestLocked(), 100 ether);
         assertEq(vault.totalVeNFTs(), 1);
@@ -84,7 +83,21 @@ contract NestVaultC1Test is Test {
         assertEq(vault.totalNestLocked(), 100 ether);
     }
 
-    function test_OwnerMustDetachBeforeTransfer() public {
+    function test_NonOwnerCannotDetachOrTransferVeNFT() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        vault.ownerDetachVeNFT(tokenId);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        vault.ownerTransferVeNFT(tokenId, migrationRecipient);
+    }
+
+    function test_OwnerDetachAndTransferVeNFT() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
@@ -100,17 +113,7 @@ contract NestVaultC1Test is Test {
         assertEq(ve.ownerOf(tokenId), migrationRecipient);
     }
 
-    function test_NonOwnerCannotManageVeNFT() public {
-        vm.prank(alice);
-        vault.deposit(100 ether);
-        uint256 tokenId = vault.getVeNFTId(0);
-
-        vm.prank(alice);
-        vm.expectRevert();
-        vault.ownerDetachVeNFT(tokenId);
-    }
-
-    function test_OwnerWithdrawsAfterNaturalUnlock() public {
+    function test_OwnerWithdrawsUnderlyingAfterUnlock() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
