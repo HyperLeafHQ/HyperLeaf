@@ -10,7 +10,7 @@ export type TaoRootIdentity = {
 };
 
 export type TaoRootSnapshot = TaoRootIdentity & {
-  netuid: number;
+  netuid: 0;
   rootStakeRao: bigint;
   betaRaw: bigint;
   valueTaoRao: bigint;
@@ -20,10 +20,12 @@ export type TaoRootSnapshot = TaoRootIdentity & {
 };
 
 export interface BittensorRootClient {
+  /** Current root principal for this coldkey delegated to this validator. */
+  getRootStakeRao(validatorHotkey: Hex, coldkey: Hex): Promise<bigint>;
+
   /**
-   * Query a validator fund / basket using Bittensor's canonical runtime API.
-   * The implementation should use the current chain SDK/RPC and must not
-   * synthesize value from wallet balances or an external price oracle.
+   * Query one validator's basket using Bittensor's canonical runtime API.
+   * `taoValueRao` is the current realizable quote, not a spot-oracle NAV.
    */
   getValidatorBasket(
     validatorHotkey: Hex,
@@ -50,12 +52,19 @@ export function positionId(coldkey: Hex, validatorHotkey: Hex): RootPositionKey 
   return `${coldkey}:${validatorHotkey}`;
 }
 
+/**
+ * Normalize the remote state. The production proof layer must supply a hash
+ * over the exact canonical proof payload accepted by the verifier. The
+ * resulting snapshot must never be sent to the EVM adapter as self-attested data.
+ */
 export async function readRootPosition(
   client: BittensorRootClient,
   coldkey: Hex,
   validatorHotkey: Hex,
+  stateHash: Hex,
 ): Promise<TaoRootSnapshot> {
-  const [position, head] = await Promise.all([
+  const [rootStakeRao, position, head] = await Promise.all([
+    client.getRootStakeRao(validatorHotkey, coldkey),
     client.getBetaPosition(validatorHotkey, coldkey),
     client.getHead(),
   ]);
@@ -63,17 +72,19 @@ export async function readRootPosition(
   if (!position) {
     throw new Error("Bittensor Root Basket position not found");
   }
+  if (/^0x0{64}$/i.test(stateHash)) {
+    throw new Error("stateHash must come from the authenticated proof layer");
+  }
 
   return {
     coldkey,
     validatorHotkey,
     netuid: 0,
-    rootStakeRao: 0n,
+    rootStakeRao,
     betaRaw: position.betaRaw,
     valueTaoRao: position.valueTaoRao,
     remoteBlock: head.remoteBlock,
     specVersion: head.specVersion,
-    // Production implementation must hash the exact canonical proof payload.
-    stateHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+    stateHash,
   };
 }
