@@ -220,6 +220,12 @@ If ceiling ≤ live supply, wrap reverts `InnerSupplyBreach`. Ceiling can only g
 
 v1 SOURCE/OFT that used ceiling ≤ live supply: **abandon**. Do not reuse. Cap stays 50e18.
 
+**hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206` is dead.** Redeem OOG: options gas 200k, xSQUID `transfer` ~168k + OApp. [tx](https://layerzeroscan.com/tx/0xb884ba97d0e9e5a8c0899d3579a55ff92f1614e5c2df9f6703d255bc9195cdba). 0.001 xSQUID stays in SOURCE; do not `abortCredit`. Do not retry that GUID. Do not bump an env var.
+
+hAVNT `0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98` round-trip **PASS** — do not redeploy.
+
+hxSQUID **v3 only**, from `main` after `LZ_RECEIVE_GAS=500_000`. New SOURCE+OFT. Same caps/ceiling/selector/ULN. Wrap → LZ → **redeem must DELIVER**. Then stop.
+
 `ConfigureMainnetListing` sets `rewardsSelector` `0x9a99b4f0` for both.
 
 hAVNT: never `0xeab52318` (`claimRewardsAndRedeem`). Claim tx `0x26f4ca90`. Combined-redeem tx `0x24398d72` is a **hash**, not a selector — already documented; blacklist is `0xeab52318`.
