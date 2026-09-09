@@ -43,6 +43,9 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     uint256 public constant MAX_IDLE_DEPOSIT_BPS = 2_000;
     /// @notice Cap on optional overshoot when dettaching for liquidity (gap + buffer).
     uint256 public constant MAX_DETTACH_BUFFER_BPS = 5_000;
+    /// @notice Bound per keeper call so harvest/process cannot scale linearly with vault size.
+    uint256 public constant MAX_NFTS_PER_PROCESS = 32;
+    uint256 public constant MAX_WITHDRAW_REQUESTS_PER_PROCESS = 32;
 
     IERC20 public immutable nestToken;
     IVotingEscrow public immutable veNEST;
@@ -55,7 +58,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     address public guardian;
     address public feeRecipient;
     uint256 public feeBps = 100;
-    uint256 public depositCap; // 0 = uncapped
+    uint256 public depositCap; // 0 = uncapped; cap can be raised later as protocol launch plan expands
 
     /// @notice Absolute idle NEST floor; fulfillments only spend balance above this.
     uint256 public minIdleNest;
@@ -85,6 +88,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     WithdrawRequest[] public withdrawQueue;
     uint256 public withdrawQueueHead;
+    uint256 public pendingWithdrawNestTotal;
 
     uint256 public totalHypeDistributed;
     mapping(address => uint256) public hypeRewardDebt;
@@ -129,6 +133,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     error CompoundDisabled();
     error DepositsDisabled();
     error HevAdapterNotSet();
+    error HevAdapterChangeWhileLive();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -241,6 +246,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
         uint256 totalSupply = hNest.totalSupply();
         uint256 nestAmount = (hNestAmount * totalNestLocked) / totalSupply;
+        if (nestAmount == 0) revert ZeroShares();
 
         hNest.burn(msg.sender, hNestAmount);
 
@@ -248,6 +254,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         withdrawQueue.push(
             WithdrawRequest({user: msg.sender, nestAmount: nestAmount, requestTime: block.timestamp, fulfilled: false})
         );
+        pendingWithdrawNestTotal += nestAmount;
 
         totalNestLocked -= nestAmount;
         hypeRewardDebt[msg.sender] = (hNest.balanceOf(msg.sender) * accHypePerShare) / 1e18;
@@ -303,14 +310,9 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
                 // Credit net HYPE into accumulator (exclude fee already transferred out)
                 uint256 supply = hNest.totalSupply();
                 if (supply > 0 && hypeClaimedNet > 0) {
-                    // lastHypeBalance should reflect pre-claim vault balance of distributable HYPE
                     // After fee transfer, vault holds beforeBal + hypeClaimedNet
-                    uint256 distributableBefore = lastHypeBalance;
-                    // Sync: treat newly arrived net HYPE as reward
                     accHypePerShare += (hypeClaimedNet * 1e18) / supply;
                     lastHypeBalance = hypeToken.balanceOf(address(this));
-                    // silence unused
-                    distributableBefore;
                 } else {
                     lastHypeBalance = hypeToken.balanceOf(address(this));
                 }
@@ -323,7 +325,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     /**
      * @notice Process unlock-eligible NFTs + fulfill queue from idle surplus.
-     * @dev Soft: does not revert on shortfall. Use `processWithdrawQueueOrRevert` to surface shortfall.
+     * @dev Work is bounded per call so keeper gas does not grow linearly with vault size.
      */
     function processWithdrawQueue() external onlyKeeper nonReentrant {
         _processWithdrawQueue();
@@ -409,19 +411,15 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         return bal - minIdleNest;
     }
 
-    function _pendingWithdrawNest() internal view returns (uint256 pending) {
-        uint256 len = withdrawQueue.length;
-        for (uint256 i = withdrawQueueHead; i < len; ++i) {
-            if (!withdrawQueue[i].fulfilled) {
-                pending += withdrawQueue[i].nestAmount;
-            }
-        }
+    function _pendingWithdrawNest() internal view returns (uint256) {
+        return pendingWithdrawNestTotal;
     }
 
     function _processWithdrawQueue() internal {
-        // 1) Unlock vault-eligible detached NFTs (ignore attached amount/end — use unlockEligibleAt).
+        // 1) Unlock a bounded number of vault-eligible detached NFTs.
+        uint256 processedNfts;
         uint256 nftCount = veNFTIds.length;
-        for (uint256 i = 0; i < nftCount;) {
+        for (uint256 i = 0; i < nftCount && processedNfts < MAX_NFTS_PER_PROCESS;) {
             uint256 tokenId = veNFTIds[i];
 
             // Still in HEV / attached path — never read amount/end for readiness.
@@ -459,12 +457,14 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             unchecked {
                 nftCount--;
             }
+            processedNfts++;
         }
 
-        // 2) Fulfill queue from idle surplus only (never spend below minIdleNest).
+        // 2) Fulfill a bounded number of queue items from idle surplus only.
         uint256 availableNest = _availableIdle(nestToken.balanceOf(address(this)));
         uint256 queueLength = withdrawQueue.length;
-        for (uint256 i = withdrawQueueHead; i < queueLength; ++i) {
+        uint256 processedRequests;
+        for (uint256 i = withdrawQueueHead; i < queueLength && processedRequests < MAX_WITHDRAW_REQUESTS_PER_PROCESS; ++i) {
             WithdrawRequest storage request = withdrawQueue[i];
             if (request.fulfilled) continue;
 
@@ -472,8 +472,10 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
                 availableNest -= request.nestAmount;
                 request.fulfilled = true;
                 withdrawQueueHead = i + 1;
+                pendingWithdrawNestTotal -= request.nestAmount;
                 nestToken.safeTransfer(request.user, request.nestAmount);
                 emit WithdrawFulfilled(request.user, request.nestAmount, i);
+                processedRequests++;
             } else {
                 break;
             }
@@ -587,6 +589,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     function setHevAdapter(address _hevAdapter) external onlyOwner {
         if (_hevAdapter == address(0)) revert ZeroAddress();
+        if (totalNestLocked != 0 || veNFTIds.length != 0) revert HevAdapterChangeWhileLive();
         emit HevAdapterUpdated(address(hevAdapter), _hevAdapter);
         hevAdapter = IHevAdapter(_hevAdapter);
     }
