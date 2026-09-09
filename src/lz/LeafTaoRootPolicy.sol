@@ -17,7 +17,7 @@ library LeafTaoRootPolicy {
     error ZeroValidatorHotkey();
     error ZeroColdkey();
     error ZeroStateHash();
-    error BetaExceedsValue(uint256 betaRaw, uint256 valueTaoRao);
+    error ZeroPositionValueWithEntitlement();
 
     function validateSnapshot(
         bytes32 coldkey,
@@ -34,9 +34,8 @@ library LeafTaoRootPolicy {
         if (specVersion < MIN_SUPPORTED_SPEC_VERSION) revert UnsupportedRuntime(specVersion);
         if (stateHash == bytes32(0)) revert ZeroStateHash();
 
-        // This is deliberately conservative: beta is a share count, while value_tao_rao is
-        // the current realizable quote. We do not infer a fixed 1 beta == 1 TAO relationship.
-        // The exact beta-to-TAO rate comes from the authenticated remote state.
-        if (betaRaw != 0 && valueTaoRao == 0) revert BetaExceedsValue(betaRaw, valueTaoRao);
+        // Beta and value use different economic units. We deliberately do not infer a fixed
+        // exchange rate. The authenticated remote runtime snapshot supplies the realizable quote.
+        if (betaRaw != 0 && valueTaoRao == 0) revert ZeroPositionValueWithEntitlement();
     }
 }
