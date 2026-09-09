@@ -117,6 +117,7 @@ One production listing at a time unless an already-proven adapter, bridge path, 
 | P1 | **hAVNT** | L | Base | Same Base L path; fixed rewards integration |
 | P2 | **hcbETH** | L | Base | Exchange-rate accounting; skim verified rate surplus |
 | P2 | **hgSOON** | L | BSC | `convertToAssets` rate model; never the 90-day cooldown path |
+| P2+ | **hslisBNB** | L | BSC | Lista slisBNB only; after hgSOON; never native BNB / 7d unstake |
 | P2 | **hsWBERA** | L | Berachain | Rate-surplus model; never the 7-day NFT queue |
 | P3 | **hsAVAX** | L | Avalanche | BENQI `getPooledAvaxByShares`; no request-unlock path |
 | P3 | **hLBTC** | L | Ethereum | LBTC only; 8-decimal rate; router `getRate`; jump breaker |
@@ -128,8 +129,11 @@ One production listing at a time unless an already-proven adapter, bridge path, 
 | P4+ | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT; specialized lockbox |
 | P4+ | **hB3** | C1 | Base | Address-keyed farm; requires verified claim path |
 | P4+ | **hsteakUSDC** | L | Base Morpho | ERC-4626 share only |
+| P4+ | **hgauntletDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 shares; never DAI / Blue market |
 | P4+ | **hsteakUSDG** | L | Robinhood Morpho | ERC-4626 share only; never deposit/redeem USDG |
 | P5 | **hJitoSOL** | L | Solana | Rate-bearing LST; stake-pool rate only; no NCN restake |
+| Watch | **hsTRX** | L | TRON | JustLend sTRX only; BLOCK until LZ TRON mainnet ULN |
+| Watch | **hLINK** | C2 | Ethereum | Chainlink v0.2 pool full / 15k cap; research only |
 | Watch | **hliSLVR** | L | Robinhood | Only after tax-free receipt is confirmed |
 | Watch | **hTWO** | C2 | Robinhood | Requires dedicated 1h / 7d queue design |
 | Watch | **hSB** | ve-NFT | Robinhood | Activated NFT only; geo and NFT lockbox constraints |

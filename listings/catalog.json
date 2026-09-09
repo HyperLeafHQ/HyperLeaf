@@ -450,6 +450,88 @@
       "priority": 25
     },
     {
+      "id": "hslisbnb",
+      "kind": "L",
+      "symbol": "hslisBNB",
+      "name": "Hyperleaf slisBNB",
+      "innerSymbol": "slisBNB",
+      "innerToken": "0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "slisbnb-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate LST: retainRateYield, 1% skim, jump breaker. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves.",
+      "refs": {
+        "stakeManager": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6"
+      },
+      "status": "after-hgsoon",
+      "priority": 26
+    },
+    {
+      "id": "hgauntletdai",
+      "kind": "L",
+      "symbol": "hgauntletDAI",
+      "name": "Hyperleaf Gauntlet DAI",
+      "innerSymbol": "gtDAI",
+      "innerToken": "0x500331c9fF24D9d11aee6B07734Aa72343EA74a5",
+      "underlying": "DAI",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Morpho Gauntlet DAI Core V1 vault shares. Wrap the 4626 share only — never DAI, never a Morpho Blue market id. convertToAssets 1% skim. Constructor must pin vault.asset()==DAI and freeze the vault. Cap to verified exit liquidity, not headline TVL. Same L family as hsteakUSDC, later.",
+      "status": "later",
+      "priority": 27
+    },
+    {
+      "id": "hstrx",
+      "kind": "L",
+      "symbol": "hsTRX",
+      "name": "Hyperleaf sTRX",
+      "innerSymbol": "sTRX",
+      "innerToken": "TU3kjFuhtEo42tsCBtfYUAZxoqQ4yuSLQ5",
+      "source": "tron",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "yield": {
+        "inner": "strx-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "JustLend sTRX only. Never raw TRX. Instant hsTRX vs sTRX; 14d TRX unbond stays on JustLend. TVM ≠ EVM. BLOCK until LayerZero TRON mainnet eid + Labs/Horizen/Canary ULN is independently verified. Testnet IDs must not be reused.",
+      "status": "watch-tron-lz",
+      "priority": 40
+    },
+    {
+      "id": "hlink",
+      "kind": "C2",
+      "symbol": "hLINK",
+      "name": "Hyperleaf staked LINK",
+      "innerSymbol": "LINK",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "queued-unstake",
+      "redeemDelay": 2419200,
+      "redeemDelayLabel": "28d+7d",
+      "infra": "evm",
+      "note": "Chainlink Community Staking v0.2. Luna: research yes, production no. Pool is full (40.875M/40.875M). Per-address cap 15k LINK. 28d unbond + 7d claim. Not a generic LINK 4626. Do not infer yield from idle LINK. Revisit only if staking capacity/architecture expands.",
+      "status": "watch-capacity",
+      "priority": 41
+    },
+    {
       "id": "hlislvr",
       "kind": "L",
       "symbol": "hliSLVR",
