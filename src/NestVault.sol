@@ -417,9 +417,12 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     function _processWithdrawQueue() internal {
         // 1) Unlock a bounded number of vault-eligible detached NFTs.
-        uint256 processedNfts;
+        uint256 scannedNfts;
         uint256 nftCount = veNFTIds.length;
-        for (uint256 i = 0; i < nftCount && processedNfts < MAX_NFTS_PER_PROCESS;) {
+        for (uint256 i = 0; i < nftCount && scannedNfts < MAX_NFTS_PER_PROCESS;) {
+            unchecked {
+                ++scannedNfts;
+            }
             uint256 tokenId = veNFTIds[i];
 
             // Still in HEV / attached path — never read amount/end for readiness.
@@ -457,7 +460,6 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             unchecked {
                 nftCount--;
             }
-            processedNfts++;
         }
 
         // 2) Fulfill a bounded number of queue items from idle surplus only.
