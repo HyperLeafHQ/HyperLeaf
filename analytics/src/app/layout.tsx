@@ -1,0 +1,1 @@
+import './globals.css';export const metadata={title:'HyperLeaf Analytics',description:'Dune-free analytics for HyperLeaf-supported assets'};export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>;}
