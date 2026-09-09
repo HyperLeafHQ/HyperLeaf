@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {NestVault} from "../src/NestVault.sol";
 import {HNest} from "../src/HNest.sol";
+import {HNestCirculation} from "../src/HNestCirculation.sol";
 import {HyperEVMAddresses} from "../src/config/HyperEVMAddresses.sol";
 import {IVotingEscrow} from "../src/interfaces/IVotingEscrow.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
@@ -170,7 +171,7 @@ contract NestVaultTest is Test {
         assertTrue(vault.inHev(tokenId));
         assertEq(nest.balanceOf(alice), 10_000 ether - 100 ether);
 
-        // 4d detachment gate
+        // 4d HEV custody lock (live vault + HEV.detachmentLockDuration). Not the 8d circulation gate.
         vm.warp(block.timestamp + DETACH_LOCK + 1);
         uint256[] memory ids = new uint256[](1);
         ids[0] = tokenId;
@@ -372,6 +373,96 @@ contract NestVaultTest is Test {
         vm.prank(keeper);
         vm.expectRevert(abi.encodeWithSelector(NestVault.DettachTooEarly.selector, tokenId, availableAt));
         vault.dettachForLiquidity(ids);
+    }
+
+    function test_DettachStillBlockedOneSecondBeforeFourDays() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
+
+        uint256 tokenId = vault.getVeNFTId(0);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+        uint256 availableAt = vault.attachedAt(tokenId) + DETACH_LOCK;
+
+        vm.warp(availableAt - 1);
+        vm.prank(keeper);
+        vm.expectRevert(abi.encodeWithSelector(NestVault.DettachTooEarly.selector, tokenId, availableAt));
+        vault.dettachForLiquidity(ids);
+    }
+
+    function test_DettachAllowedAtExactlyFourDays() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
+
+        uint256 tokenId = vault.getVeNFTId(0);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+        uint256 availableAt = vault.attachedAt(tokenId) + DETACH_LOCK;
+
+        vm.warp(availableAt);
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+        assertFalse(vault.inHev(tokenId));
+        assertEq(vault.unlockEligibleAt(tokenId), block.timestamp + LOCK);
+    }
+
+    function test_ConstantsMatchLiveHevFourDayDettach() public view {
+        assertEq(vault.DETACHMENT_LOCK_DURATION(), 4 days);
+        assertEq(vault.DETACHMENT_LOCK_DURATION(), 345600);
+    }
+
+    function test_FourDayDettachIsNotCirculationGate() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
+
+        uint256 tokenId = vault.getVeNFTId(0);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+
+        vm.warp(block.timestamp + 4 days);
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+        assertFalse(vault.inHev(tokenId));
+        // hNEST from this deposit is still inside the 8d circulation window.
+        assertLt(block.timestamp, HNestCirculation.claimableAt(vault.attachedAt(tokenId)));
+    }
+
+    function test_BookVerifiedYieldSkimsOnePercentAndRaisesNav() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        adapter.seedLockedShare(tokenId, 10 ether);
+
+        assertEq(vault.pendingVerifiedYield(), 10 ether);
+
+        vm.prank(keeper);
+        vault.bookVerifiedYield();
+
+        assertEq(vault.pendingVerifiedYield(), 0);
+        assertEq(vault.bookedLockedShare(tokenId), 10 ether);
+        assertEq(vault.totalNestLocked(), 110 ether);
+        assertGt(vault.hNest().balanceOf(feeRecipient), 0);
+        assertEq(vault.sharePrice() > 1e18, true);
+
+        vm.prank(keeper);
+        vm.expectRevert(NestVault.ZeroShares.selector);
+        vault.bookVerifiedYield();
+    }
+
+    function test_BookVerifiedYieldCapsAdapterLie() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        adapter.seedLockedShare(tokenId, 50 ether);
+        vm.prank(keeper);
+        vm.expectRevert(abi.encodeWithSelector(NestVault.YieldBookTooLarge.selector, uint256(50 ether), uint256(10 ether)));
+        vault.bookVerifiedYield();
     }
 
     function test_LiveDettachResetsLockTo26w() public {

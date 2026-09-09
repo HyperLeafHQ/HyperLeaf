@@ -11,6 +11,7 @@ import {MockVotingEscrow} from "./MockVotingEscrow.sol";
  * @title MockHevAdapter
  * @notice Unit-test stub: optional NFT custody + injectable HYPE rewards.
  *         Detach calls MockVotingEscrow.mockDettach when NFT was attached via createLockFor.
+ *         Residual HYPE (`pending`) and HEV locked NEST share (`lockedShare`) are separate.
  */
 contract MockHevAdapter is IHevAdapter, IERC721Receiver {
     IVotingEscrow public ve;
@@ -20,6 +21,7 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
     bool public custodyEnabled;
     mapping(uint256 => bool) public deposited;
     mapping(uint256 => uint256) public pending;
+    mapping(uint256 => uint256) public lockedShare;
 
     constructor(address ve_, address hype_, address vault_) {
         ve = IVotingEscrow(ve_);
@@ -41,6 +43,11 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
         require(hype.transferFrom(msg.sender, address(this), amount), "transfer");
     }
 
+    /// @notice Tests inject HEV locked NEST share (getLockedRewardsBalance). Not HYPE.
+    function seedLockedShare(uint256 tokenId, uint256 amount) external {
+        lockedShare[tokenId] = amount;
+    }
+
     function depositVeNFT(uint256 tokenId) external {
         require(msg.sender == vault, "only vault");
         require(!deposited[tokenId], "already deposited");
@@ -59,6 +66,7 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
         require(msg.sender == vault, "only vault");
         require(deposited[tokenId], "not deposited");
         deposited[tokenId] = false;
+        lockedShare[tokenId] = 0;
         IVotingEscrow.TokenState memory st = ve.getNftState(tokenId);
         if (st.isAttached) {
             MockVotingEscrow(address(ve)).mockDettach(tokenId);
@@ -82,9 +90,8 @@ contract MockHevAdapter is IHevAdapter, IERC721Receiver {
         }
     }
 
-    /// @dev Mock maps injected residual amounts; live pendingLockedNestShare is NEST share.
     function pendingLockedNestShare(uint256 tokenId) external view returns (uint256) {
-        return pending[tokenId];
+        return lockedShare[tokenId];
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
