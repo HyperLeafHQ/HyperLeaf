@@ -4,7 +4,8 @@ pragma solidity ^0.8.20;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
@@ -18,12 +19,12 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * @title NestVaultC1
  * @notice C1-style Nest claim vault: deposit NEST -> lock veNEST -> mint transferable hNEST.
  *
- * C1 policy:
- * - There is NO user redemption path. hNEST is a transferable financial claim.
- * - veNEST withdrawal / transfer / merge are owner-only administrative paths for migration.
- * - The vault does not maintain a user withdrawal queue or detach NFTs for liquidity.
- * - 100% of a deposit is locked into veNEST; there is no redemption idle buffer.
- * - hNEST remains a standard ERC20 and can be traded / transferred normally.
+ * Product policy:
+ * - User redemption is permanently disabled. hNEST is the transferable claim and exits via secondary market.
+ * - No user withdrawal queue, idle redemption buffer, or keeper-driven liquidity detachment exists.
+ * - 100% of every deposit is locked into veNEST.
+ * - veNEST NFT detach / transfer / withdrawal are owner-only migration/emergency paths.
+ * - Owner NFT extraction is explicitly administrative and must only be used during migration/emergency handling.
  */
 contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, INestVaultHype {
     using SafeERC20 for IERC20;
@@ -55,7 +56,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     mapping(address => uint256) public hypeRewardDebt;
     uint256 public accHypePerShare;
     uint256 public lastHypeBalance;
-
     mapping(uint256 => uint256) public bookedLockedShare;
 
     event Deposited(address indexed user, uint256 nestAmount, uint256 hNestMinted, uint256 indexed tokenId);
@@ -91,7 +91,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     error NotVaultOwnedNFT();
     error NFTStillAttached();
     error InvalidMerge();
-    error CompoundDisabled();
+    error RedemptionDisabled();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -134,11 +134,8 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             hNest = HNest(_hNest);
             if (hNest.vault() != address(this)) revert InvalidHNest();
         }
-
         nestToken.forceApprove(address(veNEST), type(uint256).max);
     }
-
-    // ============ User ============
 
     function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
         if (!depositsEnabled) revert DepositsDisabled();
@@ -147,7 +144,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
 
         _updateHypeAccumulator();
-
         uint256 totalSupply = hNest.totalSupply();
         uint256 hNestToMint = totalSupply == 0 || totalNestLocked == 0
             ? nestAmount
@@ -155,8 +151,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         if (hNestToMint == 0) revert ZeroShares();
 
         nestToken.safeTransferFrom(msg.sender, address(this), nestAmount);
-
-        // C1 has no redemption liquidity buffer: the entire principal is locked.
         uint256 tokenId = veNEST.createLockFor(
             nestAmount,
             MAX_LOCK_DURATION,
@@ -165,7 +159,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             false,
             HyperEVMAddresses.HEV_MANAGED_TOKEN_ID
         );
-
         veNFTIds.push(tokenId);
         nestPrincipal[tokenId] = nestAmount;
         totalNestLocked += nestAmount;
@@ -178,19 +171,13 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
 
         hNest.mint(msg.sender, hNestToMint);
         hypeRewardDebt[msg.sender] = (hNest.balanceOf(msg.sender) * accHypePerShare) / 1e18;
-
         emit Deposited(msg.sender, nestAmount, hNestToMint, tokenId);
     }
 
-    /**
-     * @notice C1 redemption is intentionally disabled.
-     * @dev hNEST is the transferable claim; exit is through transfer / secondary market.
-     */
+    /// @notice C1 has no native redeem. hNEST exits only through transfer / secondary market.
     function requestWithdraw(uint256) external pure {
-        revert CompoundDisabled();
+        revert RedemptionDisabled();
     }
-
-    // ============ hNEST residual HYPE accounting ============
 
     function settleResidualHype(address user) external override {
         if (msg.sender != address(hNest)) revert OnlyHNest();
@@ -207,20 +194,17 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     }
 
     function harvest() external onlyKeeper nonReentrant {
-        if (address(hevAdapter) != address(0) && veNFTIds.length > 0) {
-            uint256 beforeBal = hypeToken.balanceOf(address(this));
-            hevAdapter.sweepResidualHype(veNFTIds, address(this));
-            uint256 hypeGained = hypeToken.balanceOf(address(this)) - beforeBal;
-            if (hypeGained > 0) {
-                uint256 fee = (hypeGained * feeBps) / BASIS_POINTS;
-                if (fee > 0) hypeToken.safeTransfer(feeRecipient, fee);
-                uint256 net = hypeGained - fee;
-                if (hNest.totalSupply() > 0 && net > 0) {
-                    accHypePerShare += (net * 1e18) / hNest.totalSupply();
-                }
-                lastHypeBalance = hypeToken.balanceOf(address(this));
-            }
-        }
+        if (address(hevAdapter) == address(0) || veNFTIds.length == 0) return;
+        uint256 beforeBal = hypeToken.balanceOf(address(this));
+        hevAdapter.sweepResidualHype(veNFTIds, address(this));
+        uint256 hypeGained = hypeToken.balanceOf(address(this)) - beforeBal;
+        if (hypeGained == 0) return;
+        uint256 fee = (hypeGained * feeBps) / BASIS_POINTS;
+        if (fee > 0) hypeToken.safeTransfer(feeRecipient, fee);
+        uint256 net = hypeGained - fee;
+        uint256 supply = hNest.totalSupply();
+        if (supply > 0 && net > 0) accHypePerShare += (net * 1e18) / supply;
+        lastHypeBalance = hypeToken.balanceOf(address(this));
     }
 
     function bookVerifiedYield() external onlyKeeper nonReentrant {
@@ -241,7 +225,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         uint256 feeAssets = (y * feeBps) / BASIS_POINTS;
         uint256 supply = hNest.totalSupply();
         totalNestLocked += y;
-
         uint256 feeShares;
         if (feeAssets > 0 && supply > 0 && totalNestLocked > feeAssets) {
             feeShares = (feeAssets * supply) / (totalNestLocked - feeAssets);
@@ -256,10 +239,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
 
     // ============ Owner-only veNEST migration / custody ============
 
-    /**
-     * @notice Detach a Vault-owned veNFT so it can be transferred or withdrawn by the owner.
-     * @dev This is an administrative migration path only and may reset the live HEV lock window.
-     */
     function ownerDetachVeNFT(uint256 tokenId) external onlyOwner nonReentrant {
         _requireVaultOwned(tokenId);
         if (!inHev[tokenId]) return;
@@ -269,10 +248,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         emit VeNFTDetachedForAdmin(tokenId);
     }
 
-    /**
-     * @notice Transfer a Vault-owned veNFT to another address for migration/custody.
-     * @dev The NFT must already be detached. This deliberately remains owner-only.
-     */
     function ownerTransferVeNFT(uint256 tokenId, address recipient) external onlyOwner nonReentrant {
         if (recipient == address(0)) revert ZeroAddress();
         _requireVaultOwned(tokenId);
@@ -281,11 +256,12 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         emit VeNFTTransferredForAdmin(tokenId, recipient);
     }
 
-    /**
-     * @notice Withdraw the underlying NEST represented by a Vault-owned veNFT.
-     * @dev Owner-only emergency/migration custody path. No hNEST user may call this.
-     */
-    function ownerWithdrawVeNFT(uint256 tokenId, address recipient) external onlyOwner nonReentrant returns (uint256 amount) {
+    function ownerWithdrawVeNFT(uint256 tokenId, address recipient)
+        external
+        onlyOwner
+        nonReentrant
+        returns (uint256 amount)
+    {
         if (recipient == address(0)) revert ZeroAddress();
         _requireVaultOwned(tokenId);
         if (inHev[tokenId]) revert NFTStillAttached();
@@ -298,9 +274,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         emit VeNFTWithdrawnForAdmin(tokenId, recipient, amount);
     }
 
-    /**
-     * @notice Merge two detached Vault-owned veNFTs. Owner-only internal housekeeping.
-     */
     function ownerMergeVeNFT(uint256 fromTokenId, uint256 toTokenId) external onlyOwner nonReentrant {
         if (fromTokenId == toTokenId) revert InvalidMerge();
         _requireVaultOwned(fromTokenId);
@@ -420,10 +393,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         return veNFTIds[index];
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
     function _updateHypeAccumulator() internal {
         uint256 currentHypeBalance = hypeToken.balanceOf(address(this));
         uint256 supply = hNest.totalSupply();
@@ -444,5 +413,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             emit ResidualHypeClaimed(user, pending);
         }
         hypeRewardDebt[user] = (balance * accHypePerShare) / 1e18;
+    }
+
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 }
