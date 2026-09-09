@@ -29,7 +29,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 | **0** | first | `hcanary` | Toy ERC-20, L adapter, **real** ULN | Base 8453 |
 | **1** | canary dead | `hxsquid` then `havnt` | Side-token L. `0x9a99b4f0`. Never `0xeab52318` | Base 8453 |
 | **2** | batch 1 passed | `hcbeth` then `hgsoon` then `hswbera` | Rate L, 1% skim, 99% in receipt | Base / BSC 56 / Bera 80094 |
-| **3** | batch 2 passed | `hsavax` then `hsethfi` then `hstkwausdc` then **`hlbtc`** | Rate / yield-in-share / Umbrella / LBTC 8-dec | Avax / ETH |
+| **3** | batch 2 passed | `hsavax` then `hstkwausdc` then **`hlbtc`** | Rate / Umbrella / LBTC 8-dec | Avax / ETH |
 | **4** | batch 3 passed | `bluai4y` then `horder` | C1 lockbox + closed OFT. Market exit | BSC 56 / Arb 42161 |
 | **5** | batch 4 passed **and** Store PDA exists | `hjitosol` | Solana lockbox + dest `LeafOFT`. No Rewarder | Solana 30168 → HyperEVM 999 |
 
@@ -54,7 +54,7 @@ Copying one number onto both ULNs is a DVN mismatch. Script already splits them.
 
 Trio on every EVM we touch: **Labs + Horizen + Canary**. Sorted ascending. **Never Nethermind.**
 
-HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon` → 30102, `hswbera` → 30362, `hsethfi`/`hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168).
+HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon` → 30102, `hswbera` → 30362, `hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168).
 
 ---
 
@@ -216,16 +216,15 @@ Do not print a protocol APR on a dust vault.
 
 ---
 
-## 3. ETH / Avax L — hsAVAX, hsETHFI, hstkwaUSDC
+## 3. ETH / Avax L — hsAVAX, hstkwaUSDC, hLBTC
 
-`BATCH=3`. New RPCs: Avalanche, Ethereum.
+`BATCH=3`. New RPCs: Avalanche, Ethereum. **hsETHFI is gated** (`productionEvm=false`, not in `MainnetBatches`). Do not `ASSET=hsethfi`.
 
 | ASSET | SOURCE_RPC | Notes |
 | --- | --- | --- |
 | `hsavax` | avalanche | `GetPooledAvaxByShares`. Never `requestUnlock` |
-| `hsethfi` | ethereum | Yield in the receipt. **No** `setRateKind`. Never DelayedWithdraw / teller deposit |
-| `hstkwausdc` | ethereum | `ConvertToAssets` + `REWARDS_CONTROLLER` + `0xbb492bf5`. Never `cooldown`. Wrap **stkwaEthUSDC.v1** only. Umbrella will upgrade — users exit that receipt, we do not auto-migrate |
-| `hlbtc` | ethereum | **Last in batch 3.** Router `getRate(LBTC)`. 8-dec, `shareScale=1e10`. Jump **>3% up or down** → mint halt, no fee. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap `DEPOSIT_CAP=5000000` (0.05 LBTC). Peg/share cap is `5e16` (`defaultCap * 1e10`) — do not pass `PEG_CAP=5000000`. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` plus headroom, **never 5e6**. Yield is Bitwise covered-call, not Babylon |
+| `hstkwausdc` | ethereum | `ConvertToAssets` + `REWARDS_CONTROLLER` + `0xbb492bf5`. Never `cooldown`. Wrap **stkwaEthUSDC.v1** only. Umbrella will upgrade — users exit that receipt, we do not auto-migrate. `defaultCap=0` → **must pass `PEG_CAP`** (share units) |
+| `hlbtc` | ethereum | **Last in batch 3.** Router `getRate(LBTC)`. 8-dec, `shareScale=1e10`. Jump **>3% up or down** → mint halt, no fee. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap `DEPOSIT_CAP=5000000` (0.05 LBTC). Peg/share cap is **`5e16`** (`defaultCap * 1e10`). `OpenPeg` falls back to that if `PEG_CAP` is unset. Passing `PEG_CAP=5e16` is correct; **do not pass `PEG_CAP=5000000`**. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` plus headroom, **never 5e6**. Yield is Bitwise covered-call, not Babylon |
 
 `hstkwausdc` needs env `REWARDS_CONTROLLER` on `ConfigureMainnetListing`.
 
@@ -354,7 +353,7 @@ Smoke: lock dust JitoSOL → LZ → hJitoSOL on 999 → send back to a Solana pu
 
 - HyperEVM AMM / treasury bids
 - hKAITO / hVIRTUALMAX / hSKY / ve-NFT
-- NestVault v2
+- NestVault v2 / NestVaultC1 / replacing live hNEST vault
 - C1 protocol redeem
 - Reusing canary addresses as a real vault
 - jupSOL / mSOL / bnSOL / INF

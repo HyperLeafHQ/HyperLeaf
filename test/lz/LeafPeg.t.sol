@@ -329,9 +329,8 @@ contract LeafPegTest is PegReady {
         vm.expectRevert(LeafOApp.PeerFrozen.selector);
         adapter.setPeer(DST, address(0xBEEF));
         vm.prank(owner);
+        vm.expectRevert(LeafOApp.PeerFrozen.selector);
         adapter.setPeer(30102, address(0xBEEF));
-        assertEq(adapter.peers(30102), bytes32(uint256(uint160(address(0xBEEF)))));
-        assertEq(adapter.peers(DST), bytes32(uint256(uint160(address(oft)))));
     }
 
     function testOwnerCannotIncreaseCaps() public {
@@ -357,6 +356,7 @@ contract LeafPegTest is PegReady {
         vm.prank(guardian);
         adapter.closeBridge();
         vm.prank(owner);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
         adapter.setEndpointConfig(address(1), p);
     }
 
@@ -388,14 +388,15 @@ contract LeafPegTest is PegReady {
         vm.stopPrank();
         uint256 userBal = token.balanceOf(user);
         vm.prank(owner);
-        vm.expectRevert(LeafOApp.NotSolvent.selector);
-        adapter.abortCredit(user, 10e18);
+        vm.expectRevert(LeafOFTAdapter.ReentrantAbortRecoveryDisabled.selector);
+        adapter.abortCredit(bytes32(uint256(1)), user);
         vm.prank(guardian);
         adapter.setHealth(LeafOApp.Health.Halted);
         vm.prank(owner);
-        adapter.abortCredit(user, 10e18);
-        assertEq(adapter.totalLocked(), 0);
-        assertEq(token.balanceOf(user), userBal + 10e18);
+        vm.expectRevert(LeafOFTAdapter.ReentrantAbortRecoveryDisabled.selector);
+        adapter.abortCredit(bytes32(uint256(1)), user);
+        assertEq(adapter.totalLocked(), 10e18);
+        assertEq(token.balanceOf(user), userBal);
     }
 
     function testTinyYieldFeeRoundsToZeroNotTrap() public {

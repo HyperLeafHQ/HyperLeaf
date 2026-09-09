@@ -414,7 +414,7 @@ contract LeafRateYieldTest is PegReady {
         assertEq(box.totalLocked(), 100e18);
         // cooldownShares still forbidden
         vm.prank(owner);
-        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
         box.setRewardsSelector(bytes4(0x9343d9e1));
     }
 
@@ -444,9 +444,9 @@ contract LeafRateYieldTest is PegReady {
         assertEq(swbera.balanceOf(converter), _fee(surplus));
         assertEq(box.totalLocked(), 100e18);
         vm.startPrank(owner);
-        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
         box.setRewardsSelector(bytes4(0xb460af94));
-        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
         box.setRewardsSelector(bytes4(0x38248a0c));
         vm.stopPrank();
     }

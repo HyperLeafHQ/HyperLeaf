@@ -234,7 +234,6 @@ contract LeafBluaiLockboxTest is PegReady {
         box.setFarmRequest(bytes4(0x44444444));
         vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
         box.setPublicRequestType(10, true);
-        vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
         box.setShareExit(true);
         vm.stopPrank();
 
@@ -247,6 +246,6 @@ contract LeafBluaiLockboxTest is PegReady {
         assertEq(box.farmNativeFee(), 0);
         assertEq(box.farmRequestSel(), bytes4(0));
         assertFalse(box.publicRequestType(10));
-        assertFalse(box.shareExitEnabled());
+        assertTrue(box.shareExitEnabled());
     }
 }

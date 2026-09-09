@@ -7,7 +7,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | Order | Ticker | Kind | Source | Status |
 | ----- | ------ | ---- | ------ | ------ |
 | 0 | **hCANARY** | L | Base | Toy `LEAFTEST`. Real ULN. Close after redeem. Do not reuse |
-| 0 | hNEST | Native | HyperEVM | Live, capped |
+| 0 | hNEST | Native | HyperEVM | Live, capped. C1-style product: no UI redeem, secondary market exit. Keep existing vault |
 | **1** | hxSQUID | L | Base | Side-token. claimRewards → QUID → HYPE |
 | **1** | **hAVNT** | L | Base | Same adapter + `0x9a99b4f0`. Never `0xeab52318` |
 | **2** | hcbETH | L | Base | PoS in the rate. 1% skim |
@@ -49,7 +49,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 **0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). Real `SetSecurityStack`. Tiny cap. Close after redeem. `GROK_BOT_MAINNET.md`.
 **1** — hxSQUID then hAVNT. Same Base path the canary just proved.
 **2** — rate L: hcbETH (Base) + hgSOON (BSC) + hsWBERA (Bera). 1% skim. New LZ eids for BSC and Bera.
-**3** — hsAVAX (Avax) + hsETHFI + hstkwaUSDC (Ethereum).
+**3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). hsETHFI gated (`productionEvm=false`).
 **4** — C1: BLUAI4Y then hORDER. Claim board after the first C1 lists. No CREATE2 twin.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.

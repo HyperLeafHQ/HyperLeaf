@@ -7,7 +7,7 @@
 
 1. While a veNFT is **attached** to HEV, `getNftState` reports `locked.amount = 0` and `locked.end = 0`. Unlock readiness must **not** use those fields.
 2. `Voter.dettachFromManagedNFT` → `onDettachFromManagedNFT` sets lock end to `maxUnlockTimestamp()` ≈ **now + 26 weeks**, wiping the original timed end.
-3. HEV `detachmentLockDuration` = **4 days** gates when dettach is allowed (plus vote-window constraints on Voter).
+3. HEV `detachmentLockDuration` = **4 days** (HEV on-chain, we do not control it). NestVault gates `dettachForLiquidity` at **8 days** because the NEST reward cycle is 7 days. 4 days was wrong.
 4. Therefore liquid NEST for the withdraw queue is **not** “wait until original createLock end”. Eager dettach on every `requestWithdraw` would reset a fresh 26w clock and is unsafe for UX.
 
 ## Design choice — idle buffer funded by deposit skim (safer MVP)
@@ -25,7 +25,7 @@ Justification: withdraw liquidity is a solvency property and should not depend o
 
 - `totalNestLocked` — hNEST liability backing (unchanged meaning).
 - `nestPrincipal[tokenId]` — NEST locked into that NFT at deposit (or residual). **Never** read attached `getNftState.amount` for readiness or sizing.
-- `attachedAt[tokenId]` — timestamp when vault recorded attach (4d dettach gate).
+- `attachedAt[tokenId]` — timestamp when vault recorded attach (8d vault dettach gate).
 - `unlockEligibleAt[tokenId]` — set on vault-initiated dettach to `block.timestamp + 26 weeks` (mirrors live `onDettach` reset). `veNEST.withdraw` only after this and `!isAttached`.
 - Idle NEST = ERC20 balance on the vault (skim + top-ups + unlocked principal). No trust in attached NFT fields.
 
@@ -39,11 +39,11 @@ deposit(amount)
   idlePart stays as vault NEST balance
   totalNestLocked += amount; mint hNEST
 
-requestWithdraw(hNest)   // whenNotPaused — NO dettach
+requestWithdraw(hNest)   // whenNotPaused — NO dettach. Hidden backstop, not the product exit.
   burn hNEST; enqueue; totalNestLocked -= nestAmount
 
 dettachForLiquidity(tokenIds)  // keeper only, when queue needs liquidity
-  require now >= attachedAt + 4 days
+  require now >= attachedAt + 8 days
   adapter.withdrawVeNFT → Voter.dettachFromManagedNFT
   unlockEligibleAt = now + 26 weeks
   clear inHev

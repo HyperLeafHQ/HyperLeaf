@@ -52,7 +52,7 @@ contract LeafRewardTransferTest is PegReady {
     }
 
     function _mint(address to, uint256 amount) internal {
-        bytes memory payload = abi.encode(bytes32(uint256(uint160(to))), amount);
+        bytes memory payload = _msg(leaf, to, amount);
         ILayerZeroEndpointV2.Origin memory origin = ILayerZeroEndpointV2.Origin({
             srcEid: 1, sender: bytes32(uint256(1)), nonce: 1
         });

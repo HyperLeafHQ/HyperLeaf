@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
 import {Script, console2} from "forge-std/Script.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -8,7 +11,9 @@ import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 
 /// @notice Set listingTag + per-tx/day caps. OFT also gets supplyCap.
 ///         Set OPEN_BRIDGE=true only after peers and DVN are verified on-chain.
-///         PEG_CAP is always raw token/share units. Non-18-decimal assets must provide it explicitly.
+///         PEG_CAP is always dest share units. If unset, cap = defaultCap * shareScaleOf(id).
+///         That fallback is 5e16 for hlbtc (5e6 sats * 1e10). Pass PEG_CAP only to override,
+///         or when defaultCap is 0 (hstkwausdc).
 contract OpenPeg is Script {
     function run() external {
         address oapp = vm.envAddress("OAPP");
@@ -17,11 +22,10 @@ contract OpenPeg is Script {
         bytes32 tag = keccak256(bytes(a.id));
         uint256 explicitCap = vm.envOr("PEG_CAP", uint256(0));
         uint8 decimals = a.innerMainnet == address(0) ? 18 : IERC20Metadata(a.innerMainnet).decimals();
-        if (decimals != 18) require(explicitCap != 0, "PEG_CAP required for non-18-decimal asset");
         uint256 cap = explicitCap != 0 ? explicitCap : a.defaultCap * LeafLbtcPolicy.shareScaleOf(id);
         uint256 ceiling = vm.envOr("INNER_SUPPLY_CEILING", uint256(0));
         bool open = vm.envOr("OPEN_BRIDGE", false);
-        require(cap != 0, "zero peg cap");
+        require(cap != 0, "zero peg cap - pass PEG_CAP");
 
         if (block.chainid == a.sourceChainIdMain && keccak256(bytes(a.id)) == keccak256("hlbtc")) {
             require(ceiling != 0, "hlbtc INNER_SUPPLY_CEILING");
@@ -40,7 +44,7 @@ contract OpenPeg is Script {
         console2.log("peg tag", vm.toString(tag));
         console2.log("ASSET", a.id);
         console2.log("decimals", decimals);
-        console2.log("cap (raw/share units)", cap);
+        console2.log("cap (share units)", cap);
         console2.log("opened", open);
     }
 }

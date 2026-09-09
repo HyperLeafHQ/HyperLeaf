@@ -146,7 +146,8 @@ Mock NEST 经 `mintNEST` 铸给部署者后存款（非真实 NEST）。Guardian
 - `createLockFor` + atomic attach fork 测试 PASS（tokenId 示例 4430，`isAttached=true`）
 - 关键发现: `onDettachFromManagedNFT` 将 lock end 重置为 **now+26w**
 - Attached 时 `getNftState` amount/end = 0
-- HEV `detachmentLockDuration` = 4 days
+- HEV `detachmentLockDuration` = 4 days (HEV fact)
+- NestVault `DETACHMENT_LOCK_DURATION` in this source = **8 days** (NEST reward cycle is 7 days). The already-deployed live vault is immutable and still has 4 days.
 - Claim: 仅 NEST share pending；无用户 HYPE claim
 
 ---

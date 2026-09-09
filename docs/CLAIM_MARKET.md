@@ -27,7 +27,7 @@ If ACK is late: dest already gave the buyer the Leaf; seller still waits. Show *
 
 Do not show 中止中 as 已退款. Replay of ACK / REFUND / ABORT_OK after terminal status is a no-op (no second transfer).
 
-C1 is the **only** protocol exit. hNEST on this board is an *early* exit before the official window — different product, same contracts, `fillLocal`. Do not market them as the same “spot sell”.
+C1 and hNEST share the **same product exit** (market). hNEST still has `requestWithdraw` on the live vault as a hidden backstop — do not market it. Instant-receipt 1:1 vs NAV is an arb, not a market. The board is for claims that **cannot** come home today.
 
 Internal name: **Claim Market**. Never “debt”, never “HyperLeaf lends”,
 never “treasury fills the other side”.
@@ -40,8 +40,7 @@ is for claims that **cannot** come home today.
 
 | Exit (GitHub) | Face value | Maturity | Yield that transfers with the Leaf | Board useful? |
 | ------------- | ---------- | -------- | ---------------------------------- | ------------- |
-| 只能卖掉 / C1 (`hVIRTUALMAX`, `BLUAI4Y`, `hORDER`, parked `hSKY`) | `SOLVENCY` accounting unit (often not `balanceOf`) | **never** via protocol redeem | per that row | **Priority 1.** This is the product. |
-| hNEST (6-month window) | NEST (same chain) | `requestWithdraw` ~26w | residual HYPE follows address | **Priority 2.** Same escrow, `fillLocal`. Board **before** `requestWithdraw`. After burn there is a ticket, not hNEST — do not mix. |
+| 只能卖掉 / C1 (`hVIRTUALMAX`, `BLUAI4Y`, `hORDER`, parked `hSKY`, **hNEST**) | `SOLVENCY` accounting unit (often not `balanceOf`) | **never** via protocol redeem in the product | per that row | **Priority 1.** This is the product. hNEST `requestWithdraw` stays on-chain as a hidden backstop. |
 | 烧掉后等几天 / C2 | queued inner | `eta` | none after burn | Board **before** burn only. Same contracts as C1 if you allowlist. |
 | instant-receipt, **share-price** | remaining inner | LZ + official unwrap | in the receipt | **Plug only.** `setMarket` + existing fill. No escrow yield model. Cancel = seller keeps NAV. Skip if anyone would have to write extra code. |
 | instant-receipt, **Rewarder** (`hxSQUID`) | inner 1:1 | same | HYPE does not ride | Optional. Instant redeem is usually better than a 30% ask. |

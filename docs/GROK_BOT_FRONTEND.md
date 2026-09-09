@@ -174,7 +174,7 @@ Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary boa
 
 ACK 丢了：重试，不铸新票。买方中止要等三天。
 
-C1（没有官方赎回）和 hNEST（有窗口、只是提前走）**不要做成同一个「卖出现货」入口**。C1：这是协议里唯一的退出。hNEST：官方窗口仍在，这是提前找人接。
+C1（没有官方赎回）和 hNEST **是同一类用户出口**：协议不把赎回做成产品。hNEST 链上仍有 `requestWithdraw`，但前端不提供按钮，建议走转让板 / 二级市场。不要做成「有窗口所以这是提前走」。
 
 Copy: 没人出价就不成交。协议不接盘、不做市、不保证最低退出价。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。ACK 丢了会重试，不会铸新的 Leaf。买方中止要等三天（guardian 可立刻中止）。**中止中 ≠ 已退款**：目的链若已放票，中止会变成付款给卖方。成交看源链 `Paid`，不要看目的链放票。Not 债务, not 借贷, not 官方收单, not DEX. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
 
@@ -194,7 +194,7 @@ English:
 | L | 烧掉就能拿回 | 烧掉 Leaf，马上拿回原来那份收据。想变现货，自己去官方解押。 |
 | C1 | 只能卖掉 | 协议不赎回。可以挂转让板（简单，成交扣 1% 给买方），或自己去 DEX 单边 LP（有交易费、没 HYPE）。低于账面价是有人接盘的价格，不是底仓没了。 |
 | C2 | 烧掉后等几天 | 烧掉 Leaf，等窗口，再去源链领。金库不会因为排队而亏净值。 |
-| hNEST | 按窗口取出 | 按 Nest 自己的窗口拿回 NEST，大约六个月，不是随时 1:1。也可以把 hNEST 挂到转让板，用折价提前走（成交才走，协议不接盘）。 |
+| hNEST | 只能卖掉 | 和 C1 同一句。26 周锁太长，几乎没人会走协议赎回。前端 **不要** 赎回按钮。建议转让板 / 二级市场。链上 `requestWithdraw` 是后端 hidden backstop，不是产品出口。 |
 | blocked / parked | 暂不做 | Do not offer a deposit. Say why in one sentence from ROADMAP. |
 
 Filters, nav, cards, toasts: the left column never appears. “同一套 L 适配器” is also forbidden.
@@ -208,9 +208,9 @@ Do **not** ship Cancel / 撤销赎回 / “I changed my mind”. That button doe
 | If they already… | What is true | UI |
 | ---------------- | ------------ | -- |
 | Burned an instant-receipt ticker | Leaf is gone. Receipt is in flight or already back on source. | Confirm copy before send: 烧掉之后不能撤回。 |
-| Burned a queued ticker (C2 / hNEST `requestWithdraw`) | Leaf is gone **and** they do not have the inner yet. Ticket waits `eta`. | 排队中不能取消。到期去源链领取。期间既没有 Leaf，也还没有收据。 |
+| Burned a queued ticker (C2) | Leaf is gone **and** they do not have the inner yet. Ticket waits `eta`. | 排队中不能取消。到期去源链领取。期间既没有 Leaf，也还没有收据。 |
 | Want Leaf again after they hold the receipt | That is a **new wrap**. New LZ fee (paid to LayerZero, not us). New mint. | Label it 再次存入 / wrap again. Never 取消赎回 or 恢复铸造. |
-| Hold a sell-only ticker | There is no protocol redeem to cancel. | Only 卖掉. |
+| Hold a sell-only ticker (C1 / hNEST) | There is no protocol redeem in the UI. | Only 卖掉. `requestWithdraw` is backend-only for hNEST. |
 
 `abortCredit` is owner/guardian after halt — not a user cancel. Do not surface it.
 
@@ -304,7 +304,8 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Sell-only ticker | 可以长期低于账面价。那是流动性价格，除非底仓没了。 |
 | Claim board (if it exists) | 转让，不是现货，不是债。没人买就不成交。协议不接盘。1% 给买方，不是协议抽成。有 Rewarder 的票：挂单期间 HYPE 归协议。hNEST：不要写这条。跨链成交看源链 Paid，不要看目的链放票。 |
 | Instant-receipt ticker | 赎回的是收据，不是现货。官方解押要你自己去点。 |
-| Window ticker (hNEST, queued) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
+| Window ticker (queued C2) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
+| hNEST | 只能卖掉。不要放赎回 CTA。6 个月锁太长。建议二级市场。 |
 | Redeem confirm (every listing that burns) | 赎回会烧掉这份 Leaf，不能取消。 |
 | Airdrops / points | 记在金库地址上，要等收获。不是随时可领的 HYPE。 |
 | Any ticker with 领取 HYPE | 只有钱包持有才继续摊 HYPE。做 LP、去借贷、放进交易所，后面的归那个地址，通常领不出来。 |

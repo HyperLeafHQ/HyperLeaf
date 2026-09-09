@@ -129,6 +129,9 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hsethfi").sourceChainIdMain, 1);
         assertEq(AssetCatalog.get("hsethfi").sourceEidTest, 40161);
         assertEq(uint8(AssetCatalog.get("hsethfi").kind), uint8(AssetCatalog.Kind.Liquid));
+        assertFalse(AssetCatalog.get("hsethfi").productionEvm);
+        assertEq(AssetCatalog.get("hsethfi").defaultCap, 0);
+        assertEq(AssetCatalog.get("hstkwausdc").defaultCap, 0);
     }
 
     function testBepoliaHasNoLzEndpoint() public {
@@ -151,7 +154,8 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hgsoon"), 2);
         assertEq(MainnetBatches.batchOf("hswbera"), 2);
         assertEq(MainnetBatches.batchOf("hsavax"), 3);
-        assertEq(MainnetBatches.batchOf("hsethfi"), 3);
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hsethfi");
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);

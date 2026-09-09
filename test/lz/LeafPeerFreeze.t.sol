@@ -90,4 +90,25 @@ contract LeafPeerFreezeTest is PegReady {
         vm.expectRevert(LeafOApp.PeerFrozen.selector);
         adapter.setPeer(40231, address(4));
     }
+
+    function testEndpointConfigStaysFrozenAfterCloseBridge() public {
+        SetConfigParam[] memory params = new SetConfigParam[](0);
+
+        vm.prank(owner);
+        adapter.setEndpointConfig(address(0x1111), params);
+
+        vm.prank(owner);
+        adapter.openBridge();
+
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
+        adapter.setEndpointConfig(address(0x1111), params);
+
+        vm.prank(guardian);
+        adapter.closeBridge();
+
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
+        adapter.setEndpointConfig(address(0x1111), params);
+    }
 }

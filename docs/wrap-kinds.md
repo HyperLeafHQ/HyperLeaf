@@ -53,7 +53,7 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 0. **hCANARY** (L, Base mainnet toy) — real DVN stack, then dead
 1. **hxSQUID** then **hAVNT** (L, Base) — side-token claim
 2. **hcbETH** / **hgSOON** / **hsWBERA** (L, rate skim)
-3. **hsAVAX** / **hsETHFI** / **hstkwaUSDC**
+3. **hsAVAX** / **hstkwaUSDC** / **hLBTC**. **hsETHFI** is gated (`productionEvm=false`).
 4. **BLUAI4Y** / **hORDER** (C1, market exit)
 5. **hJitoSOL** (L, Solana PDA — dest OFT + `LeafJitoRate`; program next)
 
