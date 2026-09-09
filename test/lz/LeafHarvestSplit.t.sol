@@ -1,0 +1,309 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {PegReady} from "test/lz/PegReady.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
+import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
+import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
+import {ILeafRewardSource} from "src/lz/ILeafRewardSource.sol";
+import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
+
+contract MockToken is ERC20 {
+    constructor(string memory n, string memory s) ERC20(n, s) {}
+    IERC20 public payout;
+    function mint(address to, uint256 a) external {
+        _mint(to, a);
+    }
+    function setPayout(address p) external {
+        payout = IERC20(p);
+    }
+    function claimRewards(address to, uint256) external {
+        if (address(payout) == address(0)) return;
+        uint256 a = payout.balanceOf(address(this));
+        if (a > 0) payout.transfer(to, a);
+    }
+}
+
+contract MockEndpoint is ILayerZeroEndpointV2 {
+    uint32 public eid;
+    constructor(uint32 eid_) {
+        eid = eid_;
+    }
+    function send(MessagingParams calldata _params, address) external payable returns (MessagingReceipt memory r) {
+        r.guid = keccak256(abi.encode(_params, block.number));
+        r.nonce = 1;
+        r.fee = MessagingFee(msg.value, 0);
+    }
+    function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
+        return MessagingFee(0.01 ether, 0);
+    }
+    function setDelegate(address) external {}
+    function setConfig(address, address, SetConfigParam[] calldata) external {}
+    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) {
+        return "";
+    }
+    function skip(address, uint32, bytes32, uint64) external {}
+}
+
+/// @dev Simulates Squid/BLUAI: claim pays QUID into the lockbox, never touches xSQUID.
+contract MockQuidFarm is ILeafRewardSource {
+    MockToken public immutable quid;
+    uint256 public pending;
+
+    constructor(MockToken quid_) {
+        quid = quid_;
+    }
+
+    function seed(uint256 amount) external {
+        pending += amount;
+        quid.mint(address(this), amount);
+    }
+
+    function harvest(address lockbox) external {
+        uint256 a = pending;
+        pending = 0;
+        if (a > 0) quid.transfer(lockbox, a);
+    }
+}
+
+contract LeafHarvestSplitTest is PegReady {
+    MockEndpoint ep;
+    MockToken xsquid;
+    MockToken quid;
+    MockToken bluai;
+    LeafOFTAdapter adapter;
+    LeafInboundLockbox lockbox;
+    MockQuidFarm farm;
+    address owner = address(0xA11CE);
+    address guardian = address(0xB0B);
+    address feeTo = address(0xFEE);
+    address harvester = address(0x1111);
+    address converter = address(0xC0);
+    address alice = address(0xA1);
+
+    function setUp() public {
+        ep = new MockEndpoint(30184);
+        xsquid = new MockToken("xSQUID", "xSQUID");
+        quid = new MockToken("QUID", "QUID");
+        bluai = new MockToken("BLUAI", "BLUAI");
+        farm = new MockQuidFarm(quid);
+        vm.startPrank(owner);
+        adapter = new LeafOFTAdapter(address(xsquid), address(ep), owner, guardian, feeTo, 10_000e18);
+        lockbox = new LeafInboundLockbox(address(bluai), address(ep), owner, guardian, feeTo, 10_000e18);
+        adapter.setHarvester(harvester);
+        adapter.setConverter(converter);
+        adapter.setConvertYieldToHype(true);
+        adapter.setPeer(30367, address(1));
+        lockbox.setHarvester(harvester);
+        lockbox.setConverter(converter);
+        lockbox.setConvertYieldToHype(true);
+        lockbox.setPeer(30367, address(1));
+        vm.stopPrank();
+        _openSrc(adapter, owner, 10_000e18);
+        _openSrc(lockbox, owner, 10_000e18);
+        xsquid.mint(alice, 100e18);
+        bluai.mint(alice, 100e18);
+        vm.deal(alice, 1 ether);
+    }
+
+    function testAnyoneCanPokeHarvestRewards() public {
+        farm.seed(7e18);
+        vm.prank(alice);
+        farm.harvest(address(adapter));
+        assertEq(quid.balanceOf(address(adapter)), 7e18);
+        assertEq(xsquid.balanceOf(address(adapter)), 0);
+    }
+
+    function testCannotPullXsquidInner() public {
+        vm.startPrank(alice);
+        xsquid.approve(address(adapter), 50e18);
+        adapter.sendTo{value: 0.01 ether}(30367, alice, 50e18);
+        vm.stopPrank();
+        xsquid.mint(address(adapter), 3e18);
+        vm.prank(harvester);
+        vm.expectRevert(LeafOFTAdapter.CannotPullInner.selector);
+        adapter.pullYield(xsquid, converter);
+    }
+
+    function testHarvesterPullsQuidOnly() public {
+        farm.seed(4e18);
+        farm.harvest(address(adapter));
+        vm.prank(alice);
+        vm.expectRevert();
+        adapter.pullYield(quid, harvester);
+        vm.prank(alice);
+        adapter.pullYield(quid, converter);
+        assertEq(quid.balanceOf(converter), 4e18);
+        assertEq(quid.balanceOf(address(adapter)), 0);
+    }
+
+    function testDustPullDoesNotTouchPrincipalOrInnerDonation() public {
+        vm.startPrank(alice);
+        xsquid.approve(address(adapter), 50e18);
+        adapter.sendTo{value: 0.01 ether}(30367, alice, 50e18);
+        vm.stopPrank();
+        xsquid.mint(address(adapter), 3e18);
+        MockToken dust = new MockToken("DUST", "DUST");
+        dust.mint(address(adapter), 1e18);
+
+        uint256 locked = adapter.totalLocked();
+        uint256 accounted = adapter.lastAccounted();
+        uint256 innerBal = xsquid.balanceOf(address(adapter));
+
+        adapter.pullYield(dust, converter);
+
+        assertEq(dust.balanceOf(converter), 1e18);
+        assertEq(adapter.totalLocked(), locked);
+        assertEq(adapter.lastAccounted(), accounted);
+        assertEq(xsquid.balanceOf(address(adapter)), innerBal);
+        assertEq(xsquid.balanceOf(converter), 0);
+
+        vm.expectRevert(LeafOFTAdapter.CannotPullInner.selector);
+        adapter.pullYield(xsquid, converter);
+    }
+
+    function testBluaiPullsInnerSurplusNotPrincipal() public {
+        vm.startPrank(alice);
+        bluai.approve(address(lockbox), 50e18);
+        lockbox.sendTo{value: 0.01 ether}(30367, alice, 50e18);
+        vm.stopPrank();
+        bluai.mint(address(lockbox), 8e18);
+        vm.prank(harvester);
+        lockbox.pullYield(bluai, converter);
+        assertEq(bluai.balanceOf(converter), 8e18);
+        assertEq(bluai.balanceOf(address(lockbox)), 50e18);
+    }
+
+    function testPokeRewardsClaimsQuidToLockbox() public {
+        bytes4 sel = bytes4(keccak256("claimRewards(address,uint256)"));
+        assertEq(sel, bytes4(0x9a99b4f0));
+        xsquid.setPayout(address(quid));
+        quid.mint(address(xsquid), 27e18);
+        vm.prank(alice);
+        vm.expectRevert();
+        adapter.pokeRewards();
+        vm.prank(owner);
+        adapter.setRewardsSelector(sel);
+        adapter.pokeRewards();
+        assertEq(quid.balanceOf(address(adapter)), 27e18);
+        vm.startPrank(alice);
+        xsquid.approve(address(adapter), 10e18);
+        adapter.sendTo{value: 0.01 ether}(30367, alice, 10e18);
+        vm.stopPrank();
+        assertEq(xsquid.balanceOf(address(adapter)), 10e18);
+        vm.prank(harvester);
+        adapter.pullYield(quid, converter);
+        assertEq(quid.balanceOf(converter), 27e18);
+        vm.prank(harvester);
+        vm.expectRevert();
+        adapter.pullYield(xsquid, converter);
+    }
+
+    function testRewardsSelectorRejectsSquidRedeem() public {
+        bytes4 redeem = bytes4(keccak256("redeem(address,uint256)"));
+        assertEq(redeem, bytes4(0x1e9a6950));
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(redeem);
+        vm.prank(owner);
+        adapter.setRewardsSelector(bytes4(0x9a99b4f0));
+        assertEq(adapter.rewardsSelector(), bytes4(0x9a99b4f0));
+    }
+
+    function testRewardsSelectorRejectsAvntRedeemCombo() public {
+        bytes4 combo = bytes4(keccak256("claimRewardsAndRedeem(address,uint256,uint256)"));
+        assertEq(combo, bytes4(0xeab52318));
+        // Tx 0x24398d72… is that call's hash, not the selector.
+        assertTrue(combo != bytes4(0x24398d72));
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(combo);
+        bytes4 cd = bytes4(keccak256("cooldown()"));
+        assertEq(cd, bytes4(0x787a08a6));
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(cd);
+    }
+
+    function testRewardsSelectorRejectsBenqiUnlock() public {
+        bytes4 unlock = bytes4(keccak256("requestUnlock(uint256)"));
+        assertEq(unlock, bytes4(0xc9d2ff9d));
+        bytes4 w = bytes4(keccak256("withdraw(uint256)"));
+        assertEq(w, bytes4(0x2e1a7d4d));
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(unlock);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(w);
+        vm.stopPrank();
+    }
+
+    function testRewardsSelectorRejectsGsoonCooldownAndLock() public {
+        bytes4 cooldownShares = bytes4(keccak256("cooldownShares(uint256)"));
+        assertEq(cooldownShares, bytes4(0x9343d9e1));
+        bytes4 cooldownAssets = bytes4(keccak256("cooldownAssets(uint256)"));
+        assertEq(cooldownAssets, bytes4(0xcdac52ed));
+        bytes4 claimAddr = bytes4(keccak256("claim(address)"));
+        assertEq(claimAddr, bytes4(0x1e83409a));
+        bytes4 lock90 = bytes4(keccak256("lock(uint256,uint256)"));
+        assertEq(lock90, bytes4(0x1338736f));
+        bytes4 deposit4626 = bytes4(keccak256("deposit(uint256,address)"));
+        assertEq(deposit4626, bytes4(0x6e553f65));
+        bytes4 mint4626 = bytes4(keccak256("mint(uint256,address)"));
+        assertEq(mint4626, bytes4(0x94bf804d));
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(cooldownShares);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(cooldownAssets);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(claimAddr);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(lock90);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(deposit4626);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(mint4626);
+        vm.stopPrank();
+    }
+
+    function testRewardsSelectorRejectsUmbrellaCooldownOnBehalf() public {
+        bytes4 cob = bytes4(keccak256("cooldownOnBehalfOf(address)"));
+        assertEq(cob, bytes4(0x250201db));
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(cob);
+        bytes4 claimAll = bytes4(keccak256("claimAllRewards(address[],address)"));
+        assertEq(claimAll, bytes4(0xbb492bf5));
+        assertEq(claimAll, bytes4(0xbb492bf5));
+        vm.prank(owner);
+        adapter.setRewardsSelector(claimAll);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.BadRewardsTarget.selector);
+        adapter.pokeRewards();
+    }
+
+    function testRewardsSelectorRejectsSethfiDelayedWithdrawAndMerkle() public {
+        bytes4 req = bytes4(keccak256("requestWithdraw(address,uint256)"));
+        assertEq(req, bytes4(0x397a1b28));
+        bytes4 teller = bytes4(keccak256("deposit(address,uint256,uint256)"));
+        assertEq(teller, bytes4(0x0efe6a8b));
+        bytes4 king = bytes4(keccak256("claim(address,uint256,bytes32,bytes32[])"));
+        assertEq(king, bytes4(0x1d7d4ebc));
+        bytes4 ethfiSeason = bytes4(keccak256("claim(uint256,address,uint256,bytes32[])"));
+        assertEq(ethfiSeason, bytes4(0x2e7ba6ef));
+        vm.startPrank(owner);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(req);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(teller);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(king);
+        vm.expectRevert(LeafYieldFee.ForbiddenRewardsSelector.selector);
+        adapter.setRewardsSelector(ethfiSeason);
+        vm.stopPrank();
+    }
+}

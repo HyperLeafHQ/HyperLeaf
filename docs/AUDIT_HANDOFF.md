@@ -146,7 +146,8 @@ Mock NEST 经 `mintNEST` 铸给部署者后存款（非真实 NEST）。Guardian
 - `createLockFor` + atomic attach fork 测试 PASS（tokenId 示例 4430，`isAttached=true`）
 - 关键发现: `onDettachFromManagedNFT` 将 lock end 重置为 **now+26w**
 - Attached 时 `getNftState` amount/end = 0
-- HEV `detachmentLockDuration` = 4 days
+- HEV `detachmentLockDuration` = 4 days (HEV fact)
+- NestVault `DETACHMENT_LOCK_DURATION` = **4 days**, matching live `0x4f6615…` and HEV. That is custody dettach. hNEST circulation is `HNestCirculation.claimableAt` = max(deposit+8d, Thursday epochEnd+30m). Do not share the two clocks.
 - Claim: 仅 NEST share pending；无用户 HYPE claim
 
 ---

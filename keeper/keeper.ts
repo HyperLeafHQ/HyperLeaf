@@ -9,6 +9,8 @@
  * 3. 异常告警
  *
  * 角色：Keeper = Hyperleaf 热钱包；绝非 Owner/Guardian。
+ * HyperEVM: 单地址 mempool 最多 8 个 nonce。不要用一把 key 连发；
+ * harvest/poke 已 permissionless。交易 gas 必须 < 3M。
  *
  * 运行：npx ts-node keeper.ts
  * 推荐部署在：Railway / Render / 任意VPS
@@ -73,7 +75,8 @@ async function runHarvest() {
       address: VAULT_ADDRESS,
       abi: VAULT_ABI,
       functionName: "harvest",
-      gas: BigInt(5000000), // 预估gas，实际根据NFT数量调整
+      // HyperEVM: >~3M gas is forced into the 1-minute big block. Stay under.
+      gas: BigInt(2_900_000),
     });
 
     console.log(`harvest交易已发送: ${hash}`);

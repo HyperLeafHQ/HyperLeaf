@@ -1,10 +1,15 @@
-# Compiler / forge
-cache/
-out/
+# Solana crates
+solana/**/target/
+solana/**/Cargo.lock
+
 
 # Logs
 .logs/
 .ignore/
+
+# Foundry artifacts
+cache/
+out/
 
 # Broadcast dry-runs only (keep real chain broadcasts)
 /broadcast/*/31337/
