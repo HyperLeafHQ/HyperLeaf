@@ -1,0 +1,1264 @@
+{
+  "kinds": {
+    "L": "Liquid or instant-unstake. Lock inner token/receipt, instant redeem same thing. HyperEVM ticker hPREFIX.",
+    "C1": "Long lock / no transferable receipt. Inbound only. Exit is the HyperEVM market. Ticker encodes lock.",
+    "C2": "Unstake exists with a known wait. Burn hToken, wait redeemDelay, claim inner on source."
+  },
+  "testnet": {
+    "hyperevm": {
+      "chainId": 998,
+      "eid": 40362,
+      "endpoint": "0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1",
+      "rpc": "https://rpc.hyperliquid-testnet.xyz/evm"
+    },
+    "baseSepolia": {
+      "chainId": 84532,
+      "eid": 40245,
+      "endpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f"
+    },
+    "bscTestnet": {
+      "chainId": 97,
+      "eid": 40102,
+      "endpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f"
+    },
+    "note": "Go-live is mainnet (docs/GROK_BOT_MAINNET.md). HyperEVM testnet DVNs are only LayerZero Labs + P2P. Do not treat 998 as wrap acceptance."
+  },
+  "listings": [
+    {
+      "id": "hcanary",
+      "kind": "L",
+      "symbol": "hCANARY",
+      "name": "Hyperleaf Canary",
+      "innerSymbol": "LEAFTEST",
+      "innerToken": null,
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "Toy inner minted at deploy. Real SetSecurityStack. Close after redeem. Do not reuse addresses.",
+      "status": "mainnet-canary",
+      "priority": 0
+    },
+    {
+      "id": "hkaito",
+      "kind": "L",
+      "symbol": "hKAITO",
+      "name": "Hyperleaf sKAITO",
+      "innerSymbol": "sKAITO",
+      "innerToken": "0x548D3B444da39686d1a6F1544781d154e7cD1EF7",
+      "underlying": "0x98d0baa52b2D063E780DE12F615f963Fe8537553",
+      "yield": {
+        "inner": "erc4626-in-skaito",
+        "pullInner": false,
+        "toHype": [
+          "airdrop-erc20s"
+        ]
+      },
+      "claim": "owner setClaimCall(campaign, selector); anyone pokeClaim; then pullYield",
+      "note": "L redeem returns sKAITO, not KAITO (official unstake is 7d cooldown \u2014 protocol never calls it). sKAITO is transferable; Base spot is thin. On HyperEVM hKAITO is also the KAITO spot proxy. BLACKLISTED_ROLE exists; team describes it as investor airdrop exclusion \u2014 if the lockbox is ever listed, L redeem can fail. Eco airdrops are per-campaign Sign contracts, often linear vest.",
+      "refs": {
+        "depositTx": "0x69c5660ffd3812b8ec45e5f306f67ab6cf46ac5a15a46231fb4403cfae39ee86",
+        "transferTx": "0x153490b1982756aa423287c491e39ee30b323aad0e7965798b71b38a7f16a398"
+      },
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "sourceEidTest": 40245,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "testnet": {
+        "sourceChain": "base-sepolia",
+        "mockInner": true
+      },
+      "status": "blocked-omnichain-holder",
+      "priority": 50
+    },
+    {
+      "id": "hxsquid",
+      "kind": "L",
+      "symbol": "hxSQUID",
+      "name": "Hyperleaf xSQUID",
+      "innerSymbol": "xSQUID",
+      "innerToken": "0x13af2Db622d167745518aBfD59a8C4FFEe54937a",
+      "rewardToken": "0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53",
+      "yield": {
+        "inner": "keep-xsquid",
+        "pullInner": false,
+        "toHype": [
+          "QUID"
+        ]
+      },
+      "claim": "pokeRewards \u2192 claimRewards(lockbox, max) selector 0x9a99b4f0 on inner (same address as xSQUID). Then pullYield QUID. Never allowlist inner as pokeClaim target. Never set rewardsSelector to redeem(address,uint256) 0x1e9a6950 (same arity; pin 0x9ffec4c8).",
+      "note": "L returns xSQUID. Principal redeem is 1:1 QUID at Squid. Extra QUID is claimRewards, not share-price. Never pull xSQUID.",
+      "refs": {
+        "redeemTx": "0x9ffec4c8d3548ba544fc7fbd73e1c7187d13c9664c901e76e1a909222dfc0886",
+        "claimRewardsTx": "0xbd4cf0f3463bb5a56d967c3fbb0571794643f023de5671590171f31e5c60d6a5"
+      },
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "sourceEidTest": 40245,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "testnet": {
+        "sourceChain": "base-sepolia",
+        "mockInner": true
+      },
+      "status": "mainnet-batch-1",
+      "priority": 1
+    },
+    {
+      "id": "hcbeth",
+      "kind": "L",
+      "symbol": "hcbETH",
+      "name": "Hyperleaf cbETH",
+      "innerSymbol": "cbETH",
+      "innerToken": "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+      "yield": {
+        "inner": "cbeth-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "exchangeRate",
+        "retainRateYield": true
+      },
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "sourceEidTest": 40245,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "pairsWithUnit": "uETH",
+      "note": "Base Coinbase staked ETH. Only ETH PoS, in exchangeRate(). retainRateYield: harvest pulls 1% of (inner * dRate / rate) to converter as protocol fee; 99% stays so LP/lend keep the ETH value. Holders do not claim WHYPE. Never Coinbase unwrap. Never pull more than the 1% skim. Ethereum-mainnet wstETH is a later separate listing.",
+      "testnet": {
+        "sourceChain": "base-sepolia",
+        "mockInner": true
+      },
+      "status": "mainnet-batch-2",
+      "priority": 2
+    },
+    {
+      "id": "hwsteth",
+      "kind": "L",
+      "symbol": "hwstETH",
+      "name": "Hyperleaf wstETH",
+      "innerSymbol": "wstETH",
+      "innerToken": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "sourceEidTest": 40161,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "pairsWithUnit": "uETH",
+      "note": "Later. Canonical Lido wstETH on Ethereum L1. Do not mix with hcbETH supply.",
+      "testnet": {
+        "sourceChain": "sepolia",
+        "mockInner": true
+      },
+      "status": "later",
+      "priority": 20
+    },
+    {
+      "id": "hvirtualmax",
+      "kind": "C1",
+      "symbol": "hVIRTUALMAX",
+      "name": "Hyperleaf VIRTUAL MAX",
+      "innerSymbol": "VIRTUAL",
+      "innerToken": "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+      "stake": "0x60a203ddcDE45fbfb325bdeEA93824B5726b4dF8",
+      "stakeCall": "stake(uint256,uint8,bool)",
+      "stakeArgs": {
+        "numWeeks": 104,
+        "autoRenew": true
+      },
+      "yield": {
+        "inner": "staked-ve-virtuals",
+        "pullInner": false,
+        "toHype": [
+          "agent-airdrops"
+        ]
+      },
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "sourceEidTest": 40245,
+      "lockLabel": "max",
+      "lockSeconds": 62985600,
+      "exit": "market-only",
+      "infra": "evm",
+      "pairsWithUnit": "uVIRTUAL",
+      "note": "Auto Max-lock on Virtuals (104w, autoRenew). Never official redeem. Not 4 years. Yield is agent merkle airdrops (claim(index,account,amount,proof)), not VIRTUAL inflation. v1 harvests Base only, and only when a drop is worth gas+keeper time \u2014 6\u20137 dust launches/day are skipped, never auto-swapped (honeypot risk). ETH/Arb/Robinhood (4663) claims need the omnichain holder; RH gas makes dust negative EV. Same holder blocker as hKAITO.",
+      "refs": {
+        "stakeTx": "0x9d8f5040ba94fa0e6091ebc27a16808dcf7e3710901648b1c1a0304886f515d5",
+        "baseMerkleClaimTx": "0xee45c4899f836906366deb38d30840512aae01989531e5d1109d5ebf808db75c",
+        "robinhoodClaimTx": "0xa941a3e7d72f30afcc3e0977459aaaf2b0af883a155ff7f1ebe243f17bf413dc"
+      },
+      "alias": [
+        "virtual4y"
+      ],
+      "testnet": {
+        "sourceChain": "base-sepolia",
+        "mockInner": true,
+        "mockStake": true
+      },
+      "status": "blocked-omnichain-holder",
+      "priority": 50
+    },
+    {
+      "id": "bluai4y",
+      "kind": "C1",
+      "symbol": "BLUAI4Y",
+      "name": "Hyperliquid BLUAI 4Year",
+      "innerSymbol": "BLUAI",
+      "innerToken": "0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD",
+      "stake": "0x94b9865Ef26166fEBB7775d12d6dF23B51465040",
+      "stakeImpl": "0x9885b2cDf835b5c2b4d9F4d5D930B2A62E25ECe8",
+      "stakeCall": "stake(uint256,uint256)",
+      "stakeArgs": {
+        "years": 4
+      },
+      "farmExitSel": "0x2e17de78",
+      "claim": "pokeRewards \u2192 claimAll() on stake (0xd1058e59). Idle BLUAI in the box is yield; principal stays in stake.",
+      "yield": {
+        "inner": "surplus-bluai",
+        "pullInner": true,
+        "toHype": [
+          "BLUAI"
+        ]
+      },
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "sourceEidTest": 40102,
+      "lockLabel": "4y",
+      "lockSeconds": 126144000,
+      "exit": "market-only",
+      "infra": "evm",
+      "note": "C1 until the 4y farm lock ends. No auto-renew. Proxy 0x94b9865E \u2192 impl 0x9885b2cD includes unstake(uint256) 0x2e17de78. No public unstake txs found (4y not matured; do not wait on a live example). Owner after expiry: farmUnstake \u2192 restakeIdle or setShareExit.",
+      "refs": {
+        "stakeTx": "0x8983f3cc864a0052c9206ef4587684bc4c93ed42270b404fc286e981a4c21874",
+        "claimTx": "0xdf677b0f708ae20cab9fbbb1d46ee7e8573e50a4b56fafe7c6576d5fb2e0c057"
+      },
+      "testnet": {
+        "sourceChain": "bsc-testnet",
+        "mockInner": true
+      },
+      "status": "mainnet-batch-4",
+      "priority": 8
+    },
+    {
+      "id": "hsavax",
+      "kind": "L",
+      "symbol": "hsAVAX",
+      "name": "Hyperleaf sAVAX",
+      "innerSymbol": "sAVAX",
+      "innerToken": "0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE",
+      "source": "avalanche",
+      "sourceChainId": 43114,
+      "sourceEid": 30106,
+      "sourceEidTest": 40106,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "pairsWithUnit": "uAVAX",
+      "note": "BATCH 3 mainnet (Avalanche 43114). Same L/retainRateYield as hcbETH; getPooledAvaxByShares. Wrap sAVAX only, never AVAX, never requestUnlock.",
+      "testnet": {
+        "sourceChain": "fuji",
+        "mockInner": true,
+        "batch": "next"
+      },
+      "status": "mainnet-batch-3",
+      "priority": 11,
+      "yield": {
+        "inner": "benqi-pooled-avax",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "getPooledAvaxByShares",
+        "retainRateYield": true
+      },
+      "claim": "No side token. Rate is getPooledAvaxByShares(1e18). Never requestUnlock 0xc9d2ff9d, never withdraw 0x2e1a7d4d (15d + 2d AVAX claim). accrueRewards is permissionless on BENQI; HyperLeaf does not need it as pokeRewards."
+    },
+    {
+      "id": "bonk12m",
+      "kind": "C1",
+      "symbol": "BONK12M",
+      "name": "Hyperliquid BONK 12Month",
+      "innerSymbol": "BONK",
+      "source": "solana",
+      "lockLabel": "12m",
+      "lockSeconds": 31536000,
+      "exit": "market-only",
+      "infra": "solana-pending",
+      "pairsWithUnit": "uBONK",
+      "testnet": {
+        "sourceChain": "base-sepolia",
+        "mockInner": true,
+        "purpose": "exercise C1 contracts"
+      },
+      "status": "later-solana-lockbox",
+      "priority": 6
+    },
+    {
+      "id": "hmet",
+      "kind": "C2",
+      "symbol": "hMET",
+      "name": "Hyperleaf MET",
+      "innerSymbol": "MET",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "redeemDelay": 1814400,
+      "redeemDelayLabel": "21d",
+      "infra": "solana-pending",
+      "testnet": {
+        "sourceChain": "base-sepolia",
+        "mockInner": true,
+        "purpose": "exercise C2 queue"
+      },
+      "status": "later-solana-lockbox",
+      "priority": 7
+    },
+    {
+      "id": "hshmon",
+      "kind": "L",
+      "symbol": "hshMON",
+      "name": "Hyperleaf shMON",
+      "innerSymbol": "shMON",
+      "source": "monad",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "pairsWithUnit": "uMON",
+      "testnet": {
+        "sourceChain": "base-sepolia",
+        "mockInner": true
+      },
+      "status": "later-non-evm",
+      "priority": 9
+    },
+    {
+      "id": "hansem",
+      "kind": "L",
+      "symbol": "hANSEM",
+      "name": "Hyperleaf ANSEM",
+      "innerSymbol": "ANSEM",
+      "source": "solana",
+      "exit": "instant-receipt",
+      "infra": "solana-pending",
+      "yield": {
+        "inner": "keep-ansem",
+        "pullInner": false,
+        "toHype": [
+          "launchpad-airdrops"
+        ]
+      },
+      "note": "Watch. ansem.io launchpad airdrops to $ANSEM holders. Not an LST. Do not queue ahead of jitoSOL/jupSOL.",
+      "status": "watchlist",
+      "priority": 12
+    },
+    {
+      "id": "hveaero",
+      "kind": "ve-nft",
+      "symbol": "hveAERO",
+      "name": "Hyperleaf veAERO",
+      "innerSymbol": "veAERO",
+      "innerToken": "0xeBf418Fe2512e7E6bd9b87a8F0f294aCDC67e6B4",
+      "underlying": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "yield": {
+        "inner": "aero-rebase-and-bribes",
+        "pullInner": false,
+        "toHype": [
+          "bribe-erc20s"
+        ]
+      },
+      "note": "NFT lockbox LeafNftLockbox. Permanent NORMAL veNFT only. Shares = locked AERO amount. Reject voted/attached/LOCKED/MANAGED/decaying. Not a MainnetBatches id. C1 market exit. No vote/merge/split. DeployNftLockbox, not DeployClosed.",
+      "status": "later",
+      "priority": 15
+    },
+    {
+      "id": "hveup",
+      "kind": "ve-nft",
+      "symbol": "hveUP",
+      "name": "Hyperleaf veUP",
+      "innerSymbol": "veUP",
+      "innerToken": "0x5d321dE36F0bf98D92b291280514F3878582B7B6",
+      "underlying": "0x57C0E45cB534413D1C20A4240955d6bB250BB4F1",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "yield": {
+        "inner": "pool-fees-and-incentives",
+        "pullInner": false,
+        "toHype": [
+          "fee-erc20s"
+        ]
+      },
+      "note": "up. (@uponrh) ve(3,3) DEX on Robinhood Chain. Do not wrap liquid UP \u2014 no yield in the ERC-20. Productive form is veUP NFT (1w\u20134y or permanent). Same blocker as hveAERO: NFT lockbox. LZ live eid 30416 EndpointV2 0x6F475642\u2026 (same CREATE2 as Bera). Fees to voters in pool tokens, not a single harvest token. After ve-NFT custody, C1 market-only.",
+      "status": "later-nft-lockbox",
+      "priority": 16
+    },
+    {
+      "id": "hsteakusdg",
+      "kind": "L",
+      "symbol": "hsteakUSDG",
+      "name": "Hyperleaf steakUSDG",
+      "innerSymbol": "steakUSDG",
+      "innerToken": "0xBeEff033F34C046626B8D0A041844C5d1A5409dd",
+      "underlying": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Only Robinhood asset that currently fits L without a new Kind. Morpho V2 Steakhouse USDG vault (Robinhood Earn backend). Share steakUSDG, ~$454M, ~53k holders, rate ~1.006 USDG, claimed instant ERC-4626 redeem. Wrap the share only \u2014 never deposit USDG, never redeem/withdraw to USDG. Yield in convertToAssets. Credit risk = Morpho markets (USDe / syrupUSDG / spUSDG). Circuit breaker on USDG depeg before HyperEVM lending. Confirm live 4626 is not a queue. LZ eid 30416.",
+      "status": "research",
+      "priority": 14
+    },
+    {
+      "id": "hsteakusdc",
+      "kind": "L",
+      "symbol": "hsteakUSDC",
+      "name": "Hyperleaf steakUSDC",
+      "innerSymbol": "steakUSDC",
+      "innerToken": "0xBEEF010f9CB27031Ad51e3333f9aF9C6B1228183",
+      "underlying": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "sourceEidTest": 40245,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Later \u2014 USDC demand is covered by hstkwaUSDC this cycle. Morpho MetaMorpho Steakhouse USDC on Base. Wrap steakUSDC only. Never deposit USDC, never 4626 withdraw/redeem. Same L adapter as hsteakUSDG. One vault = one listing. Do not wrap Morpho Blue market positions (no ERC-20 receipt).",
+      "status": "later",
+      "priority": 25
+    },
+    {
+      "id": "hslisbnb",
+      "kind": "L",
+      "symbol": "hslisBNB",
+      "name": "Hyperleaf slisBNB",
+      "innerSymbol": "slisBNB",
+      "innerToken": "0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "slisbnb-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate LST: retainRateYield, 1% skim, jump breaker. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves.",
+      "refs": {
+        "stakeManager": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6"
+      },
+      "status": "after-hgsoon",
+      "priority": 26
+    },
+    {
+      "id": "hdai",
+      "kind": "L",
+      "symbol": "hDAI",
+      "name": "Hyperleaf Gauntlet DAI",
+      "innerSymbol": "gtDAI",
+      "innerToken": "0x500331c9fF24D9d11aee6B07734Aa72343EA74a5",
+      "underlying": "DAI",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Morpho Gauntlet DAI Core V1. Luna: Ethereum SELECT, Base/HL DEFER, Arb REJECT. Wrap vault shares only — never DAI, never Blue market id. DAI-in adapter is extra surface, not first. Cap 100_000 DAI (exit liq ~195k vs 2.13M TVL). Do not advertise 6.29%. convertToAssets 1% skim. Freeze vault.asset()==DAI.",
+      "status": "later-capped-pilot",
+      "priority": 27
+    },
+    {
+      "id": "husdt",
+      "kind": "L",
+      "symbol": "hUSDT",
+      "name": "Hyperleaf Bitway USDT",
+      "innerSymbol": "BTWUSDT",
+      "innerToken": "0x73af543D809C8D3414e5B92b3aa2c25b182Ba3A1",
+      "underlying": "USDT",
+      "source": "bitway",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Bitway Core Alpha USDT share, not commodity USDT. Vault 0xb82E32062C773c7748776C06FdB11B92EDAE3B63. Wrap BTWUSDT only — never raw USDT, never auto-route other Bitway strategies. Value-accruing. Verify ABI, chain, flash-unstake, pause, and LZ before any BATCH. Do not market as trustless lending.",
+      "refs": {
+        "coreAlphaVault": "0xb82E32062C773c7748776C06FdB11B92EDAE3B63"
+      },
+      "status": "research",
+      "priority": 28
+    },
+    {
+      "id": "husd1",
+      "kind": "L",
+      "symbol": "hUSD1",
+      "name": "Hyperleaf HertzFlow USD1",
+      "innerSymbol": "HLV-USD1",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "hlv-share-price",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "HertzFlow USD1 Genesis HLV 0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6 is a vault ID, not proven to be the ERC-20 receipt. Wrap HLV receipt only — never raw USD1. Perp LP: NAV can drop, withdraw can stall. Campaign WLFI/APY is not backing. BLOCK until share token, GlvReader, deposit/withdraw handlers, and fork unwind are verified.",
+      "refs": {
+        "hlvVault": "0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6"
+      },
+      "status": "watch-verify-receipt",
+      "priority": 29
+    },
+    {
+      "id": "hbwbtw",
+      "kind": "L",
+      "symbol": "hbwBTW",
+      "name": "Hyperleaf staked BTW",
+      "innerSymbol": "bwBTW",
+      "source": "bitway",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "note": "Watch only. Wrap bwBTW receipt, never raw BTW. ~5% + volatile. Not a launch candidate until yield/ABI/chain are worth the work.",
+      "status": "watch",
+      "priority": 42
+    },
+    {
+      "id": "hankrbnb",
+      "kind": "L",
+      "symbol": "hankrBNB",
+      "name": "Hyperleaf ankrBNB",
+      "innerSymbol": "ankrBNB",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "Rate-compatible BNB LST. Liquidity << slisBNB. After hslisBNB if ever.",
+      "status": "watch",
+      "priority": 43
+    },
+    {
+      "id": "hstrx",
+      "kind": "L",
+      "symbol": "hsTRX",
+      "name": "Hyperleaf sTRX",
+      "innerSymbol": "sTRX",
+      "innerToken": "TU3kjFuhtEo42tsCBtfYUAZxoqQ4yuSLQ5",
+      "source": "tron",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "yield": {
+        "inner": "strx-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "JustLend sTRX only. Never raw TRX. Instant hsTRX vs sTRX; 14d TRX unbond stays on JustLend. TVM ≠ EVM. BLOCK until LayerZero TRON mainnet eid + Labs/Horizen/Canary ULN is independently verified. Testnet IDs must not be reused.",
+      "status": "watch-tron-lz",
+      "priority": 40
+    },
+    {
+      "id": "hlink",
+      "kind": "C2",
+      "symbol": "hLINK",
+      "name": "Hyperleaf staked LINK",
+      "innerSymbol": "LINK",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "queued-unstake",
+      "redeemDelay": 2419200,
+      "redeemDelayLabel": "28d+7d",
+      "infra": "evm",
+      "note": "Chainlink Community Staking v0.2. Luna: research yes, production no. Pool is full (40.875M/40.875M). Per-address cap 15k LINK. 28d unbond + 7d claim. Not a generic LINK 4626. Do not infer yield from idle LINK. Revisit only if staking capacity/architecture expands.",
+      "status": "watch-capacity",
+      "priority": 41
+    },
+    {
+      "id": "htston",
+      "kind": "L",
+      "symbol": "htsTON",
+      "name": "Hyperleaf tsTON",
+      "innerSymbol": "tsTON",
+      "source": "ton",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "note": "Luna eval #02. Wrap Tonstakers tsTON, never raw GRAM. sGRAM / hGRAM secondary. SELECTED pending on-chain receipt + TON LZ. Same rate-LST family as hslisBNB, not a GRAM OFT.",
+      "status": "watch-ton-lz",
+      "priority": 44
+    },
+    {
+      "id": "hlislvr",
+      "kind": "L",
+      "symbol": "hliSLVR",
+      "name": "Hyperleaf liSLVR",
+      "innerSymbol": "liSLVR",
+      "innerToken": "0xb06a7A96d7fbfDCC64AeE0F0B185204b66E41b3B",
+      "underlying": "0x791229E3EbD6CFdC3D8157f48722684173C29aD9",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "eth-rake-to-vault",
+        "pullInner": false,
+        "toHype": [
+          "ETH"
+        ]
+      },
+      "note": "SLVR is a 1-min grid lottery on Robinhood. Token 0x791229E3 has 2% buy/sell tax \u2014 never wrap SLVR, never transfer it. Productive liquid form is liSLVR vault 0xb06a7A96: SLVR deposited is permanently locked; exit is sell liSLVR. Do not call vault deposit/lock. veNFT path is hveAERO-class. Unaudited, gambling rake. Confirm liSLVR is tax-free ERC-20 before any adapter.",
+      "status": "watch",
+      "priority": 18
+    },
+    {
+      "id": "htwo",
+      "kind": "C2",
+      "symbol": "hTWO",
+      "name": "Hyperleaf staked TWO",
+      "innerSymbol": "TWO",
+      "innerToken": "0x2A4a33A2163D005d8E7f1D9aC08d14c98db288d5",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "cooldown-or-market",
+      "infra": "evm",
+      "yield": {
+        "inner": "fee-stream",
+        "pullInner": false,
+        "toHype": [
+          "TWO",
+          "USDG"
+        ]
+      },
+      "note": "Twofold DualPool (Uniswap v4 hook) on Robinhood. Do not wrap liquid TWO (~$1.2M, Aug 2026, no tax). vTWO 0x5c02401e is 1:1 vote wrap, unwrap anytime \u2014 occupancy, no yield. StakingVaultV2 0x06E463fD stake TWO earn TWO, 1h unstake. TwoStakingUSDG 0x9CF18bB1 stake TWO earn USDG, 7d unstake, 400M cap. No transferable receipt found \u2014 would be C2 lockbox, not LeafOFTAdapter. DualPool LP is ERC-1155. Too small / too new for code.",
+      "status": "watch",
+      "priority": 19
+    },
+    {
+      "id": "hstonkbroker",
+      "kind": "ve-nft",
+      "symbol": "hSB",
+      "name": "Hyperleaf StonkBroker",
+      "innerSymbol": "StonkBroker NFT",
+      "innerToken": "0x539cdd042c2f3d93ebc5be7dfff0c79f3b4fabf0",
+      "underlying": "0xe934e36a439c94017b64a3fece66af12099abf50",
+      "source": "robinhood",
+      "sourceChainId": 4663,
+      "sourceEid": 30416,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "yield": {
+        "inner": "stock-token-drops-to-tba",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Do not wrap $STONKBROKER 0xe934e36a (spot, no yield in the ERC-20). Stock-token drops go to activated ERC-6551 NFT TBAs only. Activation fee burns STONKBROKER and clears on transfer. Geo attestation + 'work for payouts' (not passive). Same NFT-lockbox blocker as hveAERO, plus TBA and legal. Exchange is up. ve(3,3).",
+      "status": "watch",
+      "priority": 20
+    },
+    {
+      "id": "hstkaave",
+      "kind": "L",
+      "symbol": "hstkAAVE",
+      "name": "Hyperleaf stkAAVE",
+      "innerSymbol": "stkAAVE",
+      "innerToken": "0x4da27a545c0c5B758a6BA100e3a049001de870f5",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "keep-stkaave",
+        "pullInner": false,
+        "toHype": [
+          "AAVE"
+        ]
+      },
+      "note": "HOLD. Legacy Safety Module. Do not wrap stkAAVE. Umbrella listing is hstkwaUSDC (stkwaEthUSDC.v1), next testnet batch. stkAAVE still votes; tokenizing it is tokenizing governance. If ever: wrap stkAAVE not AAVE; never 20d cooldown.",
+      "status": "hold-umbrella-migration",
+      "priority": 18
+    },
+    {
+      "id": "hswbera",
+      "kind": "L",
+      "symbol": "hsWBERA",
+      "name": "Hyperleaf sWBERA",
+      "innerSymbol": "sWBERA",
+      "innerToken": "0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a",
+      "source": "berachain",
+      "sourceChainId": 80094,
+      "sourceEid": 30362,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Wrap sWBERA only. BATCH 3 MAINNET (Berachain 80094). No Bepolia. ConvertToAssets + retainRateYield 1% skim (same as hgSOON). ERC-4626 withdraw/redeem on this vault is the 7d unbond \u2014 never call it. Never deposit WBERA/BERA. Users exit via HyperEVM/Bera market or official unbond themselves after unwrap. LeafOFTAdapter. ConfigureMainnetListing.",
+      "status": "mainnet-batch-2",
+      "priority": 3
+    },
+    {
+      "id": "haevo",
+      "kind": "C1",
+      "symbol": "hAEVO",
+      "name": "Hyperleaf AEVO staked",
+      "innerSymbol": "AEVO",
+      "stake": "0x38913051E01D4F6910cB66bB9aC3cb77D746Ad81",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "market-only",
+      "infra": "evm",
+      "note": "sAEVO is NOT an ERC-20 \u2014 account stake on AevoStaking. Treat as C1. Rewards/perks often off-chain on the exchange. Confirm a harvestable on-chain reward before build.",
+      "status": "later",
+      "priority": 7
+    },
+    {
+      "id": "hgmx",
+      "kind": "C1",
+      "symbol": "hGMX",
+      "name": "Hyperleaf staked GMX",
+      "innerSymbol": "GMX",
+      "source": "arbitrum",
+      "sourceChainId": 42161,
+      "sourceEid": 30110,
+      "exit": "market-only",
+      "infra": "evm",
+      "note": "PARKED. GMX stake rewards frozen until GMX=$90 (buybacks sit in treasury). GLP (V1) retired 2025-07-16 after the exploit \u2014 mint disabled Arb+Avax, V1 fees ~0. Do not wrap GLP. V2 GM/GLV is a different listing (isolated market LP, transferable, 63% fees auto-compound) \u2014 not this ticker. Not ORDER-style CREATE2 (Arb GMX \u2260 Avax GMX).",
+      "status": "parked",
+      "priority": 90
+    },
+    {
+      "id": "hjupsol",
+      "kind": "L",
+      "symbol": "hJupSOL",
+      "name": "Hyperleaf JupSOL",
+      "innerSymbol": "JupSOL",
+      "source": "solana",
+      "exit": "instant-receipt",
+      "infra": "solana-pending",
+      "pairsWithUnit": "uSOL",
+      "note": "Do not start. Same rate-L family as hJitoSOL. After hJitoSOL has live locks. Sanctum/Jupiter subsidy APY. Never this BATCH=5.",
+      "status": "later-after-hjitosol",
+      "priority": 90
+    },
+    {
+      "id": "hstdrv",
+      "kind": "C2",
+      "symbol": "hstDRV",
+      "name": "Hyperleaf stDRV",
+      "innerSymbol": "stDRV",
+      "source": "ethereum",
+      "exit": "queued-unstake",
+      "redeemDelay": 2419200,
+      "redeemDelayLabel": "28d",
+      "infra": "evm",
+      "note": "Derive stDRV. Instant unstake takes a 20% haircut \u2014 we never do that. 28d queue instead. DRV already trades on HyperEVM, so this is low priority (spot exists).",
+      "status": "later",
+      "priority": 25
+    },
+    {
+      "id": "hsky",
+      "kind": "C1",
+      "symbol": "hSKY",
+      "name": "Hyperleaf SKY LockStake",
+      "innerSymbol": "SKY",
+      "innerToken": "0x56072C95FAA701256059aa122697B133aDEd9279",
+      "engine": "0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3",
+      "lssky": "0xf9A9cfD3229E985B91F99Bc866d42938044FFa1C",
+      "farm": "0x38E4254bD82ED5Ee97CD1C4278FAae748d998865",
+      "farmPays": "USDS",
+      "usds": "0xdC035D45d973E3EC169d2276DDab16f1e407384F",
+      "spkFarm": "0x99cBC0e4E6427F6939536eD24d1275B95ff77404",
+      "exitFeeWad": 0,
+      "minBorrowUsds": 30000,
+      "minCollateralSky": 1440000,
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "market-only",
+      "infra": "evm",
+      "yield": {
+        "inner": "keep-sky-in-urn",
+        "pullInner": false,
+        "toHype": [
+          "USDS"
+        ]
+      },
+      "note": "PARKED. Do not strip rights: stake-only (~4% USDS farm, no borrow) castrates LockStake. Full product needs draw, but min borrow is 30,000 USDS / ~1.44M SKY \u2014 too big for cold start. If revived: C1 only-in; HyperLeaf drawing USDS is liquidation risk and must be disclosed. fee()=0. Never wrap stUSDS/MKR.",
+      "status": "parked",
+      "priority": 40
+    },
+    {
+      "id": "hethfi",
+      "kind": "L",
+      "symbol": "hsETHFI",
+      "name": "Hyperleaf sETHFI",
+      "innerSymbol": "sETHFI",
+      "innerToken": "0x86B5780b606940Eb59A062aA85a07959518c0161",
+      "teller": "0xe2acf9f80a2756E51D1e53F9f41583C84279Fb1f",
+      "tellerAlt": "0x35dD2463fA7a335b721400C5Ad8Ba40bD85c179b",
+      "delayedWithdraw": "0x1509b1fdD01cAF9697aff514b9574B4A27173Dd2",
+      "depositSelector": "0x0efe6a8b",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "keep-sethfi",
+        "pullInner": false,
+        "toHype": [
+          "KING",
+          "ETHFI-seasons-ended",
+          "EIGEN-seasons-ended"
+        ]
+      },
+      "claim": "owner setClaimCall each merkle distributor + selector; lockbox must be the leaf. Seasons change.",
+      "refs": {
+        "depositTx": "0x24a993c959ce6eaa9bb2406670e042013ce64ac5aa3b48232d92a081fea1f67c",
+        "ethfiMerkleTx": "0x9f6af98675bac1514e28f50a7e578269876484251d5312b12fcc2f4daa0a3601",
+        "eigenMerkleTx": "0x6f3ec0465621d5af797f2f9a49575213c4d705e4c4b8258d18b8384a07506fc7",
+        "kingMerkleTx": "0x50111ba1688d5c677d05005f85a02e2ae9dfbbfe40ff2165e0a19dfd20c36a81"
+      },
+      "distributors": [
+        {
+          "token": "ETHFI",
+          "address": "0xbd456973DFd5B00b07Ce5307110C77E3F228Ca3c",
+          "selector": "0x2e7ba6ef",
+          "status": "empty"
+        },
+        {
+          "token": "EIGEN",
+          "address": "0x2Ec90ef34e312A855becf74762D198D8369eEcE1",
+          "selector": "0x2e7ba6ef",
+          "status": "empty"
+        },
+        {
+          "token": "KING",
+          "tokenAddress": "0x8F08B70456eb22f6109F57b8fafE862ED28E6040",
+          "address": "0x6Db24Ee656843E3fE03eb8762a54D86186bA6B64",
+          "selector": "0x1d7d4ebc",
+          "status": "live",
+          "note": "King Protocol compound ERC-20; distributor still holds ~2461 KING"
+        }
+      ],
+      "note": "GATED. Not BATCH 3. productionEvm=false until dedicated merkle accounting exists. L wrap of transferable sETHFI on Ethereum only, not ETHFI, not Base/OP copies of the same address. Deposit path: 0x24a993c9 on Teller 0xe2acf9. Yield is extra merkle ERC-20s, not a convertToAssets skim (NAV stays in the share). Never DelayedWithdraw. Alias hsETHFI / hethfi.",
+      "status": "gated",
+      "priority": 40
+    },
+    {
+      "id": "hlbtc",
+      "kind": "L",
+      "symbol": "hLBTC",
+      "name": "Hyperleaf LBTC",
+      "innerSymbol": "LBTC",
+      "innerToken": "0x8236a87084f8B84306f72007F36F2618A5634494",
+      "never": ["0xB0F70C0bD6FD87dbEb7C10dC692a2a6106817072", "0x5401b8620E5FB570064CA9114fd1e135fd77D57c", "0x3a4baaBf4DC9910596821615e848f0e6545762F3", "0xecAc9C5F704e954931349Da37F60E39f515c11c1"],
+      "rateRouter": "0x9eCe5fB1aB62d9075c4ec814b321e24D8EA021ac",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300 up or down. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap 0.05 LBTC (5e6). Peg cap 5e16 share units. INNER_SUPPLY_CEILING = live totalSupply + headroom. Bitwise covered-call, not Babylon.",
+      "status": "mainnet-batch-3",
+      "priority": 12
+    },
+    {
+      "id": "hsnx",
+      "kind": "parked",
+      "symbol": "hSNX",
+      "name": "Hyperleaf SNX",
+      "innerSymbol": "SNX",
+      "innerToken": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "none",
+      "infra": "evm",
+      "note": "420 Pool closed 2026-06-19 (SIP-423). SNX without debt returned. Staking reform Phase 4 is CONTRACT BUILD DEFERRED. Docs: previous SNX staking is not active. Wrapping SNX is wrapping spot. Do not list until a transferable yield receipt exists.",
+      "status": "parked",
+      "priority": 22
+    },
+    {
+      "id": "huncx",
+      "kind": "parked",
+      "symbol": "hUNCX",
+      "name": "Hyperleaf UNCX",
+      "innerSymbol": "UNCX",
+      "innerToken": "0xadb2437e6F65682B85F814FBc12FeC0508A7B1D0",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "exit": "none",
+      "infra": "evm",
+      "note": "PARKED with hGMX/hSNX. UNCX staking rewards and buybacks paused 2026-08-21. Locker business still runs (~$185M TVL, ~$180k annualized fees) but that revenue is not paid to stakers. Wrapping UNCX is wrapping spot. Revisit if emissions return to a transferable stake receipt.",
+      "status": "parked",
+      "priority": 91
+    },
+    {
+      "id": "hdydx",
+      "kind": "L",
+      "symbol": "hstDYDX",
+      "name": "Hyperleaf stDYDX",
+      "innerSymbol": "stDYDX",
+      "source": "stride",
+      "exit": "market-or-custom",
+      "infra": "cosmos",
+      "note": "Do not wrap ethDYDX (spot, Safety Module rewards 0). Live yield is dYdX Chain stake (USDC fees, ~21\u201330d unbond, no ERC-20). Liquid form is Stride stDYDX on Cosmos \u2014 same class as hJupSOL, needs a Cosmos/IBC lockbox, not LeafOFTAdapter. Never call undelegate.",
+      "status": "later-non-evm",
+      "priority": 23
+    },
+    {
+      "id": "hvecrv",
+      "kind": "ve-nft",
+      "symbol": "hveCRV",
+      "name": "Hyperleaf veCRV",
+      "innerSymbol": "veCRV",
+      "source": "ethereum",
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "note": "Same class as veAERO (vote-escrow NFT). Low priority. Do after hveAERO lockbox exists so we reuse it.",
+      "status": "later",
+      "priority": 24
+    },
+    {
+      "id": "hsyrup",
+      "kind": "L",
+      "symbol": "hSYRUP",
+      "name": "Hyperleaf SYRUP",
+      "innerSymbol": "SYRUP",
+      "source": "ethereum",
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "Maple MIP-019 sunset staking. stSYRUP unstake-only. Lowest priority; yield story is gone.",
+      "status": "watchlist",
+      "priority": 40
+    },
+    {
+      "id": "hstkwaUSDC",
+      "kind": "L",
+      "symbol": "hstkwaUSDC",
+      "name": "Hyperleaf stkwaEthUSDC.v1",
+      "innerSymbol": "stkwaEthUSDC.v1",
+      "innerToken": "0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6",
+      "underlying": "0xD4fa2D31b7968E448877f69A96DE69f5de8cD23E",
+      "rewardsController": "0x4655Ce3D625a63d30bA704087E52B4C31E38188B",
+      "umbrella": "0xD400fc38ED4732893174325693a63C30ee3881a8",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "sourceEidTest": 40161,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "stk-4626-rate-plus-umbrella-rewards",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [
+          "GHO",
+          "AAVE"
+        ],
+        "rateKind": "convertToAssets",
+        "retainRateYield": true,
+        "sideClaim": "RewardsController.claimAllRewards"
+      },
+      "claim": "poke RewardsController.claimAllRewards([stkwaEthUSDC.v1], lockbox) \u2014 pin 4-byte from the live controller ABI before deploy, never from a tx hash. Then pullYield side tokens. Rate surplus (aToken interest in convertToAssets) uses hcbETH retainRateYield 1% skim. Never poke inner. Never cooldown/redeem/withdraw on the StakeToken.",
+      "note": "BATCH 3 mainnet (Ethereum 1, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 at this address \u2014 pin address, not ticker. .v1 is a factory suffix; a .v2 is a new ERC-20 and a new listing. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks this round. Never start cooldown (20d, one record per address \u2014 lockbox would freeze everyone). Never auto-migrate to v2. Users exit by unwrapping the v1 receipt and migrating on Aave themselves. Slash lowers convertToAssets (watermark must drop). Dual harvest: rate (cbETH path) + RewardsController.claimAllRewards 0xbb492bf5 on 0x4655\u2026, never inner. Canary then batch 1\u20132 before this ticker.",
+      "testnet": {
+        "sourceChain": "sepolia",
+        "mockInner": true,
+        "batch": "next"
+      },
+      "status": "mainnet-batch-3",
+      "priority": 10
+    },
+    {
+      "id": "hlit",
+      "kind": "C2",
+      "symbol": "hLIT",
+      "name": "Hyperleaf staked LIT",
+      "innerSymbol": "LIT",
+      "innerToken": "0x232CE3bd40fCd6f80f3d55A522d03f25Df784Ee2",
+      "source": "lighter-l2",
+      "sourceChainId": 0,
+      "exit": "queued",
+      "infra": "lighter-zk",
+      "note": "LIT ERC-20 is on Ethereum; staking is on Lighter's own zk-rollup (appchain, like Hyperliquid). LayerZero has no Lighter endpoint (HyperEVM and ETH yes, Lighter no). LLP cap is extra liquidity occupancy, not a rights strip \u2014 not the blocker. Parked until Lighter is LZ-reachable or they expose an EVM stake we can lock.",
+      "status": "parked",
+      "priority": 45
+    },
+    {
+      "id": "ptsmax",
+      "kind": "C1",
+      "symbol": "PTSMAX",
+      "name": "Hyperleaf River Pts max-date",
+      "innerSymbol": "River Pts",
+      "innerToken": "0xfc6be825925b7a83d131e33b46efef9084f0e014",
+      "convert": "0xFdC8AeCF0Dd49b12583253809A9f188AF19c83DA",
+      "convertSelector": "0x03063b98",
+      "sRiverNft": "0xd1D5E7Fa0D57d1F9fd3c876497006e8CaBE24e1A",
+      "riverToken": "0xdA7AD9dea9397cffdDAE2F8a052B82f1484252B3",
+      "epochMax": 7,
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "exit": "market-only",
+      "infra": "evm",
+      "yield": {
+        "inner": "merkle-pts-then-convert-epoch-7",
+        "pullInner": false,
+        "toHype": [
+          "compounded-river"
+        ]
+      },
+      "ptsMerkle": "0x696524f3760CBE89C1A16aA8984DaBF30633009e",
+      "ptsClaimSelector": "0xae0b51df",
+      "ptsClaimTx": "0x000b0c1491865b15147d17d6b9ac19603dd90749c6d0813383d80155cea1394a",
+      "note": "BSC. Live convert: 100,000 River Pts \u2192 394.77 RIVER into sRIVER_V2 ERC-721 #22014, unlock 2028-10-01 14:00 UTC. convert(pts, 1, 7, minOut) 0x03063b98. Weekly extra Pts is a merkle claim on 0x6965\u2026 claim(uint256,uint256,bytes32[]) 0xae0b51df \u2014 sample 0x000b0c14 paid 20,805 Pts to the EOA. Compound path: lockbox (must be the merkle leaf) claims Pts, then convert epoch 7 so new RIVER sits in another/same sRIVER_V2 NFT. Keeper supplies the proof each week (River UI / tree). If River snapshots the original wallet instead of the NFT owner, this yield is stripped \u2014 same class as KAITO extra-chain airdrops; do not ship until a lockbox address appears in a weekly tree. 1% protocol fee on compounded RIVER. Tx 0x2143f4d9 is V1 unstake, not harvest. C1: sell PTSMAX. NFT lockbox required.",
+      "status": "research",
+      "priority": 8
+    },
+    {
+      "id": "hgsoon",
+      "kind": "L",
+      "symbol": "hgSOON",
+      "name": "Hyperleaf gSOON",
+      "innerSymbol": "gSOON",
+      "innerToken": "0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7",
+      "underlying": "0xb9E1Fd5A02D3A33b25a14d661414E6ED6954a721",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "sourceEidTest": 40102,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "gsoon-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
+      },
+      "note": "BATCH 2 mainnet (BSC 56). Same L/retainRateYield as hcbETH; convertToAssets not exchangeRate. Wrap gSOON only, never SOON, never cooldownShares / 90d lock. Harvest pulls 1% of (inner * dRate / rate); 99% stays.",
+      "status": "mainnet-batch-2",
+      "priority": 10,
+      "claim": "No side token. Rate is convertToAssets(1e18). setRateKind(ConvertToAssets)+retainRateYield. Never setRewardsSelector. Never deposit/mint SOON 0x6e553f65, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f.",
+      "refs": {
+        "depositTx1": "0x246a12a44e1c761d2201a3bc14f50e77310f92204c14d2fd3d053454c194bec9",
+        "depositTx2": "0xc6559838645fc6c719a8bd26cce4e98d752ac4d854b47ae028d3176ce306dee2",
+        "lock90Tx": "0xcaa3905eae579b5f7f20e3caebaaa346ea3b72c415411d3e88153a9d14af9917",
+        "unlock90Tx": "0x37d70161c187f2ff05e2099916ad0088091cb699168c013b622ed206e55f949c",
+        "cooldownSharesTx": "0x5a3c5441602714036fafb3c2de2eebcbe95537d5c0432d484d17daf5e7c272ee"
+      },
+      "testnet": {
+        "sourceChain": "bsc-testnet",
+        "mockInner": true,
+        "batch": "next"
+      }
+    },
+    {
+      "id": "hb3",
+      "kind": "C1",
+      "symbol": "hB3",
+      "name": "Hyperleaf staked B3",
+      "innerSymbol": "B3",
+      "innerToken": "0xB3B32F9f8827D4634fE7d973Fa1034Ec9fdDB3B3",
+      "stake": "0x18541C6D032d48E8cE735939a6147A6A5949216B",
+      "stakeImpl": "0x393b0c48ef44ffd6c22470bc96c6f382c89d682f",
+      "stakeSelector": "0x2ee40908",
+      "custody": "0x8D06628251489963f9603Da96BaF987Dd08f5097",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "exit": "market-only",
+      "infra": "evm",
+      "yield": {
+        "inner": "win-then-b3",
+        "pullInner": false,
+        "toHype": [
+          "WIN"
+        ]
+      },
+      "refs": {
+        "stakeTx": "0x7ebe5e08df256dd06fe356e9470deaa85ec9e86a2b43a8f4bba136f80d72e340"
+      },
+      "note": "Live path 2026-08-31: stakeFor(user, amount) 0x2ee40908 on proxy 0x18541 (stakingToken=B3, totalStaked~20.7M). No receipt NFT/ERC-20. B3 then leaves the stake contract to EOA 0x8D06 (no bytecode) \u2014 principal is team custody, not a contract lock. Must stakeFor(lockbox, amt) so the Staked event user is the lockbox. WIN not in this tx \u2014 still need a harvest/claim tx. 45d unstake unused (C1).",
+      "status": "research",
+      "priority": 9
+    },
+    {
+      "id": "horder",
+      "kind": "C1",
+      "symbol": "hORDER",
+      "name": "Hyperleaf staked ORDER",
+      "innerSymbol": "ORDER",
+      "innerToken": "0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8",
+      "innerCanonicalEth": "0xABD4C63d2616A5201454168269031355f4764337",
+      "stake": "0xC8A8Ce0Ab010E499ca57477AC031358febCbbF17",
+      "stakeSelector": "0x413aaa60",
+      "requestSelector": "0xcec09c0d",
+      "source": "arbitrum",
+      "sourceChainId": 42161,
+      "sourceEid": 30110,
+      "exit": "market-only",
+      "infra": "evm",
+      "note": "C1. Arbitrum only. ORDER OFT 0x4E20\u2026 (not ETH ERC-20). Orderly proxy 0xC8A8\u2026 stakeOrder. farmPrincipalOut is location only; solvency is guardian reportLedgerPrincipal vs Orderly ledger. No CREATE2 twin \u2014 one lockbox address is the identity. Unstake 2/3/4 owner; harvest 10/17 public. USDC harvest \u2260 principal. BATCH=4 ASSET=horder Arbitrum 42161.",
+      "status": "mainnet-batch-4",
+      "priority": 4
+    },
+    {
+      "id": "hseed",
+      "kind": "C1",
+      "symbol": "hSEED",
+      "name": "Hyperleaf Garden SEED",
+      "innerSymbol": "SEED",
+      "source": "arbitrum",
+      "sourceChainId": 42161,
+      "exit": "market-only",
+      "infra": "evm",
+      "note": "Official stake is still Arbitrum (lots of 2100). Rewards can be withdrawn as cbBTC on Base \u2014 that is a claim path, not a Base stake. Last Garden post: staking 'lives on Arbitrum for now', migrate later. Do not list a Base lockbox until the UI actually accepts a Base stake tx. If they migrate, this becomes a Base C1 with cbBTC \u2192 HYPE.",
+      "status": "watchlist",
+      "priority": 22
+    },
+    {
+      "id": "havnt",
+      "kind": "L",
+      "symbol": "hAVNT",
+      "name": "Hyperleaf stkAVNT",
+      "innerSymbol": "stkAVNT",
+      "innerToken": "0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9",
+      "underlying": "0x696F9436B67233384889472Cd7cD58A6fB5DF4f1",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "keep-stkavnt",
+        "pullInner": false,
+        "toHype": [
+          "AVNT"
+        ]
+      },
+      "stakeSelector": "0xadc9772e",
+      "rewardsSelector": "0x9a99b4f0",
+      "cooldownSeconds": 64800,
+      "unstakeWindow": 259200,
+      "maxSlashBps": 2000,
+      "note": "Accept transferable stkAVNT only \u2014 never AVNT. pokeRewards = claimRewards(this,max) selector 0x9a99b4f0, same 4 bytes as QUID. NEVER setRewardsSelector to claimRewardsAndRedeem 0xeab52318 (burns stkAVNT) or cooldown() 0x787a08a6. Claim tx 0x26f4ca90 (2026-07-03, 51.68 AVNT, no stkAVNT moved). Combined-redeem tx 0x24398d72 is the same 0xeab52318 call \u2014 a tx hash is not a selector. Slash max 20% stays in the receipt. AVNT 0x696F9436 isBlackListed. Stake pin 0x7aaf51e8.",
+      "claimRewardsTx": "0x26f4ca907a874d263e3f2bea18906f33559a21c9e68fe5c585a72e81cfc5e31b",
+      "status": "mainnet-batch-1",
+      "priority": 2
+    },
+    {
+      "id": "hjitosol",
+      "kind": "L",
+      "symbol": "hJitoSOL",
+      "name": "Hyperleaf JitoSOL",
+      "innerSymbol": "JitoSOL",
+      "innerMint": "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+      "source": "solana",
+      "sourceEid": 30168,
+      "exit": "instant-receipt",
+      "infra": "solana-pending",
+      "pairsWithUnit": "uSOL",
+      "yield": {
+        "inner": "jitosol-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": []
+      },
+      "note": "BATCH=5. First Solana L. Wrap JitoSOL mint J1toso1u\u2026 only. Rate = pool total_lamports/pool_token_supply. 1% retain skim same as hcbETH. Dest LeafOFT 18dp. Source is a Solana PDA, not LeafOFTAdapter. WireSolanaPeer 32-byte PDA. Recv confirms 32. Never stake-pool CPI. Spec docs/SOLANA_JITOSOL.md.",
+      "status": "solana-lockbox-wip",
+      "priority": 30,
+      "decimalsInner": 9,
+      "decimalsShare": 18,
+      "jitoPool": "Jito4APyf642JPZPx3hGc6WWJ8zPKtRbRs4P815Awbb",
+      "ncn": {
+        "switchboard": "no \u2014 requires Jito Vault / Fragmetric VRT, slashable",
+        "tiprouterRestake": "no \u2014 vault. Pool TOV already in JitoSOL rate",
+        "holderAirdropAta": "yes if pushed to PDA ATA; harvest_other, never restake"
+      }
+    },
+    {
+      "id": "hfragsol",
+      "kind": "C2",
+      "symbol": "hfragSOL",
+      "name": "Hyperleaf fragSOL",
+      "innerSymbol": "fragSOL",
+      "innerMint": "FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "infra": "solana-pending",
+      "slashable": true,
+      "note": "WATCH. Jito Vault VRT (Fragmetric). Switchboard NCN path. Token-2022 transfer hooks. Operator slashing + epoch unstake. Not hJitoSOL. Do not restake the JitoSOL lockbox into this.",
+      "status": "watchlist-slash",
+      "priority": 80
+    },
+    {
+      "id": "hkysol",
+      "kind": "C2",
+      "symbol": "hkySOL",
+      "name": "Hyperleaf kySOL",
+      "innerSymbol": "kySOL",
+      "innerMint": "kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B",
+      "vault": "CQpvXgoaaawDCLh8FwMZEwQqnPakRUZ5BnzhjnEBPJv",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "infra": "solana-pending",
+      "slashable": true,
+      "note": "WATCH. Kyros Jito VRT. Enqueue withdrawal + epoch. Slashable. After hJitoSOL.",
+      "status": "watchlist-slash",
+      "priority": 81
+    },
+    {
+      "id": "hezsol",
+      "kind": "C2",
+      "symbol": "hezSOL",
+      "name": "Hyperleaf ezSOL",
+      "innerSymbol": "ezSOL",
+      "innerMint": "ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC",
+      "vault": "CugziSqZXcUStNPXbtRmq6atsrHqWY2fH2tAhsyApQrV",
+      "source": "solana",
+      "exit": "queued-unstake",
+      "infra": "solana-pending",
+      "slashable": true,
+      "note": "WATCH. Renzo Jito VRT. Same vault program. Slashable. After hJitoSOL.",
+      "status": "watchlist-slash",
+      "priority": 82
+    }
+  ]
+}

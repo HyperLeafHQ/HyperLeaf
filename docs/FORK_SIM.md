@@ -41,7 +41,7 @@ veNEST.createLockFor(
 | `HEV.getLockedRewardsBalance(100)` | `~3.53e22` NEST share |
 | `VR.calculateAvailableRewardsAmount(100)` | equal to HEV balance |
 | `HEV.managedTokenId()` | `1` |
-| `HEV.detachmentLockDuration()` | `345600` (4 days) |
+| `HEV.detachmentLockDuration()` | `345600` (4 days) — HEV fact. NestVault dettach matches 4d. Circulation gate is separate (8d / epoch). |
 
 Forge fork tests live under `FOUNDRY_PROFILE=fork` (`test/HevFork.t.sol`); default `forge test` excludes them because public RPC rate-limits (`-32005`) flake storage fetches. Prefer `cast` + profiled fork when needed.
 

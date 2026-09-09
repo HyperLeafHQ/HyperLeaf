@@ -48,7 +48,7 @@ Shared NEST token: `0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035`.
 | `HEV.voter()` / `votingEscrow()` / `nest()` | Voter / veNEST / NEST |
 | `HEV.getBuybackTargetToken()` | NEST |
 | `HEV.totalSupply()` | equals VR `totalSupply()` (~2.96e26) |
-| `HEV.detachmentLockDuration()` | `345600` (4 days) |
+| `HEV.detachmentLockDuration()` | `345600` (4 days) — HEV. NestVault dettach matches. Circulation is `HNestCirculation`, not this lock. |
 | `veNEST.ownerOf(1)` | HEV strategy |
 | `ManagedNFTManager.isManagedNFT(1)` | `true` |
 | `ManagedNFTManager.managedTokensInfo(1)` | `(true, false, 0x0E07A5efa3…FF20482)` |

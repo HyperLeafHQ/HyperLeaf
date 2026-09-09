@@ -1,0 +1,72 @@
+# Wrap kinds
+
+`L` / `C1` / `C2` stay on GitHub. Public UI copy: `docs/GROK_BOT_FRONTEND.md`.
+
+Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
+
+**Rate-bearing L (hcbETH, hgSOON, hsAVAX, later same class):** `setRateKind` + `setRetainRateYield(true)`. Wrap and redeem **settle the 1% first** (flush to converter if convert is on; book only if halted — mint/redeem stay live). Harvest pulls **1% of** `(lastAccounted * (rate - lastRate)) / rate`. **99% stays in the lockbox.** New deposits mint at post-fee NAV, so they are not taxed for a move they missed. Redeemers cannot skip the 1% by leaving before a keeper harvest. Do not swap inside wrap. Donations are not yield.
+
+**Umbrella L (hstkwaUSDC):** same 1% rate skim via `convertToAssets` **plus** `pokeRewards` → `RewardsController.claimAllRewards([inner], lockbox)` (`0xbb492bf5`). Target is the controller, never the StakeToken. Never `cooldown`.
+
+xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). **hgSOON / hsWBERA** use `ConvertToAssets` + `retainRateYield` (cbETH-class 1% skim). **hsETHFI** is yield-in-share (sETHFI NAV stays in the receipt; no `convertToAssets`; extra KING merkle is not this round's poke). Morpho shares stay yield-in-share until their row opts in.
+
+## CREATE2 vs LZ wrap
+
+These are **not** the same scheme.
+
+| | Orderly / CREATE2 identity | LeafOFT wrap |
+| - | --- | --- |
+| What is equal | The **address** of the lockbox on every chain that talks to a foreign ledger | Nothing. Each listing is one source lockbox + dest OFT |
+| Who cares | Orderly omnichain ledger (stake keyed by address) | HyperLeaf mint ledger (`totalLocked`, `listingTag`) |
+| Tokens | Leave the box into the farm; `balanceOf` is not proof | Stay in the box (L) or farm (C1) on **one** chain |
+| hORDER | Arb-only. One address is enough. CREATE2 library kept unused | C1 `LeafInboundLockbox` + `LeafClosedOFT` |
+
+CREATE2 does **not** give HyperLeaf a general multi-chain wrap. It only makes *us* look like one person to a protocol that already keys by address. Single-chain ORDER does not need it.
+
+
+HyperLeaf is infrastructure for liquid staking on HyperEVM: introduce the asset, keep the extra income of the source position.
+
+| Kind | Source | HyperEVM | Exit | Ticker |
+| ---- | ------ | -------- | ---- | ------ |
+| L | `LeafOFTAdapter` | `LeafOFT` | Instant inner receipt | `hKAITO`, `hxSQUID`, `hcbETH`, `hwstETH`, `hsAVAX`, `hsETHFI`, `hLBTC`, `hshMON`, `hslisBNB`, `hDAI` |
+| C1 | `LeafInboundLockbox` / `LeafVirtualsLockbox` | `LeafClosedOFT` | Sell on HyperEVM only | `hVIRTUALMAX`, `BONK12M`, `BLUAI4Y`, `hORDER` |
+| C1 ve-NFT | `LeafNftLockbox` | `LeafClosedOFT` | Sell only. Permanent lock only | `hveAERO` (not a BATCH yet) |
+| C2 | `LeafRedeemQueue` | `LeafOFT` | Burn, wait, `claim` | `hMET` |
+
+Deploy: `docs/GROK_BOT_MAINNET.md`. Ids: `src/lz/AssetCatalog.sol`.
+
+## Fees
+
+Default: 1% of newly accrued inner yield stays as inner (`harvest`).
+
+**HYPE convert** (`docs/HYPE_YIELD.md`):
+
+1. Anyone: `pokeClaim` / farm `harvest(lockbox)` — claim into the lockbox, pay gas, no swap.
+2. Keeper weekly: `pullYield` QUID / extra BLUAI / airdrops → WHYPE → `notify` 1%/99%. **cbETH:** pull **1% of rate surplus** only; 99% stays in the box.
+3. L never `pullYield` sKAITO or xSQUID. C1 BLUAI4Y may pull extra inner BLUAI only. Rate L may pull **only** the `exchangeRate` / `convertToAssets` surplus.
+
+
+
+
+## Queue
+
+0. **hCANARY** (L, Base mainnet toy) — real DVN stack, then dead
+1. **hxSQUID** then **hAVNT** (L, Base) — side-token claim
+2. **hcbETH** / **hgSOON** / **hsWBERA** (L, rate skim)
+3. **hsAVAX** / **hstkwaUSDC** / **hLBTC**. **hsETHFI** is gated (`productionEvm=false`).
+4. **BLUAI4Y** / **hORDER** (C1, market exit)
+5. **hJitoSOL** (L, Solana PDA — dest OFT + `LeafJitoRate`; program next)
+
+Deploy: `docs/GROK_BOT_MAINNET.md`. Ids: `src/lz/AssetCatalog.sol`. `MainnetBatches` locks `BATCH`.
+
+**Morpho vault shares (L family):** wrap the **ERC-4626 vault token**, not USDC/USDG, not a Morpho Blue market position. Blue supply is address-keyed — that is ORDER-class, skip. Each vault is its own listing (curator + markets ≠ shared backing). Never `deposit`/`mint`/`withdraw`/`redeem` on the vault. Yield in `convertToAssets`. Base and Robinhood both have LZ. Do not auto-list every Morpho vault; each needs a SOLVENCY row.
+
+Later: hAEVO (C1), hJupSOL / hANSEM (Solana), hwstETH (own ticker). Jito VRTs (fragSOL/kySOL/ezSOL) are watchlist-slash, not hJitoSOL.
+
+**Parked:** **hSKY** — stake-only (~4%) strips LockStake borrow. Min 30k USDS / ~1.44M SKY. If revived: C1 only-in, disclose liquidation. **hGMX** — stake yield frozen until $90; GLP V1 retired 2025-07-16. **hUNCX** — stake rewards + buybacks paused 2026-08-21; locker fees continue, not paid to stakers. **hSNX** — 420 staking closed Jun 2026; SIP-423 Phase 4 deferred. **hveUP** — veUP NFT on Robinhood Chain; wait NFT lockbox (with hveAERO). Never wrap liquid UP.
+
+**Hold:** **hstkAAVE** — Safety Module is legacy; Umbrella is the live backstop. Do not tokenize AAVE governance until (1) stkAAVE still exists after Umbrella is mature, (2) voting power is a protocol delegate not the hToken, (3) HyperEVM has a real AAVE spot gap. **aave-umbrella** is a different listing (risk tranche), not hAAVE.
+
+Blocked until omnichain holder: **hKAITO**, **hVIRTUALMAX**.
+
+hNEST is native HyperEVM, not this wrap.
