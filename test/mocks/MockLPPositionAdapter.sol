@@ -31,12 +31,19 @@ contract MockLPPositionAdapter is ILPPositionAdapter {
         return state;
     }
 
-    function rebalance(bytes32, RebalanceParams calldata) external onlyManager returns (RebalanceResult memory result) {
+    function rebalance(bytes32, RebalanceParams calldata)
+        external
+        onlyManager
+        returns (RebalanceResult memory result)
+    {
         result = nextResult;
-        state.tickLower = result.newLiquidity == 0 ? state.tickLower : state.tickLower;
     }
 
-    function collectFees(bytes32, bytes calldata) external onlyManager returns (uint256 amount0, uint256 amount1) {
+    function collectFees(bytes32, bytes calldata)
+        external
+        onlyManager
+        returns (uint256 amount0, uint256 amount1)
+    {
         amount0 = state.fees0;
         amount1 = state.fees1;
         state.fees0 = 0;
