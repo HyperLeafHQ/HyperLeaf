@@ -234,7 +234,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         emit NestCompoundRecorded(y);
     }
 
-    // Owner-only: these are migration/emergency custody controls, never user exit controls.
+    // Owner-only migration/emergency custody. Moving backing can change hNEST collateralization and is not a user exit.
     function ownerDetachVeNFT(uint256 tokenId) external onlyOwner nonReentrant {
         _requireVaultOwned(tokenId);
         if (!inHev[tokenId]) return;
