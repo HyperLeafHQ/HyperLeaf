@@ -48,7 +48,14 @@ Live HyperEVM, probed 2026-09-10:
 
 At Day 4 the underlying veNEST is technically dettachable. hNEST from that deposit is still inside the circulation window until Day 8 / epoch settlement. That split is intentional: we do not use HEV's 4 days to prove a reward epoch has finished.
 
-Live vault mints transferable hNEST on deposit and cannot be patched. The circulation gate is product/frontend (and any future wrap). `requestWithdraw` stays a hidden backstop.
+Live vault mints transferable hNEST on deposit and cannot be patched. New HyperLeaf deposits go through `EpochHNestGate`:
+
+- guardian can pause; only owner unpauses
+- `allocateHype(amount=0)` is rejected; `finalizeHype` waits until `epochEnd + 1 day`
+- `rollEpoch` still works after allocate (G-004)
+- Future vaults: `setDepositGate` is one-shot and cannot be cleared. Live `0x4f6615…` has no such setter — direct deposit there still mints immediately.
+
+`requestWithdraw` stays a hidden backstop.
 
 ## Detach (4 days, HEV custody)
 

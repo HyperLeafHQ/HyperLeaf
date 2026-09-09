@@ -455,6 +455,16 @@ contract NestVaultTest is Test {
         vault.bookVerifiedYield();
     }
 
+    function test_BookVerifiedYieldCapsAdapterLie() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        adapter.seedLockedShare(tokenId, 50 ether);
+        vm.prank(keeper);
+        vm.expectRevert(abi.encodeWithSelector(NestVault.YieldBookTooLarge.selector, uint256(50 ether), uint256(10 ether)));
+        vault.bookVerifiedYield();
+    }
+
     function test_LiveDettachResetsLockTo26w() public {
         ve.setLiveDettachReset(true);
 

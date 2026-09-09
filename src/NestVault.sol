@@ -55,6 +55,9 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     uint256 public constant MAX_DETTACH_BUFFER_BPS = 5_000;
     uint256 public constant MAX_NFTS_PER_PROCESS = 32;
     uint256 public constant MAX_WITHDRAW_REQUESTS_PER_PROCESS = 32;
+    /// @notice Max adapter-reported yield bookable in one Thursday week, as bps of totalNestLocked.
+    ///         Stops a lying adapter / keeper from HL-002-style 9x liability in one call.
+    uint256 public constant MAX_YIELD_BOOK_BPS = 1_000;
 
     IERC20 public immutable nestToken;
     IVotingEscrow public immutable veNEST;
@@ -101,6 +104,12 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     uint256 public withdrawQueueHead;
     uint256 public pendingWithdrawNestTotal;
 
+    /// @notice Optional one-shot deposit router (EpochHNestGate). Zero = public deposits.
+    ///         Once set, cannot be cleared or replaced. Live 0x4f6615… has no such setter.
+    address public depositGate;
+    uint256 public yieldBookedThisEpoch;
+    uint256 public yieldBookEpochStart;
+
     uint256 public totalHypeDistributed;
     mapping(address => uint256) public hypeRewardDebt;
     uint256 public accHypePerShare; // 1e18 precision
@@ -126,6 +135,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     event NestUnlocked(uint256 indexed tokenId, uint256 principal);
     event YieldBooked(uint256 addedNest, uint256 feeAssets, uint256 feeShares);
     event VeNFTTransferredForAdmin(uint256 indexed tokenId, address indexed recipient, uint256 nestCut);
+    event DepositGateUpdated(address indexed gate);
 
     error ZeroAmount();
     error ZeroAddress();
@@ -149,6 +159,9 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     error HevAdapterChangeWhileLive();
     error NotVaultOwnedNFT();
     error NFTStillAttached();
+    error OnlyDepositGate();
+    error DepositGateFrozen();
+    error YieldBookTooLarge(uint256 y, uint256 cap);
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -201,6 +214,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
         if (!depositsEnabled) revert DepositsDisabled();
+        if (depositGate != address(0) && msg.sender != depositGate) revert OnlyDepositGate();
         if (nestAmount == 0) revert ZeroAmount();
         if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
 
@@ -392,6 +406,16 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             }
         }
         if (y == 0) revert ZeroShares();
+        if (totalNestLocked > 0) {
+            uint256 week = (block.timestamp / 7 days) * 7 days;
+            if (week != yieldBookEpochStart) {
+                yieldBookEpochStart = week;
+                yieldBookedThisEpoch = 0;
+            }
+            uint256 cap = (totalNestLocked * MAX_YIELD_BOOK_BPS) / BASIS_POINTS;
+            if (yieldBookedThisEpoch + y > cap) revert YieldBookTooLarge(y, cap - yieldBookedThisEpoch);
+            yieldBookedThisEpoch += y;
+        }
         _bookYield(y);
     }
 
@@ -623,6 +647,14 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     function setDepositCap(uint256 _depositCap) external onlyOwner {
         emit DepositCapUpdated(depositCap, _depositCap);
         depositCap = _depositCap;
+    }
+
+    /// @notice One-shot. Cannot clear to address(0) and cannot rotate. Future vaults only.
+    function setDepositGate(address _gate) external onlyOwner {
+        if (_gate == address(0)) revert ZeroAddress();
+        if (depositGate != address(0)) revert DepositGateFrozen();
+        depositGate = _gate;
+        emit DepositGateUpdated(_gate);
     }
 
     function setHevAdapter(address _hevAdapter) external onlyOwner {
