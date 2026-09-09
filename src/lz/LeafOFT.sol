@@ -15,11 +15,13 @@ contract LeafOFT is LeafOApp, ERC20 {
     error Reentrant();
     error ListingIdFrozen();
     error RewarderFrozen();
+    error RewarderDisabled();
 
     ILeafHypeRewarder public hypeRewarder;
     bytes32 public listingId;
     uint256 public supplyCap;
     uint256 private _gate;
+    bool public rewarderDisabled;
 
     modifier oftLock() {
         if (_gate != 0) revert Reentrant();
@@ -29,6 +31,7 @@ contract LeafOFT is LeafOApp, ERC20 {
     }
 
     event HypeRewarderSet(address indexed rewarder, bytes32 listingId);
+    event RewarderDisabledPermanently(address indexed rewarder, bytes32 indexed listingId);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
     event BridgedIn(address indexed to, uint32 indexed srcEid, uint256 amount, bytes32 guid);
     event SupplyCapSet(uint256 cap);
@@ -39,18 +42,27 @@ contract LeafOFT is LeafOApp, ERC20 {
         ERC20(name_, symbol_)
     {}
 
-    /// @notice Bind listing id (one-shot). Rewarder may unhook to `address(0)` so
-    ///         transfers stay live. Replacing a live rewarder while supply > 0 is frozen.
     function setHypeRewarder(address rewarder, bytes32 listingId_) external onlyOwner {
         if (listingId_ == bytes32(0)) revert ZeroAddress();
+        if (rewarderDisabled) revert RewarderDisabled();
         if (listingId != bytes32(0) && listingId != listingId_) revert ListingIdFrozen();
-        if (
-            rewarder != address(0) && listingId != bytes32(0) && rewarder != address(hypeRewarder)
-                && totalSupply() > 0
-        ) revert RewarderFrozen();
+        if (listingId != bytes32(0)) {
+            address current = address(hypeRewarder);
+            if (rewarder == address(0)) {
+                rewarderDisabled = true;
+                emit RewarderDisabledPermanently(current, listingId);
+                emit HypeRewarderSet(current, listingId_);
+                return;
+            }
+            if (current != address(0) && rewarder != current) revert RewarderFrozen();
+        }
         listingId = listingId_;
         hypeRewarder = ILeafHypeRewarder(rewarder);
         emit HypeRewarderSet(rewarder, listingId_);
+    }
+
+    function rewardsActive() external view returns (bool) {
+        return !rewarderDisabled && address(hypeRewarder) != address(0) && listingId != bytes32(0);
     }
 
     function setSupplyCap(uint256 cap) public onlyOwner {
@@ -108,8 +120,7 @@ contract LeafOFT is LeafOApp, ERC20 {
     }
 
     function _update(address from, address to, uint256 value) internal override {
-        // Rewards must not brick ERC20 liveness. Failed settle/debt is skipped.
-        // Do not auto-disable the hook: a tight gas stipend would grief every holder.
+        // Keep historical settlement active even after reward production is permanently disabled.
         if (address(hypeRewarder) != address(0) && listingId != bytes32(0)) {
             if (from != address(0) && to != address(0)) {
                 _trySettle(from);
