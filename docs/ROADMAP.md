@@ -50,7 +50,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 **1** — hxSQUID then hAVNT. Same Base path the canary just proved.
 **2** — rate L: hcbETH (Base) + hgSOON (BSC) + hsWBERA (Bera). 1% skim. New LZ eids for BSC and Bera.
 **3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). hsETHFI gated (`productionEvm=false`).
-**4** — C1: BLUAI4Y then hORDER. Claim board after the first C1 lists. No CREATE2 twin.
+**4** — C1: BLUAI4Y then hORDER. Leaf Market after the first C1 lists. No CREATE2 twin.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.

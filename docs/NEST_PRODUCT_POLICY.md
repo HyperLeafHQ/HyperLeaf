@@ -98,7 +98,7 @@ hNEST
     ↓
 Use / hold / LP / lend / trade
     ↓
-Primary exit = secondary market (转让板 / DEX)
+Primary exit = Leaf Market / DEX
 
 Direct NestVault.requestWithdraw
     ↑

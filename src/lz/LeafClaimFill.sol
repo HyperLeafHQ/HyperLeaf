@@ -8,7 +8,7 @@ import {LeafClaimPeer} from "./LeafClaimPeer.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 
 /// @title LeafClaimFill
-/// @notice Source-side inner escrow. Inner is paid only after dest ACK, or
+/// @notice Leaf Market source-side inner escrow. Inner is paid only after dest ACK, or
 ///         returned on REFUND / ABORT_OK. Protocol never takes the inner.
 ///
 /// Handshake:

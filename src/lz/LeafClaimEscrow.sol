@@ -13,10 +13,11 @@ interface IClaimHype {
 }
 
 /// @title LeafClaimEscrow
-/// @notice Exit board. Protocol is never the counterparty. No mint. Execution
+/// @notice Leaf Market dest escrow. Protocol is never the counterparty. No mint. Execution
 ///         fee is 0. 1% of ask is a **buyer incentive**. Occupancy HYPE while
 ///         listed → `feeRecipient` **only if** this listing's Rewarder is set.
 ///         hNEST has no Rewarder; do not invent occupancy HYPE for it.
+///         Product name is Leaf Market. Do not surface this contract name in UI.
 ///
 /// Settlement events (do not treat dest `Status.Filled` as cash settled):
 ///   `fillLocal` — atomic. Emits `Filled` = Leaf + 99/1 want moved.

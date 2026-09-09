@@ -1,6 +1,11 @@
-# Exit board (not a DEX)
+# Leaf Market (not a DEX)
 
-> HyperLeaf does not provide liquidity. It provides an exit venue for otherwise illiquid claims.
+> HyperLeaf does not provide liquidity. It provides an exit venue for otherwise illiquid Leaf.
+
+**Product name: Leaf Market.** ZH: **Leaf 市场**. Verb: 挂单 / 吃单.
+
+Do **not** call this Claim Market, claim board, 债, DEX, or HyperLeaf orderbook.
+`LeafClaimEscrow` / `LeafClaimFill` are implementation names only — never show them in the UI.
 
 Not an AMM. Not a matching engine. Not treasury inventory. On-chain
 escrow + a frontend that reads `orders[id]`. Seller lists, buyer fills
@@ -27,10 +32,9 @@ If ACK is late: dest already gave the buyer the Leaf; seller still waits. Show *
 
 Do not show 中止中 as 已退款. Replay of ACK / REFUND / ABORT_OK after terminal status is a no-op (no second transfer).
 
-C1 and hNEST share the **same product exit** (market). hNEST still has `requestWithdraw` on the live vault as a hidden backstop — do not market it. Instant-receipt 1:1 vs NAV is an arb, not a market. The board is for claims that **cannot** come home today.
+C1 and hNEST share the **same product exit** (Leaf Market). hNEST still has `requestWithdraw` on the live vault as a hidden backstop — do not market it. Instant-receipt 1:1 vs NAV is an arb, not a market. The board is for claims that **cannot** come home today.
 
-Internal name: **Claim Market**. Never “debt”, never “HyperLeaf lends”,
-never “treasury fills the other side”.
+Never “debt”, never “HyperLeaf lends”, never “treasury fills the other side”.
 
 ## Do we need it for every ticker?
 

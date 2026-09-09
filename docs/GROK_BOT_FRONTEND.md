@@ -131,7 +131,7 @@ Do not write, imply, or let a tooltip say any of these:
 - HyperLeaf guarantees exit at NAV
 - HyperLeaf guarantees a book, spread, or Core spot listing
 - HyperLeaf treasury will buy your Leaf if nobody else does
-- A claim-board discount is a loan or a HyperLeaf debt
+- A Leaf Market discount is a loan or a HyperLeaf debt
 - “Liquid” means the protocol pays 1:1
 - A discount to NAV is a HyperLeaf depeg
 
@@ -143,16 +143,16 @@ A discount on a **sell-only** ticker is a **liquidity price** only while that li
 | Degraded / proof stale | 底仓证明不新鲜或上游异常。折价里可能有风险，不要写成普通流动性折价。 |
 | Halted / Insolvent | 不要标「折价买」。说底仓或桥出了问题，暂停买入建议。 |
 
-Face value for any 转让 board is that ticker’s SOLVENCY accounting unit (remaining cbETH, 1:1 xSQUID, ORDER `ledgerPrincipal`, …), never a USD print we invent.
+Face value for any Leaf Market listing is that ticker’s SOLVENCY accounting unit (remaining cbETH, 1:1 xSQUID, ORDER `ledgerPrincipal`, …), never a USD print we invent.
 
 
-Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **转让这份 Leaf**：想退出的人把 Leaf 挂进托管，下一个本来要存入的人用底仓买走，协议不铸新的 Leaf、不成交对手方。
+Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary board exists, it is **Leaf Market**：想退出的人把 Leaf 挂进托管，下一个本来要存入的人用底仓买走，协议不铸新的 Leaf、不成交对手方。
 
 挂单确认（后两段永远写。第一段按 listing 选）：
 
 **有 Rewarder 的票（hxSQUID 类、以及会摊 WHYPE 的 Closed OFT）：**
 
-> 挂进转让板之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。挂单价格按挂单时锁定，不会跟着账面价值变。折价是有人接盘的价格，不是底仓没了。
+> 挂进 Leaf 市场之后，在成交或取消之前，这份 Leaf 的 HYPE 收益会停止，记在板上（归协议）。没人买可以取消，不另扣费。挂单价格按挂单时锁定，不会跟着账面价值变。折价是有人接盘的价格，不是底仓没了。
 
 **hNEST / 没有 Rewarder 的票：不要写「挂单期间 HYPE 归协议」。改写：**
 
@@ -162,7 +162,7 @@ Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary boa
 
 > 出货有两条路。我们这条：挂单等下一个本来要存入的人来买，操作简单。你也可以自己去 DEX 做**单边 LP**（只放 Leaf、自己定价格），那是给会做深度 DeFi 的人用的，我们不代操作。
 
-> 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。转让板 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励 / buyer incentive，不是协议抽成）。相当于让出 1% 换更简单的撮合。
+> 对比：DEX 单边 LP **没有** HyperLeaf 的 HYPE 收益，但能赚交易手续费。Leaf 市场 **没有** 交易手续费，成交时还要从你的要价里拿出 **1% 给买方**（接盘奖励 / buyer incentive，不是协议抽成）。相当于让出 1% 换更简单的撮合。
 
 成交状态（Indexer / UI 必须分开）：
 
@@ -174,7 +174,7 @@ Do **not** ship an AMM as the first HyperEVM “liquidity”. If a secondary boa
 
 ACK 丢了：重试，不铸新票。买方中止要等三天。
 
-C1（没有官方赎回）和 hNEST **是同一类用户出口**：协议不把赎回做成产品。hNEST 链上仍有 `requestWithdraw`，但前端不提供按钮，建议走转让板 / 二级市场。不要做成「有窗口所以这是提前走」。
+C1（没有官方赎回）和 hNEST **是同一类用户出口**：协议不把赎回做成产品。hNEST 链上仍有 `requestWithdraw`，但前端不提供按钮，建议走 Leaf Market / 二级市场。不要做成「有窗口所以这是提前走」。
 
 Copy: 没人出价就不成交。协议不接盘、不做市、不保证最低退出价。跨链成交若有 LZ 费，是 LayerZero 收的，不是我们的。ACK 丢了会重试，不会铸新的 Leaf。买方中止要等三天（guardian 可立刻中止）。**中止中 ≠ 已退款**：目的链若已放票，中止会变成付款给卖方。成交看源链 `Paid`，不要看目的链放票。Not 债务, not 借贷, not 官方收单, not DEX. Instant-receipt 烧掉就能拿回的票默认不上板。Details: `docs/CLAIM_MARKET.md`.
 
@@ -192,9 +192,9 @@ English:
 | GitHub | User-facing badge | How-to-exit (detail) |
 | ------ | ----------------- | -------------------- |
 | L | 烧掉就能拿回 | 烧掉 Leaf，马上拿回原来那份收据。想变现货，自己去官方解押。 |
-| C1 | 只能卖掉 | 协议不赎回。可以挂转让板（简单，成交扣 1% 给买方），或自己去 DEX 单边 LP（有交易费、没 HYPE）。低于账面价是有人接盘的价格，不是底仓没了。 |
+| C1 | 只能卖掉 | 协议不赎回。可以挂 Leaf Market（简单，成交扣 1% 给买方），或自己去 DEX 单边 LP（有交易费、没 HYPE）。低于账面价是有人接盘的价格，不是底仓没了。 |
 | C2 | 烧掉后等几天 | 烧掉 Leaf，等窗口，再去源链领。金库不会因为排队而亏净值。 |
-| hNEST | 只能卖掉 | 和 C1 同一句。26 周锁太长，几乎没人会走协议赎回。前端 **不要** 赎回按钮。建议转让板 / 二级市场。链上 `requestWithdraw` 是后端 hidden backstop，不是产品出口。 |
+| hNEST | 只能卖掉 | 和 C1 同一句。26 周锁太长，几乎没人会走协议赎回。前端 **不要** 赎回按钮。建议 Leaf Market / 二级市场。链上 `requestWithdraw` 是后端 hidden backstop，不是产品出口。 |
 | blocked / parked | 暂不做 | Do not offer a deposit. Say why in one sentence from ROADMAP. |
 
 Filters, nav, cards, toasts: the left column never appears. “同一套 L 适配器” is also forbidden.
@@ -302,7 +302,7 @@ Show these where a holder can deposit or even just browse tickers. Do not bury t
 | Always | 跨链费是 LayerZero 收的最低标准，付给 LZ，不是付给 HyperLeaf。协议不从中获利。送达不是即时到账。 |
 | Caps / pause live | 有上限，可暂停。 |
 | Sell-only ticker | 可以长期低于账面价。那是流动性价格，除非底仓没了。 |
-| Claim board (if it exists) | 转让，不是现货，不是债。没人买就不成交。协议不接盘。1% 给买方，不是协议抽成。有 Rewarder 的票：挂单期间 HYPE 归协议。hNEST：不要写这条。跨链成交看源链 Paid，不要看目的链放票。 |
+| Leaf Market (if it exists) | 转让，不是现货，不是债。没人买就不成交。协议不接盘。1% 给买方，不是协议抽成。有 Rewarder 的票：挂单期间 HYPE 归协议。hNEST：不要写这条。跨链成交看源链 Paid，不要看目的链放票。 |
 | Instant-receipt ticker | 赎回的是收据，不是现货。官方解押要你自己去点。 |
 | Window ticker (queued C2) | 取出跟官方窗口走，不是随时 1:1。烧掉即进入队列，不能取消。 |
 | hNEST | 只能卖掉。不要放赎回 CTA。6 个月锁太长。建议二级市场。 |
@@ -315,7 +315,7 @@ Do not say audited. Do not say auto-compound NAV while `recordCompound` is disab
 
 ## LayerZero fees (not ours)
 
-Any wrap, redeem, or 转让板跨链成交旁都要写：
+Any wrap, redeem, or Leaf Market 跨链成交旁都要写：
 
 > 这笔是 LayerZero 收取的跨链费（按对方最低标准），付给 LayerZero，HyperLeaf 不抽成、不加价。
 

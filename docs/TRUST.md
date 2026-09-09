@@ -28,7 +28,7 @@ hKAITO → totalLocked sKAITO in the lockbox → that ERC-20 → its issuer
 
 If any link is unknown, do not mint.
 
-## Claim board vs mint ledger
+## Leaf Market vs mint ledger
 
 The wrap path is the only mint. `LeafClaimEscrow` / `LeafClaimFill` **must not**
 raise `totalLocked`, dest `totalSupply`, or tickets.
