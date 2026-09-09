@@ -1,34 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ILeafHypeRewarder, ILeafOFTRewardBind} from "./ILeafHypeRewarder.sol";
 
 /// @title LeafHypeRewarder
 /// @notice HyperEVM HYPE (WHYPE) distributor. 1% protocol / 99% holders.
-///         Keeper converts source-chain yield → WHYPE, then `notify`.
-///         hToken transfers settle like MasterChef (see LeafOFT._update).
-///         99% is allocated over totalSupply, including contracts that never
-///         claim (AMM/lending/CEX). That is leftover in this contract, not
-///         redistributed. See docs/HYPE_COMPOSABILITY.md.
 contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
     using SafeERC20 for IERC20;
 
     uint16 public constant FEE_BPS = 100;
     uint16 public constant BPS = 10_000;
-
     IERC20 public immutable hype;
     address public feeRecipient;
 
-    struct Pool {
-        address hToken;
-        uint256 accHypePerShare;
-        bool exists;
-    }
-
+    struct Pool { address hToken; uint256 accHypePerShare; bool exists; }
     mapping(bytes32 id => Pool) public pools;
     mapping(address hToken => bytes32 id) public idOfToken;
     mapping(bytes32 id => mapping(address user => uint256 debt)) public rewardDebt;
@@ -47,6 +36,7 @@ contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
     error DustNotify();
     error ListingMismatch();
     error TokenAlreadyRegistered();
+    error RewardsDisabled();
 
     constructor(address hype_, address owner_, address feeRecipient_) Ownable(owner_) {
         if (hype_ == address(0) || owner_ == address(0) || feeRecipient_ == address(0)) revert ZeroAddress();
@@ -60,21 +50,17 @@ contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
         emit FeeRecipientUpdated(recipient);
     }
 
-    /// @notice One listing id ↔ one LeafOFT. OFT.setHypeRewarder(this, id) first.
     function register(bytes32 id, address hToken) external onlyOwner {
         if (hToken == address(0) || id == bytes32(0)) revert ZeroAddress();
         if (pools[id].exists) revert AlreadyRegistered();
         if (idOfToken[hToken] != bytes32(0)) revert TokenAlreadyRegistered();
         ILeafOFTRewardBind oft = ILeafOFTRewardBind(hToken);
-        if (oft.hypeRewarder() != address(this)) revert ListingMismatch();
-        if (oft.listingId() != id) revert ListingMismatch();
+        if (oft.hypeRewarder() != address(this) || oft.listingId() != id || !oft.rewardsActive()) revert ListingMismatch();
         pools[id] = Pool(hToken, 0, true);
         idOfToken[hToken] = id;
         emit Registered(id, hToken);
     }
 
-    /// @notice Smallest `amount` `notify` will accept at current supply.
-    ///         Keeper: if harvested WHYPE is below this, wait. Do not retry dust.
     function minNotify(bytes32 id) public view returns (uint256) {
         Pool storage p = pools[id];
         if (!p.exists) revert UnknownPool();
@@ -84,19 +70,14 @@ contract LeafHypeRewarder is Ownable2Step, ReentrancyGuard, ILeafHypeRewarder {
         if (minDist == 0) minDist = 1;
         uint256 amount = (minDist * BPS) / (BPS - FEE_BPS);
         if (amount == 0) amount = 1;
-        while (amount - (amount * FEE_BPS) / BPS < minDist) {
-            unchecked {
-                ++amount;
-            }
-        }
+        while (amount - (amount * FEE_BPS) / BPS < minDist) { unchecked { ++amount; } }
         return amount;
     }
 
-    /// @notice Pull WHYPE from caller, take 1%, credit 99% to current hToken supply.
-    ///         Reverts `DustNotify` when `amount` < `minNotify(id)` (acc would not increase).
     function notify(bytes32 id, uint256 amount) external nonReentrant {
         Pool storage p = pools[id];
         if (!p.exists) revert UnknownPool();
+        if (!ILeafOFTRewardBind(p.hToken).rewardsActive()) revert RewardsDisabled();
         if (amount == 0) return;
         uint256 supply = IERC20(p.hToken).totalSupply();
         if (supply == 0) revert NoSupply();
