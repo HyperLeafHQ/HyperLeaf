@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx keeper.ts",
-    "keeper": "tsx keeper.ts"
+    "keeper": "tsx keeper.ts",
+    "lp-keeper": "tsx lp-keeper.ts"
   },
   "dependencies": {
     "node-cron": "^3.0.3",
