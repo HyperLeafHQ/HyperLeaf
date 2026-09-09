@@ -28,20 +28,11 @@ contract NestVaultC1Test is Test {
         ve = new MockVotingEscrow(address(nest));
         adapter = new MockHevAdapter(address(ve), address(hype), address(0));
         vault = new NestVaultC1(
-            address(nest),
-            address(ve),
-            address(hype),
-            address(adapter),
-            feeRecipient,
-            keeper,
-            guardian,
-            1_000_000 ether,
-            address(0)
+            address(nest), address(ve), address(hype), address(adapter), feeRecipient, keeper, guardian, 1_000_000 ether, address(0)
         );
         adapter.setVault(address(vault));
         hNest = vault.hNest();
         vault.setDepositsEnabled(true);
-
         nest.mint(alice, 1_000 ether);
         vm.prank(alice);
         nest.approve(address(vault), type(uint256).max);
@@ -53,7 +44,6 @@ contract NestVaultC1Test is Test {
         assertEq(hNest.balanceOf(alice), 100 ether);
         assertEq(vault.totalNestLocked(), 100 ether);
         assertEq(vault.totalVeNFTs(), 1);
-
         uint256 tokenId = vault.getVeNFTId(0);
         assertTrue(vault.inHev(tokenId));
         assertEq(vault.nestPrincipal(tokenId), 100 ether);
@@ -63,7 +53,6 @@ contract NestVaultC1Test is Test {
     function test_RedemptionAlwaysDisabled() public {
         vm.prank(alice);
         vault.deposit(100 ether);
-
         vm.prank(alice);
         vm.expectRevert(NestVaultC1.RedemptionDisabled.selector);
         vault.requestWithdraw(1 ether);
@@ -74,7 +63,6 @@ contract NestVaultC1Test is Test {
     function test_HNestRemainsNormalTransferableErc20() public {
         vm.prank(alice);
         vault.deposit(100 ether);
-
         address bob = makeAddr("bob");
         vm.prank(alice);
         hNest.transfer(bob, 40 ether);
@@ -87,11 +75,9 @@ contract NestVaultC1Test is Test {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
-
         vm.prank(alice);
         vm.expectRevert();
         vault.ownerDetachVeNFT(tokenId);
-
         vm.prank(alice);
         vm.expectRevert();
         vault.ownerTransferVeNFT(tokenId, migrationRecipient);
@@ -101,14 +87,11 @@ contract NestVaultC1Test is Test {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
-
         vm.expectRevert(NestVaultC1.NFTStillAttached.selector);
         vault.ownerTransferVeNFT(tokenId, migrationRecipient);
-
         vault.ownerDetachVeNFT(tokenId);
         assertFalse(vault.inHev(tokenId));
         assertFalse(ve.getNftState(tokenId).isAttached);
-
         vault.ownerTransferVeNFT(tokenId, migrationRecipient);
         assertEq(ve.ownerOf(tokenId), migrationRecipient);
     }
@@ -117,12 +100,10 @@ contract NestVaultC1Test is Test {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
-
         vault.ownerDetachVeNFT(tokenId);
         vm.warp(block.timestamp + 26 weeks + 1);
         uint256 before = nest.balanceOf(migrationRecipient);
         vault.ownerWithdrawVeNFT(tokenId, migrationRecipient);
-
         assertEq(nest.balanceOf(migrationRecipient), before + 100 ether);
         assertEq(vault.totalNestLocked(), 0);
         assertEq(vault.totalVeNFTs(), 0);
