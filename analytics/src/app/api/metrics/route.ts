@@ -1,0 +1,1 @@
+import {getMetrics} from '@/lib/metrics';export const dynamic='force-dynamic';export async function GET(){return Response.json({generatedAt:new Date().toISOString(),assets:await getMetrics()});}
