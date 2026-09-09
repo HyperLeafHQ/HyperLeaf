@@ -120,7 +120,11 @@ library LayerZeroAddresses {
     uint32 internal constant CONFIG_TYPE_EXECUTOR = 1;
     uint32 internal constant CONFIG_TYPE_ULN = 2;
 
-    uint128 internal constant LZ_RECEIVE_GAS = 200_000;
+    /// @dev EVM lzReceive gas in executor options. 200k is too low for Aave-style
+    ///      stk transfer (xSQUID ~168k) plus OApp `_lzReceive` — live hxSQUID v2
+    ///      redeem `0xb884ba97…` was `SIMULATION_REVERTED` / empty reason (OOG).
+    ///      Baked into every send; peersFrozen listings cannot pick this up.
+    uint128 internal constant LZ_RECEIVE_GAS = 500_000;
     /// @dev Executor option for HyperEVM → Solana. Field is compute units, not EVM gas.
     ///      SPL transfer + harvest + endpoint.clear needs headroom above 200k.
     uint128 internal constant LZ_RECEIVE_SOLANA_CU = 400_000;

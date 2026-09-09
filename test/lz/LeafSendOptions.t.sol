@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {OptionsBuilder} from "src/lz/OptionsBuilder.sol";
+import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -82,8 +83,8 @@ contract LeafSendOptionsTest is Test {
     }
 
     function testAdapterSendOptionsMatchQuoteForEvmAndSolana() public {
-        bytes memory evmOpt = OptionsBuilder.lzReceiveOption(200_000);
-        bytes memory solOpt = OptionsBuilder.lzReceiveOption(400_000);
+        bytes memory evmOpt = OptionsBuilder.lzReceiveOption(A.LZ_RECEIVE_GAS);
+        bytes memory solOpt = OptionsBuilder.lzReceiveOption(A.LZ_RECEIVE_SOLANA_CU);
 
         vm.startPrank(user);
         inner.approve(address(adapter), 2e18);
@@ -100,8 +101,8 @@ contract LeafSendOptionsTest is Test {
     }
 
     function testInboundSendOptionsMatchQuoteForEvmAndSolana() public {
-        bytes memory evmOpt = OptionsBuilder.lzReceiveOption(200_000);
-        bytes memory solOpt = OptionsBuilder.lzReceiveOption(400_000);
+        bytes memory evmOpt = OptionsBuilder.lzReceiveOption(A.LZ_RECEIVE_GAS);
+        bytes memory solOpt = OptionsBuilder.lzReceiveOption(A.LZ_RECEIVE_SOLANA_CU);
 
         vm.startPrank(user);
         inner.approve(address(inbound), 2e18);
