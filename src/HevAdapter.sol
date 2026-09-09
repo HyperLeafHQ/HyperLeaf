@@ -53,6 +53,7 @@ contract HevAdapter is IHevAdapter, Ownable {
     error AlreadyDeposited();
     error ZeroVault();
     error VaultChangeWhileDeposited();
+    error StrategyChangeWhileDeposited();
 
     modifier onlyVault() {
         if (msg.sender != vault) revert OnlyVault();
@@ -85,6 +86,7 @@ contract HevAdapter is IHevAdapter, Ownable {
     }
 
     function setHevStrategy(address _hevStrategy) external onlyOwner {
+        if (depositedCount != 0) revert StrategyChangeWhileDeposited();
         hevStrategy = _hevStrategy;
     }
 
