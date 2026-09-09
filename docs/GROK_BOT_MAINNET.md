@@ -130,7 +130,15 @@ Read `listingTag`, peers, caps, `getConfig` on both ULNs. Then `OPEN_BRIDGE=true
 
 Mint `LEAFTEST` to OWNER (`CanaryInner.mint`). Approve. Wrap dust. Wait LayerZero. `hCANARY` on 999. Redeem back to Base.
 
-Before wrap, dest must answer `allowInitializePath` (custom OApp, not LZ OAppReceiver). First canary (`BLOCKED` / `Not Initializable`) lacked it — **do not retry that GUID**. Guardian `closeBridge` both sides. Redeploy SOURCE + OFT from a commit that has `allowInitializePath` + `nextNonce`. Dust inner in the old adapter stays there (`abortCredit` is off).
+Before wrap, dest must answer `allowInitializePath` (custom OApp, not LZ OAppReceiver). First canary (`BLOCKED` / `Not Initializable`) lacked it — **do not retry that GUID**. Do **not** wait on Guardian `closeBridge` for v1. Leave v1 open if closing is slow. Dust inner in the old adapter stays there (`abortCredit` is off).
+
+**Canary v2:** new `CanaryInner` + SOURCE + OFT from `feat/lz-oft-wrap` @ `6c1fda3` or later. New addresses. Before wrap, on dest:
+
+```
+cast call $OFT "allowInitializePath((uint32,bytes32,uint64))(bool)" "(30184, $(cast --to-bytes32 $SOURCE), 1)"
+```
+
+Must be `true`. Then dust wrap → LZ DELIVERED → hCANARY mint → redeem Base.
 
 Pass = deposit → LZ → mint → redeem, console clean, no other listing deployed.
 

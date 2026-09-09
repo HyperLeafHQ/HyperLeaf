@@ -4,7 +4,21 @@ This file is for the **frontend** bot (hyperleaf.finance, landing, this preview)
 
 Deploy / canary / Solana `.so` is the **other** bot: [`GROK_BOT_MAINNET.md`](GROK_BOT_MAINNET.md). Do not `forge script` from this file. Do not restyle because a listing shipped.
 
-`L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. If a user sees those strings, the frontend is wrong.
+## Now live — ship this without waiting for hCANARY
+
+Cross-chain wrap is **not** live. Do not show hxSQUID / hCANARY / cbETH as depositable.
+
+HyperEVM **999** product that is live:
+
+| What | Address | UI |
+| --- | --- | --- |
+| NestVault | `0x4f6615761A772e10d7f802B1C29654ABD90fF30d` | Direct `deposit` still mints transferable hNEST **immediately**. Not the product path. |
+| hNEST | `0x2101621F51D7E05518D6680C62d04Ad47bC4e05D` | Badge: **只能卖掉**. No 领取 HYPE. No redeem button. |
+| EpochHNestGate | `0xE1b8B697ac1669da4A0eC6A49d320500CC96F13c` | **Product deposit.** NEST in → wait `max(8d, Thursday epoch+30m)` → `claimTranche` circulating hNEST. |
+| Leaf Market | `0xFa77Dfb30DeCca4D9597C6764A698996B226b53A` | hNEST ↔ NEST `fillLocal`. Name **Leaf Market** / Leaf 市场. 1% to buyer. |
+| Abandoned Gate | `0xB4C43e9cE08ff5540e0E240dB7784f47231d519B` | Dead. Never use. |
+
+Do **not** claim weekly Nest HYPE isolation. Live vault has no `depositGate`; Gate is opt-in. Do not claim LZ wrap is live.
 
 `L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. If a user sees those strings, the frontend is wrong.
 
