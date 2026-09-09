@@ -235,6 +235,16 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         (nativeFee,) = quote(dstEid, payload, _defaultOptions(dstEid), false);
     }
 
+    /// @notice Endpoint calls this before the first inbound nonce. Missing it → Scan BLOCKED / Not Initializable.
+    function allowInitializePath(ILayerZeroEndpointV2.Origin calldata origin) public view returns (bool) {
+        return peers[origin.srcEid] == origin.sender;
+    }
+
+    /// @notice Unordered. `0` = accept any inbound nonce (LZ OAppReceiver default).
+    function nextNonce(uint32, bytes32) public pure returns (uint64) {
+        return 0;
+    }
+
     function lzReceive(
         ILayerZeroEndpointV2.Origin calldata origin,
         bytes32 guid,

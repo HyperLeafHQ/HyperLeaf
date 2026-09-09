@@ -78,6 +78,14 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
         _unpause();
     }
 
+    function allowInitializePath(ILayerZeroEndpointV2.Origin calldata origin) public view returns (bool) {
+        return peers[origin.srcEid] == origin.sender;
+    }
+
+    function nextNonce(uint32, bytes32) public pure returns (uint64) {
+        return 0;
+    }
+
     function lzReceive(
         ILayerZeroEndpointV2.Origin calldata origin,
         bytes32 guid,

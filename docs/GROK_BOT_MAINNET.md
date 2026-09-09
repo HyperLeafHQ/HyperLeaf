@@ -130,6 +130,8 @@ Read `listingTag`, peers, caps, `getConfig` on both ULNs. Then `OPEN_BRIDGE=true
 
 Mint `LEAFTEST` to OWNER (`CanaryInner.mint`). Approve. Wrap dust. Wait LayerZero. `hCANARY` on 999. Redeem back to Base.
 
+Before wrap, dest must answer `allowInitializePath` (custom OApp, not LZ OAppReceiver). First canary (`BLOCKED` / `Not Initializable`) lacked it — **do not retry that GUID**. Guardian `closeBridge` both sides. Redeploy SOURCE + OFT from a commit that has `allowInitializePath` + `nextNonce`. Dust inner in the old adapter stays there (`abortCredit` is off).
+
 Pass = deposit → LZ → mint → redeem, console clean, no other listing deployed.
 
 Then `closeBridge` + `pause` both sides. **Leave it dead.** Do not reuse `SOURCE` / `OFT` for hxSQUID.

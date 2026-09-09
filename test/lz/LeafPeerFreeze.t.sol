@@ -70,6 +70,16 @@ contract LeafPeerFreezeTest is PegReady {
         assertFalse(adapter.bridgeOpen());
     }
 
+    function testAllowInitializePathMatchesPeer() public view {
+        ILayerZeroEndpointV2.Origin memory ok =
+            ILayerZeroEndpointV2.Origin({srcEid: 30367, sender: bytes32(uint256(uint160(address(1)))), nonce: 1});
+        ILayerZeroEndpointV2.Origin memory bad =
+            ILayerZeroEndpointV2.Origin({srcEid: 30367, sender: bytes32(uint256(uint160(address(9)))), nonce: 1});
+        assertTrue(adapter.allowInitializePath(ok));
+        assertFalse(adapter.allowInitializePath(bad));
+        assertEq(adapter.nextNonce(30367, ok.sender), 0);
+    }
+
     function testPeerCannotChangeAfterBridgeOpened() public {
         vm.prank(owner);
         adapter.openBridge();
