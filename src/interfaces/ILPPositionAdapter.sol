@@ -10,6 +10,8 @@ interface ILPPositionAdapter {
         address token1;
         int24 tickLower;
         int24 tickUpper;
+        int24 currentTick;
+        int24 tickSpacing;
         uint128 liquidity;
         uint256 amount0;
         uint256 amount1;
