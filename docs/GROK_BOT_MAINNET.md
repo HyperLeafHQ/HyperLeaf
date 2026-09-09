@@ -202,6 +202,24 @@ Then dust wrap + inject failures + PR answers. `OPEN_BRIDGE=true` only after the
 
 `BATCH=1`. `$SOURCE_RPC=base`. Inner from catalog (script pins it).
 
+**Two different knobs. Do not copy `DEPOSIT_CAP` into `INNER_SUPPLY_CEILING`.**
+
+| Knob | Meaning | hxSQUID / hAVNT |
+| --- | --- | --- |
+| `DEPOSIT_CAP` / `PEG_CAP` / `maxPerTx` | HyperLeaf intake | **50e18** (50 tokens) |
+| `INNER_SUPPLY_CEILING` | tripwire vs **live inner `totalSupply()`** | must be **strictly above** live supply + headroom |
+
+If ceiling ≤ live supply, wrap reverts `InnerSupplyBreach`. Ceiling can only go **down** after set; raise = redeploy. `peersFrozen` does not freeze the ceiling, but `CapIncrease` does.
+
+2026-09-10 Base live (18 dec):
+
+| Inner | `totalSupply` | example ceiling (≈2×) |
+| --- | --- | --- |
+| xSQUID `0x13af2Db6…4937a` | `6.846e24` (~6.85M) | `1.4e25` |
+| stkAVNT `0xd546040F…d9e9` | `2.311e25` (~23.1M) | `5e25` |
+
+v1 SOURCE/OFT that used ceiling ≤ live supply: **abandon**. Do not reuse. Cap stays 50e18.
+
 `ConfigureMainnetListing` sets `rewardsSelector` `0x9a99b4f0` for both.
 
 hAVNT: never `0xeab52318` (`claimRewardsAndRedeem`). Claim tx `0x26f4ca90`. Combined-redeem tx `0x24398d72` is a **hash**, not a selector — already documented; blacklist is `0xeab52318`.

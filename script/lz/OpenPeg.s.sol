@@ -27,9 +27,15 @@ contract OpenPeg is Script {
         bool open = vm.envOr("OPEN_BRIDGE", false);
         require(cap != 0, "zero peg cap - pass PEG_CAP");
 
-        if (block.chainid == a.sourceChainIdMain && keccak256(bytes(a.id)) == keccak256("hlbtc")) {
-            require(ceiling != 0, "hlbtc INNER_SUPPLY_CEILING");
-            require(ceiling > IERC20(a.innerMainnet).totalSupply(), "ceiling <= live LBTC supply");
+        // Source lockbox: ceiling is an anti-print tripwire on the *inner token's
+        // global supply*, not HyperLeaf's deposit cap. Mixing the two is
+        // InnerSupplyBreach (hxSQUID v1). Dest OFT has no canonical inner.
+        if (block.chainid == a.sourceChainIdMain && a.innerMainnet != address(0)) {
+            uint256 live = IERC20(a.innerMainnet).totalSupply();
+            require(ceiling != 0, "INNER_SUPPLY_CEILING required on source");
+            require(ceiling > live, "ceiling <= live inner totalSupply");
+            console2.log("live inner totalSupply", live);
+            console2.log("INNER_SUPPLY_CEILING", ceiling);
         }
 
         vm.startBroadcast();
