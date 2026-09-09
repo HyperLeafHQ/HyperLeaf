@@ -20,6 +20,7 @@ interface ILPPositionAdapter {
     struct RebalanceParams {
         int24 tickLower;
         int24 tickUpper;
+        uint16 slippageBps;
         uint256 amount0InMax;
         uint256 amount1InMax;
         uint256 amount0OutMin;
@@ -39,7 +40,7 @@ interface ILPPositionAdapter {
     function positionState(bytes32 positionId) external view returns (PositionState memory);
 
     /// @notice Rebalance one registered position under the manager's execution limits.
-    /// @dev The adapter must enforce the venue-specific meaning of min-output values.
+    /// @dev The adapter must enforce venue-specific tick/price semantics and min-output values.
     function rebalance(
         bytes32 positionId,
         RebalanceParams calldata params
