@@ -24,7 +24,6 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * - No user withdrawal queue, idle redemption buffer, or keeper-driven liquidity detachment exists.
  * - 100% of every deposit is locked into veNEST.
  * - veNEST NFT detach / transfer / withdrawal are owner-only migration/emergency paths.
- * - Owner NFT extraction is explicitly administrative and must only be used during migration/emergency handling.
  */
 contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, INestVaultHype {
     using SafeERC20 for IERC20;
@@ -235,8 +234,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         emit NestCompoundRecorded(y);
     }
 
-    // ============ Owner-only veNEST migration / custody ============
-
+    // Owner-only: these are migration/emergency custody controls, never user exit controls.
     function ownerDetachVeNFT(uint256 tokenId) external onlyOwner nonReentrant {
         _requireVaultOwned(tokenId);
         if (!inHev[tokenId]) return;
@@ -290,8 +288,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             }
         }
     }
-
-    // ============ Admin ============
 
     function setKeeper(address _keeper) external onlyOwner {
         if (_keeper == address(0)) revert ZeroAddress();
