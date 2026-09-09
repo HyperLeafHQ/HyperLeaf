@@ -44,10 +44,13 @@ contract HevAdapter is IHevAdapter, Ownable {
     uint256 public managedTokenId;
 
     mapping(uint256 => bool) public deposited;
+    uint256 public depositedCount;
 
     error OnlyVault();
     error NotDeposited();
     error AlreadyDeposited();
+    error ZeroVault();
+    error VaultChangeWhileDeposited();
 
     modifier onlyVault() {
         if (msg.sender != vault) revert OnlyVault();
@@ -74,6 +77,8 @@ contract HevAdapter is IHevAdapter, Ownable {
     }
 
     function setVault(address _vault) external onlyOwner {
+        if (_vault == address(0)) revert ZeroVault();
+        if (depositedCount != 0) revert VaultChangeWhileDeposited();
         vault = _vault;
     }
 
@@ -90,6 +95,7 @@ contract HevAdapter is IHevAdapter, Ownable {
             voter.attachToManagedNFT(tokenId, managedTokenId);
         }
         deposited[tokenId] = true;
+        depositedCount += 1;
     }
 
     /// @inheritdoc IHevAdapter
@@ -101,6 +107,7 @@ contract HevAdapter is IHevAdapter, Ownable {
             voter.dettachFromManagedNFT(tokenId);
         }
         deposited[tokenId] = false;
+        depositedCount -= 1;
     }
 
     /// @inheritdoc IHevAdapter
