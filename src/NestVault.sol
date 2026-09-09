@@ -30,8 +30,9 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * - Do NOT dettach on every requestWithdraw (live onDettach resets lock to ~now+26w)
  * - Attached getNftState amount/end are zero — use nestPrincipal / unlockEligibleAt
  * - dettachForLiquidity caps principal to queue gap + owner buffer bps (HL-003)
- * - Vault dettach gate is 8 days (NEST reward cycle is 7 days). HEV itself still
- *   allows dettach after 4 days; we wait longer.
+ * - Vault dettach gate is 4 days, matching live HEV.detachmentLockDuration().
+ *   That is a custody constraint, not the hNEST circulation / epoch gate.
+ *   Circulation is HNestCirculation (8d min delay, Thursday epoch + 30m buffer).
  *
  * Product layer is C1-style (docs/NEST_PRODUCT_POLICY.md): frontend does not offer
  * redeem. `requestWithdraw` stays as a hidden on-chain backstop. This source cannot
@@ -42,9 +43,10 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     using SafeERC20 for IERC20;
 
     uint256 public constant MAX_LOCK_DURATION = 26 weeks;
-    /// @notice Vault gate. HEV.detachmentLockDuration() on HyperEVM is still 4 days;
-    ///         we wait 8 because the NEST reward cycle is 7 days. 4 days was wrong.
-    uint256 public constant DETACHMENT_LOCK_DURATION = 8 days;
+    /// @notice Matches live NestVault 0x4f6615… and HEV.detachmentLockDuration() = 4 days.
+    ///         This is the HEV dettach / custody lock. Not the hNEST circulation gate
+    ///         (see HNestCirculation: 8d min delay vs Thursday epoch).
+    uint256 public constant DETACHMENT_LOCK_DURATION = 4 days;
     uint256 public constant BASIS_POINTS = 10_000;
     uint256 public constant MAX_FEE_BPS = 500;
     /// @notice Cap on deposit skim into idle buffer (safety: keep most capital productive).
@@ -326,7 +328,8 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
 
     /**
      * @notice Batch dettach NFTs only when queue needs liquidity. Starts ~26w unlock clock.
-     * @dev Requires DETACHMENT_LOCK_DURATION (8d) since attach. Does not call veNEST.withdraw.
+     * @dev Requires DETACHMENT_LOCK_DURATION (4d, HEV custody) since attach.
+     *      Does not call veNEST.withdraw. Does not gate hNEST circulation.
      *      Caps cumulative nestPrincipal dettached to queue gap + dettachBufferBps (HL-003).
      *      Requires non-zero hevAdapter and successful withdrawVeNFT before clearing inHev (HL-008).
      */

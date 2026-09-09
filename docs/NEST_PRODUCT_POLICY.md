@@ -33,16 +33,27 @@ Its existing operational constraints still apply:
 
 Therefore the product can behave like C1 without changing the immutable live Vault.
 
-## Detach gate (8 days)
+## Two clocks (do not share)
 
-NEST reward cycles are **7 days**. The previous 4-day vault gate was wrong.
+Live HyperEVM, probed 2026-09-10:
 
-- **This source:** `DETACHMENT_LOCK_DURATION = 8 days`. Keeper `dettachForLiquidity` waits 8 days after attach. 7 days (the Nest epoch) is still too early.
-- **HEV on-chain:** `HEV.detachmentLockDuration()` is still 4 days. We do not control HEV. The vault is allowed to wait longer than HEV.
-- **Live vault `0x4f6615…`:** the deployed constant is still 4 days and cannot be patched. Ops on the live vault should still wait ≥8 days before dettach even though the contract would allow 4.
-- **Tests:** 4d, 7d, and 8d−1 all revert `DettachTooEarly`. Exactly 8d is the first legal dettach.
+| Clock | Value | What it gates |
+| ----- | ----- | ------------- |
+| **HEV `detachmentLockDuration()`** | **4 days** (`345600`) | `Voter.dettachFromManagedNFT`. Custody. We do not control HEV. |
+| **Live NestVault `0x4f6615…` `DETACHMENT_LOCK_DURATION()`** | **4 days** (`345600`) | Keeper `dettachForLiquidity` only. Same as HEV. Immutable. |
+| **Nest epoch** | **7 days**, Thursday 00:00 UTC | HYPE / NEST reward accounting. Keeper harvests 00:30 UTC. |
+| **hNEST circulation gate** | `max(deposit + 8 days, epochEnd + 30 minutes)` | When a new deposit's hNEST is economically “epoch-settled” for secondary-market transfer. **Not** a dettach lock. |
 
-There is no on-chain `depositGate`. C1 is a product-layer choice, not a deposit-router contract.
+`HNestCirculation.claimableAt(depositTs)` is the formula. Do **not** write `claimableAt = deposit + 8 days` alone, and do **not** fold 8 days into `dettachForLiquidity`.
+
+At Day 4 the underlying veNEST is technically dettachable. hNEST from that deposit is still inside the circulation window until Day 8 / epoch settlement. That split is intentional: we do not use HEV's 4 days to prove a reward epoch has finished.
+
+Live vault mints transferable hNEST on deposit and cannot be patched. The circulation gate is product/frontend (and any future wrap). `requestWithdraw` stays a hidden backstop.
+
+## Detach (4 days, HEV custody)
+
+- **Live + this source:** `DETACHMENT_LOCK_DURATION = 4 days`, matching HEV.
+- **Tests:** 4d−1 reverts `DettachTooEarly`. Exactly 4d is the first legal dettach. 4d dettach is still before `HNestCirculation.claimableAt`.
 
 ## `ownerTransferVeNFT`
 

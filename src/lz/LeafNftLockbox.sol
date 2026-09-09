@@ -162,7 +162,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
 
         bytes memory payload = encodeBridge(to, principal);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
-            _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
+            _lzSend(dstEid, payload, _defaultOptions(dstEid), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, tokenId, principal, receipt.guid);
         return receipt.guid;
     }

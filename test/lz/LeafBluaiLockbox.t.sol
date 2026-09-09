@@ -6,6 +6,7 @@ import {PegReady} from "test/lz/PegReady.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
+import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {IBluaiStake} from "src/lz/IBluaiStake.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -192,6 +193,32 @@ contract LeafBluaiLockboxTest is PegReady {
         assertEq(stake.staked(address(box)), 40 ether);
         assertTrue(box.farmPrincipalOut());
         assertEq(bluai.balanceOf(address(box)), 0);
+    }
+
+    function testPartialUnstakeKeepsExternalFlagAndDoesNotTreatReturnAsYield() public {
+        vm.startPrank(user);
+        bluai.approve(address(box), 40 ether);
+        box.sendTo{value: 0.01 ether}(40362, user, 40 ether);
+        vm.stopPrank();
+
+        vm.prank(owner);
+        box.farmUnstake(10 ether);
+        assertTrue(box.farmPrincipalOut());
+        assertEq(box.localPrincipal(), 10 ether);
+        assertEq(bluai.balanceOf(address(box)), 10 ether);
+        assertEq(stake.staked(address(box)), 30 ether);
+        assertEq(box.totalLocked(), 40 ether);
+
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        box.pullYield(bluai, converter);
+        assertEq(bluai.balanceOf(address(box)), 10 ether);
+
+        vm.prank(owner);
+        box.farmUnstake(30 ether);
+        assertFalse(box.farmPrincipalOut());
+        assertEq(box.localPrincipal(), 0);
+        assertEq(bluai.balanceOf(address(box)), 40 ether);
     }
 
     function testFarmConfigMutableBeforeFirstDeposit() public {

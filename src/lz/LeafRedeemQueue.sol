@@ -150,7 +150,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
         bytes memory payload = encodeBridge(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
-            _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
+            _lzSend(dstEid, payload, _defaultOptions(dstEid), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, got, receipt.guid);
         return receipt.guid;
     }

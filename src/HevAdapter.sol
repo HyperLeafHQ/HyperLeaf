@@ -26,14 +26,15 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * Withdraw timing (NestVault owns policy — see docs/WITHDRAW_WINDOWS.md):
  * - Do not call withdrawVeNFT on every redeem; onDettach resets lock end ≈ now+26w
  * - HEV.detachmentLockDuration is 4 days on-chain (we do not control HEV).
- *   NestVault gates dettachForLiquidity at 8 days because the NEST reward cycle is 7 days.
+ *   NestVault.dettachForLiquidity uses the same 4 days. hNEST circulation
+ *   is a separate clock (HNestCirculation, 8d / Thursday epoch).
  * - Attached getNftState amount/end are zero — vault tracks nestPrincipal
  */
 contract HevAdapter is IHevAdapter, Ownable {
     using SafeERC20 for IERC20;
 
-    /// @notice Vault-side gate (8 days). HEV itself still allows dettach after 4 days.
-    uint256 public constant DETACHMENT_LOCK_DURATION = 8 days;
+    /// @notice HEV custody lock. Not the hNEST circulation gate.
+    uint256 public constant DETACHMENT_LOCK_DURATION = 4 days;
 
     IVotingEscrow public immutable veNEST;
     IVoter public immutable voter;

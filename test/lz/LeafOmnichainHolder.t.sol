@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {LeafOmnichainHolder} from "src/lz/LeafOmnichainHolder.sol";
+import {LeafForbiddenSelectors} from "src/lz/LeafForbiddenSelectors.sol";
 
 contract Tkn is ERC20 {
     constructor() ERC20("T", "T") {}
@@ -52,6 +53,51 @@ contract LeafOmnichainHolderTest is Test {
         vm.prank(owner);
         h.sweep(drop, converter);
         assertEq(drop.balanceOf(converter), 2e18);
+    }
+
+    function testPrincipalRotationClearsOldSweepProtection() public {
+        Tkn next_ = new Tkn();
+        inner.mint(address(h), 1e18);
+        next_.mint(address(h), 1e18);
+        vm.startPrank(owner);
+        h.setPrincipal(address(next_), true);
+        assertFalse(h.isPrincipal(address(inner)));
+        assertTrue(h.isPrincipal(address(next_)));
+        assertEq(h.principal(), address(next_));
+        h.sweep(inner, converter);
+        vm.expectRevert(LeafOmnichainHolder.Principal.selector);
+        h.sweep(next_, converter);
+        vm.stopPrank();
+        assertEq(inner.balanceOf(converter), 1e18);
+    }
+
+    function testAdapterCannotReleaseSideToken() public {
+        drop.mint(address(h), 3e18);
+        vm.prank(adapter);
+        vm.expectRevert(LeafOmnichainHolder.NotPrincipal.selector);
+        h.release(drop, alice, 3e18);
+        assertEq(drop.balanceOf(address(h)), 3e18);
+    }
+
+    function testHolderForbiddenSelectorsMatchFeePolicy() public {
+        bytes4[8] memory blocked = [
+            bytes4(0xeab52318),
+            bytes4(0x38248a0c),
+            bytes4(0x06866fdc),
+            bytes4(0x250201db),
+            bytes4(0x041d5408),
+            bytes4(0x787a08a6),
+            bytes4(0x42966c68),
+            bytes4(0xe5c1bf6e)
+        ];
+        vm.startPrank(owner);
+        for (uint256 i; i < blocked.length; i++) {
+            assertTrue(LeafForbiddenSelectors.forbidden(blocked[i]));
+            vm.expectRevert(LeafOmnichainHolder.ForbiddenRewardsSelector.selector);
+            h.setRewardsSelector(blocked[i]);
+        }
+        h.setRewardsSelector(bytes4(0x9a99b4f0));
+        vm.stopPrank();
     }
 
     function testCannotAllowlistPrincipalAsClaim() public {

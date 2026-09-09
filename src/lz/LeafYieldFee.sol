@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {LeafForbiddenSelectors} from "./LeafForbiddenSelectors.sol";
 
 abstract contract LeafYieldFee {
     using SafeERC20 for IERC20;
@@ -140,42 +141,15 @@ abstract contract LeafYieldFee {
     ///      Tx 0x24398d72 is that combined redeem *hash*, not a selector — do not
     ///      blacklist the hash prefix.
     function _forbiddenRewardsSelector(bytes4 s) internal pure returns (bool) {
-        return _forbiddenExitSelector(s) || _forbiddenLbtcSelector(s);
+        return LeafForbiddenSelectors.forbidden(s);
     }
 
     function _forbiddenExitSelector(bytes4 s) internal pure returns (bool) {
-        return s == bytes4(0x1e9a6950) // redeem(address,uint256)
-            || s == bytes4(0xeab52318) // claimRewardsAndRedeem(address,uint256,uint256) — Avantis
-            || s == bytes4(0x787a08a6) // cooldown()
-            || s == bytes4(0xb460af94) // withdraw(uint256,address,address)
-            || s == bytes4(0xba087652) // redeem(uint256,address,address)
-            || s == bytes4(0x9343d9e1) // cooldownShares(uint256)
-            || s == bytes4(0xcdac52ed) // cooldownAssets(uint256)
-            || s == bytes4(0x1e83409a) // claim(address)
-            || s == bytes4(0x9ad82aa0) // queueRedeem
-            || s == bytes4(0x50b3f984) // queueWithdraw
-            || s == bytes4(0x38248a0c) // completeWithdrawal(bool) — sWBERA 7d NFT
-            || s == bytes4(0x06866fdc) // completeWithdrawal(bool,uint256)
-            || s == bytes4(0x1b0aed2c) // cancelQueuedWithdrawal (vault)
-            || s == bytes4(0x041d5408) // cancelQueuedWithdrawal()
-            || s == bytes4(0xc9d2ff9d) // requestUnlock(uint256) — BENQI sAVAX 15d
-            || s == bytes4(0x2e1a7d4d) // withdraw(uint256) — BENQI claim AVAX / SOON 90d unlock
-            || s == bytes4(0x1338736f) // lock(uint256,uint256) — SOON occupancy 0x6601, not gSOON vault
-            || s == bytes4(0x6e553f65) // deposit(uint256,address) — ERC-4626; poke arity matches
-            || s == bytes4(0x94bf804d) // mint(uint256,address)
-            || s == bytes4(0x250201db) // cooldownOnBehalfOf(address) — Umbrella StakeToken
-            || s == bytes4(0x397a1b28) // requestWithdraw(address,uint256) — ether.fi DelayedWithdraw arity
-            || s == bytes4(0x0efe6a8b) // deposit(address,uint256,uint256) — sETHFI teller, never poke
-            || s == bytes4(0x1d7d4ebc) // KING merkle claim(address,uint256,bytes32,bytes32[])
-            || s == bytes4(0x2e7ba6ef); // ETHFI/EIGEN merkle claim(uint256,address,uint256,bytes32[])
+        return LeafForbiddenSelectors.exit(s);
     }
 
     function _forbiddenLbtcSelector(bytes4 s) internal pure returns (bool) {
-        return s == bytes4(0x42966c68) // burn(uint256)
-            || s == bytes4(0xbcf64e05) // burn(uint256,bytes32)
-            || s == bytes4(0x6bc63893) // mint(bytes,bytes)
-            || s == bytes4(0x8340f549) // deposit(address,address,uint256) — AssetRouter BTC.b→LBTC
-            || s == bytes4(0xe5c1bf6e); // redeem(bytes,bytes) — 10d BTC
+        return LeafForbiddenSelectors.lbtc(s);
     }
 
     function _setRewardsTarget(address t) internal {

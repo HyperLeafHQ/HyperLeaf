@@ -24,6 +24,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     bytes4 public farmExitSel;
     uint256 public farmStakeArg;
     bool public farmPrincipalOut;
+    /// @dev Principal returned from a partial farm exit while the rest is still
+    ///      external. Reserved so it cannot be pulled as yield.
+    uint256 public localPrincipal;
     bool public shareExitEnabled;
 
     /// @dev AmountYears = BLUAI `stake(amount, years)`. AmountNative = payable
@@ -202,8 +205,13 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (farm == address(0) || farmExitSel == bytes4(0) || amount == 0) revert BadStake();
         uint256 before = innerToken.balanceOf(address(this));
         (bool ok,) = farm.call(abi.encodeWithSelector(farmExitSel, amount));
-        if (!ok || innerToken.balanceOf(address(this)) <= before) revert BadStake();
-        farmPrincipalOut = false;
+        uint256 afterBal = innerToken.balanceOf(address(this));
+        if (!ok || afterBal <= before) revert BadStake();
+        localPrincipal += afterBal - before;
+        if (afterBal >= totalLocked && localPrincipal >= totalLocked) {
+            farmPrincipalOut = false;
+            localPrincipal = 0;
+        }
         emit FarmUnstaked(amount);
     }
 
@@ -220,6 +228,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         uint256 idle = innerToken.balanceOf(address(this));
         if (idle == 0 || farm == address(0)) revert ZeroAmount();
         _afterDeposit(idle);
+        localPrincipal = 0;
         emit RestakedIdle(idle);
     }
 
@@ -272,7 +281,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
         bytes memory payload = encodeBridge(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
-            _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
+            _lzSend(dstEid, payload, _defaultOptions(dstEid), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, got, receipt.guid);
         return receipt.guid;
     }
@@ -332,7 +341,10 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         if (farmStyle == FarmStyle.AmountNative) {
             return innerToken.balanceOf(address(this));
         }
-        return farmPrincipalOut ? 0 : totalLocked;
+        // Partial BLUAI unstake: returned inner is principal. Idle claimAll
+        // while still staked stays yield (localPrincipal == 0).
+        if (farmPrincipalOut) return localPrincipal;
+        return totalLocked;
     }
 
     function _requireFarmConfigMutable() internal view {

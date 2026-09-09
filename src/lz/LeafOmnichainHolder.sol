@@ -5,6 +5,7 @@ import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {LeafForbiddenSelectors} from "./LeafForbiddenSelectors.sol";
 
 interface ILeafOmnichainHolder {
     function release(IERC20 token, address to, uint256 amount) external;
@@ -33,6 +34,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     error BadClaimSelector();
     error ClaimFailed();
     error Principal();
+    error NotPrincipal();
     error ForbiddenRewardsSelector();
     error BadConverter();
 
@@ -59,8 +61,18 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
 
     function setPrincipal(address t, bool ok) external onlyOwner {
         if (t == address(0)) revert ZeroAddress();
-        isPrincipal[t] = ok;
-        if (ok) principal = t;
+        if (ok) {
+            address prev = principal;
+            if (prev != address(0) && prev != t) {
+                isPrincipal[prev] = false;
+                emit PrincipalSet(prev, false);
+            }
+            principal = t;
+            isPrincipal[t] = true;
+        } else {
+            isPrincipal[t] = false;
+            if (principal == t) principal = address(0);
+        }
         emit PrincipalSet(t, ok);
     }
 
@@ -101,20 +113,14 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     }
 
     function setRewardsSelector(bytes4 s) external onlyOwner {
-        // Keep in sync with LeafYieldFee._forbiddenRewardsSelector.
-        if (s != bytes4(0) && (s == bytes4(0x1e9a6950) || s == bytes4(0xb460af94) || s == bytes4(0xba087652)
-            || s == bytes4(0x9343d9e1) || s == bytes4(0xcdac52ed) || s == bytes4(0x1e83409a)
-            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984)
-            || s == bytes4(0xc9d2ff9d) || s == bytes4(0x2e1a7d4d)
-            || s == bytes4(0x1338736f) || s == bytes4(0x6e553f65) || s == bytes4(0x94bf804d)
-            || s == bytes4(0x397a1b28) || s == bytes4(0x0efe6a8b) || s == bytes4(0x1d7d4ebc)
-            || s == bytes4(0x2e7ba6ef))) revert ForbiddenRewardsSelector();
+        if (s != bytes4(0) && LeafForbiddenSelectors.forbidden(s)) revert ForbiddenRewardsSelector();
         rewardsSelector = s;
         emit RewardsSelectorSet(s);
     }
 
     function release(IERC20 token, address to, uint256 amount) external nonReentrant {
         if (!isAdapter[msg.sender]) revert NotAdapter();
+        if (address(token) != principal) revert NotPrincipal();
         token.safeTransfer(to, amount);
         emit Released(address(token), to, amount);
     }
@@ -134,11 +140,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
         address p = principal;
         bytes4 s = rewardsSelector;
         if (p == address(0) || s == bytes4(0)) revert BadClaimTarget();
-        if (s == bytes4(0x1e9a6950) || s == bytes4(0xb460af94) || s == bytes4(0xba087652)
-            || s == bytes4(0x9343d9e1) || s == bytes4(0xcdac52ed) || s == bytes4(0x1e83409a)
-            || s == bytes4(0x9ad82aa0) || s == bytes4(0x50b3f984)
-            || s == bytes4(0xc9d2ff9d) || s == bytes4(0x2e1a7d4d)
-            || s == bytes4(0x1338736f) || s == bytes4(0x6e553f65) || s == bytes4(0x94bf804d)) revert ForbiddenRewardsSelector();
+        if (LeafForbiddenSelectors.forbidden(s)) revert ForbiddenRewardsSelector();
         (bool ok,) = p.call{value: msg.value}(abi.encodeWithSelector(s, address(this), type(uint256).max));
         if (!ok) revert ClaimFailed();
     }

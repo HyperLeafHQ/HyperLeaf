@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {NestVault} from "../src/NestVault.sol";
 import {HNest} from "../src/HNest.sol";
+import {HNestCirculation} from "../src/HNestCirculation.sol";
 import {HyperEVMAddresses} from "../src/config/HyperEVMAddresses.sol";
 import {IVotingEscrow} from "../src/interfaces/IVotingEscrow.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
@@ -25,7 +26,7 @@ contract NestVaultTest is Test {
     address feeRecipient = makeAddr("fee");
 
     uint256 constant LOCK = 26 weeks;
-    uint256 constant DETACH_LOCK = 8 days;
+    uint256 constant DETACH_LOCK = 4 days;
 
     function setUp() public {
         nest = new MockERC20("NEST", "NEST");
@@ -170,7 +171,7 @@ contract NestVaultTest is Test {
         assertTrue(vault.inHev(tokenId));
         assertEq(nest.balanceOf(alice), 10_000 ether - 100 ether);
 
-        // 8d vault dettach gate (NEST epoch is 7d; HEV on-chain is still 4d)
+        // 4d HEV custody lock (live vault + HEV.detachmentLockDuration). Not the 8d circulation gate.
         vm.warp(block.timestamp + DETACH_LOCK + 1);
         uint256[] memory ids = new uint256[](1);
         ids[0] = tokenId;
@@ -374,41 +375,7 @@ contract NestVaultTest is Test {
         vault.dettachForLiquidity(ids);
     }
 
-    function test_DettachStillBlockedAtFormerFourDayGate() public {
-        vm.prank(alice);
-        vault.deposit(100 ether);
-        vm.prank(alice);
-        vault.requestWithdraw(100 ether);
-
-        uint256 tokenId = vault.getVeNFTId(0);
-        uint256[] memory ids = new uint256[](1);
-        ids[0] = tokenId;
-        uint256 availableAt = vault.attachedAt(tokenId) + DETACH_LOCK;
-
-        vm.warp(block.timestamp + 4 days + 1);
-        vm.prank(keeper);
-        vm.expectRevert(abi.encodeWithSelector(NestVault.DettachTooEarly.selector, tokenId, availableAt));
-        vault.dettachForLiquidity(ids);
-    }
-
-    function test_DettachStillBlockedAtSevenDayRewardCycle() public {
-        vm.prank(alice);
-        vault.deposit(100 ether);
-        vm.prank(alice);
-        vault.requestWithdraw(100 ether);
-
-        uint256 tokenId = vault.getVeNFTId(0);
-        uint256[] memory ids = new uint256[](1);
-        ids[0] = tokenId;
-        uint256 availableAt = vault.attachedAt(tokenId) + DETACH_LOCK;
-
-        vm.warp(block.timestamp + 7 days + 1);
-        vm.prank(keeper);
-        vm.expectRevert(abi.encodeWithSelector(NestVault.DettachTooEarly.selector, tokenId, availableAt));
-        vault.dettachForLiquidity(ids);
-    }
-
-    function test_DettachStillBlockedOneSecondBeforeEightDays() public {
+    function test_DettachStillBlockedOneSecondBeforeFourDays() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         vm.prank(alice);
@@ -425,7 +392,7 @@ contract NestVaultTest is Test {
         vault.dettachForLiquidity(ids);
     }
 
-    function test_DettachAllowedAtExactlyEightDays() public {
+    function test_DettachAllowedAtExactlyFourDays() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         vm.prank(alice);
@@ -443,8 +410,27 @@ contract NestVaultTest is Test {
         assertEq(vault.unlockEligibleAt(tokenId), block.timestamp + LOCK);
     }
 
-    function test_ConstantsMatchEightDayGate() public view {
-        assertEq(vault.DETACHMENT_LOCK_DURATION(), 8 days);
+    function test_ConstantsMatchLiveHevFourDayDettach() public view {
+        assertEq(vault.DETACHMENT_LOCK_DURATION(), 4 days);
+        assertEq(vault.DETACHMENT_LOCK_DURATION(), 345600);
+    }
+
+    function test_FourDayDettachIsNotCirculationGate() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
+
+        uint256 tokenId = vault.getVeNFTId(0);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+
+        vm.warp(block.timestamp + 4 days);
+        vm.prank(keeper);
+        vault.dettachForLiquidity(ids);
+        assertFalse(vault.inHev(tokenId));
+        // hNEST from this deposit is still inside the 8d circulation window.
+        assertLt(block.timestamp, HNestCirculation.claimableAt(vault.attachedAt(tokenId)));
     }
 
     function test_BookVerifiedYieldSkimsOnePercentAndRaisesNav() public {

@@ -187,7 +187,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
         bytes memory payload = encodeBridge(to, shares);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
-            _lzSend(dstEid, payload, _defaultOptions(), refund == address(0) ? msg.sender : refund);
+            _lzSend(dstEid, payload, _defaultOptions(dstEid), refund == address(0) ? msg.sender : refund);
         emit BridgedOut(msg.sender, dstEid, to, shares, receipt.guid);
         return receipt.guid;
     }
