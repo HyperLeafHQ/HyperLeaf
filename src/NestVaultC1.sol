@@ -73,7 +73,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     event VeNFTDetachedForAdmin(uint256 indexed tokenId);
     event VeNFTTransferredForAdmin(uint256 indexed tokenId, address indexed recipient);
     event VeNFTWithdrawnForAdmin(uint256 indexed tokenId, address indexed recipient, uint256 amount);
-    event VeNFTMergedForAdmin(uint256 indexed fromTokenId, uint256 indexed toTokenId, uint256 mergedPrincipal);
 
     error ZeroAmount();
     error ZeroAddress();
@@ -90,7 +89,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     error HevAdapterChangeWhileLive();
     error NotVaultOwnedNFT();
     error NFTStillAttached();
-    error InvalidMerge();
     error RedemptionDisabled();
 
     modifier onlyKeeper() {
@@ -274,23 +272,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         emit VeNFTWithdrawnForAdmin(tokenId, recipient, amount);
     }
 
-    function ownerMergeVeNFT(uint256 fromTokenId, uint256 toTokenId) external onlyOwner nonReentrant {
-        if (fromTokenId == toTokenId) revert InvalidMerge();
-        _requireVaultOwned(fromTokenId);
-        _requireVaultOwned(toTokenId);
-        if (inHev[fromTokenId] || inHev[toTokenId]) revert NFTStillAttached();
-
-        uint256 fromPrincipal = nestPrincipal[fromTokenId];
-        uint256 toPrincipal = nestPrincipal[toTokenId];
-        if (fromPrincipal == 0 || toPrincipal == 0) revert InvalidMerge();
-
-        veNEST.merge(fromTokenId, toTokenId);
-        delete nestPrincipal[fromTokenId];
-        nestPrincipal[toTokenId] = fromPrincipal + toPrincipal;
-        _removeTrackedNFT(fromTokenId);
-        emit VeNFTMergedForAdmin(fromTokenId, toTokenId, fromPrincipal + toPrincipal);
-    }
-
     function _requireVaultOwned(uint256 tokenId) internal view {
         if (veNEST.ownerOf(tokenId) != address(this)) revert NotVaultOwnedNFT();
     }
@@ -364,8 +345,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         emit GuardianUpdated(guardian, _guardian);
         guardian = _guardian;
     }
-
-    // ============ Views ============
 
     function sharePrice() external view returns (uint256) {
         uint256 totalSupply = hNest.totalSupply();
