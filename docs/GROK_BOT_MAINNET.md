@@ -1,8 +1,9 @@
 # Grok bot tasks — mainnet go-live
 
 You deploy. You do **not** redesign assets, restyle the frontend, or open a
-bridge because a PR merged. Branch: `feat/lz-oft-wrap`. Log every address in
-the PR. `BATCH` is required. Wrong ticker reverts `NotThisBatch`.
+bridge because a PR merged. Branch: **`main`**. Log every address in
+issue [#7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) or a deploy comment — not a frontend rewrite.
+`BATCH` is required. Wrong ticker reverts `NotThisBatch`.
 
 Frontend copy is a **different** bot: [`GROK_BOT_FRONTEND.md`](GROK_BOT_FRONTEND.md).
 Harvest notes: [`GROK_BOT_RECEIPTS.md`](GROK_BOT_RECEIPTS.md).
@@ -28,7 +29,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 | ---: | --- | --- | --- | --- |
 | **0** | first | `hcanary` | Toy ERC-20, L adapter, **real** ULN | Base 8453 |
 | **1** | canary dead | `hxsquid` then `havnt` | Side-token L. `0x9a99b4f0`. Never `0xeab52318` | Base 8453 |
-| **2** | batch 1 passed | `hcbeth` then `hgsoon` then `hswbera` | Rate L, 1% skim, 99% in receipt | Base / BSC 56 / Bera 80094 |
+| **2** | batch 1 passed | `hgsoon` then `hswbera` | Rate L, 1% skim, 99% in receipt. **Not hcbETH** | BSC 56 / Bera 80094 |
 | **3** | batch 2 passed | `hsavax` then `hstkwausdc` then **`hlbtc`** | Rate / Umbrella / LBTC 8-dec | Avax / ETH |
 | **4** | batch 3 passed | `bluai4y` then `horder` | C1 lockbox + closed OFT. Market exit | BSC 56 / Arb 42161 |
 | **5** | batch 4 passed **and** Store PDA exists | `hjitosol` | Solana lockbox + dest `LeafOFT`. No Rewarder | Solana 30168 → HyperEVM 999 |
@@ -224,7 +225,11 @@ v1 SOURCE/OFT that used ceiling ≤ live supply: **abandon**. Do not reuse. Cap 
 
 hAVNT `0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98` round-trip **PASS** — do not redeploy.
 
-hxSQUID **v3 only**, from `main` after `LZ_RECEIVE_GAS=500_000`. New SOURCE+OFT. Same caps/ceiling/selector/ULN. Wrap → LZ → **redeem must DELIVER**. Then stop.
+hxSQUID **v3 live** (wrap + redeem DELIVERED, `LZ_RECEIVE_GAS=500000`):
+- SOURCE Base `0x13E3e8803022cb58e93d025bfEB95ab88BE60d25`
+- OFT HEVM `0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc`
+
+**BATCH 1 smoke is done.** Do not redeploy either. Do not touch frontend. Remaining: verify the 7 contracts on explorers, then FINAL `acceptOwnership` via Write Contract (OKX). Do not accept v2 `0x6586…`.
 
 `ConfigureMainnetListing` sets `rewardsSelector` `0x9a99b4f0` for both.
 
@@ -234,19 +239,22 @@ After both tickers: Rewarder bind on 999 (`setHypeRewarder` first, then `registe
 
 ---
 
-## 2. Rate L — hcbETH, hgSOON, hsWBERA
+## 2. Rate L — hgSOON then hsWBERA
 
-`BATCH=2`. Wrap/redeem **settle the 1% skim first**. 99% stays in the receipt. No holder `claim()` HYPE.
+`BATCH=2`. **Skip `hcbeth`** (`NotThisBatch`). Base cbETH has no `exchangeRate()`.
 
-| ASSET | SOURCE_RPC | RateKind | Never |
-| --- | --- | --- | --- |
-| `hcbeth` | base | `ExchangeRate` | treat donations as yield |
-| `hgsoon` | bsc | `ConvertToAssets` | `cooldownShares` / `cooldownAssets` / SOON `deposit` |
-| `hswbera` | berachain | `ConvertToAssets` | Bera 7d NFT `requestUnlock` |
+Wrap/redeem **settle the 1% skim first**. 99% stays in the receipt. No holder `claim()` HYPE. New corridors: BSC eid **30102**, Bera eid **30362**. Same ULN 255 / 2-of-3 / 15↔5. `lzReceive.gas` is 500k.
+
+| ASSET | SOURCE_RPC | RateKind | Never | inner `totalSupply` (2026-09-10) | ceiling ≈2× |
+| --- | --- | --- | --- | --- | --- |
+| `hgsoon` | bsc | `ConvertToAssets` (~1.744) | `cooldownShares` / `cooldownAssets` / SOON `deposit` / 90d `lock` | `1.141e26` | **`2.3e26`** |
+| `hswbera` | berachain | `ConvertToAssets` (~1.459) | 7d NFT `requestUnlock` / 4626 `withdraw`/`redeem` | `3.752e25` | **`8e25`** |
+
+`DEPOSIT_CAP` / `PEG_CAP` = **50e18** until we raise it. Do not copy that into the ceiling.
 
 `pullYield(inner)` **is** the 1% skim. Dust fee (surplus < 100 atoms) is 0; watermark still moves; do not claw later.
 
-Do not print a protocol APR on a dust vault.
+Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this batch (`after-hgsoon`). Do not frontend.
 
 ---
 
