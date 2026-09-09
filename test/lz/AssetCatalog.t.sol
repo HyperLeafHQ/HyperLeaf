@@ -150,7 +150,8 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hcanary"), 0);
         assertEq(MainnetBatches.batchOf("hxsquid"), 1);
         assertEq(MainnetBatches.batchOf("havnt"), 1);
-        assertEq(MainnetBatches.batchOf("hcbeth"), 2);
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hcbeth");
         assertEq(MainnetBatches.batchOf("hgsoon"), 2);
         assertEq(MainnetBatches.batchOf("hswbera"), 2);
         assertEq(MainnetBatches.batchOf("hsavax"), 3);
@@ -169,7 +170,7 @@ contract AssetCatalogTest is Test {
         this._batch("hkaito");
         MainnetBatches.requireBatch("hxsquid", 1);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
-        this._requireBatch("hcbeth", 1);
+        this._requireBatch("hcbeth", 2);
         assertEq(AssetCatalog.get("hcanary").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hcanary").sourceChainIdMain, 8453);
         assertEq(AssetCatalog.get("hcanary").defaultCap, 5e16);

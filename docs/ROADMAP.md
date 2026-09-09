@@ -8,9 +8,9 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | ----- | ------ | ---- | ------ | ------ |
 | 0 | **hCANARY** | L | Base | Toy `LEAFTEST`. Real ULN. Close after redeem. Do not reuse |
 | 0 | hNEST | Native | HyperEVM | Live, capped. C1-style product: no UI redeem, secondary market exit. Keep existing vault |
-| **1** | hxSQUID | L | Base | Side-token. claimRewards → QUID → HYPE |
-| **1** | **hAVNT** | L | Base | Same adapter + `0x9a99b4f0`. Never `0xeab52318` |
-| **2** | hcbETH | L | Base | PoS in the rate. 1% skim |
+| **1** | hxSQUID | L | Base | **Live v3** SOURCE `0x13E3…0d25` / OFT `0x78B6…4DFc`. Cap 50. Owner pending FINAL |
+| **1** | **hAVNT** | L | Base | **Live** `0x571C…aa98` both chains. Cap 50. Owner pending FINAL |
+| parked | hcbETH | L | Base | No `exchangeRate` on Base cbETH. Not BATCH 2 |
 | **2** | **hgSOON** | L | BSC | `convertToAssets` 1% skim. Never 90d cooldown |
 | **2b** | **hslisBNB** | L | BSC | Lista slisBNB only. Same BSC path as hgSOON. Never native BNB. Never Lista 7d unstake |
 | **2** | **hsWBERA** | L | Berachain 80094 | Same skim. Never 7d NFT queue |
@@ -59,7 +59,7 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 
 **0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). Real `SetSecurityStack`. Tiny cap. Close after redeem. `GROK_BOT_MAINNET.md`.
 **1** — hxSQUID then hAVNT. Same Base path the canary just proved.
-**2** — rate L: hcbETH (Base) + hgSOON (BSC) + hsWBERA (Bera). 1% skim. New LZ eids for BSC and Bera. **hslisBNB only after hgSOON** (same BSC corridor, Lista rate, never native BNB / 7d unstake).
+**2** — rate L: **hgSOON (BSC) then hsWBERA (Bera)**. 1% skim. New LZ eids 30102 / 30362. **hcbETH out** (Base token has no `exchangeRate`). **hslisBNB only after hgSOON** (same BSC corridor, Lista rate, never native BNB / 7d unstake).
 **3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). hsETHFI gated (`productionEvm=false`).
 **4** — C1: BLUAI4Y then hORDER. Leaf Market after the first C1 lists. No CREATE2 twin.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
