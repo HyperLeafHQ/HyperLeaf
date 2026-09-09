@@ -16,20 +16,8 @@ contract StableAssetController is Ownable2Step, Pausable {
     uint256 public constant BPS = 10_000;
     uint256 public constant ONE = 1e18;
 
-    enum PegStatus {
-        Normal,
-        Warning,
-        Degraded,
-        Broken
-    }
-
-    enum ExitMode {
-        MarketOnly,
-        PrimaryRedeem,
-        BufferedRedeem,
-        QueueRedeem,
-        Frozen
-    }
+    enum PegStatus { Normal, Warning, Degraded, Broken }
+    enum ExitMode { MarketOnly, PrimaryRedeem, BufferedRedeem, QueueRedeem, Frozen }
 
     struct RiskConfig {
         uint16 maxPegDeviationBps;
@@ -79,16 +67,11 @@ contract StableAssetController is Ownable2Step, Pausable {
 
     error InvalidListing();
     error InvalidConfig();
-    error EvidenceStale();
-    error PegNotHealthy();
     error ExitNotHealthy();
 
     constructor(address initialOwner) Ownable(initialOwner) {}
 
-    function registerListing(bytes32 listingId, address leaf, address adapter, address buffer)
-        external
-        onlyOwner
-    {
+    function registerListing(bytes32 listingId, address leaf, address adapter, address buffer) external onlyOwner {
         if (listingId == bytes32(0) || leaf == address(0) || adapter == address(0)) revert InvalidListing();
         listings[listingId] = Listing({leaf: leaf, adapter: adapter, buffer: buffer, enabled: true});
         emit ListingRegistered(listingId, leaf, adapter, buffer);
@@ -177,10 +160,14 @@ contract StableAssetController is Ownable2Step, Pausable {
             a.exitMode = ExitMode.QueueRedeem;
         }
 
-        if (a.marketEnabled && cfg.maxExitDiscountBps < BPS) {
-            uint256 effective = _effectiveExitPrice(peg.referencePrice, a.exitCoverageBps, peg.primaryRedeemPrice);
-            a.effectiveExitPrice = effective;
-            if (effective > 0 && _discountBps(effective, peg.referencePrice) > cfg.maxExitDiscountBps) {
+        // Price and capacity are deliberately separate dimensions. Coverage is a gate on
+        // available exit capacity; it must not be multiplied into the redemption price.
+        if (a.marketEnabled) {
+            a.effectiveExitPrice = peg.primaryRedeemPrice > 0 ? peg.primaryRedeemPrice : peg.referencePrice;
+            if (
+                a.effectiveExitPrice > 0
+                    && _discountBps(a.effectiveExitPrice, peg.referencePrice) > cfg.maxExitDiscountBps
+            ) {
                 a.marketEnabled = false;
                 a.exitMode = ExitMode.Frozen;
             }
@@ -203,8 +190,8 @@ contract StableAssetController is Ownable2Step, Pausable {
         return a.pegStatus == PegStatus.Normal && a.evidenceFresh;
     }
 
-    /// @notice Guard for a primary exit adapter integration. It intentionally does not custody
-    ///         funds or perform the external redemption; the venue adapter remains responsible.
+    /// @notice Validate a primary-exit quote without moving funds. The adapter remains the
+    ///         venue-specific execution/proof layer.
     function validatePrimaryExit(bytes32 listingId, uint256 shares) external view returns (uint256 assets) {
         Assessment memory a = assess(listingId);
         if (!a.primaryExitAllowed) revert ExitNotHealthy();
@@ -238,18 +225,6 @@ contract StableAssetController is Ownable2Step, Pausable {
     function _discountBps(uint256 value, uint256 reference) internal pure returns (uint256) {
         if (reference == 0 || value >= reference) return 0;
         return ((reference - value) * BPS) / reference;
-    }
-
-    function _effectiveExitPrice(uint256 reference, uint256 coverageBps, uint256 primaryPrice)
-        internal
-        pure
-        returns (uint256)
-    {
-        if (reference == 0) return 0;
-        if (primaryPrice == 0 || coverageBps >= BPS) return primaryPrice == 0 ? reference : primaryPrice;
-        // Conservative blended floor: uncovered claim is priced at the lesser of the observed
-        // primary exit price and zero. This produces a policy signal, not a promised redemption.
-        return (primaryPrice * coverageBps) / BPS;
     }
 
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {
