@@ -129,9 +129,12 @@ One production listing at a time unless an already-proven adapter, bridge path, 
 | P4+ | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT; specialized lockbox |
 | P4+ | **hB3** | C1 | Base | Address-keyed farm; requires verified claim path |
 | P4+ | **hsteakUSDC** | L | Base Morpho | ERC-4626 share only |
-| P4+ | **hgauntletDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 shares; never DAI / Blue market |
+| P4+ | **hDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 shares; cap 100k DAI; never DAI / Blue market |
+| P4+ | **hUSDT** | L | Bitway | BTWUSDT Core Alpha share; never raw USDT |
 | P4+ | **hsteakUSDG** | L | Robinhood Morpho | ERC-4626 share only; never deposit/redeem USDG |
 | P5 | **hJitoSOL** | L | Solana | Rate-bearing LST; stake-pool rate only; no NCN restake |
+| Watch | **hUSD1** | L | BSC HertzFlow | HLV receipt only; never raw USD1; NAV can drop |
+| Watch | **hbwBTW** | L | Bitway | bwBTW only; low priority |
 | Watch | **hsTRX** | L | TRON | JustLend sTRX only; BLOCK until LZ TRON mainnet ULN |
 | Watch | **hLINK** | C2 | Ethereum | Chainlink v0.2 pool full / 15k cap; research only |
 | Watch | **hliSLVR** | L | Robinhood | Only after tax-free receipt is confirmed |

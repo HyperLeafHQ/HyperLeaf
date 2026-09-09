@@ -24,8 +24,13 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | hveAERO | ve-NFT | Base | `LeafNftLockbox` exists. Permanent NORMAL only. Not a BATCH |
 | later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |
 | later | **hsteakUSDC** | L | Base Morpho | steakUSDC `0xBEEF010f…8183`. Same L family as hsteakUSDG |
-| later | **hgauntletDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 `0x500331c9…74a5`. Wrap **vault shares**, never DAI, never Blue market id. Cap to exit liquidity |
+| later | **hDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 `0x500331c9…74a5`. Wrap **vault shares**, never DAI, never Blue market. **Cap 100k DAI** (exit liq ~195k). Pilot, not unlimited. Do not advertise 6.29% |
+| later | **hUSDT** | L | Bitway | Core Alpha share **BTWUSDT** `0x73af543D…3A1` / vault `0xb82E32…B63`. Never raw USDT. Value-accruing, not a 1:1 USDT wrap. Verify ABI + chain + LZ before any BATCH |
 | later | **hsteakUSDG** | L | Robinhood Morpho | steakUSDG `0xBeEf…09dd`. Never deposit/redeem USDG |
+| later | **asBNB** | L | BSC | Aster extra rewards on top of LST — later, not first |
+| watch | **hUSD1** | L | BSC HertzFlow | HLV Genesis `0xeeA83A77…da9c6`. Wrap **HLV receipt**, never raw USD1. Perp LP NAV can drop; withdraw can stall. Campaign WLFI is **not** backing. SELECTED pending share-token ID |
+| watch | **hbwBTW** | L | Bitway | bwBTW only, never raw BTW. ~5% + volatile. Low priority |
+| watch | **ankrBNB** | L | BSC | Rate-compatible; liquidity << slisBNB |
 | watch | **hsTRX** | L | TRON | JustLend sTRX `TU3kjFuh…SLQ5` only. Instant hsTRX vs sTRX, not raw TRX. 14d source unbond stays on JustLend. **No LZ TRON mainnet ULN yet** |
 | watch | **hLINK** | C2 | Ethereum | Chainlink Staking v0.2. Community pool **full**, per-address **15k LINK**, 28d+7d exit. Research only — not an open vault |
 | watch | **hliSLVR** | L | Robinhood | Wrap **liSLVR only**. Never taxed SLVR. Lottery rake. Confirm tax-free share |
@@ -43,6 +48,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hstDYDX** | L | Cosmos/Stride | Wrap **stDYDX**, never ethDYDX. Needs IBC lockbox like JupSOL |
 | hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
+| blocked | **BNBx** | | BSC | Stader sunset 2026 |
 | watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
 | blocked | hKAITO / hVIRTUALMAX | | Base | Extra-chain claims until CREATE2 holder |
 

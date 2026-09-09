@@ -474,9 +474,9 @@
       "priority": 26
     },
     {
-      "id": "hgauntletdai",
+      "id": "hdai",
       "kind": "L",
-      "symbol": "hgauntletDAI",
+      "symbol": "hDAI",
       "name": "Hyperleaf Gauntlet DAI",
       "innerSymbol": "gtDAI",
       "innerToken": "0x500331c9fF24D9d11aee6B07734Aa72343EA74a5",
@@ -491,9 +491,83 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Morpho Gauntlet DAI Core V1 vault shares. Wrap the 4626 share only — never DAI, never a Morpho Blue market id. convertToAssets 1% skim. Constructor must pin vault.asset()==DAI and freeze the vault. Cap to verified exit liquidity, not headline TVL. Same L family as hsteakUSDC, later.",
-      "status": "later",
+      "note": "Morpho Gauntlet DAI Core V1. Luna: Ethereum SELECT, Base/HL DEFER, Arb REJECT. Wrap vault shares only — never DAI, never Blue market id. DAI-in adapter is extra surface, not first. Cap 100_000 DAI (exit liq ~195k vs 2.13M TVL). Do not advertise 6.29%. convertToAssets 1% skim. Freeze vault.asset()==DAI.",
+      "status": "later-capped-pilot",
       "priority": 27
+    },
+    {
+      "id": "husdt",
+      "kind": "L",
+      "symbol": "hUSDT",
+      "name": "Hyperleaf Bitway USDT",
+      "innerSymbol": "BTWUSDT",
+      "innerToken": "0x73af543D809C8D3414e5B92b3aa2c25b182Ba3A1",
+      "underlying": "USDT",
+      "source": "bitway",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Bitway Core Alpha USDT share, not commodity USDT. Vault 0xb82E32062C773c7748776C06FdB11B92EDAE3B63. Wrap BTWUSDT only — never raw USDT, never auto-route other Bitway strategies. Value-accruing. Verify ABI, chain, flash-unstake, pause, and LZ before any BATCH. Do not market as trustless lending.",
+      "refs": {
+        "coreAlphaVault": "0xb82E32062C773c7748776C06FdB11B92EDAE3B63"
+      },
+      "status": "research",
+      "priority": 28
+    },
+    {
+      "id": "husd1",
+      "kind": "L",
+      "symbol": "hUSD1",
+      "name": "Hyperleaf HertzFlow USD1",
+      "innerSymbol": "HLV-USD1",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "hlv-share-price",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "HertzFlow USD1 Genesis HLV 0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6 is a vault ID, not proven to be the ERC-20 receipt. Wrap HLV receipt only — never raw USD1. Perp LP: NAV can drop, withdraw can stall. Campaign WLFI/APY is not backing. BLOCK until share token, GlvReader, deposit/withdraw handlers, and fork unwind are verified.",
+      "refs": {
+        "hlvVault": "0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6"
+      },
+      "status": "watch-verify-receipt",
+      "priority": 29
+    },
+    {
+      "id": "hbwbtw",
+      "kind": "L",
+      "symbol": "hbwBTW",
+      "name": "Hyperleaf staked BTW",
+      "innerSymbol": "bwBTW",
+      "source": "bitway",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "note": "Watch only. Wrap bwBTW receipt, never raw BTW. ~5% + volatile. Not a launch candidate until yield/ABI/chain are worth the work.",
+      "status": "watch",
+      "priority": 42
+    },
+    {
+      "id": "hankrbnb",
+      "kind": "L",
+      "symbol": "hankrBNB",
+      "name": "Hyperleaf ankrBNB",
+      "innerSymbol": "ankrBNB",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "Rate-compatible BNB LST. Liquidity << slisBNB. After hslisBNB if ever.",
+      "status": "watch",
+      "priority": 43
     },
     {
       "id": "hstrx",
