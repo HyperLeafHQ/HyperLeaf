@@ -606,6 +606,19 @@
       "priority": 41
     },
     {
+      "id": "htston",
+      "kind": "L",
+      "symbol": "htsTON",
+      "name": "Hyperleaf tsTON",
+      "innerSymbol": "tsTON",
+      "source": "ton",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "note": "Luna eval #02. Wrap Tonstakers tsTON, never raw GRAM. sGRAM / hGRAM secondary. SELECTED pending on-chain receipt + TON LZ. Same rate-LST family as hslisBNB, not a GRAM OFT.",
+      "status": "watch-ton-lz",
+      "priority": 44
+    },
+    {
       "id": "hlislvr",
       "kind": "L",
       "symbol": "hliSLVR",
