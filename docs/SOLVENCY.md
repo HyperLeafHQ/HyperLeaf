@@ -356,11 +356,11 @@ Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8
 | Core invariant | L: `supply ≤ totalLocked stk`. Rate harvest must not drop backing below outstanding principal watermark |
 | Proof source | lockbox `totalLocked` + `balanceOf(stk)` + `convertToAssets`. Side rewards are **not** backing |
 | Mint / redeem | wrap/unwrap the v1 receipt, instant. **Never** `cooldown` / `redeem` / `withdraw` on StakeToken (20d, one cooldown per address). **Never** auto-migrate to v2. User who wants Aave v2: unwrap, migrate themselves |
-| Yield | **Two books.** (1) aToken interest in `convertToAssets` → hcbETH `retainRateYield`, pull **1% of surplus** as protocol fee, 99% stays in backing. Slash / rate down → watermark down, pull 0. (2) Umbrella emissions via `RewardsController` `0x4655Ce3D…` `claimAllRewards([stk], lockbox)` → converter → WHYPE 99/1. Pin selector from controller ABI, not a tx hash |
+| Yield | **Two books.** (1) aToken interest in `convertToAssets` → hcbETH `retainRateYield`, pull **1% of surplus** as protocol fee, 99% stays in backing. Slash / rate down → keep high-water mark, pull 0. Recovery to that mark is not fee. Guardian `acknowledgeRate` is the explicit loss-recognition path. (2) Umbrella emissions via `RewardsController` `0x4655Ce3D…` `claimAllRewards([stk], lockbox)` → converter → WHYPE 99/1. Pin selector from controller ABI, not a tx hash |
 | Failure | Aave USDC deficit slash; governance upgrades implementation at same proxy; `.v2` migration (pause mint, keep redeem of v1); RewardsController mis-set to cooldown/redeem |
 | Auto-pause | health on slash / inner supply ceiling; guardian pause mint if Aave announces v2 |
 | Worst-case loss | slash of locked stk (Umbrella max is `totalAssets - MIN_ASSETS_REMAINING`) + converter slippage on side rewards |
-| Test | cooldown/redeem selectors forbidden; `test/lz/LeafUmbrella.t.sol` claimAllRewards does not move stk; donation not yield; slash lowers watermark |
+| Test | cooldown/redeem selectors forbidden; `test/lz/LeafUmbrella.t.sol` claimAllRewards does not move stk; donation not yield; slash keeps high-water mark |
 
 Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner.
 

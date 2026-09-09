@@ -46,6 +46,7 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error UnknownTicket();
     error CannotPullInner();
     error DelayTooLow();
+    error ReentrantAbortRecoveryDisabled();
 
     constructor(
         address token_,
@@ -78,15 +79,8 @@ contract LeafRedeemQueue is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit CapUpdated(cap);
     }
 
-    function abortCredit(address to, uint256 amount) external onlyOwner nonReentrant {
-        if (to == address(0) || amount == 0) revert ZeroAmount();
-        if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
-        if (amount > totalLocked) revert InsufficientLocked();
-        _requireCash(innerToken, amount, pendingTicketAssets);
-        totalLocked -= amount;
-        innerToken.safeTransfer(to, amount);
-        _syncAccounted(innerToken, pendingTicketAssets);
-        emit CreditAborted(to, amount);
+    function abortCredit(address, uint256) external pure {
+        revert ReentrantAbortRecoveryDisabled();
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {

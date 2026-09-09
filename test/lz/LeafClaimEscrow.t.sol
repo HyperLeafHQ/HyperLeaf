@@ -578,4 +578,19 @@ contract LeafClaimEscrowTest is PegReady {
         assertEq(oft.balanceOf(address(escrow)), 0);
         assertEq(bluai.balanceOf(address(escrow)), 0);
     }
+
+    function testClaimPeerHasNoDelegateAndCanFreezeConfig() public {
+        assertFalse(escrow.configFrozen());
+        SetConfigParam[] memory params = new SetConfigParam[](0);
+        vm.prank(owner);
+        escrow.setEndpointConfig(address(1), params);
+
+        vm.prank(owner);
+        escrow.freezeConfig();
+        assertTrue(escrow.configFrozen());
+
+        vm.prank(owner);
+        vm.expectRevert(LeafClaimPeer.ConfigFrozen.selector);
+        escrow.setEndpointConfig(address(1), params);
+    }
 }

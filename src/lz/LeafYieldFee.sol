@@ -374,9 +374,12 @@ abstract contract LeafYieldFee {
     }
 
     /// @dev Move rate delta on `lastAccounted` into `accruedRateYield`.
-    ///      Retain: book 1% of surplus, pin watermark, then flush to converter if convert is on.
+    ///      Retain: book 1% of surplus above the high-water mark, pin watermark,
+    ///      then flush to converter if convert is on.
     ///      Halt (convert off): book only — wrap/redeem stay live, new deposits mint at post-fee NAV.
-    ///      Slash lowers the watermark and pulls nothing. Donations never enter lastAccounted.
+    ///      Slash does **not** lower lastRate. Recovery to the previous high-water
+    ///      mark is not fee-bearing. Guardian `acknowledgeRate` is the explicit
+    ///      loss-recognition path. Donations never enter lastAccounted.
     function _accrueRateYield(IERC20 token) internal {
         if (rateKind == RateKind.None) return;
         if (retainRateYield) {
@@ -392,10 +395,7 @@ abstract contract LeafYieldFee {
         }
         if (rate == lastRate) return;
         if (_tripIfRateJump(rate)) return;
-        if (rate < lastRate) {
-            lastRate = rate;
-            return;
-        }
+        if (rate < lastRate) return;
         uint256 add = (lastAccounted * (rate - lastRate)) / rate;
         lastAccounted -= add;
         accruedRateYield += add;
@@ -403,7 +403,8 @@ abstract contract LeafYieldFee {
         emit RateYieldAccrued(add, accruedRateYield, rate);
     }
 
-    /// @dev Pin lastRate. On increase, 1% of surplus → accrued (not 100%). Dust fee stays with holders.
+    /// @dev Pin lastRate as a high-water mark. On increase, 1% of surplus → accrued.
+    ///      Dust fee stays with holders. A decrease is a no-op.
     function _bookRetainFee(IERC20 token) internal {
         uint256 rate = _readRate(token);
         if (lastRate == 0) {
@@ -412,10 +413,7 @@ abstract contract LeafYieldFee {
         }
         if (rate == lastRate || lastAccounted == 0) return;
         if (_tripIfRateJump(rate)) return;
-        if (rate < lastRate) {
-            lastRate = rate;
-            return;
-        }
+        if (rate < lastRate) return;
         uint256 add = (lastAccounted * (rate - lastRate)) / rate;
         lastRate = rate;
         uint256 fee = (add * YIELD_FEE_BPS) / BPS_DENOMINATOR;

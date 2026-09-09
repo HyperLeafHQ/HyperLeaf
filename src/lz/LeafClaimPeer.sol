@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
+import {ILayerZeroEndpointV2, SetConfigParam} from "./interfaces/ILayerZeroEndpointV2.sol";
 import {OptionsBuilder} from "./OptionsBuilder.sol";
 
 /// @dev Thin LZ peer for the claim board. Not a wrap OApp: no mint, no caps, no listingTag.
@@ -13,6 +13,7 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     mapping(uint32 eid => bytes32 peer) public peers;
     /// @dev First wired EID. New EIDs revert. Extra chains = new deploy.
     uint32 public remoteEid;
+    bool public configFrozen;
 
     error ZeroAddress();
     error OnlyEndpoint();
@@ -21,9 +22,11 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     error PeerFrozen();
     error NotGuardian();
     error BadEid();
+    error ConfigFrozen();
 
     event PeerSet(uint32 indexed eid, bytes32 peer);
     event GuardianUpdated(address indexed oldG, address indexed newG);
+    event ConfigFrozenSet();
 
     modifier onlyGuardian() {
         if (msg.sender != guardian && msg.sender != owner()) revert NotGuardian();
@@ -34,7 +37,7 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
         if (endpoint_ == address(0) || owner_ == address(0) || guardian_ == address(0)) revert ZeroAddress();
         endpoint = ILayerZeroEndpointV2(endpoint_);
         guardian = guardian_;
-        endpoint.setDelegate(owner_);
+        // No Endpoint delegate. Same #11 rule as LeafOApp.
     }
 
     function setGuardian(address g) external onlyOwner {
@@ -54,6 +57,17 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
 
     function setPeer(uint32 eid, address peer) external onlyOwner {
         setPeer(eid, bytes32(uint256(uint160(peer))));
+    }
+
+    function setEndpointConfig(address lib, SetConfigParam[] calldata params) external onlyOwner {
+        if (configFrozen) revert ConfigFrozen();
+        endpoint.setConfig(address(this), lib, params);
+    }
+
+    function freezeConfig() external onlyOwner {
+        if (remoteEid == 0) revert NoPeer();
+        configFrozen = true;
+        emit ConfigFrozenSet();
     }
 
     function pause() external onlyGuardian {

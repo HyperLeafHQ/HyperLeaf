@@ -212,7 +212,7 @@ Do **not** ship Cancel / 撤销赎回 / “I changed my mind”. That button doe
 | Want Leaf again after they hold the receipt | That is a **new wrap**. New LZ fee (paid to LayerZero, not us). New mint. | Label it 再次存入 / wrap again. Never 取消赎回 or 恢复铸造. |
 | Hold a sell-only ticker (C1 / hNEST) | There is no protocol redeem in the UI. | Only 卖掉. `requestWithdraw` is backend-only for hNEST. |
 
-`abortCredit` is owner/guardian after halt — not a user cancel. Do not surface it.
+`abortCredit` is a permanent revert, not a rescue drain. Do not surface it.
 
 **Copy that must sit on every redeem confirm:**
 

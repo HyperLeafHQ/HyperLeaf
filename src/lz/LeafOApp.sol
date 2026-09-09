@@ -86,7 +86,9 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         if (_endpoint == address(0) || _owner == address(0) || _guardian == address(0)) revert ZeroAddress();
         endpoint = ILayerZeroEndpointV2(_endpoint);
         guardian = _guardian;
-        endpoint.setDelegate(_owner);
+        // No Endpoint delegate. Owner configures through `setEndpointConfig` (msg.sender
+        // is this OApp). A delegate would let owner call Endpoint.setConfig / setSendLibrary
+        // after `peersFrozen` and bypass #11.
     }
 
     function setGuardian(address _guardian) external onlyOwner {
@@ -174,6 +176,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
 
     /// @notice Call after peers, DVN, caps, and listingTag are on-chain. Not a git merge.
     ///         Freezes peers and endpoint config permanently. `closeBridge` does not unfreeze.
+    ///         There is no Endpoint delegate; live `setConfig` cannot go around this wrapper.
     function openBridge() public virtual onlyOwner {
         if (listingTag == bytes32(0)) revert NoListingTag();
         if (maxPerTx == 0 || maxPerDay == 0) revert LimitsUnset();

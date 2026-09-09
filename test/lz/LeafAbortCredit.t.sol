@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {LeafOFTAdapter} from "src/lz/LeafOFTAdapter.sol";
+import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
+import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {LeafOApp} from "src/lz/LeafOApp.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
@@ -33,12 +35,14 @@ contract MockEndpointAbortCredit is ILayerZeroEndpointV2 {
     function skip(address, uint32, bytes32, uint64) external {}
 }
 
-/// @dev Adapter abortCredit is permanently disabled. An old GUID must never
-///      authorize consumption of later users' backing.
+/// @dev abortCredit is permanently disabled on adapter, inbound, and queue.
+///      An old GUID must never authorize consumption of later users' backing.
 contract LeafAbortCreditTest is Test {
     MockEndpointAbortCredit ep;
     MockERC20 inner;
     LeafOFTAdapter adapter;
+    LeafInboundLockbox inbound;
+    LeafRedeemQueue queue;
     address owner = address(0xA11CE);
     address guardian = address(0xB0B);
     address user = address(0xCAFE);
@@ -47,20 +51,27 @@ contract LeafAbortCreditTest is Test {
         ep = new MockEndpointAbortCredit();
         inner = new MockERC20("INNER", "INR");
 
-        vm.prank(owner);
-        adapter = new LeafOFTAdapter(address(inner), address(ep), owner, guardian, address(0xFEE), 10e18);
-
         vm.startPrank(owner);
-        adapter.setPeer(30367, address(1));
-        adapter.setListingTag(bytes32("HLBTC"));
-        adapter.setLimits(1e18, 2e18);
-        adapter.setInnerSupplyCeiling(10e18);
-        adapter.openBridge();
+        adapter = new LeafOFTAdapter(address(inner), address(ep), owner, guardian, address(0xFEE), 10e18);
+        inbound = new LeafInboundLockbox(address(inner), address(ep), owner, guardian, address(0xFEE), 10e18);
+        queue = new LeafRedeemQueue(address(inner), address(ep), owner, guardian, address(0xFEE), 10e18, 1 days);
+
+        _open(adapter);
+        _open(inbound);
+        _open(queue);
         vm.stopPrank();
 
         inner.mint(user, 2e18);
         vm.deal(user, 1 ether);
         vm.deal(owner, 1 ether);
+    }
+
+    function _open(LeafOApp box) internal {
+        box.setPeer(30367, address(1));
+        box.setListingTag(bytes32("HLBTC"));
+        box.setLimits(1e18, 2e18);
+        box.setInnerSupplyCeiling(10e18);
+        box.openBridge();
     }
 
     function testAbortCreditDisabledBeforeAndAfterHalt() public {
@@ -82,6 +93,44 @@ contract LeafAbortCreditTest is Test {
         vm.expectRevert(LeafOFTAdapter.ReentrantAbortRecoveryDisabled.selector);
         adapter.abortCredit(guid, user);
         assertEq(adapter.totalLocked(), locked);
+        assertEq(inner.balanceOf(user), userBal);
+    }
+
+    function testInboundAbortCreditDisabledEvenWhenHalted() public {
+        vm.startPrank(user);
+        inner.approve(address(inbound), 1e18);
+        inbound.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 1e18, user);
+        vm.stopPrank();
+
+        uint256 locked = inbound.totalLocked();
+        uint256 userBal = inner.balanceOf(user);
+        assertEq(locked, 1e18);
+
+        vm.prank(guardian);
+        inbound.setHealth(LeafOApp.Health.Halted);
+        vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.ReentrantAbortRecoveryDisabled.selector);
+        inbound.abortCredit(user, 1e18);
+        assertEq(inbound.totalLocked(), locked);
+        assertEq(inner.balanceOf(user), userBal);
+    }
+
+    function testQueueAbortCreditDisabledEvenWhenHalted() public {
+        vm.startPrank(user);
+        inner.approve(address(queue), 1e18);
+        queue.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 1e18, user);
+        vm.stopPrank();
+
+        uint256 locked = queue.totalLocked();
+        uint256 userBal = inner.balanceOf(user);
+        assertEq(locked, 1e18);
+
+        vm.prank(guardian);
+        queue.setHealth(LeafOApp.Health.Halted);
+        vm.prank(owner);
+        vm.expectRevert(LeafRedeemQueue.ReentrantAbortRecoveryDisabled.selector);
+        queue.abortCredit(user, 1e18);
+        assertEq(queue.totalLocked(), locked);
         assertEq(inner.balanceOf(user), userBal);
     }
 }

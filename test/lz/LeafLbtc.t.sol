@@ -182,7 +182,7 @@ contract LeafLbtcTest is PegReady {
         router.setRate(address(inner), 0.98e18);
         adapter.pokeRate();
         assertFalse(adapter.rateJumped());
-        assertEq(adapter.lastRate(), 0.98e18);
+        assertEq(adapter.lastRate(), 1e18);
     }
 
     function testJumpIsNotHarvested() public {

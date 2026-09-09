@@ -184,13 +184,49 @@ contract LeafRateYieldTest is PegReady {
         assertEq(shares2, (10e18 * 100e18) / prev);
     }
 
-    function testSlashLowersWatermarkNoPull() public {
+    function testSlashKeepsHighWaterMarkNoPull() public {
         _mintLeaf(100e18);
         inner.setRate(95e16);
         vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
         adapter.pullYield(inner, converter);
-        assertEq(adapter.lastRate(), 95e16);
+        assertEq(adapter.lastRate(), 1e18);
         assertEq(inner.balanceOf(converter), 0);
+        assertEq(adapter.lastAccounted(), 100e18);
+    }
+
+    function testSlashThenRecoveryToHighWaterIsNotYield() public {
+        _mintLeaf(100e18);
+        inner.setRate(0.9e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        adapter.pullYield(inner, converter);
+        assertEq(adapter.lastRate(), 1e18);
+
+        inner.setRate(1e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        adapter.pullYield(inner, converter);
+        assertEq(adapter.lastRate(), 1e18);
+        assertEq(inner.balanceOf(converter), 0);
+        assertEq(adapter.lastAccounted(), 100e18);
+    }
+
+    function testFeeOnlyAbovePreviousHighWater() public {
+        _mintLeaf(100e18);
+        inner.setRate(0.9e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        adapter.pullYield(inner, converter);
+
+        inner.setRate(1.1e18);
+        uint256 surplus = _surplus(100e18, 1e18, 1.1e18);
+        uint256 fee = _fee(surplus);
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        assertEq(inner.balanceOf(converter), fee);
+        assertEq(adapter.lastRate(), 1.1e18);
+        assertEq(adapter.lastAccounted(), 100e18 - fee);
     }
 
     function testNoRateFeedCannotPullInner() public {
@@ -330,19 +366,16 @@ contract LeafRateYieldTest is PegReady {
         uint256[4] memory rates = [r1, r2, r3, r4];
         for (uint256 i; i < 4; i++) {
             inner.setRate(rates[i]);
-            if (rates[i] < last) {
+            if (rates[i] <= last) {
                 vm.prank(owner);
+                vm.expectRevert(LeafYieldFee.NoYield.selector);
                 adapter.pullYield(inner, converter);
-                last = rates[i];
                 continue;
             }
             uint256 add = _surplus(accounted, last, rates[i]);
             uint256 fee = _fee(add);
             vm.prank(owner);
             if (fee == 0) {
-                if (rates[i] == last) {
-                    vm.expectRevert(LeafYieldFee.NoYield.selector);
-                }
                 adapter.pullYield(inner, converter);
                 last = rates[i];
             } else {
@@ -357,6 +390,7 @@ contract LeafRateYieldTest is PegReady {
         assertEq(inner.balanceOf(address(adapter)), 100e18 - harvested);
         assertLe(harvested, 100e18);
         assertLe(accounted, 100e18);
+        assertEq(adapter.lastRate(), last);
     }
 
     function testSavaxPooledAvaxRateSameMathAsCbeth() public {

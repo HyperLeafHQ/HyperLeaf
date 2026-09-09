@@ -380,7 +380,7 @@ contract LeafPegTest is PegReady {
         assertEq(other.totalSupply(), 0);
     }
 
-    function testAbortCreditOnlyAfterHalt() public {
+    function testAbortCreditDisabledEvenAfterHalt() public {
         _openPair(adapter, oft, owner, 1_000e18);
         vm.startPrank(user);
         token.approve(address(adapter), 10e18);

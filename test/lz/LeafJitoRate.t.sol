@@ -65,11 +65,26 @@ contract LeafJitoRateTest is Test, PegReady {
         assertEq(nr, r1);
     }
 
-    function testSlashDropsWatermarkNoFee() public pure {
+    function testSlashKeepsWatermarkNoFee() public pure {
         (uint256 fee, uint256 next, uint256 nr) = LeafJitoRate.bookRetainFee(100e9, 1.1e18, 1.05e18);
         assertEq(fee, 0);
         assertEq(next, 100e9);
-        assertEq(nr, 1.05e18);
+        assertEq(nr, 1.1e18);
+    }
+
+    function testRecoveryToHighWaterIsNotYield() public pure {
+        (uint256 fee, uint256 next, uint256 nr) = LeafJitoRate.bookRetainFee(100e9, 1e18, 0.9e18);
+        assertEq(fee, 0);
+        assertEq(next, 100e9);
+        assertEq(nr, 1e18);
+        (fee, next, nr) = LeafJitoRate.bookRetainFee(next, nr, 1e18);
+        assertEq(fee, 0);
+        assertEq(next, 100e9);
+        assertEq(nr, 1e18);
+        (fee, next, nr) = LeafJitoRate.bookRetainFee(next, nr, 1.1e18);
+        assertGt(fee, 0);
+        assertEq(nr, 1.1e18);
+        assertEq(next, 100e9 - fee);
     }
 
     function testDustSurplusZeroFeeWatermarkMoves() public pure {

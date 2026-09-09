@@ -60,7 +60,7 @@ Address-keyed externals (hORDER): Orderly’s ledger keys by **EVM address**, ch
 
 Anyone may `reportInnerSupply`. Only the listing's canonical inner counts. If `inner.totalSupply()` exceeds the ceiling, health becomes Degraded. Guardian can only worsen. Owner restores Degraded/Halted; `restoreHealth(Normal)` re-checks the ceiling (and hORDER `ledgerPrincipal`). Insolvent needs `recoverInsolvent`.
 
-Stuck LZ: owner is the LZ delegate and calls `Endpoint.skip` on the OApp (we cannot wrap `skip` on the lockbox — IR stack). That does **not** return tokens. Then Halted/Insolvent + owner `abortCredit`. Convert-to-HYPE hop failure stays in `LeafYieldConverter` — `halt([lockbox])` so `pullYield` stops, then try deBridge/Mayan or `returnToLockbox`. Do not unpause wrap to “retry” a skip.
+Stuck LZ: OApps have **no** Endpoint delegate. Owner cannot `Endpoint.skip` / `setConfig` / `setSendLibrary` as delegate. DVN is set through `setEndpointConfig` before `openBridge`. A stuck nonce is an ops incident (retry / dest-side credit), not a principal drain — `abortCredit` is permanently disabled. Convert-to-HYPE hop failure stays in `LeafYieldConverter` — `halt([lockbox])` so `pullYield` stops, then try deBridge/Mayan or `returnToLockbox`. Do not unpause wrap to “retry” a skip.
 
 
 1% fee is `y/100`. Sub-100 wei yield pays 0 fee (holders keep dust). `notify` reverts `DustNotify` if WHYPE would not move `accHypePerShare`, so 1 wei cannot jam the rewarder.
@@ -91,12 +91,12 @@ Luna: operational security is the weak score, not “delete owner.” Owner is a
 
 | Role | Holds | Can | Cannot |
 | ---- | ----- | --- | ------ |
-| **Owner** (multisig) | LZ delegate, restore, unpause, **lower** caps, DVN config while closed, `abortCredit`, rotate harvester/converter | Resume after halt. Rotate a burned keeper. Skip a stuck LZ nonce. | Replace an existing peer (ever). Raise caps. Change rate/retain after first deposit. Replace a live Rewarder while supply > 0. `pullYield`. `setEndpointConfig` while the bridge is live. Worsen health (guardian). |
+| **Owner** (multisig) | restore, unpause, **lower** caps, DVN via `setEndpointConfig` **before** `openBridge`, rotate harvester/converter | Resume after halt. Rotate a burned keeper. | Replace an existing peer (ever). Raise caps. Change rate/retain after first deposit. Replace a live Rewarder while supply > 0. `pullYield`. `setEndpointConfig` after `openBridge`. Direct Endpoint `setConfig` (no delegate). Worsen health (guardian). |
 | **Guardian** | pause, `closeBridge`, `setHealth` worse, `reportLedgerPrincipal` | Halt mint in minutes | Unpause, restore Normal, skip LZ, pull yield, change peers |
 | **Harvester / keeper** | converter `execute` / `notify` / `returnToLockbox` | Move surplus that is already yield | Point `pullYield` `to` anywhere but the converter. Change peers. Unpause. **Must not** `notify` a different listing than the WHYPE came from (ops; not an on-chain bucket) |
 | **Converter** | the contract, never an EOA | Hold inventory, minOut hops, halt pulls | Receive principal. Be the owner |
 
-Do **not** remove: `abortCredit`, `setEndpointConfig`, `restoreHealth`, `farmUnstake`, `setRedeemEnabled`. Those are incident tools. Bind them to the multisig. `restoreHealth(Normal)` already re-checks the ceiling and hORDER `ledgerPrincipal` — it is not a bare declaration.
+Do **not** remove: `setEndpointConfig`, `restoreHealth`, `farmUnstake`, `setRedeemEnabled`. `abortCredit` is a permanent revert, not a rescue drain. Bind the rest to the multisig. `restoreHealth(Normal)` already re-checks the ceiling and hORDER `ledgerPrincipal` — it is not a bare declaration.
 
 Do **not** put owner, guardian, harvester on one EOA. Scripts already revert `split keys`.
 

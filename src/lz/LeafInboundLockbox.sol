@@ -62,6 +62,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error BadStake();
     error InsufficientLocked();
     error FarmConfigFrozen();
+    error ReentrantAbortRecoveryDisabled();
 
     constructor(
         address token_,
@@ -99,16 +100,10 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit CapUpdated(cap);
     }
 
-    /// @notice Same as adapter. Reverts if principal is still in the farm.
-    function abortCredit(address to, uint256 amount) external onlyOwner nonReentrant {
-        if (to == address(0) || amount == 0) revert ZeroAmount();
-        if (health != Health.Halted && health != Health.Insolvent) revert NotSolvent();
-        if (farmPrincipalOut) revert BadStake();
-        if (amount > totalLocked) revert InsufficientLocked();
-        _requireCash(innerToken, amount, 0);
-        totalLocked -= amount;
-        innerToken.safeTransfer(to, amount);
-        emit CreditAborted(to, amount);
+    /// @notice Same as adapter: no owner drain of principal. An old GUID must
+    ///         never authorize consumption of later users' backing.
+    function abortCredit(address, uint256) external pure {
+        revert ReentrantAbortRecoveryDisabled();
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {

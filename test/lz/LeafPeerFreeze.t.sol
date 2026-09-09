@@ -8,6 +8,10 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockEndpointPeerFreeze is ILayerZeroEndpointV2 {
+    error LZ_Unauthorized();
+
+    mapping(address oapp => address delegate) public delegates;
+
     function eid() external pure returns (uint32) {
         return 30101;
     }
@@ -22,9 +26,18 @@ contract MockEndpointPeerFreeze is ILayerZeroEndpointV2 {
         return MessagingFee(0.01 ether, 0);
     }
 
-    function setDelegate(address) external {}
-    function setConfig(address, address, SetConfigParam[] calldata) external {}
-    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) { return ""; }
+    function setDelegate(address d) external {
+        delegates[msg.sender] = d;
+    }
+
+    function setConfig(address oapp, address, SetConfigParam[] calldata) external {
+        if (msg.sender != oapp && msg.sender != delegates[oapp]) revert LZ_Unauthorized();
+    }
+
+    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) {
+        return "";
+    }
+
     function skip(address, uint32, bytes32, uint64) external {}
 }
 
@@ -110,5 +123,35 @@ contract LeafPeerFreezeTest is PegReady {
         vm.prank(owner);
         vm.expectRevert(LeafOApp.ConfigFrozen.selector);
         adapter.setEndpointConfig(address(0x1111), params);
+    }
+
+    function testOwnerIsNeverEndpointDelegate() public {
+        assertEq(ep.delegates(address(adapter)), address(0));
+
+        SetConfigParam[] memory params = new SetConfigParam[](0);
+        vm.prank(owner);
+        adapter.setEndpointConfig(address(0x1111), params);
+
+        vm.prank(owner);
+        vm.expectRevert(MockEndpointPeerFreeze.LZ_Unauthorized.selector);
+        ep.setConfig(address(adapter), address(0x1111), params);
+
+        vm.prank(owner);
+        adapter.openBridge();
+
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
+        adapter.setEndpointConfig(address(0x1111), params);
+
+        vm.prank(owner);
+        vm.expectRevert(MockEndpointPeerFreeze.LZ_Unauthorized.selector);
+        ep.setConfig(address(adapter), address(0x1111), params);
+
+        vm.prank(guardian);
+        adapter.closeBridge();
+
+        vm.prank(owner);
+        vm.expectRevert(MockEndpointPeerFreeze.LZ_Unauthorized.selector);
+        ep.setConfig(address(adapter), address(0x1111), params);
     }
 }

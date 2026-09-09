@@ -49,7 +49,8 @@ library LeafJitoRate {
     /// @dev On rate ↑: fee = 1% of (lastAccounted * dRate / rate), floor twice.
     ///      Surplus < 100 atoms → fee 0; watermark still moves; dust stays.
     ///      lastAccounted is reduced by the fee only. 99% stays as atoms.
-    ///      On rate ↓: watermark drops, fee 0.
+    ///      On rate ↓: keep the high-water mark, fee 0. Recovery to that mark
+    ///      is not yield. Must match solana/leaf-jito-rate book_retain_fee.
     function bookRetainFee(uint256 lastAccounted, uint256 lastRate, uint256 newRate)
         internal
         pure
@@ -57,7 +58,7 @@ library LeafJitoRate {
     {
         if (newRate == 0) revert BadRate();
         if (lastRate == 0 || lastAccounted == 0) return (0, lastAccounted, newRate);
-        if (newRate < lastRate) return (0, lastAccounted, newRate);
+        if (newRate < lastRate) return (0, lastAccounted, lastRate);
         if (newRate == lastRate) return (0, lastAccounted, lastRate);
         uint256 add = (lastAccounted * (newRate - lastRate)) / newRate;
         fee = (add * YIELD_FEE_BPS) / BPS;
