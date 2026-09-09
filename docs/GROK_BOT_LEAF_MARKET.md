@@ -79,7 +79,7 @@ PR comment after smoke:
 - `setPeer` / `WirePeers` / `SetSecurityStack` / `OPEN_BRIDGE`
 - `setRewarder` or any non-zero `REWARD_ID` (hNEST has no Rewarder)
 - `setMarket` for any ticker except hNEST/NEST this job
-- Touch NestVault, HNest, HevAdapter, EpochHNestGate, live `0x4f6615…`
+- Touch NestVault, HNest, HevAdapter, live `0x4f6615…`. Gate redeploy is a **different** job: [`GROK_BOT_GATE.md`](GROK_BOT_GATE.md).
 - Advertise weekly HYPE, occupancy HYPE, or “hNEST is always 8-day locked”
 - Protocol bid / treasury fill / AMM
 - Wait for BATCH 4
