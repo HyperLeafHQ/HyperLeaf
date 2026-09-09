@@ -26,7 +26,6 @@ contract LPPositionManager is Ownable {
     }
 
     mapping(bytes32 => PositionConfig) public positions;
-
     bool public paused;
 
     error NotKeeper();
@@ -39,7 +38,8 @@ contract LPPositionManager is Ownable {
     error DeadlineExpired();
     error Amount0LimitExceeded();
     error Amount1LimitExceeded();
-    error SlippageExceeded(uint256 spent0, uint256 spent1);
+    error SpentTooMuch(uint256 spent0, uint256 spent1);
+    error OutputTooLow(uint256 received0, uint256 received1);
     error ZeroPositionId();
 
     event PositionRegistered(bytes32 indexed positionId, address indexed adapter, address indexed keeper);
@@ -135,9 +135,8 @@ contract LPPositionManager is Ownable {
         emit ManagerPaused(value);
     }
 
-    /// @notice Execute a keeper-selected rebalance subject to immutable-on-chain policy limits.
-    /// @dev The keeper chooses the target range; the manager does not price the position.
-    ///      The adapter is the only venue-specific trust boundary.
+    /// @notice Execute a keeper-selected rebalance subject to policy limits.
+    /// @dev The keeper chooses a target range and execution budget; the adapter handles venue mechanics.
     function executeRebalance(bytes32 positionId, ILPPositionAdapter.RebalanceParams calldata params)
         external
         onlyKeeper(positionId)
@@ -148,31 +147,23 @@ contract LPPositionManager is Ownable {
         PositionConfig storage cfg = positions[positionId];
         if (!cfg.active) revert PositionInactive();
         if (block.timestamp > params.deadline) revert DeadlineExpired();
+        if (params.slippageBps > cfg.maxSlippageBps) revert InvalidSlippage();
 
         uint256 nextAllowedAt = cfg.lastRebalanceAt + cfg.minRebalanceInterval;
         if (block.timestamp < nextAllowedAt) revert CooldownActive(nextAllowedAt);
-        if (params.amount0Desired > cfg.maxAmount0PerRebalance) revert Amount0LimitExceeded();
-        if (params.amount1Desired > cfg.maxAmount1PerRebalance) revert Amount1LimitExceeded();
+        if (params.amount0InMax > cfg.maxAmount0PerRebalance) revert Amount0LimitExceeded();
+        if (params.amount1InMax > cfg.maxAmount1PerRebalance) revert Amount1LimitExceeded();
 
         cfg.lastRebalanceAt = block.timestamp;
-
         result = ILPPositionAdapter(cfg.adapter).rebalance(positionId, params);
 
-        if (result.amount0Spent > params.amount0Min && params.amount0Min != 0) {
-            // For adapters where amount0Min is a post-swap receipt floor, this branch is intentionally
-            // not used. Spending is bounded by the desired amount and must instead be constrained by
-            // the manager caps above. Keep this manager neutral about venue swap semantics.
+        if (result.amount0Spent > params.amount0InMax || result.amount1Spent > params.amount1InMax) {
+            revert SpentTooMuch(result.amount0Spent, result.amount1Spent);
+        }
+        if (result.amount0Received < params.amount0OutMin || result.amount1Received < params.amount1OutMin) {
+            revert OutputTooLow(result.amount0Received, result.amount1Received);
         }
 
-        if (
-            result.amount0Spent > params.amount0Desired ||
-            result.amount1Spent > params.amount1Desired
-        ) {
-            revert SlippageExceeded(result.amount0Spent, result.amount1Spent);
-        }
-
-        // Defensive post-condition: returned values must not claim more output than the adapter
-        // could have observed under the requested budget. Exact venue-level accounting stays in adapter.
         emit PositionRebalanced(
             positionId,
             cfg.adapter,
