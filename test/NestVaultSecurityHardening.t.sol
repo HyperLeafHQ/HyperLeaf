@@ -89,6 +89,26 @@ contract NestVaultSecurityHardeningTest is Test {
         assertEq(vault.hNest().totalSupply(), 100 ether);
     }
 
+    function test_OwnerTransferCutsPrincipalPlusBookedYield() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        adapter.seedLockedShare(tokenId, 10 ether);
+        vm.prank(keeper);
+        vault.bookVerifiedYield();
+        uint256 locked = vault.totalNestLocked();
+        assertEq(locked, 110 ether);
+
+        uint256 supply = vault.hNest().totalSupply();
+        address recipient = makeAddr("migrate");
+        vault.ownerTransferVeNFT(tokenId, recipient);
+
+        assertEq(vault.totalNestLocked(), 0);
+        assertEq(vault.bookedLockedShare(tokenId), 0);
+        assertEq(ve.ownerOf(tokenId), recipient);
+        assertEq(vault.hNest().totalSupply(), supply);
+    }
+
     function test_OwnerTransferUnknownNftReverts() public {
         vm.prank(alice);
         vault.deposit(100 ether);

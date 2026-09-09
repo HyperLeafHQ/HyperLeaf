@@ -37,9 +37,10 @@ Therefore the product can behave like C1 without changing the immutable live Vau
 
 NEST reward cycles are **7 days**. The previous 4-day vault gate was wrong.
 
-- **This source:** `DETACHMENT_LOCK_DURATION = 8 days`. Keeper `dettachForLiquidity` waits 8 days after attach.
+- **This source:** `DETACHMENT_LOCK_DURATION = 8 days`. Keeper `dettachForLiquidity` waits 8 days after attach. 7 days (the Nest epoch) is still too early.
 - **HEV on-chain:** `HEV.detachmentLockDuration()` is still 4 days. We do not control HEV. The vault is allowed to wait longer than HEV.
 - **Live vault `0x4f6615…`:** the deployed constant is still 4 days and cannot be patched. Ops on the live vault should still wait ≥8 days before dettach even though the contract would allow 4.
+- **Tests:** 4d, 7d, and 8d−1 all revert `DettachTooEarly`. Exactly 8d is the first legal dettach.
 
 There is no on-chain `depositGate`. C1 is a product-layer choice, not a deposit-router contract.
 
