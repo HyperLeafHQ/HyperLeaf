@@ -18,7 +18,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 4. **Keys are three EOAs.** `OWNER` ≠ `GUARDIAN` ≠ `HARVESTER`. `PRIVATE_KEY` is OWNER. Converter is `LeafYieldConverter`, never an EOA. Do not leave this bot as owner.
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
-7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL).
+7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
 
 ---
 
@@ -267,7 +267,9 @@ Do not enable protocol redeem to “help” a seller. Do not `DeployOmnichainLoc
 | `bluai4y` | bsc | catalog. Farm `claimAll` | extra BLUAI only |
 | `horder` | arb | ORDER OFT | `reportLedgerPrincipal`. Occupancy ≠ harvest |
 
-Claim Board (escrow + fill) only after the first C1 wrap smoke. Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive, not protocol fee.
+Claim Board (escrow + fill) for **batch 4 C1 OFTs** only after the first C1 wrap smoke. Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive, not protocol fee.
+
+Live **hNEST** Leaf Market is **not this section**. See [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Same-chain `fillLocal` only. No Fill contract.
 
 Do not enable protocol redeem to “help” a seller.
 

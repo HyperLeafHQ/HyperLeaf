@@ -5,7 +5,8 @@ import {Script, console2} from "forge-std/Script.sol";
 import {LeafClaimEscrow} from "src/lz/LeafClaimEscrow.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
-/// @notice HyperEVM mainnet claim board. After OFT exists.
+/// @notice HyperEVM mainnet Leaf Market escrow. After the Leaf exists.
+///         hNEST: LEAF=hNEST WANT=NEST REWARDER unset. Do not deploy Fill.
 contract DeployClaimDest is Script {
     function run() external {
         address owner = vm.envAddress("OWNER");
