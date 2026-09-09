@@ -50,6 +50,13 @@ At Day 4 the underlying veNEST is technically dettachable. hNEST from that depos
 
 Live vault mints transferable hNEST on deposit and cannot be patched. **Do not advertise weekly HYPE isolation on 0x4f6615…** until `EpochHNestGate` is the actual deposit path.
 
+Safe to say: HyperLeaf's gated deposit path applies the 8-day circulation rule.
+Not safe to say: hNEST itself is always subject to the 8-day rule. The token has no provenance bit.
+
+Same-user deposits in one epoch are independent tranches (`claimTranche`). A later deposit does not delay an earlier one.
+
+`allocateHype` is keeper-supplied HYPE, not an on-chain Nest harvest proof. `bookVerifiedYield` is adapter-bounded (10%/week), not canonical.
+
 New HyperLeaf deposits (when Gate is wired):
 
 - guardian can pause; only owner unpauses

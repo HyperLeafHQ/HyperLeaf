@@ -85,7 +85,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     mapping(uint256 => bool) public inHev;
     /// @notice Vault-tracked NEST principal per veNFT (ignore attached getNftState.amount).
     mapping(uint256 => uint256) public nestPrincipal;
-    /// @notice When vault recorded attach (8d dettach gate).
+    /// @notice When the vault recorded HEV attachment (4d custody detachment lock).
     mapping(uint256 => uint256) public attachedAt;
     /// @notice Earliest time vault will call veNEST.withdraw after dettach (now+26w on dettach).
     mapping(uint256 => uint256) public unlockEligibleAt;
@@ -162,6 +162,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     error OnlyDepositGate();
     error DepositGateFrozen();
     error YieldBookTooLarge(uint256 y, uint256 cap);
+    error MigrationWhileLive();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -718,6 +719,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
      *      deployed immutable live vault.
      */
     function ownerTransferVeNFT(uint256 tokenId, address recipient) external onlyOwner nonReentrant {
+        if (depositsEnabled) revert MigrationWhileLive();
         if (recipient == address(0)) revert ZeroAddress();
         uint256 principal = nestPrincipal[tokenId];
         if (principal == 0) revert UnknownNft(tokenId);

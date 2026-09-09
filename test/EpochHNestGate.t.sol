@@ -78,10 +78,14 @@ contract EpochHNestGateTest is Test {
     }
 
     function _claimWhenReady(uint256 epochId, address user) internal {
-        uint256 unlock = gate.userClaimableAt(epochId, user);
-        if (block.timestamp < unlock) vm.warp(unlock);
-        vm.prank(user);
-        gate.claim(epochId);
+        uint256 n = gate.trancheCount(epochId, user);
+        for (uint256 i; i < n; ++i) {
+            (,, uint256 unlock, bool claimed) = gate.depositTranches(epochId, user, i);
+            if (claimed) continue;
+            if (block.timestamp < unlock) vm.warp(unlock);
+            vm.prank(user);
+            gate.claimTranche(epochId, i);
+        }
     }
 
     function test_EpochUsesFixed7dAnd8dClaimBoundary() public view {
@@ -235,7 +239,7 @@ contract EpochHNestGateTest is Test {
         vm.prank(alice);
         gate.deposit(100 ether);
         _rollAllocateFinalize(0, 10 ether);
-        uint256 unlock = gate.userClaimableAt(0, alice);
+        (,, uint256 unlock,) = gate.depositTranches(0, alice, 0);
         assertGe(unlock, (end - 1 days) + 8 days);
         vm.warp(unlock - 1);
         vm.prank(alice);
@@ -247,20 +251,49 @@ contract EpochHNestGateTest is Test {
         assertEq(hNest.balanceOf(alice), 100 ether);
     }
 
+    function test_SecondDepositDoesNotDelayFirstTranche() public {
+        vm.prank(alice);
+        gate.deposit(100 ether);
+        (,, uint256 first,) = gate.depositTranches(0, alice, 0);
+
+        vm.warp(block.timestamp + 1 days);
+        vm.prank(alice);
+        gate.deposit(50 ether);
+        (,, uint256 second,) = gate.depositTranches(0, alice, 1);
+        assertGt(second, first);
+
+        uint256 end = _end(0);
+        if (block.timestamp < end) vm.warp(end);
+        gate.rollEpoch();
+        vm.prank(keeper);
+        gate.allocateHype(0, 15 ether);
+        uint256 earliestFinal = end + gate.HYPE_FINALIZE_DELAY();
+        uint256 t = first > earliestFinal ? first : earliestFinal;
+        vm.warp(t);
+        gate.finalizeHype(0);
+
+        vm.prank(alice);
+        gate.claimTranche(0, 0);
+        assertEq(hNest.balanceOf(alice), 100 ether);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        gate.claimTranche(0, 1);
+
+        vm.warp(second);
+        vm.prank(alice);
+        gate.claimTranche(0, 1);
+        assertEq(hNest.balanceOf(alice), 150 ether);
+    }
+
     function test_TwoDepositorsSplitNetHypeProRata() public {
         vm.prank(alice);
         gate.deposit(100 ether);
         vm.prank(bob);
         gate.deposit(300 ether);
         _rollAllocateFinalize(0, 40 ether);
-        uint256 unlock = gate.userClaimableAt(0, alice);
-        uint256 unlockB = gate.userClaimableAt(0, bob);
-        if (unlockB > unlock) unlock = unlockB;
-        vm.warp(unlock);
-        vm.prank(alice);
-        gate.claim(0);
-        vm.prank(bob);
-        gate.claim(0);
+        _claimWhenReady(0, alice);
+        _claimWhenReady(0, bob);
         assertEq(hype.balanceOf(feeRecipient), 0.4 ether);
         assertEq(hype.balanceOf(alice), (100 ether * 39.6 ether) / 400 ether);
         assertEq(hype.balanceOf(bob), (300 ether * 39.6 ether) / 400 ether);

@@ -39,6 +39,7 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public constant HNEST_MINT_DELAY = 8 days;
     uint256 public constant HYPE_FINALIZE_DELAY = 1 days;
     uint256 public constant RESIDUAL_INDEX_SCALE = 1e18;
+    uint256 public constant MAX_TRANCHES_PER_EPOCH = 32;
 
     IERC20 public immutable nestToken;
     IERC20 public immutable hypeToken;
@@ -71,11 +72,17 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     mapping(uint256 => Epoch) public epochs;
     mapping(uint256 => mapping(address => uint256)) public nestIn;
     mapping(uint256 => mapping(address => uint256)) public hNestOwed;
-    mapping(uint256 => mapping(address => uint256)) public userClaimableAt;
-    mapping(uint256 => mapping(address => bool)) public hNestTaken;
-    mapping(uint256 => mapping(address => bool)) public hypeTaken;
     mapping(uint256 => mapping(address => uint256)) public vaultResidualIndexPaid;
     mapping(uint256 => mapping(address => uint256)) public vaultResidualOwed;
+
+    struct DepositTranche {
+        uint256 nestAmount;
+        uint256 hNestAmount;
+        uint256 claimableAt;
+        bool claimed;
+    }
+
+    mapping(uint256 => mapping(address => DepositTranche[])) internal _tranches;
 
     event KeeperUpdated(address indexed oldKeeper, address indexed newKeeper);
     event GuardianUpdated(address indexed oldGuardian, address indexed newGuardian);
@@ -102,6 +109,8 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     error HypeNotFinal();
     error FeeTooHigh();
     error FinalizeTooEarly(uint256 earliest);
+    error TooManyTranches();
+    error UnknownTranche();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -189,12 +198,12 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
 
         uint256 unlockAt = HNestCirculation.claimableAt(block.timestamp);
         if (unlockAt < ep.claimableAt) unlockAt = ep.claimableAt;
-        if (unlockAt > userClaimableAt[currentEpochId][msg.sender]) {
-            userClaimableAt[currentEpochId][msg.sender] = unlockAt;
-        }
+        DepositTranche[] storage ts = _tranches[currentEpochId][msg.sender];
+        if (ts.length >= MAX_TRANCHES_PER_EPOCH) revert TooManyTranches();
+        ts.push(DepositTranche({nestAmount: nestAmount, hNestAmount: minted, claimableAt: unlockAt, claimed: false}));
         vaultResidualIndexPaid[currentEpochId][msg.sender] = vaultResidualIndex;
 
-        emit Deposited(currentEpochId, msg.sender, nestAmount, minted, userClaimableAt[currentEpochId][msg.sender]);
+        emit Deposited(currentEpochId, msg.sender, nestAmount, minted, unlockAt);
     }
 
     /// @notice Keeper adds this week's new-deposit HYPE. amount=0 rejected.
@@ -232,35 +241,66 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function claim(uint256 epochId) external nonReentrant {
+        DepositTranche[] storage ts = _tranches[epochId][msg.sender];
+        uint256 n = ts.length;
+        uint256 earliest;
+        for (uint256 i; i < n; ++i) {
+            if (ts[i].claimed) continue;
+            if (block.timestamp >= ts[i].claimableAt) {
+                _claimTranche(epochId, i);
+                return;
+            }
+            if (earliest == 0 || ts[i].claimableAt < earliest) earliest = ts[i].claimableAt;
+        }
+        if (earliest != 0) revert MintDelayActive(earliest);
+        revert NothingOwed();
+    }
+
+    function claimTranche(uint256 epochId, uint256 trancheIndex) external nonReentrant {
+        _claimTranche(epochId, trancheIndex);
+    }
+
+    function _claimTranche(uint256 epochId, uint256 trancheIndex) internal {
         Epoch storage ep = epochs[epochId];
         if (!ep.hypeFinal) revert HypeNotFinal();
+        DepositTranche[] storage ts = _tranches[epochId][msg.sender];
+        if (trancheIndex >= ts.length) revert UnknownTranche();
+        DepositTranche storage t = ts[trancheIndex];
+        if (t.claimed) revert AlreadyTaken();
+        if (block.timestamp < t.claimableAt) revert MintDelayActive(t.claimableAt);
 
-        uint256 owedH = hNestOwed[epochId][msg.sender];
-        if (owedH == 0) revert NothingOwed();
-        if (hNestTaken[epochId][msg.sender]) revert AlreadyTaken();
+        uint256 remainingH = hNestOwed[epochId][msg.sender];
+        _checkpointVaultResidual(epochId, msg.sender, remainingH);
+        uint256 residualPay;
+        if (remainingH > 0 && vaultResidualOwed[epochId][msg.sender] > 0) {
+            residualPay = (vaultResidualOwed[epochId][msg.sender] * t.hNestAmount) / remainingH;
+            vaultResidualOwed[epochId][msg.sender] -= residualPay;
+        }
 
-        uint256 claimableAt_ = userClaimableAt[epochId][msg.sender];
-        if (block.timestamp < claimableAt_) revert MintDelayActive(claimableAt_);
-
-        _checkpointVaultResidual(epochId, msg.sender, owedH);
-        uint256 residualAmt = vaultResidualOwed[epochId][msg.sender];
-        vaultResidualOwed[epochId][msg.sender] = 0;
-        hNestTaken[epochId][msg.sender] = true;
+        t.claimed = true;
+        hNestOwed[epochId][msg.sender] = remainingH - t.hNestAmount;
 
         uint256 hypeAmt;
         if (ep.hypeAllocated > 0 && ep.totalNest > 0) {
-            hypeAmt = (nestIn[epochId][msg.sender] * ep.hypeAllocated) / ep.totalNest;
+            hypeAmt = (t.nestAmount * ep.hypeAllocated) / ep.totalNest;
         }
-        if (hypeAmt > 0) {
-            hypeTaken[epochId][msg.sender] = true;
-            hypeToken.safeTransfer(msg.sender, hypeAmt);
-        }
-        if (residualAmt > 0) {
-            hypeToken.safeTransfer(msg.sender, residualAmt);
-        }
-        hNest.safeTransfer(msg.sender, owedH);
+        if (hypeAmt > 0) hypeToken.safeTransfer(msg.sender, hypeAmt);
+        if (residualPay > 0) hypeToken.safeTransfer(msg.sender, residualPay);
+        hNest.safeTransfer(msg.sender, t.hNestAmount);
+        emit Claimed(epochId, msg.sender, t.hNestAmount, hypeAmt + residualPay);
+    }
 
-        emit Claimed(epochId, msg.sender, owedH, hypeAmt + residualAmt);
+    function depositTranches(uint256 epochId, address user, uint256 i)
+        external
+        view
+        returns (uint256 nestAmount, uint256 hNestAmount, uint256 claimableAt_, bool claimed)
+    {
+        DepositTranche storage t = _tranches[epochId][user][i];
+        return (t.nestAmount, t.hNestAmount, t.claimableAt, t.claimed);
+    }
+
+    function trancheCount(uint256 epochId, address user) external view returns (uint256) {
+        return _tranches[epochId][user].length;
     }
 
     function pending(uint256 epochId, address user)
@@ -270,12 +310,16 @@ contract EpochHNestGate is Ownable2Step, ReentrancyGuard, Pausable {
     {
         Epoch storage ep = epochs[epochId];
         nestDeposited = nestIn[epochId][user];
-        hNestAmount = hNestTaken[epochId][user] ? 0 : hNestOwed[epochId][user];
-        if (ep.hypeFinal && ep.totalNest > 0 && !hypeTaken[epochId][user]) {
-            hypeAmount = (nestIn[epochId][user] * ep.hypeAllocated) / ep.totalNest;
+        DepositTranche[] storage ts = _tranches[epochId][user];
+        uint256 n = ts.length;
+        for (uint256 i; i < n; ++i) {
+            if (ts[i].claimed) continue;
+            hNestAmount += ts[i].hNestAmount;
+            if (ep.hypeFinal && ep.totalNest > 0) {
+                hypeAmount += (ts[i].nestAmount * ep.hypeAllocated) / ep.totalNest;
+            }
+            if (ep.hypeFinal && block.timestamp >= ts[i].claimableAt) claimable = true;
         }
-        claimable = ep.hypeFinal && !hNestTaken[epochId][user] && hNestOwed[epochId][user] > 0
-            && block.timestamp >= userClaimableAt[epochId][user];
     }
 
     function pendingVaultResidual(uint256 epochId, address user) external view returns (uint256 amount) {

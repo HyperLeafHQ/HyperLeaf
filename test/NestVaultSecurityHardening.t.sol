@@ -79,7 +79,7 @@ contract NestVaultSecurityHardeningTest is Test {
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
         address recipient = makeAddr("migrate");
-
+        vault.setDepositsEnabled(false);
         vault.ownerTransferVeNFT(tokenId, recipient);
 
         assertEq(vault.totalNestLocked(), 0);
@@ -101,6 +101,7 @@ contract NestVaultSecurityHardeningTest is Test {
 
         uint256 supply = vault.hNest().totalSupply();
         address recipient = makeAddr("migrate");
+        vault.setDepositsEnabled(false);
         vault.ownerTransferVeNFT(tokenId, recipient);
 
         assertEq(vault.totalNestLocked(), 0);
@@ -112,7 +113,16 @@ contract NestVaultSecurityHardeningTest is Test {
     function test_OwnerTransferUnknownNftReverts() public {
         vm.prank(alice);
         vault.deposit(100 ether);
+        vault.setDepositsEnabled(false);
         vm.expectRevert(abi.encodeWithSelector(NestVault.UnknownNft.selector, uint256(99)));
         vault.ownerTransferVeNFT(99, makeAddr("migrate"));
+    }
+
+    function test_OwnerTransferRevertsWhileDepositsEnabled() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        vm.expectRevert(NestVault.MigrationWhileLive.selector);
+        vault.ownerTransferVeNFT(tokenId, makeAddr("migrate"));
     }
 }
