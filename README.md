@@ -52,11 +52,12 @@ If a PR cannot show this still holds, it does not merge.
 
 | What | Where | Deployed? |
 | ---- | ----- | --------- |
-| Live hNEST (NestVault / HNest / HevAdapter) | [`main`](https://github.com/HyperLeafHQ/HyperLeaf) | HyperEVM 999, capped |
-| Wrap L / C1 / C2 + LayerZero OFT + **yield → HYPE** | this branch [`feat/lz-oft-wrap`](https://github.com/HyperLeafHQ/HyperLeaf/tree/feat/lz-oft-wrap) · [PR #4](https://github.com/HyperLeafHQ/HyperLeaf/pull/4) | No |
-| Next NestVault (verified 1% compound fee + mint-delay EpochGate) | [`feat/hnest-yield-fee-gate`](https://github.com/HyperLeafHQ/HyperLeaf/tree/feat/hnest-yield-fee-gate) · [PR #5](https://github.com/HyperLeafHQ/HyperLeaf/pull/5) | No — live vault is not this code |
+| Live hNEST (NestVault / HNest / HevAdapter) | [`main`](https://github.com/HyperLeafHQ/HyperLeaf) | HyperEVM 999, capped. No `depositGate`. |
+| EpochHNestGate (8d mint delay, opt-in) | [`main`](https://github.com/HyperLeafHQ/HyperLeaf) | `0xE1b8…F13c`. Direct vault deposit still mints immediately. |
+| Leaf Market (hNEST ↔ NEST `fillLocal`) | live address; escrow source still [PR #4](https://github.com/HyperLeafHQ/HyperLeaf/pull/4) | `0xFa77…653A` |
+| Wrap L / C1 / C2 + LayerZero OFT + **yield → HYPE** | [`feat/lz-oft-wrap`](https://github.com/HyperLeafHQ/HyperLeaf/tree/feat/lz-oft-wrap) · [PR #4](https://github.com/HyperLeafHQ/HyperLeaf/pull/4) | Canary in progress — not this merge |
 
-Default GitHub `main` is the live NestVault only. **HYPE conversion (`LeafHypeRewarder`, `pullYield`, `convertYieldToHype`) is this wrap branch.** It is not on `main` until PR #4 merges.
+Default GitHub `main` is the live Nest vault + Gate source. **LayerZero wrap (`LeafHypeRewarder`, `pullYield`, canary) stays [PR #4](https://github.com/HyperLeafHQ/HyperLeaf/pull/4) until that merge.** Do not merge `feat/nest-8d-withdraw-gate` (PR #22) — that binary was abandoned.
 
 ---
 
@@ -158,10 +159,10 @@ Honest limits of the **live** vault:
 - Withdrawals follow Nest/HEV windows plus an idle buffer — not instant 1:1.
 - Live fee: **1% of residual HYPE** on `harvest` (`feeBps = 100`). NEST deposit / withdraw: **0%**.
 
-Designed, not live (PR #5):
+Designed, not live on the **immutable** vault `0x4f6615…`:
 
-- Verified compound: book only `pendingLockedNestShare` deltas; 1% of that growth as protocol shares, 99% NAV to holders.
-- **EpochGate is a mint delay**, not a transfer lock. Circulating hNEST stays a normal ERC-20. New deposits wait one Nest epoch before hNEST is minted.
+- `bookVerifiedYield` / one-shot `setDepositGate` exist in this repo’s `NestVault.sol` for a future vault. Live bytecode is not upgraded.
+- **EpochHNestGate is a mint delay**, not a transfer lock. Circulating hNEST stays a normal ERC-20. New deposits that opt into the Gate wait `max(deposit+8d, Thursday epochEnd+30m)`.
 
 ### Live contracts (HyperEVM 999)
 
@@ -171,6 +172,9 @@ Designed, not live (PR #5):
 | HNest | `0x2101621F51D7E05518D6680C62d04Ad47bC4e05D` |
 | HevAdapter | `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2` |
 | NEST | `0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035` |
+| EpochHNestGate | `0xE1b8B697ac1669da4A0eC6A49d320500CC96F13c` |
+| Leaf Market | `0xFa77Dfb30DeCca4D9597C6764A698996B226b53A` |
+| Abandoned Gate (do not use) | `0xB4C43e9cE08ff5540e0E240dB7784f47231d519B` |
 
 ---
 

@@ -25,13 +25,15 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  *
  * Withdraw timing (NestVault owns policy — see docs/WITHDRAW_WINDOWS.md):
  * - Do not call withdrawVeNFT on every redeem; onDettach resets lock end ≈ now+26w
- * - HEV.detachmentLockDuration = 4 days; vault gates dettachForLiquidity
+ * - HEV.detachmentLockDuration is 4 days on-chain (we do not control HEV).
+ *   NestVault.dettachForLiquidity uses the same 4 days. hNEST circulation
+ *   is a separate clock (HNestCirculation, 8d / Thursday epoch).
  * - Attached getNftState amount/end are zero — vault tracks nestPrincipal
  */
 contract HevAdapter is IHevAdapter, Ownable {
     using SafeERC20 for IERC20;
 
-    /// @notice Mirrors HEV.detachmentLockDuration (informational for integrators).
+    /// @notice HEV custody lock. Not the hNEST circulation gate.
     uint256 public constant DETACHMENT_LOCK_DURATION = 4 days;
 
     IVotingEscrow public immutable veNEST;
@@ -44,10 +46,13 @@ contract HevAdapter is IHevAdapter, Ownable {
     uint256 public managedTokenId;
 
     mapping(uint256 => bool) public deposited;
+    uint256 public depositedCount;
 
     error OnlyVault();
     error NotDeposited();
     error AlreadyDeposited();
+    error ZeroVault();
+    error VaultChangeWhileDeposited();
 
     modifier onlyVault() {
         if (msg.sender != vault) revert OnlyVault();
@@ -74,6 +79,8 @@ contract HevAdapter is IHevAdapter, Ownable {
     }
 
     function setVault(address _vault) external onlyOwner {
+        if (_vault == address(0)) revert ZeroVault();
+        if (depositedCount != 0) revert VaultChangeWhileDeposited();
         vault = _vault;
     }
 
@@ -90,10 +97,11 @@ contract HevAdapter is IHevAdapter, Ownable {
             voter.attachToManagedNFT(tokenId, managedTokenId);
         }
         deposited[tokenId] = true;
+        depositedCount += 1;
     }
 
     /// @inheritdoc IHevAdapter
-    /// @dev Caller (NestVault) must enforce 4d detachment gate + post-dettach 26w accounting.
+    /// @dev Caller (NestVault) must enforce 8d detachment gate + post-dettach 26w accounting.
     function withdrawVeNFT(uint256 tokenId) external onlyVault {
         if (!deposited[tokenId]) revert NotDeposited();
         IVotingEscrow.TokenState memory state = veNEST.getNftState(tokenId);
@@ -101,6 +109,7 @@ contract HevAdapter is IHevAdapter, Ownable {
             voter.dettachFromManagedNFT(tokenId);
         }
         deposited[tokenId] = false;
+        depositedCount -= 1;
     }
 
     /// @inheritdoc IHevAdapter

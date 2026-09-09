@@ -1,7 +1,7 @@
 {
   "chainId": 999,
   "network": "HyperEVM mainnet",
-  "updatedAt": "2026-09-06T19:37:00+08:00",
+  "updatedAt": "2026-09-10T03:10:00+08:00",
   "rpc": "https://rpc.hyperliquid.xyz/evm",
   "hypeToken": "0x5555555555555555555555555555555555555555",
   "nestToken": "0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035",
@@ -15,7 +15,10 @@
   "contracts": {
     "HevAdapter": "0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2",
     "HNest": "0x2101621F51D7E05518D6680C62d04Ad47bC4e05D",
-    "NestVault": "0x4f6615761A772e10d7f802B1C29654ABD90fF30d"
+    "NestVault": "0x4f6615761A772e10d7f802B1C29654ABD90fF30d",
+    "EpochHNestGate": "0xE1b8B697ac1669da4A0eC6A49d320500CC96F13c",
+    "EpochHNestGateAbandoned": "0xB4C43e9cE08ff5540e0E240dB7784f47231d519B",
+    "LeafMarket": "0xFa77Dfb30DeCca4D9597C6764A698996B226b53A"
   },
   "deployTx": {
     "HevAdapter": "0x1433ba82ab90f3968044987c473501b7bad76e81d427eca531209d0cf4c3e53a",
