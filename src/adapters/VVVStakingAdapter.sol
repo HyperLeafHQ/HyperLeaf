@@ -15,7 +15,6 @@ interface IERC20Like {
 contract VVVStakingAdapter {
     error NotVault();
     error RateJump();
-    error Insolvent();
     error InvalidConfig();
 
     IERC20Like public immutable VVV;
@@ -38,8 +37,8 @@ contract VVVStakingAdapter {
         _;
     }
 
-    /// @notice Economic NAV before fees. For VVV staking this is the staked principal
-    ///         plus verified claimable VVV rewards, subject to final accounting design.
+    /// @notice Economic NAV before fees. Final implementation must confirm whether
+    ///         pending rewards are realizable without a separate claim/exit constraint.
     function totalAssets() public view returns (uint256) {
         return STAKING.stakedBalance(address(this)) + STAKING.pendingRewards(address(this));
     }
@@ -66,18 +65,18 @@ contract VVVStakingAdapter {
         VVV.transfer(recipient, amount);
     }
 
-    /// @dev Placeholder for the final accounting/rate breaker. The adapter must never
-    ///      manufacture yield from donations, rate recovery, or an unverified ABI.
+    /// @notice Core solvency check for a future Strategy Vault.
     function verifyHealth(uint256 liabilities) external view returns (bool) {
         return totalAssets() >= liabilities;
     }
 
+    /// @dev Framework breaker only. Do not treat this as the final staking-rate model.
     function setRateObservation(uint256 newRate) external onlyVault {
         if (lastObservedRate != 0) {
             uint256 diff = newRate > lastObservedRate
                 ? newRate - lastObservedRate
                 : lastObservedRate - newRate;
-            if (diff * 10_000 > lastObservedRate * (10_000 + maxRateChangeBps)) {
+            if (diff * 10_000 > lastObservedRate * maxRateChangeBps) {
                 revert RateJump();
             }
         }
