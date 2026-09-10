@@ -632,6 +632,32 @@
       "priority": 80
     },
     {
+      "id": "hhbarx",
+      "kind": "L",
+      "symbol": "hHBARX",
+      "name": "Hyperleaf HBARX",
+      "innerSymbol": "HBARX",
+      "innerToken": "0x00000000000000000000000000000000000cba44",
+      "underlying": "HBAR",
+      "source": "hedera",
+      "sourceChainId": 295,
+      "sourceEid": 30316,
+      "exit": "instant-receipt",
+      "infra": "evm-hts",
+      "yield": {
+        "inner": "none",
+        "pullInner": false,
+        "toHype": [],
+        "rateKind": "none"
+      },
+      "note": "Stader HBARX HTS 0.0.834116, 8-dec. Never raw HBAR. Never Stader 1d unstake. LZ eid 30316. Lockbox must HTS-associate before transferFrom. Rate not on token. HyperEVM empty. NotThisBatch. docs/HBAR.md.",
+      "refs": {
+        "hts": "0.0.834116"
+      },
+      "status": "later",
+      "priority": 26
+    },
+    {
       "id": "hbwbtw",
       "kind": "L",
       "symbol": "hbwBTW",
