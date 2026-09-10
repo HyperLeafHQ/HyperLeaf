@@ -711,6 +711,29 @@
       "priority": 27
     },
     {
+      "id": "hxm",
+      "kind": "L",
+      "symbol": "hXM",
+      "name": "Hyperleaf X$M",
+      "innerSymbol": "X$M",
+      "innerToken": "",
+      "underlying": "M",
+      "source": "memecore",
+      "sourceChainId": 4352,
+      "sourceEid": 30466,
+      "exit": "instant-receipt",
+      "infra": "pending-receipt-dvn",
+      "yield": {
+        "inner": "none",
+        "pullInner": false,
+        "toHype": [],
+        "rateKind": "none"
+      },
+      "note": "Watch. Never native $M, never BSC 0x22b1\u202631fa, never MemeX stM, never MRC-20 stakeMeme. X$M receipt not pinned. LZ 30466 live but no Horizen/Canary DVN. NotThisBatch. docs/MEMECORE.md.",
+      "status": "watch",
+      "priority": 45
+    },
+    {
       "id": "hbwbtw",
       "kind": "L",
       "symbol": "hbwBTW",
