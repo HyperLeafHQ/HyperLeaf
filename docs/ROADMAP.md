@@ -50,6 +50,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | parked | **hstTAO** | L | Bittensor | No live EVM LST. wTAO is spot. Tensorplex sunset. Native stake is chain 964 pallet. Do not wrap |
 | later | **hkPYUSD** | C2 | Solana | After hJitoSOL. Wrap Kamino **kV-PYUSD** (Sentora vault), not raw PYUSD. Interest in share price; subsidy/KMNO only if compounded |
 | later | **hnICP** | L | ICP | WaterNeuron nICP canisters only. No LZ ICP. After Jito, after IBC. Never dissolve |
+| later | **hvDOT** | L | Moonbeam/XCM | Bifrost vDOT only. New eid 30126. Never raw DOT. After Jito. Coin age ≠ priority |
 | hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
 | parked | **hASTER** | C1 | Aster Chain | Same slot as hLIT. Wait for EVM `delegate(208w)`. Do not wrap BSC spot |

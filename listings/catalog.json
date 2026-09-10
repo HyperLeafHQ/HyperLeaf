@@ -1068,6 +1068,21 @@
       "priority": 45
     },
     {
+      "id": "hvdot",
+      "kind": "L",
+      "symbol": "hvDOT",
+      "name": "Hyperleaf vDOT",
+      "innerSymbol": "vDOT",
+      "source": "moonbeam",
+      "sourceChainId": 1284,
+      "sourceEid": 30126,
+      "exit": "instant-receipt",
+      "infra": "xcm",
+      "note": "DELAY. Wrap Bifrost vDOT only (Moonbeam xc 0xFFF\u2026aBf). Never raw DOT / nomination / sunset stDOT. ETH+BSC vDOT ~25k copies. New LZ eid 30126, no Moonbeam listing yet. After Jito/XCM. docs/DOT.md.",
+      "status": "later",
+      "priority": 28
+    },
+    {
       "id": "hvecrv",
       "kind": "ve-nft",
       "symbol": "hveCRV",
