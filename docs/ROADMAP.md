@@ -48,7 +48,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hstDYDX** | L | Cosmos/Stride | Wrap **stDYDX**, never ethDYDX. Needs IBC lockbox like JupSOL |
 | later | **hstATOM** | L | Cosmos/Stride | No EVM LST. Wrap Stride stATOM only. Same IBC lockbox as hstDYDX, **after** hJitoSOL. Never axl-stATOM / pSTAKE ERC-20 |
 | parked | **hstTAO** | L | Bittensor | No live EVM LST. wTAO is spot. Tensorplex sunset. Native stake is chain 964 pallet. Do not wrap |
-| skip | **hPYUSD** | C1 | ETH / SOL | Dollar, 0 yield. Not JitoSOL. ETH already wrapable. Solana mint still a dollar |
+| later | **hkPYUSD** | C2 | Solana | After hJitoSOL. Wrap Kamino **kV-PYUSD** (Sentora vault), not raw PYUSD. Interest in share price; subsidy/KMNO only if compounded |
 | later | **hnICP** | L | ICP | WaterNeuron nICP canisters only. No LZ ICP. After Jito, after IBC. Never dissolve |
 | hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |

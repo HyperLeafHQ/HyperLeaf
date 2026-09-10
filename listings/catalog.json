@@ -1014,16 +1014,16 @@
     },
     {
       "id": "hpyusd",
-      "kind": "C1",
-      "symbol": "hPYUSD",
-      "name": "Hyperleaf PYUSD",
-      "innerSymbol": "PYUSD",
-      "source": "ethereum",
+      "kind": "C2",
+      "symbol": "hkPYUSD",
+      "name": "Hyperleaf kV-PYUSD",
+      "innerSymbol": "kV-PYUSD",
+      "source": "solana",
       "exit": "instant-receipt",
-      "infra": "evm",
-      "note": "SKIP as L. Paxos dollar, 0 native yield. ETH 0x6c3e\u2026A0e8 ~1.70B. Solana Token-2022 2b1k\u2026GXo is still a dollar. Spark spPYUSD ~54k TVL, skip. Not JitoSOL. docs/PYUSD.md.",
-      "status": "skip",
-      "priority": 93
+      "infra": "solana",
+      "note": "After hJitoSOL. Inner is Kamino Sentora vault kV-PYUSD (A2wsxh\u2026E5BK), not raw PYUSD. Capture Kamino interest in share price only; PYUSD subsidy/KMNO only if compounded. Never ETH PYUSD. docs/PYUSD.md.",
+      "status": "later-non-evm",
+      "priority": 22
     },
     {
       "id": "hnicp",

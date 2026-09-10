@@ -22,7 +22,7 @@ Register: [5609229978](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issueco
 | #04 | [5609283334](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609283334) | NEAR / stNEAR |
 | #05 | [5609285169](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609285169) | USDG |
 | #06 | [5609286867](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609286867) | TAO / Root Stake — **parked 2026-09-10**: Tensorplex sunset, wTAO is spot. `docs/TAO.md` |
-| #07 | [5609288243](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609288243) | PYUSD — **skip as L** (dollar, 0 yield). `docs/PYUSD.md` |
+| #07 | [5609288243](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609288243) | PYUSD — later **kV-PYUSD** on Kamino, after Jito. `docs/PYUSD.md` |
 | #08 | [5609290174](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609290174) | M / MemeCore |
 | #09 | [5609262492](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609262492) | Bitway USDT |
 | #10 | [5609263693](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609263693) | bwBTW |
