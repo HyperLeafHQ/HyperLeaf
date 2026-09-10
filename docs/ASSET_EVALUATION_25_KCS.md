@@ -15,13 +15,9 @@ However, the integration is **not low-effort at the HyperEVM boundary**. Current
 
 The best implementation direction is:
 
-`KCS → KCC native staking → sKCS → authenticated KCC custody/state → HyperEVM → hKCS`
+`KCS → native KCC staking → sKCS → authenticated KCC custody/state → HyperEVM → hKCS`
 
-or, if HyperLeaf represents the receipt directly:
-
-`KCS → sKCS → authenticated custody/state → hKCS`
-
-The second path is preferable because it avoids HyperLeaf recreating validator delegation and reward-compounding logic.
+The sKCS route is preferable because HyperLeaf does not need to recreate validator delegation and reward-compounding logic.
 
 ## 1. Gate 0 — canonical representation
 
