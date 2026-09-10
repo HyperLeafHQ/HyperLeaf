@@ -20,6 +20,10 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
+8. **`main` is live + the next deploy only.** BATCH 1 is live. Next is **BATCH 2** (`hgsoon` / `hswbera`). Do **not** merge hslisBNB or BATCH 3 until that wrap has smoked on mainnet.
+   - hslisBNB rate: branch **`feat/hslisbnb-rate`**
+   - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
+   Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.
 
 ---
 
