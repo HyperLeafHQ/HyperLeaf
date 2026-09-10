@@ -72,6 +72,12 @@ contract SetSecurityStack is Script {
             receiveLib = A.RECEIVE_ULN_AVAX;
             executor = A.EXECUTOR_AVAX;
             optionalDvns = LeafSecurity.avaxOptionalDvns();
+        } else if (chainId == 295) {
+            remoteEid = A.EID_HYPEREVM;
+            sendLib = A.SEND_ULN_HEDERA;
+            receiveLib = A.RECEIVE_ULN_HEDERA;
+            executor = A.EXECUTOR_HEDERA;
+            optionalDvns = LeafSecurity.hederaOptionalDvns();
         } else {
             revert("unsupported chain");
         }

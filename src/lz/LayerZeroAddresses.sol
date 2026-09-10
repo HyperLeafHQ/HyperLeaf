@@ -19,6 +19,8 @@ library LayerZeroAddresses {
     uint32 internal constant EID_BERA = 30362;
     uint32 internal constant EID_ROBINHOOD = 30416;
     uint32 internal constant EID_SOLANA = 30168;
+    uint32 internal constant EID_HEDERA = 30316;
+    uint32 internal constant EID_HEDERA_TESTNET = 40285;
     uint32 internal constant EID_BERA_TESTNET = 40371;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
@@ -69,6 +71,12 @@ library LayerZeroAddresses {
     address internal constant RECEIVE_ULN_AVAX = 0xbf3521d309642FA9B1c91A08609505BA09752c61;
     address internal constant EXECUTOR_AVAX = 0x90E595783E43eb89fF07f63d27B8430e6B44bD9c;
 
+    /// @dev Hedera V2. Endpoint happens to share HyperEVM's CREATE2 address; ULN/executor do not.
+    address internal constant ENDPOINT_HEDERA = 0x3A73033C0b1407574C76BdBAc67f126f6b4a9AA9;
+    address internal constant SEND_ULN_HEDERA = 0x2367325334447C5E1E0f1b3a6fB947b262F58312;
+    address internal constant RECEIVE_ULN_HEDERA = 0xc1B621b18187F74c8F6D52a6F709Dd2780C09821;
+    address internal constant EXECUTOR_HEDERA = 0xa20DB4Ffe74A31D17fc24BD32a7DD7555441058e;
+
     function endpoint(uint256 chainId) internal pure returns (address) {
         if (chainId == 1) return ENDPOINT_ETH;
         if (chainId == 8453) return ENDPOINT_BASE;
@@ -85,6 +93,7 @@ library LayerZeroAddresses {
         if (chainId == 80069) revert("lz: Bepolia EndpointV2 not deployed");
         if (chainId == 999) return ENDPOINT_HYPEREVM;
         if (chainId == 998) return ENDPOINT_HYPEREVM_TESTNET;
+        if (chainId == 295) return ENDPOINT_HEDERA;
         revert("lz: no endpoint");
     }
 
@@ -117,6 +126,10 @@ library LayerZeroAddresses {
     address internal constant DVN_LZ_LABS_ETH = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;
     address internal constant DVN_CANARY_ETH = 0xa4fE5A5B9A846458a70Cd0748228aED3bF65c2cd;
 
+    address internal constant DVN_CANARY_HEDERA = 0x4b92BC2A7d681bf5230472C80d92aCFE9A6b9435;
+    address internal constant DVN_LZ_LABS_HEDERA = 0xce8358bc28dd8296Ce8cAF1CD2b44787abd65887;
+    address internal constant DVN_HORIZEN_HEDERA = 0xd0f50363E1aE33feAC8e0E067e42d0070C394525;
+
     uint32 internal constant CONFIG_TYPE_EXECUTOR = 1;
     uint32 internal constant CONFIG_TYPE_ULN = 2;
 
@@ -144,6 +157,7 @@ library LayerZeroAddresses {
     uint64 internal constant CONFIRMATIONS_AVAX = 12;
     uint64 internal constant CONFIRMATIONS_ETH = 15;
     uint64 internal constant CONFIRMATIONS_SOLANA = 32;
+    uint64 internal constant CONFIRMATIONS_HEDERA = 5;
 
     function confirmationsForEid(uint32 eid) internal pure returns (uint64) {
         if (eid == EID_BASE || eid == EID_OP) return CONFIRMATIONS_BASE;
@@ -154,6 +168,7 @@ library LayerZeroAddresses {
         if (eid == EID_AVALANCHE) return CONFIRMATIONS_AVAX;
         if (eid == EID_ETH) return CONFIRMATIONS_ETH;
         if (eid == EID_SOLANA) return CONFIRMATIONS_SOLANA;
+        if (eid == EID_HEDERA) return CONFIRMATIONS_HEDERA;
         revert("lz: no confirmations");
     }
 
@@ -166,6 +181,7 @@ library LayerZeroAddresses {
         if (chainId == 43114) return EID_AVALANCHE;
         if (chainId == 10) return EID_OP;
         if (chainId == 1) return EID_ETH;
+        if (chainId == 295) return EID_HEDERA;
         revert("lz: no eid");
     }
 

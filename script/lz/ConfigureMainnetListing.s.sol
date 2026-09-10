@@ -10,6 +10,7 @@ import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 import {LeafSpolPolicy} from "src/lz/LeafSpolPolicy.sol";
+import {LeafHbarxPolicy} from "src/lz/LeafHbarxPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -69,6 +70,13 @@ contract ConfigureMainnetListing is Script {
             require(box.shareScale() == LeafLbtcPolicy.SHARE_SCALE, "scale");
             require(box.maxRateJumpBps() == LeafLbtcPolicy.MAX_RATE_JUMP_BPS, "jump");
             require(box.rewardsSelector() == bytes4(0), "lbtc poke after");
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hhbarx")) {
+            LeafHbarxPolicy.requireHbarx(address(box.innerToken()));
+            require(IERC20Metadata(address(box.innerToken())).decimals() == LeafHbarxPolicy.INNER_DECIMALS, "not 8-dec");
+            require(box.rewardsSelector() == bytes4(0), "hbarx poke");
+            box.setShareScale(LeafHbarxPolicy.SHARE_SCALE);
+            require(box.shareScale() == LeafHbarxPolicy.SHARE_SCALE, "scale");
         }
         if (keccak256(bytes(a.id)) == keccak256("hspol")) {
             LeafSpolPolicy.requireSpol(address(box.innerToken()));

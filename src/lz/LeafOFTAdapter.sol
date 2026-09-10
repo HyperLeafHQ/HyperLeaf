@@ -7,6 +7,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {LeafOApp} from "./LeafOApp.sol";
 import {LeafYieldFee} from "./LeafYieldFee.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
+import {LeafHts} from "./LeafHts.sol";
 
 /// @title LeafOFTAdapter
 /// @notice Source-chain lockbox for an existing ERC20 (e.g. sKAITO / xSQUID / cbETH).
@@ -156,6 +157,12 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _harvestInner(innerToken, 0);
     }
 
+    /// @notice Hedera: associate this lockbox with the HTS inner. Anyone.
+    ///         Off Hedera this is a no-op. Call after funding tiny HBAR for the fee.
+    function associateInner() external {
+        LeafHts.associateSelf(address(innerToken));
+    }
+
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
         public
         payable
@@ -222,6 +229,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function _pull(address from, uint256 amount) internal returns (uint256 got) {
+        LeafHts.associateSelf(address(innerToken));
         uint256 before = innerToken.balanceOf(address(this));
         innerToken.safeTransferFrom(from, address(this), amount);
         got = innerToken.balanceOf(address(this)) - before;

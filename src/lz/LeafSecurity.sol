@@ -72,6 +72,13 @@ library LeafSecurity {
         d[2] = A.DVN_CANARY_ETH;
     }
 
+    function hederaOptionalDvns() internal pure returns (address[] memory d) {
+        d = new address[](3);
+        d[0] = A.DVN_CANARY_HEDERA;
+        d[1] = A.DVN_LZ_LABS_HEDERA;
+        d[2] = A.DVN_HORIZEN_HEDERA;
+    }
+
     function ulnConfig(uint64 confirmations, address hyperleafDvn, address[] memory optionalDvns)
         internal
         pure

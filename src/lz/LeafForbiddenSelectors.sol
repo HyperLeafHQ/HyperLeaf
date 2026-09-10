@@ -6,7 +6,7 @@ pragma solidity ^0.8.24;
 ///      one path and not the other.
 library LeafForbiddenSelectors {
     function forbidden(bytes4 s) internal pure returns (bool) {
-        return exit(s) || lbtc(s) || spol(s) || hertz(s);
+        return exit(s) || lbtc(s) || spol(s) || hertz(s) || hbarx(s);
     }
 
     function exit(bytes4 s) internal pure returns (bool) {
@@ -74,5 +74,12 @@ library LeafForbiddenSelectors {
             || s == bytes4(0x078d3b79) // transferOut(address,address,uint256)
             || s == bytes4(0x2fb12605) // transferOut(address,address,uint256,bool)
             || s == bytes4(0xd443ca94); // transferOutNativeToken(address,uint256)
+    }
+
+    /// @dev Stader HBARX unstake. Lockbox never requests the 1-day HBAR unbond.
+    function hbarx(bytes4 s) internal pure returns (bool) {
+        return s == bytes4(0x745400c9) // requestWithdraw(uint256)
+            || s == bytes4(0x2e17de78) // unstake(uint256)
+            || s == bytes4(0x23095721); // requestUnstake(uint256)
     }
 }

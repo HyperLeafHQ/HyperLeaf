@@ -356,6 +356,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("hhbarx") || k == keccak256("hHBARX")) {
+            return Listing(
+                Kind.Liquid,
+                "hhbarx",
+                "Hyperleaf HBARX",
+                "hHBARX",
+                "HBARX",
+                295,
+                30316,
+                40285,
+                0,
+                0,
+                0x00000000000000000000000000000000000cbA44,
+                1e11,
+                false
+            );
+        }
         if (k == keccak256("hveaero") || k == keccak256("hveAERO")) {
             return Listing(
                 Kind.Closed,

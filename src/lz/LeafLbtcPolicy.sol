@@ -25,6 +25,7 @@ library LeafLbtcPolicy {
     function shareScaleOf(string memory id) internal pure returns (uint256) {
         bytes32 k = keccak256(bytes(id));
         if (k == keccak256("hlbtc") || k == keccak256("hLBTC")) return SHARE_SCALE;
+        if (k == keccak256("hhbarx") || k == keccak256("hHBARX")) return SHARE_SCALE;
         return 1;
     }
 }
