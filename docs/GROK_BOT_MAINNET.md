@@ -323,6 +323,8 @@ Do not enable protocol redeem to “help” a seller.
 
 ## 5. hJitoSOL — Solana source + HyperEVM dest
 
+**Branch: `feat/batch5-jito`.** Not on `main` until wrap smoke. Do **not** deploy from `main`. NCN VRTs (fragSOL / kySOL / ezSOL) are denylisted.
+
 `BATCH=5`. **Do this after batch 4.** NCN is out. Wrap JitoSOL mint only.
 
 Mint `J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn`. Pool (read-only) `Jito4APyf642JPZPx3hGc6WWJ8zPKtRbRs4P815Awbb`. Spec: `solana/leaf-jito-rate` (`cargo test --manifest-path solana/leaf-jito-rate/Cargo.toml`). If the on-chain program disagrees with those tests, the program is wrong.
