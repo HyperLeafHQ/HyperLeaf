@@ -1132,7 +1132,7 @@
         "winQueueTx": "0x58016b6a293a757544183e7e82b5f4d5a6f4920894ee830e4ab42dd83ca77ae3",
         "winClaimTx": "0x087ce4a030b8ec0d0a7736570c04a1ee7da1b9b07477491c6406989ec49effd9"
       },
-      "note": "stakeFor 0x2ee40908 on 0x18541; principal then sits in EOA 0x8D06. WIN is not an ERC-20. Convert is two Base txs on 0xe69b via ERC-4337 EntryPoint 0x5FF1: (1) queue 0x24cf0593(amount, recipient) tx 0x58016b6a — 22340.427 B3 to 0x11356, Request 1451, 24h, no B3 moved; (2) claimDelayedWithdrawal(index) 0xf41ba29c tx 0x087ce4a0 — index 5, Request 1431, 252.67 B3 to stored recipient. Lockbox must be the queue recipient. Never call the queue from the lockbox. 45d unstake unused (C1).",
+      "note": "Flow: stakeFor B3 on 0x18541 (principal then EOA 0x8D06) -> queue WIN on 0xe69b -> wait 24h -> claim B3. WIN is not an ERC-20. Queue 0x24cf0593(winAmount, recipient) via ERC-4337 tx 0x58016b6a: 22340.427 WIN -> ~223.40 B3 (100:1), Request 1451, recipient 0x11356, no B3 moved. Claim claimDelayedWithdrawal(index) 0xf41ba29c tx 0x087ce4a0: index 5, Request 1431, 252.67 B3 to stored recipient. Lockbox must be the queue recipient. Never submit the UserOp from the lockbox. 45d unstake unused (C1).",
       "status": "research",
       "priority": 9
     },

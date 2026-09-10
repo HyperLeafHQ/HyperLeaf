@@ -115,6 +115,7 @@ contract LeafB3LockboxTest is PegReady {
         assertEq(P.CLAIM_DELAYED_WITHDRAWAL, bytes4(0xf41ba29c));
         assertEq(P.QUEUE_DELAYED_WITHDRAWAL, bytes4(0x24cf0593));
         assertEq(P.WIN_DELAY, 1 days);
+        assertEq(P.WIN_PER_B3, 100);
         assertEq(P.STAKE_FOR, bytes4(0x2ee40908));
     }
 

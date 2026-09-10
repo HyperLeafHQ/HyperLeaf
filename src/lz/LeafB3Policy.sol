@@ -3,14 +3,12 @@ pragma solidity ^0.8.24;
 
 /// @notice hB3 pins. Base only. stakeFor(lockbox, amt). Principal then sits in
 ///         EOA 0x8D06 — not a contract lock.
-///         WIN is not a token. upside.win pays B3 in two Base txs on 0xe69b
-///         (explorer.b3.fun/base is their Base indexer, chainid 8453):
-///         1) queue 0x24cf0593(amount, recipient) via ERC-4337 UserOp
-///            live 0x58016b6a: 22340.427 B3, recipient 0x11356…, Request 1451,
-///            24h delay. No B3 Transfer in that tx.
+///         Flow: stake B3 → queue WIN → wait WIN_DELAY → claim B3.
+///         1) queue 0x24cf0593(winAmount, recipient) via ERC-4337 UserOp
+///            live 0x58016b6a: 22340.427 WIN → ~223.40 B3 (100 WIN = 1 B3),
+///            recipient 0x11356…, Request 1451, 24h. No B3 Transfer in that tx.
 ///         2) claimDelayedWithdrawal(index) 0xf41ba29c after the delay
-///            live 0x087ce4a0: index 5, Request 1431, paid 252.67 B3 to the
-///            stored recipient.
+///            live 0x087ce4a0: index 5, Request 1431, paid 252.67 B3.
 ///         Lockbox never submits the 4337 queue. Enable claim only after a
 ///         queue with recipient=lockbox, then claimDelayedWithdrawal.
 library LeafB3Policy {
@@ -24,9 +22,11 @@ library LeafB3Policy {
     address internal constant CLAIM = 0xe69Bc02DC0C4c6dAc306fFDdD2ebd4cf470F0764;
     address internal constant CLAIM_IMPL = 0x135827651431fA164fD80a97D5f08EA728803099;
     bytes4 internal constant CLAIM_DELAYED_WITHDRAWAL = 0xf41ba29c;
-    /// @dev queue(amount, recipient) — live 0x58016b6a. Not called by the lockbox.
+    /// @dev queue(winAmount, recipient) — live 0x58016b6a. Not called by the lockbox.
     bytes4 internal constant QUEUE_DELAYED_WITHDRAWAL = 0x24cf0593;
     uint32 internal constant WIN_DELAY = 1 days;
+    /// @dev Live 0x58016b6a: 22340.427 WIN queued for ~223.40 B3.
+    uint256 internal constant WIN_PER_B3 = 100;
     address internal constant WIN = address(0);
 
     uint256 internal constant MIN_STAKE = 50 ether; // BSMNT FAQ
