@@ -115,7 +115,6 @@ One production listing at a time unless an already-proven adapter, bridge path, 
 | P0 | **hCANARY** | L | Base | Real LayerZero canary; toy asset, not a product |
 | P1 | **hxSQUID** | L | Base | xSQUID receipt; side-token rewards → HYPE |
 | P1 | **hAVNT** | L | Base | Same Base L path; fixed rewards integration |
-| P2 | **hcbETH** | L | Base | Exchange-rate accounting; skim verified rate surplus |
 | P2 | **hgSOON** | L | BSC | `convertToAssets` rate model; never the 90-day cooldown path |
 | P2+ | **hslisBNB** | L | BSC | Lista slisBNB only; after hgSOON; never native BNB / 7d unstake |
 | P2 | **hsWBERA** | L | Berachain | Rate-surplus model; never the 7-day NFT queue |
@@ -149,11 +148,12 @@ One production listing at a time unless an already-proven adapter, bridge path, 
 | Parked | **hSNX** | — | Ethereum | Relevant pool closed; defer |
 | Parked | **hLIT** | — | Lighter L2 | Stake lives on Lighter zk-rollup; integration path needs separate work |
 | Hold | **hstkAAVE** | — | Ethereum | Legacy path; Umbrella route is `hstkwaUSDC` |
+| Last | **hwstETH / weETH / ezETH / hcbETH** | L | — | Official weETH already on HyperEVM. ETH LST family last |
 | Blocked | **hKAITO / hVIRTUALMAX** | — | Base | Need omnichain StrategyAccount / CREATE2 holder |
 
 ### Sequence
 
-`hNEST → hCANARY → hxSQUID → hAVNT → hcbETH → hgSOON → hsWBERA → hsAVAX → hLBTC → hstkwaUSDC → BLUAI4Y → hORDER → specialized EVM assets → hJitoSOL → later / watchlist`
+`hNEST → hCANARY → hxSQUID → hAVNT → hgSOON → hsWBERA → hsAVAX → hLBTC → hstkwaUSDC → BLUAI4Y → hORDER → specialized EVM assets → hJitoSOL → ETH LSTs last / watchlist`
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) and [`listings/catalog.json`](listings/catalog.json) for the detailed internal ordering.
 

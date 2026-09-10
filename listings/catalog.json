@@ -138,8 +138,8 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Base Coinbase wrapped ETH. Live token has **no exchangeRate()** — cannot retainRateYield. Parked, not BATCH 2. Do not wrap as a 1:1 ETH OFT. Ethereum wstETH is a separate later listing.",
-      "status": "blocked-no-rate",
+      "note": "ETH LST last. Base cbETH has no exchangeRate(). Official weETH already on HyperEVM (ether.fi). Do not wrap as 1:1 ETH. hwstETH is the only ETH LST still in catalog, also last.",
+      "status": "last",
       "testnet": {
         "sourceChain": "base-sepolia",
         "mockInner": true
@@ -160,13 +160,13 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Later. Canonical Lido wstETH on Ethereum L1. Do not mix with hcbETH supply.",
+      "note": "ETH LST last. Canonical Lido wstETH on Ethereum L1. Official weETH already on HyperEVM — do not list weETH/ezETH. Do not mix with hcbETH. After Solana + C1, not BATCH 2/3.",
       "testnet": {
         "sourceChain": "sepolia",
         "mockInner": true
       },
-      "status": "later",
-      "priority": 20
+      "status": "last",
+      "priority": 90
     },
     {
       "id": "hvirtualmax",

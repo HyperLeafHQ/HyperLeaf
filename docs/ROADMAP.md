@@ -10,7 +10,6 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | 0 | hNEST | Native | HyperEVM | Live, capped. C1-style product: no UI redeem, secondary market exit. Keep existing vault |
 | **1** | hxSQUID | L | Base | **Live v3** SOURCE `0x13E3…0d25` / OFT `0x78B6…4DFc`. Cap 50. Owner pending FINAL |
 | **1** | **hAVNT** | L | Base | **Live** `0x571C…aa98` both chains. Cap 50. Owner pending FINAL |
-| parked | hcbETH | L | Base | No `exchangeRate` on Base cbETH. Not BATCH 2 |
 | **2** | **hgSOON** | L | BSC | `convertToAssets` 1% skim. Never 90d cooldown |
 | **2b** | **hslisBNB** | L | BSC | Lista slisBNB only. Same BSC path as hgSOON. Never native BNB. Never Lista 7d unstake |
 | **2** | **hsWBERA** | L | Berachain 80094 | Same skim. Never 7d NFT queue |
@@ -40,7 +39,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **5** | **hJitoSOL** | L | Solana | Rate LST. Not NCN VRT |
 | watch | **hfragSOL** / **hkySOL** / **hezSOL** | L/C2 | Solana | Jito Vault **VRT**. Receipt exists. Slash + unstake queue. After hJitoSOL, not instead of it |
 | later | **hANSEM** | L? | Solana | Watch. Memecoin + launchpad airdrops, not an LST receipt |
-| later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |
+| last | hwstETH / hcbETH | L | Ethereum / Base | ETH LST last. Official weETH already on HyperEVM. Do not list weETH/ezETH. hLBTC/hstkwaUSDC stay |
 | last | BONK12M / hMET | C1/C2 | Solana | After the LST lockbox exists |
 | parked | hSKY | C1 | Ethereum | Stake-only strips LockStake borrow. Min 1.44M SKY / 30k USDS |
 | parked | hGMX | C1 | Arbitrum | Stake yield frozen until $90. GLP V1 retired 2025-07-16 |
@@ -59,15 +58,15 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 
 **0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). Real `SetSecurityStack`. Tiny cap. Close after redeem. `GROK_BOT_MAINNET.md`.
 **1** — hxSQUID then hAVNT. Same Base path the canary just proved.
-**2** — rate L: **hgSOON (BSC) then hsWBERA (Bera)**. 1% skim. New LZ eids 30102 / 30362. **hcbETH out** (Base token has no `exchangeRate`). **hslisBNB only after hgSOON** (same BSC corridor, Lista rate, never native BNB / 7d unstake).
-**3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). hsETHFI gated (`productionEvm=false`).
+**2** — rate L: **hgSOON (BSC) then hsWBERA (Bera)**. 1% skim. New LZ eids 30102 / 30362. **ETH LST family last** (weETH already on HyperEVM; Base cbETH has no `exchangeRate`). **hslisBNB only after hgSOON**.
+**3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). Not ETH. hsETHFI gated (`productionEvm=false`).
 **4** — C1: BLUAI4Y then hORDER. Leaf Market after the first C1 lists. No CREATE2 twin.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
 **5** — hJitoSOL. Grok bot: Docker `anchor build -v` → deploy `.so` → Store PDA → HyperEVM dest OFT. Task list: `GROK_BOT_MAINNET.md` §5. NCN out.
-**Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.
+**Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hAVNT are used as collateral. ETH LSTs (wstETH / weETH / ezETH / cbETH) after that.
 
 ## Solana (batch 5, after EVM 0–4)
 
