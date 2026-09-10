@@ -8,6 +8,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {IBluaiStake} from "src/lz/IBluaiStake.sol";
+import {LeafBluaiPolicy} from "src/lz/LeafBluaiPolicy.sol";
+import {LeafForbiddenSelectors} from "src/lz/LeafForbiddenSelectors.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockBluai is ERC20 {
@@ -99,6 +101,7 @@ contract LeafBluaiLockboxTest is PegReady {
         vm.startPrank(owner);
         box.setFarm(address(stake), IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector);
         box.setFarmExit(IBluaiStake.unstake.selector);
+        box.setFarmUnlockAt(uint64(block.timestamp + 4 * 365 days));
         box.setPeer(40362, address(1));
         box.setHarvester(owner);
         box.setConverter(converter);
@@ -223,6 +226,11 @@ contract LeafBluaiLockboxTest is PegReady {
 
     function testFarmConfigMutableBeforeFirstDeposit() public {
         vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.ShareExitTooEarly.selector);
+        box.setShareExit(true);
+        assertFalse(box.shareExitEnabled());
+
+        vm.prank(owner);
         box.setFarmExit(bytes4(0x12345678));
         assertEq(box.farmExitSel(), bytes4(0x12345678));
 
@@ -232,16 +240,16 @@ contract LeafBluaiLockboxTest is PegReady {
         assertEq(box.farmNativeFee(), 0.01 ether);
 
         vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.setShareExit(true);
+
+        vm.prank(owner);
         box.setFarmRequest(bytes4(0x87654321));
         assertEq(box.farmRequestSel(), bytes4(0x87654321));
 
         vm.prank(owner);
         box.setPublicRequestType(10, true);
         assertTrue(box.publicRequestType(10));
-
-        vm.prank(owner);
-        box.setShareExit(true);
-        assertTrue(box.shareExitEnabled());
     }
 
     function testLiveFarmConfigCannotChangeAfterDeposit() public {
@@ -261,6 +269,7 @@ contract LeafBluaiLockboxTest is PegReady {
         box.setFarmRequest(bytes4(0x44444444));
         vm.expectRevert(LeafInboundLockbox.FarmConfigFrozen.selector);
         box.setPublicRequestType(10, true);
+        vm.expectRevert(LeafInboundLockbox.ShareExitTooEarly.selector);
         box.setShareExit(true);
         vm.stopPrank();
 
@@ -273,6 +282,22 @@ contract LeafBluaiLockboxTest is PegReady {
         assertEq(box.farmNativeFee(), 0);
         assertEq(box.farmRequestSel(), bytes4(0));
         assertFalse(box.publicRequestType(10));
+        assertFalse(box.shareExitEnabled());
+    }
+
+    function testShareExitAfterFourYearLock() public {
+        vm.warp(block.timestamp + 4 * 365 days);
+        vm.prank(owner);
+        box.setShareExit(true);
         assertTrue(box.shareExitEnabled());
+    }
+
+    function testBluaiPins() public pure {
+        assertEq(LeafBluaiPolicy.BLUAI, 0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD);
+        assertEq(LeafBluaiPolicy.YEARS, 4);
+        assertEq(LeafBluaiPolicy.STAKE_SEL, IBluaiStake.stake.selector);
+        assertEq(LeafBluaiPolicy.CLAIM_ALL, IBluaiStake.claimAll.selector);
+        assertEq(LeafBluaiPolicy.UNSTAKE, bytes4(0x2e17de78));
+        assertTrue(LeafForbiddenSelectors.forbidden(LeafBluaiPolicy.UNSTAKE));
     }
 }
