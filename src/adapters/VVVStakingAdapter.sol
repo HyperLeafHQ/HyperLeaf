@@ -10,8 +10,8 @@ interface IERC20Like {
 }
 
 /// @notice Verification-stage Position Adapter for Venice VVV staking.
-/// @dev Framework only. Confirm the live Base ABI, ownership/upgrade path,
-///      sVVV representation and staking semantics before deployment.
+/// @dev Framework only. Live Base StakingV2 is a UUPS proxy and its unstake path
+///      is cooldown-based; this adapter intentionally does not pretend withdrawal is instant.
 contract VVVStakingAdapter {
     error NotVault();
     error RateJump();
@@ -37,37 +37,55 @@ contract VVVStakingAdapter {
         _;
     }
 
+    /// @notice Economic NAV before HyperLeaf fees.
+    /// @dev sVVV balance is the staked principal/receipt; pendingRewards are separately
+    ///      claimable VVV and must be confirmed as economically realizable before inclusion.
     function totalAssets() public view returns (uint256) {
-        return STAKING.stakedBalance(address(this)) + STAKING.pendingRewards(address(this));
+        return STAKING.balanceOf(address(this)) + STAKING.pendingRewards(address(this));
     }
 
     function emissionRatePerSecond() external view returns (uint256) {
         return STAKING.emissionRatePerSecond();
     }
 
+    function cooldownState() external view returns (uint256 cooldownEnd, uint256 cooldownAmount) {
+        (, cooldownEnd, cooldownAmount) = STAKING.stakes(address(this));
+    }
+
+    function cooldownDuration() external view returns (uint256) {
+        return STAKING.cooldownDuration();
+    }
+
     function deposit(uint256 amount) external onlyVault {
         if (!depositsEnabled) revert InvalidConfig();
         VVV.approve(address(STAKING), amount);
-        STAKING.stake(amount);
+        STAKING.stake(address(this), amount);
     }
 
     function harvest() external onlyVault returns (uint256 realizedReward) {
         uint256 beforeBal = VVV.balanceOf(address(this));
-        STAKING.claimRewards();
+        STAKING.claim();
         uint256 afterBal = VVV.balanceOf(address(this));
         realizedReward = afterBal - beforeBal;
     }
 
-    function withdraw(uint256 amount, address recipient) external onlyVault {
-        STAKING.unstake(amount);
-        VVV.transfer(recipient, amount);
+    /// @notice Start the live 7-day-style cooldown path (exact duration is read from the contract).
+    function initiateWithdraw(uint256 amount) external onlyVault {
+        STAKING.initiateUnstake(amount);
+    }
+
+    /// @notice Finalize an already completed cooldown.
+    function finalizeWithdraw(address recipient) external onlyVault {
+        STAKING.finalizeUnstake();
+        uint256 balance = VVV.balanceOf(address(this));
+        if (balance != 0) VVV.transfer(recipient, balance);
     }
 
     function verifyHealth(uint256 liabilities) external view returns (bool) {
         return totalAssets() >= liabilities;
     }
 
-    /// @dev Framework breaker only; final accounting must use verified source semantics.
+    /// @dev Framework breaker only; final production accounting must use verified source semantics.
     function setRateObservation(uint256 newRate) external onlyVault {
         if (lastObservedRate != 0) {
             uint256 diff = newRate > lastObservedRate
