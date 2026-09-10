@@ -306,8 +306,8 @@ Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decay
 | | |
 | --- | --- |
 | Canonical backing | veAERO NFTs in `LeafNftLockbox` on Base (`0xeBf418Fe…`). Principal = `locked(tokenId).amount` at wrap |
-| Accounting unit | 1 hveAERO = 1 AERO locked in a **permanent** NFT. Not voting power. Not liquid AERO |
-| Core invariant | dest supply ≤ sum of recorded `principalOf` ≤ on-chain `locked.amount` of held ids |
+| Accounting unit | dest shares via vault math: first wrap 1:1, later `assets * supply / live backing`. Not 1 dest per 1 wrap AERO after Maxi compounds |
+| Core invariant | dest supply = `totalLocked` (shares) ≤ economic claim on `currentAssets()` (sum of live `locked.amount`) |
 | Mint / redeem | C1, market-only (`LeafClosedOFT`). No protocol NFT return. No `createLock` of AERO |
 | Accept | `escrowType == NORMAL` at wrap, then `depositManaged` → `LOCKED` in veAERO Maxi (`mTokenId` 10298). Still reject MANAGED / decaying / voted / attached / tokenId 0 |
 | Never | `withdrawManaged` / `vote` / `merge` / `split` / `unlockPermanent` / wrap liquid AERO / iAERO (5%+20% haircut) |
