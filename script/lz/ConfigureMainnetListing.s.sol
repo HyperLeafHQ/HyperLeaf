@@ -9,6 +9,7 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
+import {LeafListaPolicy} from "src/lz/LeafListaPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -47,6 +48,14 @@ contract ConfigureMainnetListing is Script {
         if (keccak256(bytes(a.id)) == keccak256("hswbera") || keccak256(bytes(a.id)) == keccak256("hgsoon")) {
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hslisbnb")) {
+            LeafListaPolicy.requireSlisBnb(address(box.innerToken()));
+            require(box.rewardsSelector() == bytes4(0), "lista poke");
+            box.setRewardsTarget(LeafListaPolicy.STAKE_MANAGER);
+            box.setRateKind(LeafYieldFee.RateKind.ConvertSnBnbToBnb);
+            box.setRetainRateYield(true);
+            require(box.rewardsSelector() == bytes4(0), "lista poke after");
         }
         if (keccak256(bytes(a.id)) == keccak256("hcbeth")) {
             box.setRateKind(LeafYieldFee.RateKind.ExchangeRate);
