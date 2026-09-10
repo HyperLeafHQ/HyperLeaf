@@ -9,6 +9,8 @@ import {LeafYieldFee} from "src/lz/LeafYieldFee.sol";
 import {MockConvertERC20} from "test/mocks/MockConvertERC20.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockRewardsController} from "test/mocks/MockRewardsController.sol";
+import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
+import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockEndpointU is ILayerZeroEndpointV2 {
@@ -131,5 +133,14 @@ contract LeafUmbrellaTest is PegReady {
         adapter.setRewardsSelector(bytes4(0x9a99b4f0));
         vm.expectRevert(LeafYieldFee.BadRewardsTarget.selector);
         adapter.pokeRewards();
+    }
+
+    function testUmbrellaPins() public pure {
+        AssetCatalog.Listing memory a = AssetCatalog.get("hstkwausdc");
+        assertEq(a.innerMainnet, LeafUmbrellaPolicy.STKWA_ETH_USDC_V1);
+        assertEq(a.defaultCap, 0);
+        LeafUmbrellaPolicy.requireStkwaUsdc(LeafUmbrellaPolicy.STKWA_ETH_USDC_V1);
+        LeafUmbrellaPolicy.requireController(LeafUmbrellaPolicy.REWARDS_CONTROLLER);
+        assertEq(LeafUmbrellaPolicy.CLAIM_ALL_REWARDS, bytes4(0xbb492bf5));
     }
 }
