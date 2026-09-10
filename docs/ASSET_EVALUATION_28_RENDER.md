@@ -6,16 +6,16 @@
 
 RENDER has real protocol-level economic activity, but the current productive reward is attached to **Render Network node operators / compute supply**, not to ordinary RENDER holders. Render is not a PoS chain and does not provide native holder staking or a mature liquid-staking receipt. Therefore `RENDER -> hRENDER` cannot currently be justified as a rate-bearing Leaf without constructing a separate node-operator productive position.
 
-## Latest ASR / Availability Reward check
+## Latest ASR / Availability Reward check — 2026-09-10
 
-As of the latest Render Foundation dashboard snapshot checked on 2026-09-10:
+As of the latest Render Foundation dashboard snapshot checked today:
 
 - Latest node operator reward: **15,000 RENDER**.
-- Dashboard shows a **next node operator reward countdown**, indicating the reward epoch is operating normally.
-- The Foundation FAQ states that node operators receive emissions for both completed rendering work and node availability; Availability Rewards are calculated from uptime through a weighted points system.
+- A **next node operator reward countdown is active**, indicating the reward epoch is continuing.
 - RNP-015 formally defines Availability Rewards and is marked **Implemented**.
+- The Foundation FAQ states that node operators receive emissions for completed rendering work and node availability, with Availability Rewards distributed according to uptime through a weighted-points system.
 
-Therefore: **ASR appears to be functioning and being emitted normally at the network level.** This is not evidence of a holder-level RENDER staking yield; ASR is a node-operator reward.
+**Verdict: ASR is currently operating and being emitted normally at the network level.** This is not evidence of a holder-level RENDER staking yield; ASR is a node-operator reward.
 
 ## Product fit
 
