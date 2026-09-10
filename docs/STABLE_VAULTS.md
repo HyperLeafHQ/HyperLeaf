@@ -22,10 +22,24 @@ Bitway Core Alpha share `0x73af543D809C8D3414e5B92b3aa2c25b182Ba3A1` on **BSC** 
 
 Yield is Bitway strategy + **CEX custody**. Normal unstake ~7d; flash has a penalty. Token is **not** ERC-4626. Wrap **BTWUSDT** only, never USDT. Do not market as trustless. LZ eid 30102 exists; still not a BATCH.
 
-## HertzFlow USD1 — watch
+## HertzFlow USD1 — watch (receipt live, GMX-style keeper)
 
-`0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6` **is** the ERC-20: `HLV [USD1-USD1]`, supply ≈6.76M. Official handler list still “to be published” for BSC mainnet. No `convertToAssets`. Perp LP: share price can fall; withdraw can stall. Campaign USD1 is not backing.
+User txs on BSC (2026-09-10 RPC):
 
-Wrap **HLV** only, never raw USD1. Block until Reader + deposit/withdraw handlers are in their docs and fork-tested.
+- Deposit execute: [`0x8b441590…8184`](https://bscscan.com/tx/0x8b4415902782d3bd1419ff9c67b052766472a8a62c6fc08aa37b4507c3678184)  
+  `0xB58B…3Bf4.multicall` → `executeHlvDeposit(0xd6b8546b)`. Mints **8.998 HLV** to `0xe0df…4cd3`.
+- Withdraw execute: [`0xc472af4c…a779`](https://bscscan.com/tx/0xc472af4c610dc368959cd9e1661d7c6d63bc883d76b4940742a2fd6678d0a779)  
+  `0xBA3A…65fa.executeHlvWithdrawal(0x55ceeb84)`. Burns **13.5 HLV**, user `0x8404…08db` gets **~14.19 USD1**.
 
-`NotThisBatch`.
+| | Address | Role |
+| --- | --- | --- |
+| HLV receipt | `0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6` | wrap this |
+| HFUSD1 | `0x026c39ab4b07f4c8c62b5824f0f9d7be5087405a` | Hertzflow wrapped USD1 — do not wrap |
+| HF Market | `0xf59b083e6b700f011475c70a2f81fa49378e28d3` | GM-style market — do not wrap |
+| USD1 | `0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d` | World Liberty — do not wrap |
+| Deposit router | `0xB58BA4E284d48Fc689Bf209eb4E54009e71E3Bf4` | keeper `executeHlvDeposit` |
+| Withdraw router | `0xBA3A1F7663500b4bEEb8c98E910b116D10AE65fa` | keeper `executeHlvWithdrawal` |
+
+HLV is a transferable ERC-20. Protocol in/out is **async keeper**, not ERC-4626. Observed ~1.05 USD1 / HLV; **NAV can fall**. Leaf lockbox must **never** call HertzFlow routers. User unwraps HLV and exits on HertzFlow.
+
+Still not a BATCH: no `convertToAssets`, perp drawdown, fork unwind untested.

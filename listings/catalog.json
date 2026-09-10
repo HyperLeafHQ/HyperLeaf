@@ -601,7 +601,7 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "HertzFlow USD1 Genesis HLV 0xeeA83A77\u2026da9c6 IS the ERC-20 (HLV [USD1-USD1], supply ~6.76M). No convertToAssets. Official BSC handlers still unpublished. Perp LP NAV can drop. Wrap HLV only — never raw USD1. BLOCK until Reader + deposit/withdraw are documented and forked. docs/STABLE_VAULTS.md.",
+      "note": "HertzFlow HLV [USD1-USD1] 0xeeA83A77\u2026da9c6. Live keeper: executeHlvDeposit 0xd6b8546b on 0xB58B\u20263Bf4 (tx 0x8b441590), executeHlvWithdrawal 0x55ceeb84 on 0xBA3A\u202665fa (tx 0xc472af4c). Wrap HLV only. Never USD1 0x8d0d\u2026 / HFUSD1 0x026c\u2026 / HF Market 0xf59b\u2026. Lockbox must not call routers. Perp NAV can drop. No 4626. Watch, not BATCH. docs/STABLE_VAULTS.md.",
       "refs": {
         "hlvVault": "0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6"
       },
