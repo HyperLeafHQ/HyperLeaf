@@ -106,7 +106,22 @@ Not batch 0–4. `BATCH=5`. Dest `DeployOFT`. Source is not `DeployAdapter`.
 | Worst-case loss | min(depositCap, maxPerDay) on principal. Yield path loss is converter execution on the 1% skim |
 | Test | `test/lz/LeafRateYield.t.sol` — 1% skim, 99% retained, slash, NAV mint, donation invariance, floor rounding, rate fuzz, sell-all still works if retain is off |
 
-Do **not** enable `rateKind` on Morpho shares unless that listing's row says pull rate surplus. **hgSOON and hsWBERA opt in:** `ConvertToAssets` + `retainRateYield` (same 1% skim as hcbETH).
+Do **not** enable `rateKind` on Morpho shares unless that listing's row says pull rate surplus. **hgSOON and hsWBERA opt in:** `ConvertToAssets` + `retainRateYield` (same 1% skim as hcbETH). **hsPOL** uses `ConvertSpolToPol` on the official controller, not `convertToAssets`.
+
+### hsPOL (rate L — Ethereum sPOL, not a BATCH yet)
+
+| | |
+| --- | --- |
+| Canonical backing | Ethereum sPOL `0x3B79…7969` pulled into the lockbox. After skim, remaining sPOL |
+| Accounting unit | hsPOL shares. 18-dec. 1 share ≈ remaining sPOL after the 1% skim |
+| Core invariant | `oft.totalSupply() ≤ adapter.totalLocked()`. Remaining inner ≥ lastAccounted |
+| Rate source | Polygon Labs controller `0xEaad…28B` `convertSPOLtoPOL(1e18)`. Live ~1.012347 POL/sPOL (2026-09-10). **Not** ERC-4626 |
+| Rate trust | controller / sPOL upgrade. 3% jump breaker |
+| Mint / redeem | wrap/unwrap sPOL. **Never** wrap POL `0x455e…C3F6`. **Never** wrap Polygon child `0xd1CD…`. **Never** call convertPOLtoSPOL / convertSPOLtoPOL from the lockbox |
+| Yield | POL staking in the sPOL rate, 99% stays, protocol 1% skim → HYPE. No holder WHYPE claim |
+| Failure | controller lie; wrapping the child; converting sPOL back to POL |
+| Test | `test/lz/LeafSpol.t.sol` |
+| Deploy | `feat/hspol`. `MainnetBatches` reverts `NotThisBatch` until a BATCH is assigned |
 
 Converter `minOut` is enforced on `LeafYieldConverter.execute` (balance delta) and `notify(amount, minAmount)`. It is **not** a lockbox invariant — wrap/redeem never talk to the converter. A dead hop: `halt` + `returnToLockbox`. Next hop can be a different allowlisted bridge (deBridge / Mayan / Relay).
 

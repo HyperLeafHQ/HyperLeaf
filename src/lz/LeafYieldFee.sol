@@ -26,15 +26,17 @@ abstract contract LeafYieldFee {
     bytes4 public constant CLAIM_ALL_REWARDS = 0xbb492bf5;
 
     /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`,
-    ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`). Surplus is taken from
-    ///      `lastAccounted` only — donations are not yield.
+    ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`, sPOL controller
+    ///      `convertSPOLtoPOL(1e18)`). Surplus is taken from `lastAccounted`
+    ///      only — donations are not yield.
     ///      Floor: (lastAccounted * (rate - lastRate)) / rate. Dust stays principal.
     enum RateKind {
         None,
         ExchangeRate,
         ConvertToAssets,
         GetPooledAvaxByShares,
-        RouterGetRate
+        RouterGetRate,
+        ConvertSpolToPol
     }
 
     RateKind public rateKind;
@@ -309,6 +311,13 @@ abstract contract LeafYieldFee {
             address t = rewardsTarget;
             if (t == address(0) || t == address(token)) revert BadRateFeed();
             (bool ok, bytes memory ret) = t.staticcall(abi.encodeWithSignature("getRate(address)", address(token)));
+            if (!ok || ret.length < 32) revert BadRateFeed();
+            rate = abi.decode(ret, (uint256));
+        } else if (rateKind == RateKind.ConvertSpolToPol) {
+            address t = rewardsTarget;
+            if (t == address(0) || t == address(token)) revert BadRateFeed();
+            (bool ok, bytes memory ret) =
+                t.staticcall(abi.encodeWithSignature("convertSPOLtoPOL(uint256)", uint256(1e18)));
             if (!ok || ret.length < 32) revert BadRateFeed();
             rate = abi.decode(ret, (uint256));
         }

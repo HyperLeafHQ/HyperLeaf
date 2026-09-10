@@ -169,6 +169,35 @@
       "priority": 90
     },
     {
+      "id": "hspol",
+      "kind": "L",
+      "symbol": "hsPOL",
+      "name": "Hyperleaf sPOL",
+      "innerSymbol": "sPOL",
+      "innerToken": "0x3B790d651e950497c7723D47B24E6f61534f7969",
+      "controller": "0xEaadA411F2600570796c341552b9869DA708a28B",
+      "underlying": "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
+      "childNever": "0xd1CD49A08AeF3Af93457aEc17C786C2b7F48eCd7",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "sourceEidTest": 40161,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "spol-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "convertSPOLtoPOL",
+        "retainRateYield": true
+      },
+      "claim": "No side token. Rate is controller.convertSPOLtoPOL(1e18). setRewardsTarget(controller) then setRateKind(ConvertSpolToPol)+retainRateYield. Never wrap POL or Polygon sPOLChild. Never poke convertSPOLtoPOL / convertPOLtoSPOL.",
+      "note": "Polygon Labs sPOL on Ethereum. Not ERC-4626. Official weETH-style Gate 0: HyperEVM has no official sPOL, so this listing is the HyperEVM representation. Live 2026-09-10: convertSPOLtoPOL(1e18)=1.012347 POL. Code on feat/hspol. Not a grok-bot BATCH until assigned. Cap 50.",
+      "status": "code",
+      "priority": 12
+    },
+    {
       "id": "hvirtualmax",
       "kind": "C1",
       "symbol": "hVIRTUALMAX",

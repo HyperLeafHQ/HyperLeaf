@@ -18,7 +18,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **3** | **hstkwaUSDC** | L | Ethereum | stkwaEthUSDC.v1. Rate + RewardsController. Never cooldown / v2 migrate |
 | **4** | BLUAI4Y | C1 | BSC | No protocol redeem. Claim Board |
 | **4** | **hORDER** | C1 | **Arbitrum only** | `LeafInboundLockbox` + Orderly proxy. No CREATE2 twin |
-| later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
+| later | **hsPOL** | L | Ethereum | Polygon Labs sPOL. Rate = controller.convertSPOLtoPOL. Never POL / child. `feat/hspol`. Not a BATCH yet |
 | later | **hB3** | C1 | Base | stake → queue WIN (0x58016b6a) → 24h → claim B3 (0x087ce4a0). Claim poke still off until recipient=lockbox. `feat/hb3` |
 | later | hveAERO | ve-NFT | Base | `LeafNftLockbox` exists. Permanent NORMAL only. Not a BATCH |
 | later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |

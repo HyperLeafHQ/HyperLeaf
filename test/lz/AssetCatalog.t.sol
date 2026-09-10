@@ -49,7 +49,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[15] memory ids = AssetCatalog.allIds();
+        string[16] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
@@ -132,6 +132,11 @@ contract AssetCatalogTest is Test {
         assertFalse(AssetCatalog.get("hsethfi").productionEvm);
         assertEq(AssetCatalog.get("hsethfi").defaultCap, 0);
         assertEq(AssetCatalog.get("hstkwausdc").defaultCap, 0);
+        assertEq(AssetCatalog.get("hspol").innerMainnet, 0x3B790d651e950497c7723D47B24E6f61534f7969);
+        assertEq(AssetCatalog.get("hsPOL").id, "hspol");
+        assertEq(AssetCatalog.get("hspol").sourceChainIdMain, 1);
+        assertEq(AssetCatalog.get("hspol").defaultCap, 50 ether);
+        assertTrue(AssetCatalog.get("hspol").productionEvm);
     }
 
     function testBepoliaHasNoLzEndpoint() public {
@@ -157,6 +162,8 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hsavax"), 3);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._batch("hsethfi");
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hspol");
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);

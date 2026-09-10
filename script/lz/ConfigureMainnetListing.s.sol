@@ -9,6 +9,7 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
+import {LeafSpolPolicy} from "src/lz/LeafSpolPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -68,6 +69,16 @@ contract ConfigureMainnetListing is Script {
             require(box.shareScale() == LeafLbtcPolicy.SHARE_SCALE, "scale");
             require(box.maxRateJumpBps() == LeafLbtcPolicy.MAX_RATE_JUMP_BPS, "jump");
             require(box.rewardsSelector() == bytes4(0), "lbtc poke after");
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hspol")) {
+            LeafSpolPolicy.requireSpol(address(box.innerToken()));
+            require(box.rewardsSelector() == bytes4(0), "spol poke");
+            box.setRewardsTarget(LeafSpolPolicy.CONTROLLER);
+            box.setMaxRateJumpBps(LeafSpolPolicy.MAX_RATE_JUMP_BPS);
+            box.setRateKind(LeafYieldFee.RateKind.ConvertSpolToPol);
+            box.setRetainRateYield(true);
+            require(box.rewardsTarget() == LeafSpolPolicy.CONTROLLER, "spol ctrl");
+            require(box.rewardsSelector() == bytes4(0), "spol poke after");
         }
         if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
