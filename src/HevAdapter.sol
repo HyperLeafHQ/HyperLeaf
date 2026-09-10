@@ -54,6 +54,7 @@ contract HevAdapter is IHevAdapter, Ownable {
     error ZeroVault();
     error VaultChangeWhileDeposited();
     error StrategyChangeWhileDeposited();
+    error ZeroStrategy();
 
     modifier onlyVault() {
         if (msg.sender != vault) revert OnlyVault();
@@ -86,6 +87,7 @@ contract HevAdapter is IHevAdapter, Ownable {
     }
 
     function setHevStrategy(address _hevStrategy) external onlyOwner {
+        if (_hevStrategy == address(0)) revert ZeroStrategy();
         if (depositedCount != 0) revert StrategyChangeWhileDeposited();
         hevStrategy = _hevStrategy;
     }
@@ -148,7 +150,7 @@ contract HevAdapter is IHevAdapter, Ownable {
         if (virtualRewarder != address(0)) {
             return IVirtualRewarder(virtualRewarder).calculateAvailableRewardsAmount(tokenId);
         }
-        return hypeToken.balanceOf(address(this));
+        return 0;
     }
 
     /// @notice Convenience defaults matching HyperEVMAddresses library constants.
