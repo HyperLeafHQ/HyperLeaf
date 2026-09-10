@@ -1013,6 +1013,33 @@
       "priority": 92
     },
     {
+      "id": "hpyusd",
+      "kind": "C1",
+      "symbol": "hPYUSD",
+      "name": "Hyperleaf PYUSD",
+      "innerSymbol": "PYUSD",
+      "source": "ethereum",
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "SKIP as L. Paxos dollar, 0 native yield. ETH 0x6c3e\u2026A0e8 ~1.70B. Solana Token-2022 2b1k\u2026GXo is still a dollar. Spark spPYUSD ~54k TVL, skip. Not JitoSOL. docs/PYUSD.md.",
+      "status": "skip",
+      "priority": 93
+    },
+    {
+      "id": "hnicp",
+      "kind": "L",
+      "symbol": "hnICP",
+      "name": "Hyperleaf nICP",
+      "innerSymbol": "nICP",
+      "innerCanister": "buwm7-7yaaa-aaaar-qagva-cai",
+      "source": "icp",
+      "exit": "instant-receipt",
+      "infra": "icp",
+      "note": "No EVM LST. WaterNeuron nICP on ICP only (6-month neuron, ~8%). LZ has no ICP eid. Third non-EVM runtime after Solana then IBC. Never dissolve. docs/NICP.md.",
+      "status": "later-non-evm",
+      "priority": 25
+    },
+    {
       "id": "hvecrv",
       "kind": "ve-nft",
       "symbol": "hveCRV",
