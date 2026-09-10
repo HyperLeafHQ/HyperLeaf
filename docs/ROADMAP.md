@@ -29,6 +29,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hsteakUSDG** | L | Robinhood Morpho | steakUSDG `0xBeEf…09dd`. Never deposit/redeem USDG |
 | later | **asBNB** | L | BSC | After **hslisBNB**. Aster Earn on BSC still live. Never wrap $ASTER / Aster Chain ve |
 | watch | **hHLV** | L | BSC HertzFlow | **Only** `HLV [USD1-USD1]` `0xeeA83A77…`. Perp LP share priced in USD1. Never raw USD1. RateKind.None |
+| skip | **hsKCS** | L | KCC | sKCS.io ~3k supply, no LZ KCC. Never KuCoin Earn / raw KCS |
 | watch | **hbwBTW** | L | Bitway | bwBTW only, never raw BTW. ~5% + volatile. Low priority |
 | watch | **ankrBNB** | L | BSC | Rate-compatible; liquidity << slisBNB |
 | watch | **htsTON** | L | TON | Tonstakers **tsTON** only, never raw GRAM. Luna #02. sGRAM/hGRAM secondary. BLOCK until TON LZ + receipt mint verified |

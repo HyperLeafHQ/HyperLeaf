@@ -616,6 +616,22 @@
       "priority": 29
     },
     {
+      "id": "hskcs",
+      "kind": "L",
+      "symbol": "hsKCS",
+      "name": "Hyperleaf sKCS",
+      "innerSymbol": "sKCS",
+      "innerToken": "0x00eE2d494258D6C5A30D6B6472A09b27121Ef451",
+      "underlying": "KCS",
+      "source": "kcc",
+      "sourceChainId": 321,
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "note": "Skip. sKCS.io on KCC, ~3046 supply, dead. No LZ KCC. Never wrap KuCoin Earn / raw KCS / validator stake. exchangeRate() is not 1e18-per-share. HyperEVM empty. docs/KCS.md.",
+      "status": "skip",
+      "priority": 80
+    },
+    {
       "id": "hbwbtw",
       "kind": "L",
       "symbol": "hbwBTW",
