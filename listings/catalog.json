@@ -1056,14 +1056,16 @@
       "id": "haster",
       "kind": "C1",
       "symbol": "hASTER",
-      "name": "Hyperleaf ASTER",
+      "name": "Hyperleaf ASTER 4y",
       "innerSymbol": "ASTER",
-      "source": "bsc",
-      "exit": "none",
+      "innerToken": "0x000Ae314E2A2172a039B26378814C252734f556A",
+      "source": "aster-chain",
+      "sourceChainId": 0,
+      "exit": "market-only",
       "infra": "aster-chain",
-      "note": "SKIP. C1 max-lock is the right product but stake is Aster Chain Spot account, not a BSC contract. No stake() to call. Do not lock idle ASTER. Wait for a permissionless delegate(validator, 208w) or accept custody. docs/ASTER.md.",
-      "status": "skip",
-      "priority": 94
+      "note": "Same slot as hLIT. C1 max-lock 208w is the product once they expose EVM stake. Today: Aster Spot account, no stake(), LZ has no Aster Chain eid. Do not wrap idle BSC ASTER. asBNB is a different listing. docs/ASTER.md.",
+      "status": "parked",
+      "priority": 45
     },
     {
       "id": "hvecrv",

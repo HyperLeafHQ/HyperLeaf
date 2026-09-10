@@ -24,6 +24,6 @@ Do not wrap idle ASTER as C1 (0 yield, 4y illiquid). Do not fake a farm selector
 1. Aster publishes a permissionless staking contract (or EVM precompile) we can `delegate(validator, amount, 208w)` from a lockbox, **or**
 2. You accept **custodial** path: Deposit Bridge `0x128463…` → Aster Spot → API stake. That is an EOA/account, not `LeafVirtualsLockbox`. Same class as parked sKAITO custody.
 
-Until (1): **skip hASTER**. Keep **asBNB** later after hslisBNB.
+Until (1): **parked with hLIT**. Same reason: appchain stake, no LZ, no EVM `stake()`. asBNB stays a separate later listing (after hslisBNB).
 
 `NotThisBatch`. No Solidity until the stake selector is on-chain.

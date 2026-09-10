@@ -147,6 +147,7 @@ One production listing at a time unless an already-proven adapter, bridge path, 
 | Parked | **hUNCX** | — | Ethereum | Current reward / buyback state does not support intended economics |
 | Parked | **hSNX** | — | Ethereum | Relevant pool closed; defer |
 | Parked | **hLIT** | — | Lighter L2 | Stake lives on Lighter zk-rollup; integration path needs separate work |
+| Parked | **hASTER** | C1 | Aster Chain | Same as hLIT. Wait for EVM stake (208w). Not BSC spot |
 | Hold | **hstkAAVE** | — | Ethereum | Legacy path; Umbrella route is `hstkwaUSDC` |
 | Last | **hwstETH / weETH / ezETH / hcbETH** | L | — | Official weETH already on HyperEVM. ETH LST family last |
 | Blocked | **hKAITO / hVIRTUALMAX** | — | Base | Need omnichain StrategyAccount / CREATE2 holder |

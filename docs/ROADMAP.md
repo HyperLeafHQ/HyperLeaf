@@ -52,6 +52,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hnICP** | L | ICP | WaterNeuron nICP canisters only. No LZ ICP. After Jito, after IBC. Never dissolve |
 | hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
+| parked | **hASTER** | C1 | Aster Chain | Same slot as hLIT. Wait for EVM `delegate(208w)`. Do not wrap BSC spot |
 | blocked | **BNBx** | | BSC | Stader sunset 2026 |
 | watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
 | blocked | hKAITO / hVIRTUALMAX | | Base | Extra-chain claims until CREATE2 holder |
