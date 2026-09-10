@@ -106,7 +106,15 @@
         "mockInner": true
       },
       "status": "mainnet-batch-1",
-      "priority": 1
+      "priority": 1,
+      "live": {
+        "sourceChain": 8453,
+        "destChain": 999,
+        "source": "0x13E3e8803022cb58e93d025bfEB95ab88BE60d25",
+        "oft": "0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc",
+        "depositCap": "50000000000000000000",
+        "dead": ["0x6586351861c31A8Adea414e18E1cB9dd5B1dD206"]
+      }
     },
     {
       "id": "hcbeth",
@@ -1188,7 +1196,14 @@
       "note": "Accept transferable stkAVNT only \u2014 never AVNT. pokeRewards = claimRewards(this,max) selector 0x9a99b4f0, same 4 bytes as QUID. NEVER setRewardsSelector to claimRewardsAndRedeem 0xeab52318 (burns stkAVNT) or cooldown() 0x787a08a6. Claim tx 0x26f4ca90 (2026-07-03, 51.68 AVNT, no stkAVNT moved). Combined-redeem tx 0x24398d72 is the same 0xeab52318 call \u2014 a tx hash is not a selector. Slash max 20% stays in the receipt. AVNT 0x696F9436 isBlackListed. Stake pin 0x7aaf51e8.",
       "claimRewardsTx": "0x26f4ca907a874d263e3f2bea18906f33559a21c9e68fe5c585a72e81cfc5e31b",
       "status": "mainnet-batch-1",
-      "priority": 2
+      "priority": 2,
+      "live": {
+        "sourceChain": 8453,
+        "destChain": 999,
+        "source": "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
+        "oft": "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
+        "depositCap": "50000000000000000000"
+      }
     },
     {
       "id": "hjitosol",
