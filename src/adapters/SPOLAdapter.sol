@@ -34,10 +34,12 @@ contract SPOLAdapter {
     }
 
     /// @notice Current POL value represented by one whole sPOL, scaled by 1e18.
+    /// @dev Uses the sPOL token's own decimals rather than assuming 18 decimals.
     function exchangeRate1e18() external view returns (uint256) {
         uint256 supply = controller.totalsPOLBalance();
         if (supply == 0) return 1e18;
-        return controller.convertSPOLtoPOL(1e18);
+        uint256 unit = 10 ** uint256(sPOL.decimals());
+        return controller.convertSPOLtoPOL(unit) * 1e18 / unit;
     }
 
     function previewDeposit(uint256 polAmount) external view returns (uint256) {
