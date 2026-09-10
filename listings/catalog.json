@@ -708,6 +708,31 @@
       "priority": 23
     },
     {
+      "id": "hsff",
+      "kind": "L",
+      "symbol": "hsFF",
+      "name": "Hyperleaf sFF",
+      "innerSymbol": "sFF",
+      "innerToken": "0x1a0C3FfCbd101c6f2f6650DED9964c4A568C4D72",
+      "underlying": "0xFA1C09fC8B491B6A4d3Ff53A10CAd29381b3F949",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "sourceEidTest": 40161,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "4626-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
+      },
+      "note": "Falcon flexible sFF 0x1a0C\u20264D72 only. convertToAssets ~1.009 + retain 1%. cooldownDuration=3d \u2014 never cooldown() 0x787a08a6. Never FF / sFF-Prime 0x41FF\u2026 / vault 0x1E7f\u2026. Never setRewardsSelector 0x9a99b4f0 (QUID collision). Do not advertise 0.1% / 5.22%. HyperEVM empty. productionEvm false. NotThisBatch. docs/SFF.md.",
+      "status": "later",
+      "priority": 25
+    },
+    {
       "id": "hstnear",
       "kind": "L",
       "symbol": "hstNEAR",

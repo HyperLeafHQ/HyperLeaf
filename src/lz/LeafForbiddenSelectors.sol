@@ -6,7 +6,7 @@ pragma solidity ^0.8.24;
 ///      one path and not the other.
 library LeafForbiddenSelectors {
     function forbidden(bytes4 s) internal pure returns (bool) {
-        return exit(s) || lbtc(s) || spol(s) || hertz(s) || hbarx(s);
+        return exit(s) || lbtc(s) || spol(s) || hertz(s) || hbarx(s) || sff(s);
     }
 
     function exit(bytes4 s) internal pure returns (bool) {
@@ -81,5 +81,11 @@ library LeafForbiddenSelectors {
         return s == bytes4(0x745400c9) // requestWithdraw(uint256)
             || s == bytes4(0x2e17de78) // unstake(uint256)
             || s == bytes4(0x23095721); // requestUnstake(uint256)
+    }
+
+    /// @notice sFF cooldown is already in exit(). Do not add claimRewards(address,uint256)
+    ///         0x9a99b4f0 — that is also the QUID poke. Only the on-behalf variant.
+    function sff(bytes4 s) internal pure returns (bool) {
+        return s == bytes4(0x20fb80b5); // claimRewardsOnBehalf(address,address,uint256)
     }
 }
