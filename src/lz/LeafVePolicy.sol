@@ -12,6 +12,14 @@ library LeafVePolicy {
 
     bytes32 internal constant LISTING_TAG = keccak256("hveaero");
 
+    bytes4 internal constant VOTE = 0x7ac09bf7;
+    bytes4 internal constant RESET = 0x310bd74b;
+    bytes4 internal constant MERGE = 0xd1c2babb;
+    bytes4 internal constant SPLIT = 0x4b19becc;
+    bytes4 internal constant WITHDRAW = 0x2e1a7d4d;
+    bytes4 internal constant UNLOCK_PERMANENT = 0x35b0f6bd;
+    bytes4 internal constant CREATE_LOCK = 0xb52c05fe;
+
     error NotPermanent();
     error NotNormal();
     error ZeroLock();
@@ -41,5 +49,13 @@ library LeafVePolicy {
         if (!L.isPermanent || ve.escrowType(tokenId) != IVeNft.EscrowType.NORMAL) return false;
         if (L.amount <= 0) return false;
         return uint256(int256(L.amount)) >= principal;
+    }
+
+    /// @dev Never poke these on the veNFT or voter. Bribes that arrive as ERC-20
+    ///      on the lockbox are pullYield. Claiming bribes requires a vote; we
+    ///      do not vote, so that yield is stripped until a vote-less path exists.
+    function isForbiddenVe(bytes4 s) internal pure returns (bool) {
+        return s == VOTE || s == RESET || s == MERGE || s == SPLIT || s == WITHDRAW
+            || s == UNLOCK_PERMANENT || s == CREATE_LOCK;
     }
 }

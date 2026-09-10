@@ -21,7 +21,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **4** | **hORDER** | C1 | **Arbitrum only** | `LeafInboundLockbox` + Orderly proxy. No CREATE2 twin |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
-| later | hveAERO | ve-NFT | Base | `LeafNftLockbox` exists. Permanent NORMAL only. Not a BATCH |
+| later | hveAERO | ve-NFT | Base | `feat/hveaero`. Permanent NORMAL only. No vote → bribes stripped. Not a BATCH |
 | later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |
 | later | **hsteakUSDC** | L | Base Morpho | steakUSDC `0xBEEF010f…8183`. Same L family as hsteakUSDG |
 | later | **hDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 `0x500331c9…74a5`. Wrap **vault shares**, never DAI, never Blue market. **Cap 100k DAI** (exit liq ~195k). Pilot, not unlimited. Do not advertise 6.29% |

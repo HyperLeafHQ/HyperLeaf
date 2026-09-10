@@ -76,6 +76,11 @@ contract LeafNftLockboxTest is PegReady {
         AssetCatalog.Listing memory a = AssetCatalog.get("hveaero");
         assertEq(a.innerMainnet, LeafVePolicy.VE);
         assertEq(uint8(a.kind), uint8(AssetCatalog.Kind.Closed));
+        assertFalse(a.productionEvm);
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.VOTE));
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.MERGE));
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.UNLOCK_PERMANENT));
+        assertFalse(LeafVePolicy.isForbiddenVe(bytes4(0xf5f8d365))); // getReward — not a ve mutation
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._requireBatch("hveaero", 4);
     }
