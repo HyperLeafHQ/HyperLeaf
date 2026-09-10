@@ -531,9 +531,33 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Morpho Gauntlet DAI Core V1. Luna: Ethereum SELECT, Base/HL DEFER, Arb REJECT. Wrap vault shares only — never DAI, never Blue market id. DAI-in adapter is extra surface, not first. Cap 100_000 DAI (exit liq ~195k vs 2.13M TVL). Do not advertise 6.29%. convertToAssets 1% skim. Freeze vault.asset()==DAI.",
+      "note": "Morpho Gauntlet DAI Core V1. Verified 2026-09-10: gtDAIcore, asset=DAI, convertToAssets(1e18)=1.176e18, totalAssets~2.14M. Wrap vault shares only — never DAI, never Blue. Cap 100_000 DAI. Do not advertise APY. Freeze asset()==DAI. docs/STABLE_VAULTS.md.",
       "status": "later-capped-pilot",
       "priority": 27
+    },
+    {
+      "id": "hrlusd",
+      "kind": "L",
+      "symbol": "hRLUSD",
+      "name": "Hyperleaf senRLUSD",
+      "innerSymbol": "senRLUSDv2",
+      "innerToken": "0x6dc58a0fdfc8d694e571dc59b9a52eeea780e6bf",
+      "underlying": "0x8292Bb45bf1Ee4d140127049757C2E0fF06317eD",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "erc4626-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
+      },
+      "note": "Sentora RLUSD Main V2. Verified 2026-09-10: senRLUSDv2, asset=Ripple RLUSD 0x8292\u202617eD, convertToAssets(1e18)=1.011e18, totalAssets~350M. Wrap shares only — never RLUSD, never Blue. Freeze asset(). One vault = one listing. Do not advertise APY. After hDAI pattern. docs/STABLE_VAULTS.md.",
+      "status": "later",
+      "priority": 22
     },
     {
       "id": "husdt",
@@ -543,15 +567,17 @@
       "innerSymbol": "BTWUSDT",
       "innerToken": "0x73af543D809C8D3414e5B92b3aa2c25b182Ba3A1",
       "underlying": "USDT",
-      "source": "bitway",
+      "source": "bsc",
+      "sourceChainId": 56,
+      "sourceEid": 30102,
       "exit": "instant-receipt",
-      "infra": "pending-lz",
+      "infra": "evm",
       "yield": {
         "inner": "erc4626-rate",
         "pullInner": false,
         "toHype": []
       },
-      "note": "Bitway Core Alpha USDT share, not commodity USDT. Vault 0xb82E32062C773c7748776C06FdB11B92EDAE3B63. Wrap BTWUSDT only — never raw USDT, never auto-route other Bitway strategies. Value-accruing. Verify ABI, chain, flash-unstake, pause, and LZ before any BATCH. Do not market as trustless lending.",
+      "note": "Bitway Core Alpha BTWUSDT on BSC. Official vault 0xb82E32\u2026B63 paused=false. Supply ~23.9M. Not ERC-4626. CeDeFi (CEX custody, 7d unstake / flash penalty). Wrap BTWUSDT only — never raw USDT. Do not market as trustless. docs/STABLE_VAULTS.md.",
       "refs": {
         "coreAlphaVault": "0xb82E32062C773c7748776C06FdB11B92EDAE3B63"
       },
@@ -564,6 +590,7 @@
       "symbol": "hUSD1",
       "name": "Hyperleaf HertzFlow USD1",
       "innerSymbol": "HLV-USD1",
+      "innerToken": "0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6",
       "source": "bsc",
       "sourceChainId": 56,
       "sourceEid": 30102,
@@ -574,7 +601,7 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "HertzFlow USD1 Genesis HLV 0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6 is a vault ID, not proven to be the ERC-20 receipt. Wrap HLV receipt only — never raw USD1. Perp LP: NAV can drop, withdraw can stall. Campaign WLFI/APY is not backing. BLOCK until share token, GlvReader, deposit/withdraw handlers, and fork unwind are verified.",
+      "note": "HertzFlow USD1 Genesis HLV 0xeeA83A77\u2026da9c6 IS the ERC-20 (HLV [USD1-USD1], supply ~6.76M). No convertToAssets. Official BSC handlers still unpublished. Perp LP NAV can drop. Wrap HLV only — never raw USD1. BLOCK until Reader + deposit/withdraw are documented and forked. docs/STABLE_VAULTS.md.",
       "refs": {
         "hlvVault": "0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6"
       },
