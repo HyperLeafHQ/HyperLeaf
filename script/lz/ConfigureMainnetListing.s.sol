@@ -11,6 +11,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 import {LeafSpolPolicy} from "src/lz/LeafSpolPolicy.sol";
 import {LeafHbarxPolicy} from "src/lz/LeafHbarxPolicy.sol";
+import {LeafSghoPolicy} from "src/lz/LeafSghoPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -77,6 +78,13 @@ contract ConfigureMainnetListing is Script {
             require(box.rewardsSelector() == bytes4(0), "hbarx poke");
             box.setShareScale(LeafHbarxPolicy.SHARE_SCALE);
             require(box.shareScale() == LeafHbarxPolicy.SHARE_SCALE, "scale");
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hsgho")) {
+            LeafSghoPolicy.requireSgho(address(box.innerToken()));
+            require(address(box.innerToken()) != LeafSghoPolicy.GHO, "gho");
+            require(box.rewardsSelector() == bytes4(0), "sgho poke");
+            box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+            box.setRetainRateYield(true);
         }
         if (keccak256(bytes(a.id)) == keccak256("hspol")) {
             LeafSpolPolicy.requireSpol(address(box.innerToken()));

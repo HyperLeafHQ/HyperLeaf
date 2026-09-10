@@ -166,6 +166,8 @@ contract AssetCatalogTest is Test {
         this._batch("hspol");
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._batch("hhbarx");
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hsgho");
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);

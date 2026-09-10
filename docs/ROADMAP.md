@@ -31,6 +31,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | watch | **hHLV** | L | BSC HertzFlow | **Only** `HLV [USD1-USD1]` `0xeeA83A77…`. Perp LP share priced in USD1. Never raw USD1. RateKind.None |
 | skip | **hsKCS** | L | KCC | sKCS.io ~3k supply, no LZ KCC. Never KuCoin Earn / raw KCS |
 | later | **hHBARX** | L | Hedera 295 | Stader **HBARX** HTS `0x0000…cba44`. Never raw HBAR. LZ 30316. Need HTS associate. After current EVM batches |
+| later | **hsGHO** | L | Ethereum | Aave **sGHO** `0xE175…ca1d` only. App 6% is a shell. Never GHO / App vault / aUSDC. `convertToAssets` 1% |
 | watch | **hbwBTW** | L | Bitway | bwBTW only, never raw BTW. ~5% + volatile. Low priority |
 | watch | **ankrBNB** | L | BSC | Rate-compatible; liquidity << slisBNB |
 | watch | **htsTON** | L | TON | Tonstakers **tsTON** only, never raw GRAM. Luna #02. sGRAM/hGRAM secondary. BLOCK until TON LZ + receipt mint verified |

@@ -658,6 +658,31 @@
       "priority": 26
     },
     {
+      "id": "hsgho",
+      "kind": "L",
+      "symbol": "hsGHO",
+      "name": "Hyperleaf sGHO",
+      "innerSymbol": "sGHO",
+      "innerToken": "0xE1753F2e00940cC31213dd92013cF019DFE4ca1d",
+      "underlying": "0x40D16FC0246aD3160Ccc09B8D0D3A2cD28aE6C2f",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "sourceEidTest": 40161,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "4626-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
+      },
+      "note": "Aave App 6% is a retail shell \u2014 wrap sGHO 0xE175\u2026ca1d only. Never GHO, never App Stable Vault, never Arb aUSDC/aUSDT sleeve, never Merit/legacy sGHO. convertToAssets + retainRateYield 1%. Never deposit/redeem GHO from lockbox. Do not advertise 6.25% (in-app boosts). HyperEVM empty. productionEvm false. NotThisBatch. docs/SGHO.md.",
+      "status": "later",
+      "priority": 24
+    },
+    {
       "id": "hbwbtw",
       "kind": "L",
       "symbol": "hbwBTW",
