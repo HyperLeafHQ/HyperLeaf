@@ -49,7 +49,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[15] memory ids = AssetCatalog.allIds();
+        string[17] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
@@ -154,6 +154,10 @@ contract AssetCatalogTest is Test {
         this._batch("hcbeth");
         assertEq(MainnetBatches.batchOf("hgsoon"), 2);
         assertEq(MainnetBatches.batchOf("hswbera"), 2);
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hslisbnb");
+        assertEq(AssetCatalog.get("hslisbnb").innerMainnet, 0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B);
+        assertEq(AssetCatalog.get("hslisbnb").sourceChainIdMain, 56);
         assertEq(MainnetBatches.batchOf("hsavax"), 3);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._batch("hsethfi");

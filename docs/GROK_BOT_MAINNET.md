@@ -254,7 +254,7 @@ Wrap/redeem **settle the 1% skim first**. 99% stays in the receipt. No holder `c
 
 `pullYield(inner)` **is** the 1% skim. Dust fee (surplus < 100 atoms) is 0; watermark still moves; do not claw later.
 
-Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this batch (`after-hgsoon`). Do not frontend.
+Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this batch (`NotThisBatch` until hgSOON smoke). Rate for hslisBNB is Lista StakeManager `convertSnBnbToBnb`, **not** `convertToAssets` on the token. Do not frontend.
 
 ---
 
