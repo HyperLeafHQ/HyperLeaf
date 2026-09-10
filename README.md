@@ -132,7 +132,7 @@ One production listing at a time unless an already-proven adapter, bridge path, 
 | P4+ | **hUSDT** | L | Bitway | BTWUSDT Core Alpha share; never raw USDT |
 | P4+ | **hsteakUSDG** | L | Robinhood Morpho | ERC-4626 share only; never deposit/redeem USDG |
 | P5 | **hJitoSOL** | L | Solana | Rate-bearing LST; stake-pool rate only; no NCN restake |
-| Watch | **hUSD1** | L | BSC HertzFlow | HLV receipt only; never raw USD1; NAV can drop |
+| Watch | **hHLV** | L | BSC HertzFlow | Only `HLV [USD1-USD1]`; perp LP share; never raw USD1 |
 | Watch | **hbwBTW** | L | Bitway | bwBTW only; low priority |
 | Watch | **hsTRX** | L | TRON | JustLend sTRX only; BLOCK until LZ TRON mainnet ULN |
 | Watch | **hLINK** | C2 | Ethereum | Chainlink v0.2 pool full / 15k cap; research only |

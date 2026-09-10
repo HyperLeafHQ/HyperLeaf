@@ -80,7 +80,7 @@ contract LeafOmnichainHolderTest is Test {
     }
 
     function testHolderForbiddenSelectorsMatchFeePolicy() public {
-        bytes4[8] memory blocked = [
+        bytes4[11] memory blocked = [
             bytes4(0xeab52318),
             bytes4(0x38248a0c),
             bytes4(0x06866fdc),
@@ -88,7 +88,10 @@ contract LeafOmnichainHolderTest is Test {
             bytes4(0x041d5408),
             bytes4(0x787a08a6),
             bytes4(0x42966c68),
-            bytes4(0xe5c1bf6e)
+            bytes4(0xe5c1bf6e),
+            bytes4(0xd6b8546b),
+            bytes4(0x55ceeb84),
+            bytes4(0x40c10f19)
         ];
         vm.startPrank(owner);
         for (uint256 i; i < blocked.length; i++) {

@@ -28,7 +28,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hUSDT** | L | BSC Bitway | Core Alpha **BTWUSDT** `0x73af543D…3A1`. Never raw USDT. CeDeFi. Not BATCH |
 | later | **hsteakUSDG** | L | Robinhood Morpho | steakUSDG `0xBeEf…09dd`. Never deposit/redeem USDG |
 | later | **asBNB** | L | BSC | After **hslisBNB**. Aster Earn on BSC still live. Never wrap $ASTER / Aster Chain ve |
-| watch | **hUSD1** | L | BSC HertzFlow | HLV `0xeeA83A77…da9c6` is the ERC-20 (`HLV [USD1-USD1]`). Never raw USD1. Perp NAV can drop. Handlers unpublished |
+| watch | **hHLV** | L | BSC HertzFlow | **Only** `HLV [USD1-USD1]` `0xeeA83A77…`. Perp LP share priced in USD1. Never raw USD1. RateKind.None |
 | watch | **hbwBTW** | L | Bitway | bwBTW only, never raw BTW. ~5% + volatile. Low priority |
 | watch | **ankrBNB** | L | BSC | Rate-compatible; liquidity << slisBNB |
 | watch | **htsTON** | L | TON | Tonstakers **tsTON** only, never raw GRAM. Luna #02. sGRAM/hGRAM secondary. BLOCK until TON LZ + receipt mint verified |

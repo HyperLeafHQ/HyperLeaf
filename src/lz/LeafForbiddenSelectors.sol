@@ -6,7 +6,7 @@ pragma solidity ^0.8.24;
 ///      one path and not the other.
 library LeafForbiddenSelectors {
     function forbidden(bytes4 s) internal pure returns (bool) {
-        return exit(s) || lbtc(s) || spol(s);
+        return exit(s) || lbtc(s) || spol(s) || hertz(s);
     }
 
     function exit(bytes4 s) internal pure returns (bool) {
@@ -61,5 +61,18 @@ library LeafForbiddenSelectors {
             || s == bytes4(0x6bc63893) // mint(bytes,bytes)
             || s == bytes4(0x8340f549) // deposit(address,address,uint256)
             || s == bytes4(0xe5c1bf6e); // redeem(bytes,bytes)
+    }
+
+    /// @dev HertzFlow HLV. Lockbox only holds the ERC-20. Never poke deposit/withdraw
+    ///      keepers or the token's Bank mint/burn/transferOut.
+    function hertz(bytes4 s) internal pure returns (bool) {
+        return s == bytes4(0xd6b8546b) // executeHlvDeposit(bytes32,(address[],address[],bytes[]))
+            || s == bytes4(0x55ceeb84) // executeHlvWithdrawal(bytes32,(address[],address[],bytes[]))
+            || s == bytes4(0xd0e30db0) // deposit()
+            || s == bytes4(0x40c10f19) // mint(address,uint256)
+            || s == bytes4(0x9dc29fac) // burn(address,uint256)
+            || s == bytes4(0x078d3b79) // transferOut(address,address,uint256)
+            || s == bytes4(0x2fb12605) // transferOut(address,address,uint256,bool)
+            || s == bytes4(0xd443ca94); // transferOutNativeToken(address,uint256)
     }
 }

@@ -22,7 +22,19 @@ Bitway Core Alpha share `0x73af543D809C8D3414e5B92b3aa2c25b182Ba3A1` on **BSC** 
 
 Yield is Bitway strategy + **CEX custody**. Normal unstake ~7d; flash has a penalty. Token is **not** ERC-4626. Wrap **BTWUSDT** only, never USDT. Do not market as trustless. LZ eid 30102 exists; still not a BATCH.
 
-## HertzFlow USD1 — watch (receipt live, GMX-style keeper)
+## hHLV — watch. Only `HLV [USD1-USD1]`
+
+Ticker is **hHLV**, not hUSD1. Inner is the perp LP share. USD1 is the unit of NAV, not the wrapped token.
+
+Config that keeps our books 1:1 in **HLV** (PnL lives in HLV/USD1, not in `totalLocked`):
+
+- `RateKind.None`
+- `convertYieldToHype = true` (so `_harvestInner` is a no-op and redeem is 1:1 HLV)
+- never `retainRateYield`
+- never approve HertzFlow routers
+- never poke `executeHlvDeposit` / `executeHlvWithdrawal` / HLV `mint` `burn` `deposit` `transferOut`
+
+Ignoring trader PnL, remaining code risks: (1) a future transfer tax on HLV would underback the box on redeem; (2) `innerSupplyCeiling` must sit above live ~6.76e24; (3) do not point poke at the HLV address — it is also a Bank (`deposit`/`mint`/`burn`/`transferOut`).
 
 User txs on BSC (2026-09-10 RPC):
 
