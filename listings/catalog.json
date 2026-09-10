@@ -1040,6 +1040,32 @@
       "priority": 25
     },
     {
+      "id": "hasbnb",
+      "kind": "L",
+      "symbol": "hasBNB",
+      "name": "Hyperleaf asBNB",
+      "innerSymbol": "asBNB",
+      "source": "bsc",
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "note": "BSC asBNB 0x7773\u202612b6 (~107k). slisBNB + Lista/Launchpool. After hslisBNB, never $ASTER / Aster Chain ve. Withdraw is slisBNB. HyperEVM empty at this address. docs/ASTER.md.",
+      "status": "later",
+      "priority": 21
+    },
+    {
+      "id": "haster",
+      "kind": "C1",
+      "symbol": "hASTER",
+      "name": "Hyperleaf ASTER",
+      "innerSymbol": "ASTER",
+      "source": "bsc",
+      "exit": "none",
+      "infra": "aster-chain",
+      "note": "SKIP. BSC 0x000A\u2026556A is spot. Stake/veASTER is Aster Chain (208w lock), not a transferable receipt.",
+      "status": "skip",
+      "priority": 94
+    },
+    {
       "id": "hvecrv",
       "kind": "ve-nft",
       "symbol": "hveCRV",
