@@ -1128,9 +1128,11 @@
         ]
       },
       "refs": {
-        "stakeTx": "0x7ebe5e08df256dd06fe356e9470deaa85ec9e86a2b43a8f4bba136f80d72e340"
+        "stakeTx": "0x7ebe5e08df256dd06fe356e9470deaa85ec9e86a2b43a8f4bba136f80d72e340",
+        "winQueueTx": "0x58016b6a293a757544183e7e82b5f4d5a6f4920894ee830e4ab42dd83ca77ae3",
+        "winClaimTx": "0x087ce4a030b8ec0d0a7736570c04a1ee7da1b9b07477491c6406989ec49effd9"
       },
-      "note": "Live path 2026-08-31: stakeFor(user, amount) 0x2ee40908 on proxy 0x18541 (stakingToken=B3, totalStaked~20.7M). No receipt NFT/ERC-20. B3 then leaves the stake contract to EOA 0x8D06 (no bytecode) \u2014 principal is team custody, not a contract lock. Must stakeFor(lockbox, amt) so the Staked event user is the lockbox. WIN not in this tx \u2014 still need a harvest/claim tx. 45d unstake unused (C1).",
+      "note": "stakeFor 0x2ee40908 on 0x18541; principal then sits in EOA 0x8D06. WIN is not an ERC-20. Convert is two Base txs on 0xe69b via ERC-4337 EntryPoint 0x5FF1: (1) queue 0x24cf0593(amount, recipient) tx 0x58016b6a — 22340.427 B3 to 0x11356, Request 1451, 24h, no B3 moved; (2) claimDelayedWithdrawal(index) 0xf41ba29c tx 0x087ce4a0 — index 5, Request 1431, 252.67 B3 to stored recipient. Lockbox must be the queue recipient. Never call the queue from the lockbox. 45d unstake unused (C1).",
       "status": "research",
       "priority": 9
     },

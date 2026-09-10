@@ -252,7 +252,7 @@ Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.7
 | Accounting unit | C1 ticker. No receipt token |
 | Core invariant | HyperEVM hB3 ≤ inbound B3 we staked. We cannot prove EOA still holds it |
 | Proof source | `Staked` event on 0x18541. **Not** `balanceOf(stake)` — tokens leave |
-| Yield | upside.win delayed B3 on `0xe69b`. `claimDelayedWithdrawal(index)` `0xf41ba29c`. Live tx `0x087ce4a0` paid 252.67 B3 to stored recipient (Request ID 1431). **Not** a WIN ERC-20. Enable only if lockbox is both stake `user` and payout recipient |
+| Yield | Two-step on `0xe69b`, **not** a WIN ERC-20. Queue `0x24cf0593(amount, recipient)` via ERC-4337 (`0x58016b6a`: 22340.427 B3 → `0x11356`, Request 1451, 24h, no Transfer). After delay, `claimDelayedWithdrawal(index)` `0xf41ba29c` (`0x087ce4a0`: index 5, Request 1431, 252.67 B3 to stored recipient). Lockbox never submits the UserOp. Enable only if queue `recipient` = lockbox |
 | Failure | EOA moves B3; WIN paid to EOA not lockbox; games/spins on the stake account |
 | Auto-pause | health. Do not mint if team wallet drained |
 | Worst-case loss | all TVL (custodial). C1: no protocol peg-out |

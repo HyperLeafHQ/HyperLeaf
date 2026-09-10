@@ -113,6 +113,8 @@ contract LeafB3LockboxTest is PegReady {
         assertEq(P.WIN, address(0));
         assertEq(P.CLAIM, 0xe69Bc02DC0C4c6dAc306fFDdD2ebd4cf470F0764);
         assertEq(P.CLAIM_DELAYED_WITHDRAWAL, bytes4(0xf41ba29c));
+        assertEq(P.QUEUE_DELAYED_WITHDRAWAL, bytes4(0x24cf0593));
+        assertEq(P.WIN_DELAY, 1 days);
         assertEq(P.STAKE_FOR, bytes4(0x2ee40908));
     }
 
@@ -136,6 +138,9 @@ contract LeafB3LockboxTest is PegReady {
         vm.prank(owner);
         vm.expectRevert(LeafB3Lockbox.ClaimUnset.selector);
         box.setClaim(address(0), P.CLAIM_DELAYED_WITHDRAWAL);
+        vm.prank(owner);
+        vm.expectRevert(P.WrongStake.selector);
+        box.setClaim(address(1), P.QUEUE_DELAYED_WITHDRAWAL);
     }
 
     function testClaimWinPaysB3AsYield() public {

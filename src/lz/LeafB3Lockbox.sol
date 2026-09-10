@@ -82,7 +82,7 @@ contract LeafB3Lockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     /// @notice Keeper supplies the per-user request index (not the UI global id).
-    ///         Live example: calldata index 5, event Request ID 1431.
+    ///         Live queue 0x58016b6a (amount, recipient) then claim 0x087ce4a0.
     ///         Received B3 is yield — do not add to totalLocked.
     function claimWin(uint256 index) external nonReentrant {
         if (!winClaimEnabled || claim == address(0)) revert ClaimUnset();
