@@ -1017,9 +1017,22 @@
       "exit": "instant-receipt",
       "infra": "solana-pending",
       "pairsWithUnit": "uSOL",
-      "note": "Do not start. Same rate-L family as hJitoSOL. After hJitoSOL has live locks. Sanctum/Jupiter subsidy APY. Never this BATCH=5.",
-      "status": "later-after-hjitosol",
-      "priority": 90
+      "note": "Deprioritized. After hJitoSOL + mSOL/INF have live locks. Never BATCH=5. Never wrap JUP (governance, no liquid receipt, 7d ASR cooldown). Do not proxy-stake JUP.",
+      "status": "later-after-msol",
+      "priority": 95
+    },
+    {
+      "id": "hjup",
+      "kind": "C1",
+      "symbol": "hJUP",
+      "name": "Hyperleaf JUP",
+      "innerSymbol": "JUP",
+      "source": "solana",
+      "exit": "none",
+      "infra": "solana-pending",
+      "note": "SKIP. Official staked JUP is not liquid. 7d unstake exists to stop ASR gaming. No transferable receipt. Rain stJUP is non-transferable. Do not proxy-stake; vault would own votes and new depositors would free-ride time-weight.",
+      "status": "skip",
+      "priority": 99
     },
     {
       "id": "hstdrv",

@@ -2,7 +2,7 @@
 
 Not this Grok-bot pass (batches 0–4 stay EVM). Dest OFT: `BATCH=5 ASSET=hjitosol`. Source is a **new Solana program**, not `LeafOFTAdapter`.
 
-jupSOL / mSOL / bnSOL / INF are **not this listing**. Do not start them until hJitoSOL lock/unlock/harvest has run on mainnet.
+jupSOL / mSOL / bnSOL / INF are **not this listing**. mSOL/INF after hJitoSOL live. **jupSOL after those.** Never wrap JUP / never proxy-stake JUP.
 
 ## What we wrap
 

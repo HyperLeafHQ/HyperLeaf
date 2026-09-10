@@ -29,7 +29,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hsteakUSDG** | L | Robinhood Morpho | steakUSDG `0xBeEf…09dd`. Never deposit/redeem USDG |
 | later | **asBNB** | L | BSC | After **hslisBNB**. Aster Earn on BSC still live. Never wrap $ASTER / Aster Chain ve |
 | watch | **hHLV** | L | BSC HertzFlow | **Only** `HLV [USD1-USD1]` `0xeeA83A77…`. Perp LP share priced in USD1. Never raw USD1. RateKind.None |
-| skip | **hsKCS** | L | KCC | sKCS.io ~3k supply, no LZ KCC. Never KuCoin Earn / raw KCS |
+| skip | **JUP** | — | Solana | No liquid stake receipt. Do not proxy-stake. jupSOL after mSOL |
 | later | **hHBARX** | L | Hedera 295 | Stader **HBARX** HTS `0x0000…cba44`. Never raw HBAR. LZ 30316. Need HTS associate. After current EVM batches |
 | later | **hsGHO** | L | Ethereum | Aave **sGHO** `0xE175…ca1d` only. App 6% is a shell. Never GHO / App vault / aUSDC. `convertToAssets` 1% |
 | later | **hsUSDf** | L | Ethereum | Falcon **sUSDf** `0xc8CF…4B0` only. Never USDf / FF / sFF. `convertToAssets` 1% |
@@ -92,8 +92,9 @@ Do **not** mock Solana inners on Base.
 | Candidate | Kind | Why / why not |
 | --- | --- | --- |
 | **jitoSOL** | L rate | **This listing.** Stake-pool rate only. No NCN restake |
-| **jupSOL** | later | Same math, after hJitoSOL has live locks. Subsidy APY |
 | **mSOL** / **INF** | later | Same math. After jitoSOL |
+| **jupSOL** | later | After mSOL/INF. Deprioritized. Never JUP governance |
+| **JUP** / proxy stake | skip | No liquid receipt. 7d ASR cooldown. Do not mint hsJUP |
 | **bnSOL** | skip | Binance-issued |
 | **hANSEM** | watch | Not an LST |
 | **BONK12M** / **hMET** | last | After the JitoSOL program exists |
