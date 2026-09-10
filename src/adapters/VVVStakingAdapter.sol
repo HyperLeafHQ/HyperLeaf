@@ -10,8 +10,8 @@ interface IERC20Like {
 }
 
 /// @notice Verification-stage Position Adapter for Venice VVV staking.
-/// @dev This is a framework, NOT deployment-ready code. Confirm the live Base ABI,
-///      ownership/upgrade path, sVVV representation and all staking semantics first.
+/// @dev Framework only. Confirm the live Base ABI, ownership/upgrade path,
+///      sVVV representation and staking semantics before deployment.
 contract VVVStakingAdapter {
     error NotVault();
     error RateJump();
@@ -37,8 +37,6 @@ contract VVVStakingAdapter {
         _;
     }
 
-    /// @notice Economic NAV before fees. Final implementation must confirm whether
-    ///         pending rewards are realizable without a separate claim/exit constraint.
     function totalAssets() public view returns (uint256) {
         return STAKING.stakedBalance(address(this)) + STAKING.pendingRewards(address(this));
     }
@@ -65,20 +63,17 @@ contract VVVStakingAdapter {
         VVV.transfer(recipient, amount);
     }
 
-    /// @notice Core solvency check for a future Strategy Vault.
     function verifyHealth(uint256 liabilities) external view returns (bool) {
         return totalAssets() >= liabilities;
     }
 
-    /// @dev Framework breaker only. Do not treat this as the final staking-rate model.
+    /// @dev Framework breaker only; final accounting must use verified source semantics.
     function setRateObservation(uint256 newRate) external onlyVault {
         if (lastObservedRate != 0) {
             uint256 diff = newRate > lastObservedRate
                 ? newRate - lastObservedRate
                 : lastObservedRate - newRate;
-            if (diff * 10_000 > lastObservedRate * maxRateChangeBps) {
-                revert RateJump();
-            }
+            if (diff * 10_000 > lastObservedRate * maxRateChangeBps) revert RateJump();
         }
         lastObservedRate = newRate;
     }
