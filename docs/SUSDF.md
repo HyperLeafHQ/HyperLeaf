@@ -7,7 +7,7 @@ Wrap **sUSDf** only. Official Falcon ERC-4626 on Ethereum:
 - 18-dec. `convertToAssets(1e18)` ~ 1.134 (RPC 2026-09-10)
 - Supply ~5.82e25 shares. HyperEVM empty. ETH LZ already in the stack
 
-Lockbox: `RateKind.ConvertToAssets` + `retainRateYield`. Never `deposit` / `withdraw` / `redeem`. Never poke the rewards distributor `0x8AF2…`. Falcon’s daily 21:00–22:00 GMT+8 queue is theirs.
+Lockbox: `RateKind.ConvertToAssets` + `retainRateYield` + `maxRateJumpBps=300`. Configure checks live `asset()==USDf`. Never pin EIP-1967 impl — Falcon can upgrade the same proxy.
 
 Do **not** wrap: raw USDf, FF, sFF, sFF-Prime, BSC USDf `0xb3b0…e9d2`.
 

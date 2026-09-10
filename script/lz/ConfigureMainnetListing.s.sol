@@ -82,26 +82,32 @@ contract ConfigureMainnetListing is Script {
             require(box.shareScale() == LeafHbarxPolicy.SHARE_SCALE, "scale");
         }
         if (keccak256(bytes(a.id)) == keccak256("hsgho")) {
-            LeafSghoPolicy.requireSgho(address(box.innerToken()));
+            LeafSghoPolicy.requireSghoLive(address(box.innerToken()));
             require(address(box.innerToken()) != LeafSghoPolicy.GHO, "gho");
             require(box.rewardsSelector() == bytes4(0), "sgho poke");
+            box.setMaxRateJumpBps(LeafSghoPolicy.MAX_RATE_JUMP_BPS);
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
+            require(box.maxRateJumpBps() == LeafSghoPolicy.MAX_RATE_JUMP_BPS, "sgho jump");
         }
         if (keccak256(bytes(a.id)) == keccak256("hsusdf")) {
-            LeafSusdfPolicy.requireSusdf(address(box.innerToken()));
+            LeafSusdfPolicy.requireSusdfLive(address(box.innerToken()));
             require(address(box.innerToken()) != LeafSusdfPolicy.USDF, "usdf");
             require(box.rewardsSelector() == bytes4(0), "susdf poke");
+            box.setMaxRateJumpBps(LeafSusdfPolicy.MAX_RATE_JUMP_BPS);
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
+            require(box.maxRateJumpBps() == LeafSusdfPolicy.MAX_RATE_JUMP_BPS, "susdf jump");
         }
         if (keccak256(bytes(a.id)) == keccak256("hsff")) {
-            LeafSffPolicy.requireSff(address(box.innerToken()));
+            LeafSffPolicy.requireSffLive(address(box.innerToken()));
             require(address(box.innerToken()) != LeafSffPolicy.FF, "ff");
             require(address(box.innerToken()) != LeafSffPolicy.PRIME, "prime");
             require(box.rewardsSelector() == bytes4(0), "sff poke");
+            box.setMaxRateJumpBps(LeafSffPolicy.MAX_RATE_JUMP_BPS);
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
+            require(box.maxRateJumpBps() == LeafSffPolicy.MAX_RATE_JUMP_BPS, "sff jump");
         }
         if (keccak256(bytes(a.id)) == keccak256("hspol")) {
             LeafSpolPolicy.requireSpol(address(box.innerToken()));

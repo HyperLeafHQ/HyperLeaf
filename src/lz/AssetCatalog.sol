@@ -488,7 +488,7 @@ library AssetCatalog {
         return keccak256(bytes(id)) == keccak256("horder");
     }
 
-    function allIds() internal pure returns (string[16] memory ids) {
+    function allIds() internal pure returns (string[22] memory ids) {
         ids = [
             string("hkaito"),
             string("hxsquid"),
@@ -505,7 +505,13 @@ library AssetCatalog {
             string("hswbera"),
             string("hstkwausdc"),
             string("hsethfi"),
-            string("hspol")
+            string("hspol"),
+            string("havnt"),
+            string("hlbtc"),
+            string("hhbarx"),
+            string("hsgho"),
+            string("hsusdf"),
+            string("hsff")
         ];
     }
 }

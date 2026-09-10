@@ -49,6 +49,7 @@ contract LeafSghoTest is PegReady {
         adapter = new LeafOFTAdapter(address(inner), address(ep), owner, guardian, feeTo, 1_000 ether);
         adapter.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
         adapter.setRetainRateYield(true);
+        adapter.setMaxRateJumpBps(LeafSghoPolicy.MAX_RATE_JUMP_BPS);
         adapter.setConvertYieldToHype(true);
         adapter.setConverter(converter);
         adapter.setHarvester(owner);
@@ -68,6 +69,8 @@ contract LeafSghoTest is PegReady {
         assertEq(a.defaultCap, 10_000 ether);
         assertFalse(a.productionEvm);
         assertEq(AssetCatalog.get("hsGHO").id, "hsgho");
+        assertEq(uint256(LeafSghoPolicy.MAX_RATE_JUMP_BPS), 300);
+        assertEq(adapter.maxRateJumpBps(), LeafSghoPolicy.MAX_RATE_JUMP_BPS);
     }
 
     function testRequireSghoRejectsGho() public {

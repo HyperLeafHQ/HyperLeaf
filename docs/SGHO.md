@@ -11,7 +11,7 @@ Wrap **sGHO** only. Official ERC-4626 on Ethereum:
 - Supply ~1.62e26 shares / ~1.64e26 GHO
 - HyperEVM empty. ETH LZ already in the stack
 
-Lockbox: `RateKind.ConvertToAssets` + `retainRateYield`. Never `deposit`/`withdraw`/`redeem` on the vault. Never poke.
+Lockbox: `RateKind.ConvertToAssets` + `retainRateYield` + `maxRateJumpBps=300`. Configure checks live `asset()==GHO`. Never pin impl.
 
 Do **not** wrap: raw GHO, App basket, Arb aUSDC/aUSDT, Merit/legacy sGHO, Umbrella `stkwaEthUSDC.v1` (that is `hstkwaUSDC`).
 

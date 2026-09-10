@@ -48,6 +48,7 @@ contract LeafSffTest is PegReady {
         adapter = new LeafOFTAdapter(address(inner), address(ep), owner, guardian, feeTo, 1_000 ether);
         adapter.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
         adapter.setRetainRateYield(true);
+        adapter.setMaxRateJumpBps(LeafSffPolicy.MAX_RATE_JUMP_BPS);
         adapter.setConvertYieldToHype(true);
         adapter.setConverter(converter);
         adapter.setHarvester(owner);
@@ -66,6 +67,7 @@ contract LeafSffTest is PegReady {
         assertEq(a.sourceChainIdMain, 1);
         assertFalse(a.productionEvm);
         assertEq(AssetCatalog.get("hsFF").id, "hsff");
+        assertEq(adapter.maxRateJumpBps(), LeafSffPolicy.MAX_RATE_JUMP_BPS);
     }
 
     function testRequireSffRejectsFfAndPrime() public {

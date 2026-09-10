@@ -48,6 +48,7 @@ contract LeafSusdfTest is PegReady {
         adapter = new LeafOFTAdapter(address(inner), address(ep), owner, guardian, feeTo, 1_000 ether);
         adapter.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
         adapter.setRetainRateYield(true);
+        adapter.setMaxRateJumpBps(LeafSusdfPolicy.MAX_RATE_JUMP_BPS);
         adapter.setConvertYieldToHype(true);
         adapter.setConverter(converter);
         adapter.setHarvester(owner);
@@ -67,6 +68,7 @@ contract LeafSusdfTest is PegReady {
         assertEq(a.defaultCap, 10_000 ether);
         assertFalse(a.productionEvm);
         assertEq(AssetCatalog.get("hsUSDf").id, "hsusdf");
+        assertEq(adapter.maxRateJumpBps(), LeafSusdfPolicy.MAX_RATE_JUMP_BPS);
     }
 
     function testRequireSusdfRejectsUsdf() public {
