@@ -6,7 +6,7 @@ pragma solidity ^0.8.24;
 ///      one path and not the other.
 library LeafForbiddenSelectors {
     function forbidden(bytes4 s) internal pure returns (bool) {
-        return exit(s) || lbtc(s);
+        return exit(s) || lbtc(s) || spol(s);
     }
 
     function exit(bytes4 s) internal pure returns (bool) {
@@ -33,9 +33,26 @@ library LeafForbiddenSelectors {
             || s == bytes4(0x397a1b28) // requestWithdraw(address,uint256) — ether.fi
             || s == bytes4(0x0efe6a8b) // deposit(address,uint256,uint256) — sETHFI teller
             || s == bytes4(0x1d7d4ebc) // KING merkle claim
-            || s == bytes4(0x2e7ba6ef) // ETHFI/EIGEN merkle claim
-            || s == bytes4(0xff8aaf7a) // convertSPOLtoPOL(uint256)
-            || s == bytes4(0xc356a582); // convertPOLtoSPOL(uint256)
+            || s == bytes4(0x2e7ba6ef); // ETHFI/EIGEN merkle claim
+    }
+
+    /// @dev Official sPOLController mutating paths. convertSPOLtoPOL is view; still
+    ///      listed so a poke cannot be pointed at it. sellSPOL queues the 80-checkpoint
+    ///      unbond on the lockbox — that would freeze the vault.
+    function spol(bytes4 s) internal pure returns (bool) {
+        return s == bytes4(0xff8aaf7a) // convertSPOLtoPOL(uint256) view
+            || s == bytes4(0xc356a582) // convertPOLtoSPOL(uint256) view
+            || s == bytes4(0xbb7914a3) // buySPOL(uint256)
+            || s == bytes4(0xb6722163) // buySPOL(uint256,uint16)
+            || s == bytes4(0x4d4778a1) // buySPOLPermit(...)
+            || s == bytes4(0x27bbe03d) // buySPOLPermit(...,uint16,...)
+            || s == bytes4(0xf57ccae9) // buySPOLWithDPOL(uint256,uint16)
+            || s == bytes4(0x5d43011f) // sellSPOL(uint256)
+            || s == bytes4(0x32f42f13) // sellSPOL(uint256,uint16)
+            || s == bytes4(0xacc150d0) // sellSPOLPermit(...)
+            || s == bytes4(0x1341248d) // sellSPOLPermit(...,uint16,...)
+            || s == bytes4(0x61ad860b) // withdrawPOL()
+            || s == bytes4(0x8ffcca07); // withdrawPOL(address)
     }
 
     function lbtc(bytes4 s) internal pure returns (bool) {

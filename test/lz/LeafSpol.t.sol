@@ -105,6 +105,10 @@ contract LeafSpolTest is PegReady {
         assertEq(P.CONVERT_POL_TO_SPOL, bytes4(0xc356a582));
         assertTrue(LeafForbiddenSelectors.forbidden(P.CONVERT_SPOL_TO_POL));
         assertTrue(LeafForbiddenSelectors.forbidden(P.CONVERT_POL_TO_SPOL));
+        assertTrue(LeafForbiddenSelectors.forbidden(P.SELL_SPOL));
+        assertTrue(LeafForbiddenSelectors.forbidden(P.BUY_SPOL));
+        assertTrue(LeafForbiddenSelectors.forbidden(P.WITHDRAW_POL));
+        assertTrue(LeafForbiddenSelectors.forbidden(bytes4(0x32f42f13))); // sellSPOL(uint256,uint16)
         P.requireSpol(P.SPOL);
         P.requireController(P.CONTROLLER);
         P.requireEth(1);

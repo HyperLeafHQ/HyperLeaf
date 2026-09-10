@@ -115,9 +115,9 @@ Do **not** enable `rateKind` on Morpho shares unless that listing's row says pul
 | Canonical backing | Ethereum sPOL `0x3B79…7969` pulled into the lockbox. After skim, remaining sPOL |
 | Accounting unit | hsPOL shares. 18-dec. 1 share ≈ remaining sPOL after the 1% skim |
 | Core invariant | `oft.totalSupply() ≤ adapter.totalLocked()`. Remaining inner ≥ lastAccounted |
-| Rate source | Polygon Labs controller `0xEaad…28B` `convertSPOLtoPOL(1e18)`. Live ~1.012347 POL/sPOL (2026-09-10). **Not** ERC-4626 |
-| Rate trust | controller / sPOL upgrade. 3% jump breaker |
-| Mint / redeem | wrap/unwrap sPOL. **Never** wrap POL `0x455e…C3F6`. **Never** wrap Polygon child `0xd1CD…`. **Never** call convertPOLtoSPOL / convertSPOLtoPOL from the lockbox |
+| Rate source | Polygon Labs controller `0xEaad…28B` **view** `convertSPOLtoPOL(1e18)`. Formula `(totaldPOL − feedPOL) / totalsPOL`. Live 2026-09-10: **1012347237242067203** matches both the call and the formula. **Not** ERC-4626. Official: [docs](https://docs.polygon.technology/pos/concepts/tokens/spol) + [0xPolygon/sPOL-contracts](https://github.com/0xPolygon/sPOL-contracts) |
+| Rate trust | **Upgradeable** sPOL + controller (AccessManager `0x2c91…`). Jump breaker 3%. L2 child rate is cached + 0.3% safety fee — never used |
+| Mint / redeem | wrap/unwrap Ethereum sPOL only. **Never** POL, **never** child `0xd1CD…`. **Never** `buySPOL` / `sellSPOL` / `withdrawPOL` (sell queues ~80-checkpoint / 2–3 day unbond on the lockbox) |
 | Yield | POL staking in the sPOL rate, 99% stays, protocol 1% skim → HYPE. No holder WHYPE claim |
 | Failure | controller lie; wrapping the child; converting sPOL back to POL |
 | Test | `test/lz/LeafSpol.t.sol` |

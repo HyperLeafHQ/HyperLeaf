@@ -193,7 +193,7 @@
         "retainRateYield": true
       },
       "claim": "No side token. Rate is controller.convertSPOLtoPOL(1e18). setRewardsTarget(controller) then setRateKind(ConvertSpolToPol)+retainRateYield. Never wrap POL or Polygon sPOLChild. Never poke convertSPOLtoPOL / convertPOLtoSPOL.",
-      "note": "Polygon Labs sPOL on Ethereum. Not ERC-4626. Official weETH-style Gate 0: HyperEVM has no official sPOL, so this listing is the HyperEVM representation. Live 2026-09-10: convertSPOLtoPOL(1e18)=1.012347 POL. Code on feat/hspol. Not a grok-bot BATCH until assigned. Cap 50.",
+      "note": "Verified 2026-09-10 vs docs.polygon.technology/pos/concepts/tokens/spol and github.com/0xPolygon/sPOL-contracts. Ethereum sPOL 0x3B79\u20267969 only. Rate = view convertSPOLtoPOL; live 1.012347 matches (totaldPOL-feedPOL)/totalsPOL. Never POL, never child, never sellSPOL (80-checkpoint unbond). Upgradeable proxies. feat/hspol. Not a BATCH. Cap 50.",
       "status": "code",
       "priority": 12
     },
