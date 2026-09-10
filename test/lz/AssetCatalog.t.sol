@@ -49,7 +49,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[22] memory ids = AssetCatalog.allIds();
+        string[23] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
