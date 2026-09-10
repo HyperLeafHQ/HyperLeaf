@@ -683,6 +683,34 @@
       "priority": 24
     },
     {
+      "id": "hstnear",
+      "kind": "L",
+      "symbol": "hstNEAR",
+      "name": "Hyperleaf stNEAR",
+      "innerSymbol": "STNEAR",
+      "innerToken": "0x07F9F7f963C5cD2BBFFd30CcfB964Be114332E30",
+      "underlying": "NEAR",
+      "source": "aurora",
+      "sourceChainId": 1313161554,
+      "sourceEid": 30211,
+      "sourceEidTest": 40201,
+      "exit": "instant-receipt",
+      "infra": "evm-24dec",
+      "yield": {
+        "inner": "none",
+        "pullInner": false,
+        "toHype": [],
+        "rateKind": "none"
+      },
+      "note": "Meta Pool STNEAR on Aurora only (Rainbow 1:1 with meta-pool.near). Never NEAR/wNEAR. Never delayed or liquid unstake. Never stAUR/Linear. 24-dec \u2014 OFT shareScale cannot downscale yet. RateKind.None until an Aurora price is pinned. LZ 30211. HyperEVM empty. NotThisBatch. docs/STNEAR.md.",
+      "refs": {
+        "near": "meta-pool.near",
+        "auroraStake": "0x534BACf1126f60EA513F796a3377ff432BE62cf9"
+      },
+      "status": "later",
+      "priority": 27
+    },
+    {
       "id": "hbwbtw",
       "kind": "L",
       "symbol": "hbwBTW",
