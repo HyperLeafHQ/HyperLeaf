@@ -474,10 +474,10 @@
         "pullInner": "rate-surplus-1pct",
         "toHype": [],
         "protocolFee": "1pct-rate-surplus",
-        "rateKind": "convertSnBnbToBnb",
+        "rateKind": "convertToAssets",
         "retainRateYield": true
       },
-      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate is StakeManager convertSnBnbToBnb — slisBNB token is not ERC-4626. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves. Not in MainnetBatches until hgSOON smoke.",
+      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate LST: retainRateYield, 1% skim, jump breaker. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves.",
       "refs": {
         "stakeManager": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6"
       },
@@ -907,16 +907,6 @@
       "source": "ethereum",
       "sourceChainId": 1,
       "sourceEid": 30101,
-      "exit": "instant-receipt",
-      "infra": "evm",
-      "yield": {
-        "inner": "lbtc-router-rate",
-        "pullInner": "rate-surplus-1pct",
-        "toHype": [],
-        "protocolFee": "1pct-rate-surplus",
-        "rateKind": "getRate",
-        "retainRateYield": true
-      },
       "exit": "instant-receipt",
       "infra": "evm",
       "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300 up or down. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap 0.05 LBTC (5e6). Peg cap 5e16 share units. INNER_SUPPLY_CEILING = live totalSupply + headroom. Bitwise covered-call, not Babylon.",

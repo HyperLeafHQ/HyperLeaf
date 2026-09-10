@@ -20,6 +20,10 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
+8. **`main` is live + the next deploy only.** BATCH 1 is live. Next is **BATCH 2** (`hgsoon` / `hswbera`). Do **not** merge hslisBNB or BATCH 3 until that wrap has smoked on mainnet.
+   - hslisBNB rate: branch **`feat/hslisbnb-rate`**
+   - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
+   Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.
 
 ---
 
@@ -254,7 +258,7 @@ Wrap/redeem **settle the 1% skim first**. 99% stays in the receipt. No holder `c
 
 `pullYield(inner)` **is** the 1% skim. Dust fee (surplus < 100 atoms) is 0; watermark still moves; do not claw later.
 
-Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this batch (`NotThisBatch` until hgSOON smoke). Rate for hslisBNB is Lista StakeManager `convertSnBnbToBnb`, **not** `convertToAssets` on the token. Do not frontend.
+Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this batch (`after-hgsoon`). Do not frontend.
 
 ---
 
@@ -268,7 +272,7 @@ Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this ba
 | `hstkwausdc` | ethereum | `ConvertToAssets` + `REWARDS_CONTROLLER` + `0xbb492bf5`. Never `cooldown`. Wrap **stkwaEthUSDC.v1** only. Umbrella will upgrade — users exit that receipt, we do not auto-migrate. `defaultCap=0` → **must pass `PEG_CAP`** (share units) |
 | `hlbtc` | ethereum | **Last in batch 3.** Router `getRate(LBTC)`. 8-dec, `shareScale=1e10`. Jump **>3% up or down** → mint halt, no fee. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap `DEPOSIT_CAP=5000000` (0.05 LBTC). Peg/share cap is **`5e16`** (`defaultCap * 1e10`). `OpenPeg` falls back to that if `PEG_CAP` is unset. Passing `PEG_CAP=5e16` is correct; **do not pass `PEG_CAP=5000000`**. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` plus headroom, **never 5e6**. Yield is Bitwise covered-call, not Babylon |
 
-`hstkwausdc` `REWARDS_CONTROLLER` is pinned `0x4655Ce3D…`. Env is optional and must match; a different address reverts.
+`hstkwausdc` needs env `REWARDS_CONTROLLER` on `ConfigureMainnetListing`.
 
 ---
 

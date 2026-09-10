@@ -9,9 +9,6 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
-import {LeafListaPolicy} from "src/lz/LeafListaPolicy.sol";
-import {LeafBenqiPolicy} from "src/lz/LeafBenqiPolicy.sol";
-import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -51,21 +48,11 @@ contract ConfigureMainnetListing is Script {
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
         }
-        if (keccak256(bytes(a.id)) == keccak256("hslisbnb")) {
-            LeafListaPolicy.requireSlisBnb(address(box.innerToken()));
-            require(box.rewardsSelector() == bytes4(0), "lista poke");
-            box.setRewardsTarget(LeafListaPolicy.STAKE_MANAGER);
-            box.setRateKind(LeafYieldFee.RateKind.ConvertSnBnbToBnb);
-            box.setRetainRateYield(true);
-            require(box.rewardsSelector() == bytes4(0), "lista poke after");
-        }
         if (keccak256(bytes(a.id)) == keccak256("hcbeth")) {
             box.setRateKind(LeafYieldFee.RateKind.ExchangeRate);
             box.setRetainRateYield(true);
         }
         if (keccak256(bytes(a.id)) == keccak256("hsavax")) {
-            LeafBenqiPolicy.requireSavax(address(box.innerToken()));
-            require(box.rewardsSelector() == bytes4(0), "savax poke");
             box.setRateKind(LeafYieldFee.RateKind.GetPooledAvaxByShares);
             box.setRetainRateYield(true);
         }
@@ -83,14 +70,12 @@ contract ConfigureMainnetListing is Script {
             require(box.rewardsSelector() == bytes4(0), "lbtc poke after");
         }
         if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
-            LeafUmbrellaPolicy.requireStkwaUsdc(address(box.innerToken()));
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
-            address controller = vm.envOr("REWARDS_CONTROLLER", LeafUmbrellaPolicy.REWARDS_CONTROLLER);
-            LeafUmbrellaPolicy.requireController(controller);
-            require(controller != source, "umbrella controller");
+            address controller = vm.envAddress("REWARDS_CONTROLLER");
+            require(controller != address(0) && controller != source, "umbrella controller");
             box.setRewardsTarget(controller);
-            box.setRewardsSelector(LeafUmbrellaPolicy.CLAIM_ALL_REWARDS);
+            box.setRewardsSelector(bytes4(0xbb492bf5));
         }
         vm.stopBroadcast();
 
