@@ -45,6 +45,6 @@ New memos: next `#NN` on **#7**, then ROADMAP / catalog. No tmp issues. No new e
 | Deploy | [5606320087](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5606320087) | Leaf Market live |
 | Deploy | [5606511931](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5606511931) | Gate `0xE1b8…` / abandon `0xB4C43…` |
 | Audit | [5605875989](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5605875989) | Gate HEAD |
-| Audit | [5588977985](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5588975989) | Solana spec (open in #20) |
+| Audit | [5588975985](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5588975985) | Solana spec (open in #20) |
 
 Abandoned: PR #22 (`7cd3134` Gate). hxSQUID v2 `0x6586…d206` (OOG). Do not merge leftover wrap branches.
