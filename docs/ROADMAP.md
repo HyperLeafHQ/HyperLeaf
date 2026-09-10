@@ -30,6 +30,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **asBNB** | L | BSC | After **hslisBNB**. Aster Earn on BSC still live. Never wrap $ASTER / Aster Chain ve |
 | watch | **hHLV** | L | BSC HertzFlow | **Only** `HLV [USD1-USD1]` `0xeeA83A77…`. Perp LP share priced in USD1. Never raw USD1. RateKind.None |
 | skip | **JUP** | — | Solana | No liquid stake receipt. Do not proxy-stake. jupSOL after mSOL |
+| skip | **hsKCS** | L | KCC | sKCS.io ~3k supply, no LZ KCC. Never KuCoin Earn / raw KCS |
 | later | **hHBARX** | L | Hedera 295 | Stader **HBARX** HTS `0x0000…cba44`. Never raw HBAR. LZ 30316. Need HTS associate. After current EVM batches |
 | later | **hsGHO** | L | Ethereum | Aave **sGHO** `0xE175…ca1d` only. App 6% is a shell. Never GHO / App vault / aUSDC. `convertToAssets` 1% |
 | later | **hsUSDf** | L | Ethereum | Falcon **sUSDf** `0xc8CF…4B0` only. Never USDf / FF / sFF. `convertToAssets` 1% |
