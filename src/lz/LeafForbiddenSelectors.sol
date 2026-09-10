@@ -38,12 +38,7 @@ library LeafForbiddenSelectors {
             || s == bytes4(0xb13acedd) // claimWithdraw(uint256) — Lista / ether.fi
             || s == bytes4(0x9a53d5af) // claimWithdrawFor(address,uint256)
             || s == bytes4(0xfd92bff2) // instantWithdraw(uint256) — Lista
-            || s == bytes4(0xd0e30db0) // deposit() — Lista native BNB
-            || s == bytes4(0x5bcb2fc6) // submit() — BENQI stake AVAX
-            || s == bytes4(0xa1903eab) // submit(address)
-            || s == bytes4(0xdb006a75) // redeem(uint256) — BENQI unlock claim
-            || s == bytes4(0x819bfd9e) // cancelUnlock(uint256)
-            || s == bytes4(0xda276040); // cooldown(uint256)
+            || s == bytes4(0xd0e30db0); // deposit() — Lista native BNB
     }
 
     function lbtc(bytes4 s) internal pure returns (bool) {

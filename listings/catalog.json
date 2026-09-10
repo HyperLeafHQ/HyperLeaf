@@ -909,16 +909,6 @@
       "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
-      "yield": {
-        "inner": "lbtc-router-rate",
-        "pullInner": "rate-surplus-1pct",
-        "toHype": [],
-        "protocolFee": "1pct-rate-surplus",
-        "rateKind": "getRate",
-        "retainRateYield": true
-      },
-      "exit": "instant-receipt",
-      "infra": "evm",
       "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300 up or down. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap 0.05 LBTC (5e6). Peg cap 5e16 share units. INNER_SUPPLY_CEILING = live totalSupply + headroom. Bitwise covered-call, not Babylon.",
       "status": "mainnet-batch-3",
       "priority": 12

@@ -268,7 +268,7 @@ Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this ba
 | `hstkwausdc` | ethereum | `ConvertToAssets` + `REWARDS_CONTROLLER` + `0xbb492bf5`. Never `cooldown`. Wrap **stkwaEthUSDC.v1** only. Umbrella will upgrade — users exit that receipt, we do not auto-migrate. `defaultCap=0` → **must pass `PEG_CAP`** (share units) |
 | `hlbtc` | ethereum | **Last in batch 3.** Router `getRate(LBTC)`. 8-dec, `shareScale=1e10`. Jump **>3% up or down** → mint halt, no fee. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap `DEPOSIT_CAP=5000000` (0.05 LBTC). Peg/share cap is **`5e16`** (`defaultCap * 1e10`). `OpenPeg` falls back to that if `PEG_CAP` is unset. Passing `PEG_CAP=5e16` is correct; **do not pass `PEG_CAP=5000000`**. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` plus headroom, **never 5e6**. Yield is Bitwise covered-call, not Babylon |
 
-`hstkwausdc` `REWARDS_CONTROLLER` is pinned `0x4655Ce3D…`. Env is optional and must match; a different address reverts.
+`hstkwausdc` needs env `REWARDS_CONTROLLER` on `ConfigureMainnetListing`.
 
 ---
 
