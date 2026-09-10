@@ -1000,6 +1000,19 @@
       "priority": 24
     },
     {
+      "id": "htao",
+      "kind": "L",
+      "symbol": "hstTAO",
+      "name": "Hyperleaf TAO",
+      "innerSymbol": "TAO",
+      "source": "bittensor",
+      "exit": "none",
+      "infra": "subtensor",
+      "note": "PARKED. No live EVM LST. wTAO 0x77E0\u20260A44 is spot (no yield). Tensorplex stTAO/tTAO deprecated 2026-04 (manual withdraw). Native stake is Subtensor pallet (chain 964, precompile 0x0805), not an ERC-20. LZ eid 30374 exists but this is custody, not a wrap. docs/TAO.md.",
+      "status": "parked",
+      "priority": 92
+    },
+    {
       "id": "hvecrv",
       "kind": "ve-nft",
       "symbol": "hveCRV",
