@@ -30,6 +30,9 @@ Register: [5609229978](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issueco
 | #12 | [5609266200](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609266200) | hLINK |
 | #13 | [5609267997](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609267997) | hDAI / Gauntlet |
 | #14 | [5609270716](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609270716) | slisBNB |
+| #89 | [5623789248](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623789248) | EURC / Circle Euro Coin (Selected — P2 capped pilot) |
+
+Batch #89–#91 (2026-09-11, CMC rank snapshot SlickCharts 2026-09-11 02:39 UTC): #89 EURC Selected/P2 (report above); #90 SPX6900 No-Go (pure meme); #91 VIRTUAL skipped — already evaluated as `hVIRTUALMAX` (Blocked), slid to #92 PONS → Watchlist/No-Go (buyback-burn only). Index update comment: [5623791940](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623791940). Entries #15–#88 predate this index update; see issue #7 comment thread.
 
 New memos: next `#NN` on **#7**, then ROADMAP / catalog. No tmp issues. No new eval comments on #4.
 
@@ -42,6 +45,6 @@ New memos: next `#NN` on **#7**, then ROADMAP / catalog. No tmp issues. No new e
 | Deploy | [5606320087](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5606320087) | Leaf Market live |
 | Deploy | [5606511931](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5606511931) | Gate `0xE1b8…` / abandon `0xB4C43…` |
 | Audit | [5605875989](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5605875989) | Gate HEAD |
-| Audit | [5588977985](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5588977985) | Solana spec (open in #20) |
+| Audit | [5588977985](https://github.com/HyperLeafHQ/HyperLeaf/pull/4#issuecomment-5588975989) | Solana spec (open in #20) |
 
 Abandoned: PR #22 (`7cd3134` Gate). hxSQUID v2 `0x6586…d206` (OOG). Do not merge leftover wrap branches.
