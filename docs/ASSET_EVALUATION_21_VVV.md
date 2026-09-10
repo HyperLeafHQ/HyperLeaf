@@ -2,19 +2,7 @@
 
 Status: **Selected — P1 research candidate; deployment blocked on canonical HyperEVM representation and live ABI verification.**
 
-## Executive conclusion
-
-VVV is materially stronger than a generic governance-token candidate because Venice has a native productive position and an explicit utility/revenue loop:
-
-```text
-VVV → Venice staking → sVVV
-                     ├─ staking emissions
-                     └─ lock → DIEM → $1/day Venice API credit
-
-Venice revenue → VVV buyback + burn
-```
-
-The asset passes the productive-position test. Preferred representation is the native staked position (`sVVV` / staking claim), not raw VVV.
+VVV passes the productive-position test because Venice provides native VVV staking, staking emissions, DIEM utility backed by locked sVVV, and a revenue-funded VVV buyback/burn mechanism.
 
 ## Official-source findings
 
@@ -67,15 +55,7 @@ Preferred: **Liquid / Rate-bearing**, conditional on verification of a transfera
 
 ## Yield accounting
 
-Separate:
-
-1. VVV principal;
-2. staking emissions;
-3. 1% HyperLeaf fee on realized supported staking surplus;
-4. DIEM utility value;
-5. Venice revenue-funded VVV buybacks/burns;
-6. VVV market-price movement;
-7. exit liquidity / cooldown value.
+Separate VVV principal, staking emissions, the 1% HyperLeaf fee on realized supported staking surplus, DIEM utility value, Venice revenue-funded buybacks/burns, VVV market-price movement, and exit liquidity/cooldown value.
 
 Do not treat DIEM market price as VVV NAV. Do not treat buyback/burn as an immediately claimable reward.
 
