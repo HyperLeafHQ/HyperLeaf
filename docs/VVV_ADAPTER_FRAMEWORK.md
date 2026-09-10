@@ -30,15 +30,15 @@ These addresses are reference data only. Production deployment must read and ver
 
 ## Adapter responsibilities
 
-1. bind exact VVV token and staking contract;
+1. bind the exact VVV token and staking contract;
 2. deposit VVV into staking;
 3. report economically realizable staked NAV;
 4. harvest VVV rewards;
 5. expose unstake/cooldown state;
 6. enforce solvency against Leaf liabilities;
-7. detect abnormal reward/rate changes;
+7. detect abnormal rate/reward changes;
 8. never treat DIEM as VVV backing;
-9. never treat VVV market-price movement as staking yield;
+9. never treat VVV market-price appreciation as staking yield;
 10. keep buyback/burn economics separate from claimable rewards.
 
 ## Not deployment-ready
