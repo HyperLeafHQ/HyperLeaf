@@ -986,6 +986,20 @@
       "priority": 23
     },
     {
+      "id": "hstatom",
+      "kind": "L",
+      "symbol": "hstATOM",
+      "name": "Hyperleaf stATOM",
+      "innerSymbol": "stATOM",
+      "innerDenom": "stuatom",
+      "source": "stride",
+      "exit": "instant-receipt",
+      "infra": "cosmos",
+      "note": "No EVM LST. Do not wrap Axelar stATOM, dead pSTAKE ERC-20 stkATOM (deprecated 2025-12-31), or Evmos copies. Inner is Stride stATOM (stuatom). Same IBC lockbox as hstDYDX, after hJitoSOL non-EVM path. Never undelegate. Spec docs/COSMOS_STATOM.md.",
+      "status": "later-non-evm",
+      "priority": 24
+    },
+    {
       "id": "hvecrv",
       "kind": "ve-nft",
       "symbol": "hveCRV",

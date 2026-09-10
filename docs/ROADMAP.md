@@ -46,6 +46,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | parked | **hUNCX** | — | Ethereum | Stake rewards + buybacks paused 2026-08-21. Lockers still earn; not paid to stakers |
 | parked | **hSNX** | — | Ethereum | 420 Pool closed Jun 2026. Phase 4 staking deferred. Spot only |
 | later | **hstDYDX** | L | Cosmos/Stride | Wrap **stDYDX**, never ethDYDX. Needs IBC lockbox like JupSOL |
+| later | **hstATOM** | L | Cosmos/Stride | No EVM LST. Wrap Stride stATOM only. Same IBC lockbox as hstDYDX, **after** hJitoSOL. Never axl-stATOM / pSTAKE ERC-20 |
 | hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
 | blocked | **BNBx** | | BSC | Stader sunset 2026 |
