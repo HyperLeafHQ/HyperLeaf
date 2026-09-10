@@ -1565,6 +1565,29 @@
       }
     },
     {
+      "id": "hssui",
+      "kind": "L",
+      "symbol": "hsSUI",
+      "name": "Hyperleaf sSUI",
+      "innerSymbol": "sSUI",
+      "innerCoinType": "0x83556891f4a0f233ce7b05cfe7f957d4020492a34f5405b2cb9377d060bef4bf::spring_sui::SPRING_SUI",
+      "source": "sui",
+      "sourceEid": 30378,
+      "sourceEidTest": 40378,
+      "exit": "instant-receipt",
+      "infra": "sui-pending",
+      "yield": {
+        "inner": "ssui-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": []
+      },
+      "note": "Wrap SpringSui sSUI only. Instant LST. Never raw SUI 0x2::sui::SUI, never haSUI/afSUI/vSUI (cooldown). Never unstake to SUI from the lockbox. Dest LeafOFT 18dp, inner 9dp, shareScale 1e9. LZ eid 30378. Trio Labs+Horizen+Canary present. Peer on EVM = Sui OFT package id, not object id. Source is Move, not LeafOFTAdapter. After hJitoSOL. productionEvm false. NotThisBatch. docs/SSUI.md.",
+      "status": "later-after-hjitosol",
+      "priority": 31,
+      "decimalsInner": 9,
+      "decimalsShare": 18
+    },
+    {
       "id": "hfragsol",
       "kind": "C2",
       "symbol": "hfragSOL",

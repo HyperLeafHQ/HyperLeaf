@@ -458,6 +458,23 @@ library AssetCatalog {
                 false
             );
         }
+        if (k == keccak256("hssui") || k == keccak256("hsSUI")) {
+            return Listing(
+                Kind.Liquid,
+                "hssui",
+                "Hyperleaf sSUI",
+                "hsSUI",
+                "sSUI",
+                0,
+                30378,
+                40378,
+                0,
+                0,
+                address(0),
+                10 ether,
+                false
+            );
+        }
         if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) {
             return Listing(
                 Kind.Liquid,

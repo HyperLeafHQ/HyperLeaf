@@ -45,6 +45,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | watch | **hTWO** | C2 | Robinhood | Twofold. No receipt; 1h/7d stake vaults. Do not wrap TWO or vTWO |
 | watch | **hSB** | ve-NFT | Robinhood | StonkBrokers. Wrap **activated NFT**, never $STONKBROKER. TBA + geo. Skip until NFT lockbox |
 | **5** | **hJitoSOL** | L | Solana | Rate LST. Not NCN VRT |
+| later | **hsSUI** | L | Sui | SpringSui **sSUI** only. Never raw SUI / haSUI. Move lockbox after hJitoSOL. LZ 30378 |
 | watch | **hfragSOL** / **hkySOL** / **hezSOL** | L/C2 | Solana | Jito Vault **VRT**. Receipt exists. Slash + unstake queue. After hJitoSOL, not instead of it |
 | later | **hANSEM** | L? | Solana | Watch. Memecoin + launchpad airdrops, not an LST receipt |
 | last | hwstETH / hcbETH | L | Ethereum / Base | ETH LST last. Official weETH already on HyperEVM. Do not list weETH/ezETH. hLBTC/hstkwaUSDC stay |

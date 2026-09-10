@@ -107,6 +107,9 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hjitosol").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hjitosol").sourceEidMain, 30168);
         assertFalse(AssetCatalog.get("hjitosol").productionEvm);
+        assertEq(AssetCatalog.get("hssui").innerMainnet, address(0));
+        assertEq(AssetCatalog.get("hssui").sourceEidMain, 30378);
+        assertFalse(AssetCatalog.get("hssui").productionEvm);
         assertEq(AssetCatalog.get("hmet").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hshmon").innerMainnet, address(0));
         assertTrue(AssetCatalog.get("hkaito").productionEvm);
@@ -172,6 +175,8 @@ contract AssetCatalogTest is Test {
         this._batch("hsusdf");
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._batch("hsff");
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hssui");
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);
