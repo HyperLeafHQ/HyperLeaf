@@ -4,11 +4,11 @@ This file is for the **frontend** bot (hyperleaf.finance, landing, this preview)
 
 Deploy / canary / Solana `.so` is the **other** bot: [`GROK_BOT_MAINNET.md`](GROK_BOT_MAINNET.md). Do not `forge script` from this file. Do not restyle because a listing shipped.
 
-## Now live — ship this without waiting for hCANARY
+## Now live (2026-09-10)
 
-Cross-chain wrap is **not** live. Do not show hxSQUID / hCANARY / cbETH as depositable.
+This job is **frontend only**. No `forge`. No new contracts. No `acceptOwnership`. No BATCH 2.
 
-HyperEVM **999** product that is live:
+### HyperEVM native
 
 | What | Address | UI |
 | --- | --- | --- |
@@ -18,9 +18,43 @@ HyperEVM **999** product that is live:
 | Leaf Market | `0xFa77Dfb30DeCca4D9597C6764A698996B226b53A` | hNEST ↔ NEST `fillLocal`. Name **Leaf Market** / Leaf 市场. 1% to buyer. |
 | Abandoned Gate | `0xB4C43e9cE08ff5540e0E240dB7784f47231d519B` | Dead. Never use. |
 
-Do **not** claim weekly Nest HYPE isolation. Live vault has no `depositGate`; Gate is opt-in. Do not claim LZ wrap is live.
+Do **not** claim weekly Nest HYPE isolation. Live vault has no `depositGate`; Gate is opt-in.
+
+### BATCH 1 wrap — depositable, cap 50
+
+Canary is dead. Show wrap + redeem. Do **not** use v2.
+
+| Ticker | Base SOURCE | HyperEVM OFT | Inner |
+| --- | --- | --- | --- |
+| hxSQUID | `0x13E3e8803022cb58e93d025bfEB95ab88BE60d25` | `0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc` | xSQUID `0x13af2Db622d167745518aBfD59a8C4FFEe54937a` |
+| hAVNT | `0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98` | 同址 | stkAVNT `0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9` |
+
+Dead, never wire: hCANARY any address; hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206`; Gate `0xB4C43…519B`.
+
+Do **not** show as depositable: hcbETH, hgSOON, hsWBERA, hslisBNB.
 
 `L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. If a user sees those strings, the frontend is wrong.
+
+### 看板 (do this in the same job)
+
+Add a **看板** nav item. Not a restyle. Table:
+
+- Leaf ticker + 已上线 / 排队 / 暂不做
+- 源协议 + 源链
+- 源协议 TVL = DefiLlama `https://api.llama.fi/tvl/{slug}` (整协议，表头写清楚)
+- 源收据 = inner `totalSupply`；有报价再标美元
+- 收益 = 形态或链上汇率（gSOON / sWBERA `convertToAssets`）。**不编 APR，不写 HyperLeaf APR**
+- 已吸纳 = SOURCE `totalLocked()`；hNEST = NestVault `totalNestLocked()`
+
+Hero 合计不要把 Aave / Morpho 整协议加进去。无报价（xSQUID、NEST）美元格留空，只显示数量。缓存 ≥ 5 分钟。
+
+RPC：Base `https://mainnet.base.org`，HyperEVM `https://rpc.hyperliquid.xyz/evm`，BSC `https://bsc-dataseed.binance.org`，Bera `https://rpc.berachain.com`。
+
+Selectors：`totalSupply` `0x18160ddd`，`totalLocked` `0x56891412`，`totalNestLocked` `0xc9bb6f57`，`convertToAssets(1e18)` `0x07a2d13a`。
+
+产品备忘：[#7 comment](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609846444)。
+
+Stop when 看板 + BATCH 1 wrap 在 hyperleaf.finance 能点。Do not deploy, verify, or restyle.
 
 ## Key narrative (landing first screen)
 
