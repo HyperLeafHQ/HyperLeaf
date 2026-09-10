@@ -1,25 +1,29 @@
-# ASTER — BSC asTokens yes; $ASTER / Aster Chain no
+# ASTER C1 — blocked on-chain. Stake is the Aster **account**, not BSC
 
-Verified 2026-09-10 against [Aster contracts](https://docs.asterdex.com/overview/smart-contracts) and [Aster Chain staking](https://docs.asterdex.com/aster-chain/staking.md).
+Verified 2026-09-10.
 
-## Do not wrap $ASTER
+## What you asked
 
-BSC token `0x000Ae314E2A2172a039B26378814C252734f556A` is the **spot** BEP-20 (8e9 max). Yield is **veASTER on Aster Chain** (mainnet Mar 2026): lock up to 208 weeks, loyalty + fee buyback. Not a transferable BSC receipt. Aster Chain is their L1 for perps — not a Leaf listing.
+Take BSC ASTER in, **max-lock**, C1 ticker (sell on Leaf Market only). Same shape as `LeafVirtualsLockbox` (104w auto) / BLUAI4Y.
 
-## BSC first: asTokens, not $ASTER
+## Why we cannot ship that lockbox yet
 
-Official Earn still on BSC, mint not paused:
+Official staking is **Aster Chain account Spot**, not a BEP-20 `stake()`.
 
-| Token | Address | Live supply | Inner |
-| --- | --- | --- | --- |
-| **asBNB** | `0x77734e70b6E88b4d82fE632a168EDf6e700912b6` | ~107,315 | slisBNB (Lista clisBNB + Binance Launchpool NAV). Withdraw **always slisBNB**. |
-| asCAKE | `0x9817F4c9f968a553fF6caEf1a2ef6cF1386F16F7` | ~40,932 | veCAKE. Minting was closed. |
-| asUSDF / asBTC | docs list | — | later C2 |
+- Docs: connect wallet → pick validator → amount from **Spot balance** → lock 26–**208 weeks**. [how it works](https://docs.asterdex.com/aster-chain/staking/how-staking-works)
+- veASTER is a **weight**, not a transferable token. Early exit penalty up to 60%.
+- Official [contracts](https://docs.asterdex.com/overview/smart-contracts): Deposit Bridge + asTokens. **No staking/ve contract.**
+- Loyalty Power = veASTER × **trading-volume boost**. A silent lockbox is 1.00×.
 
-asBNB mint `0x2F31ab8950c50080E77999fa456372f276952fD8`, `paused()==false`. HyperEVM has **no** code at the asBNB address.
+BSC ASTER `0x000Ae314E2A2172a039B26378814C252734f556A` is only the deposit asset. `LeafInboundLockbox._afterDeposit → stake(amt, 208, true)` has **nothing to call**.
 
-asBNB is **hslisBNB + extra layer**. Lista slisBNB first (`feat/hslisbnb-rate`, after hgSOON). asBNB after that, never instead, never native BNB.
+Do not wrap idle ASTER as C1 (0 yield, 4y illiquid). Do not fake a farm selector.
 
-Hodler/Megadrop airdrops are **claimable asBNB**, not share-price. Same rule as PYUSD subsidy: only NAV we skim.
+## What would make C1 real
 
-`NotThisBatch`.
+1. Aster publishes a permissionless staking contract (or EVM precompile) we can `delegate(validator, amount, 208w)` from a lockbox, **or**
+2. You accept **custodial** path: Deposit Bridge `0x128463…` → Aster Spot → API stake. That is an EOA/account, not `LeafVirtualsLockbox`. Same class as parked sKAITO custody.
+
+Until (1): **skip hASTER**. Keep **asBNB** later after hslisBNB.
+
+`NotThisBatch`. No Solidity until the stake selector is on-chain.

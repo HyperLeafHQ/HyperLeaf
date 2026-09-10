@@ -1061,7 +1061,7 @@
       "source": "bsc",
       "exit": "none",
       "infra": "aster-chain",
-      "note": "SKIP. BSC 0x000A\u2026556A is spot. Stake/veASTER is Aster Chain (208w lock), not a transferable receipt.",
+      "note": "SKIP. C1 max-lock is the right product but stake is Aster Chain Spot account, not a BSC contract. No stake() to call. Do not lock idle ASTER. Wait for a permissionless delegate(validator, 208w) or accept custody. docs/ASTER.md.",
       "status": "skip",
       "priority": 94
     },
