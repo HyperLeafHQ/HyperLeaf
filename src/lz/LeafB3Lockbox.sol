@@ -21,6 +21,7 @@ contract LeafB3Lockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     address public immutable stake;
     address public immutable custody;
     address public claim;
+    bool public winClaimEnabled;
     uint256 public depositCap;
     uint256 public totalLocked;
 
@@ -64,14 +65,29 @@ contract LeafB3Lockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         emit CapUpdated(cap);
     }
 
-    /// @notice No-op until a live WIN/harvest tx exists. Cannot set unstake.
+    /// @notice Records the upside.win delayed-withdrawal target. Off until a
+    ///         lockbox-as-user request actually pays this contract.
     function setClaim(address claim_, bytes4 sel) external onlyOwner {
         if (claim_ == address(0)) revert ClaimUnset();
         if (P.isUnstake(sel) || sel == P.STAKE_FOR) revert P.UnstakeForbidden();
+        if (sel != P.CLAIM_DELAYED_WITHDRAWAL) revert P.WrongStake();
+        if (block.chainid == 8453 && claim_ != P.CLAIM) revert P.WrongStake();
         claim = claim_;
-        _setRewardsSelector(sel);
-        _setRewardsTarget(claim_);
         emit ClaimSet(claim_, sel);
+    }
+
+    function setWinClaimEnabled(bool on) external onlyOwner {
+        if (on && claim == address(0)) revert ClaimUnset();
+        winClaimEnabled = on;
+    }
+
+    /// @notice Keeper supplies the per-user request index (not the UI global id).
+    ///         Live example: calldata index 5, event Request ID 1431.
+    ///         Received B3 is yield — do not add to totalLocked.
+    function claimWin(uint256 index) external nonReentrant {
+        if (!winClaimEnabled || claim == address(0)) revert ClaimUnset();
+        (bool ok,) = claim.call(abi.encodeWithSelector(P.CLAIM_DELAYED_WITHDRAWAL, index));
+        if (!ok) revert BadStake();
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
@@ -126,9 +142,7 @@ contract LeafB3Lockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     function pokeRewards() external payable {
-        if (claim == address(0)) revert ClaimUnset();
-        if (P.isUnstake(rewardsSelector)) revert P.UnstakeForbidden();
-        _pokeRewards(address(b3));
+        revert ClaimUnset();
     }
 
     function _lzReceive(ILayerZeroEndpointV2.Origin calldata, bytes32, bytes calldata, address, bytes calldata)

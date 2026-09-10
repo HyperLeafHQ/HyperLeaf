@@ -17,6 +17,18 @@ contract MockB3 is ERC20 {
     }
 }
 
+contract MockWinClaim {
+    IERC20 public token;
+    uint256 public lastIndex;
+    constructor(IERC20 token_) {
+        token = token_;
+    }
+    function claimDelayedWithdrawal(uint256 index) external {
+        lastIndex = index;
+        require(token.transfer(msg.sender, 10 ether), "pay");
+    }
+}
+
 contract MockStake {
     IERC20 public token;
     address public custody;
@@ -97,7 +109,10 @@ contract LeafB3LockboxTest is PegReady {
         assertEq(b3.balanceOf(custody), 1_000 ether);
         assertEq(farm.lastUser(), address(box));
         assertEq(box.claim(), address(0));
+        assertFalse(box.winClaimEnabled());
         assertEq(P.WIN, address(0));
+        assertEq(P.CLAIM, 0xe69Bc02DC0C4c6dAc306fFDdD2ebd4cf470F0764);
+        assertEq(P.CLAIM_DELAYED_WITHDRAWAL, bytes4(0xf41ba29c));
         assertEq(P.STAKE_FOR, bytes4(0x2ee40908));
     }
 
@@ -120,7 +135,21 @@ contract LeafB3LockboxTest is PegReady {
         box.setClaim(address(1), bytes4(0x2e17de78));
         vm.prank(owner);
         vm.expectRevert(LeafB3Lockbox.ClaimUnset.selector);
-        box.setClaim(address(0), bytes4(0x9a99b4f0));
+        box.setClaim(address(0), P.CLAIM_DELAYED_WITHDRAWAL);
+    }
+
+    function testClaimWinPaysB3AsYield() public {
+        MockWinClaim win = new MockWinClaim(b3);
+        b3.mint(address(win), 10 ether);
+        vm.startPrank(owner);
+        box.setClaim(address(win), P.CLAIM_DELAYED_WITHDRAWAL);
+        box.setWinClaimEnabled(true);
+        vm.stopPrank();
+        uint256 locked = box.totalLocked();
+        box.claimWin(5);
+        assertEq(win.lastIndex(), 5);
+        assertEq(b3.balanceOf(address(box)), 10 ether);
+        assertEq(box.totalLocked(), locked);
     }
 
     function testInboundBlocked() public {
