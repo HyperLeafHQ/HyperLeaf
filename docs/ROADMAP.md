@@ -12,7 +12,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **1** | **hAVNT** | L | Base | **Live** `0x571C…aa98` both chains. Cap 50. Owner pending FINAL |
 | parked | hcbETH | L | Base | No `exchangeRate` on Base cbETH. Not BATCH 2 |
 | **2** | **hgSOON** | L | BSC | `convertToAssets` 1% skim. Never 90d cooldown |
-| **2b** | **hslisBNB** | L | BSC | Lista `convertSnBnbToBnb` on StakeManager. Same BSC path after hgSOON. Never native BNB / 7d unstake. **Not in MainnetBatches yet** |
+| **2b** | **hslisBNB** | L | BSC | Lista slisBNB only. Same BSC path as hgSOON. Never native BNB. Never Lista 7d unstake |
 | **2** | **hsWBERA** | L | Berachain 80094 | Same skim. Never 7d NFT queue |
 | **3** | **hsAVAX** | L | Avalanche | BENQI. `getPooledAvaxByShares`. Never `requestUnlock` |
 | **3** | **hLBTC** | L | Ethereum | LBTC only. 8-dec. Router getRate. 3% jump breaker. Not BTC.b |

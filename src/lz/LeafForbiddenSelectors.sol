@@ -33,12 +33,7 @@ library LeafForbiddenSelectors {
             || s == bytes4(0x397a1b28) // requestWithdraw(address,uint256) — ether.fi
             || s == bytes4(0x0efe6a8b) // deposit(address,uint256,uint256) — sETHFI teller
             || s == bytes4(0x1d7d4ebc) // KING merkle claim
-            || s == bytes4(0x2e7ba6ef) // ETHFI/EIGEN merkle claim
-            || s == bytes4(0x745400c9) // requestWithdraw(uint256) — Lista 7d
-            || s == bytes4(0xb13acedd) // claimWithdraw(uint256) — Lista / ether.fi
-            || s == bytes4(0x9a53d5af) // claimWithdrawFor(address,uint256)
-            || s == bytes4(0xfd92bff2) // instantWithdraw(uint256) — Lista
-            || s == bytes4(0xd0e30db0); // deposit() — Lista native BNB
+            || s == bytes4(0x2e7ba6ef); // ETHFI/EIGEN merkle claim
     }
 
     function lbtc(bytes4 s) internal pure returns (bool) {

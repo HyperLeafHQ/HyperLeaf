@@ -474,10 +474,10 @@
         "pullInner": "rate-surplus-1pct",
         "toHype": [],
         "protocolFee": "1pct-rate-surplus",
-        "rateKind": "convertSnBnbToBnb",
+        "rateKind": "convertToAssets",
         "retainRateYield": true
       },
-      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate is StakeManager convertSnBnbToBnb — slisBNB token is not ERC-4626. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves. Not in MainnetBatches until hgSOON smoke.",
+      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate LST: retainRateYield, 1% skim, jump breaker. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves.",
       "refs": {
         "stakeManager": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6"
       },
