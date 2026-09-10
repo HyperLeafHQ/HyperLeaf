@@ -78,6 +78,8 @@ contract NestVaultSecurityHardeningTest is Test {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
         address recipient = makeAddr("migrate");
         vault.setDepositsEnabled(false);
         vault.ownerTransferVeNFT(tokenId, recipient);
@@ -86,33 +88,32 @@ contract NestVaultSecurityHardeningTest is Test {
         assertEq(vault.totalVeNFTs(), 0);
         assertEq(vault.nestPrincipal(tokenId), 0);
         assertEq(ve.ownerOf(tokenId), recipient);
-        assertEq(vault.hNest().totalSupply(), 100 ether);
+        assertEq(vault.hNest().totalSupply(), 0);
     }
 
-    function test_OwnerTransferCutsPrincipalPlusBookedYield() public {
+    function test_OwnerTransferRevertsWhileFeeSharesOutstanding() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
         adapter.seedLockedShare(tokenId, 10 ether);
         vm.prank(keeper);
         vault.bookVerifiedYield();
-        uint256 locked = vault.totalNestLocked();
-        assertEq(locked, 110 ether);
+        uint256 aliceShares = vault.hNest().balanceOf(alice);
+        vm.prank(alice);
+        vault.requestWithdraw(aliceShares);
+        assertGt(vault.hNest().totalSupply(), 0);
 
-        uint256 supply = vault.hNest().totalSupply();
         address recipient = makeAddr("migrate");
         vault.setDepositsEnabled(false);
+        vm.expectRevert(NestVault.MigrationWhileLive.selector);
         vault.ownerTransferVeNFT(tokenId, recipient);
-
-        assertEq(vault.totalNestLocked(), 0);
-        assertEq(vault.bookedLockedShare(tokenId), 0);
-        assertEq(ve.ownerOf(tokenId), recipient);
-        assertEq(vault.hNest().totalSupply(), supply);
     }
 
     function test_OwnerTransferUnknownNftReverts() public {
         vm.prank(alice);
         vault.deposit(100 ether);
+        vm.prank(alice);
+        vault.requestWithdraw(100 ether);
         vault.setDepositsEnabled(false);
         vm.expectRevert(abi.encodeWithSelector(NestVault.UnknownNft.selector, uint256(99)));
         vault.ownerTransferVeNFT(99, makeAddr("migrate"));
@@ -124,5 +125,31 @@ contract NestVaultSecurityHardeningTest is Test {
         uint256 tokenId = vault.getVeNFTId(0);
         vm.expectRevert(NestVault.MigrationWhileLive.selector);
         vault.ownerTransferVeNFT(tokenId, makeAddr("migrate"));
+    }
+
+    function test_OwnerTransferRevertsWhileHNestOutstanding() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        vault.setDepositsEnabled(false);
+        vm.expectRevert(NestVault.MigrationWhileLive.selector);
+        vault.ownerTransferVeNFT(tokenId, makeAddr("migrate"));
+    }
+
+    function test_BookVerifiedYieldWritesDownWhenPendingDrops() public {
+        vm.prank(alice);
+        vault.deposit(100 ether);
+        uint256 tokenId = vault.getVeNFTId(0);
+        adapter.seedLockedShare(tokenId, 10 ether);
+        vm.prank(keeper);
+        vault.bookVerifiedYield();
+        assertEq(vault.totalNestLocked(), 110 ether);
+        assertEq(vault.bookedLockedShare(tokenId), 10 ether);
+
+        adapter.seedLockedShare(tokenId, 3 ether);
+        vm.prank(keeper);
+        vault.bookVerifiedYield();
+        assertEq(vault.bookedLockedShare(tokenId), 3 ether);
+        assertEq(vault.totalNestLocked(), 103 ether);
     }
 }

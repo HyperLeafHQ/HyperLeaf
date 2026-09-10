@@ -32,4 +32,9 @@ contract HevAdapterFreezeTest is Test {
         vm.expectRevert(HevAdapter.StrategyChangeWhileDeposited.selector);
         adapter.setHevStrategy(makeAddr("evil"));
     }
+
+    function test_SetHevStrategyRejectsZero() public {
+        vm.expectRevert(HevAdapter.ZeroStrategy.selector);
+        adapter.setHevStrategy(address(0));
+    }
 }

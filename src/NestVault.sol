@@ -134,6 +134,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     event DettachForLiquidity(uint256 indexed tokenId, uint256 unlockEligibleAt);
     event NestUnlocked(uint256 indexed tokenId, uint256 principal);
     event YieldBooked(uint256 addedNest, uint256 feeAssets, uint256 feeShares);
+    event YieldWrittenDown(uint256 removedNest);
     event VeNFTTransferredForAdmin(uint256 indexed tokenId, address indexed recipient, uint256 nestCut);
     event DepositGateUpdated(address indexed gate);
 
@@ -395,6 +396,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     function bookVerifiedYield() external onlyKeeper nonReentrant {
         if (address(hevAdapter) == address(0)) revert HevAdapterNotSet();
         uint256 y;
+        uint256 down;
         uint256 n = veNFTIds.length;
         for (uint256 i; i < n; ++i) {
             uint256 tokenId = veNFTIds[i];
@@ -404,9 +406,16 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             if (pending > booked) {
                 y += pending - booked;
                 bookedLockedShare[tokenId] = pending;
+            } else if (pending < booked) {
+                down += booked - pending;
+                bookedLockedShare[tokenId] = pending;
             }
         }
-        if (y == 0) revert ZeroShares();
+        if (down > 0) _writeDownYield(down);
+        if (y == 0) {
+            if (down == 0) revert ZeroShares();
+            return;
+        }
         if (totalNestLocked > 0) {
             uint256 week = (block.timestamp / 7 days) * 7 days;
             if (week != yieldBookEpochStart) {
@@ -437,6 +446,13 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         }
         emit YieldBooked(y, feeAssets, feeShares);
         emit NestCompoundRecorded(y);
+    }
+
+    function _writeDownYield(uint256 d) internal {
+        if (d == 0) return;
+        if (d > totalNestLocked) d = totalNestLocked;
+        totalNestLocked -= d;
+        emit YieldWrittenDown(d);
     }
 
     function _availableIdle(uint256 bal) internal view returns (uint256) {
@@ -491,6 +507,7 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
             emit NestUnlocked(tokenId, principal);
             _removeNFTFromArray(i);
             if (withdrawn > principal + booked) _bookYield(withdrawn - principal - booked);
+            else if (withdrawn < principal + booked) _writeDownYield(principal + booked - withdrawn);
             unchecked {
                 nftCount--;
             }
@@ -533,13 +550,13 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
         _updateHypeAccumulator();
         uint256 userBalance = hNest.balanceOf(user);
         uint256 pending = (userBalance * accHypePerShare) / 1e18 - hypeRewardDebt[user];
+        hypeRewardDebt[user] = (userBalance * accHypePerShare) / 1e18;
         if (pending > 0) {
             hypeToken.safeTransfer(user, pending);
             totalHypeDistributed += pending;
             lastHypeBalance = hypeToken.balanceOf(address(this));
             emit ResidualHypeClaimed(user, pending);
         }
-        hypeRewardDebt[user] = (userBalance * accHypePerShare) / 1e18;
     }
 
     function _removeNFTFromArray(uint256 index) internal {
@@ -715,11 +732,11 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
      * @dev For test-fund / admin migration. Decrements totalNestLocked by
      *      principal + booked yield so remaining hNEST is not over-accounted.
      *      Remaining holders are diluted unless matching hNEST is burned off-path.
-     *      Adding this function to repo source does **not** change the already
-     *      deployed immutable live vault.
+     *      Blocked while any hNEST is outstanding. Live vault is immutable and
+     *      does not include this function.
      */
     function ownerTransferVeNFT(uint256 tokenId, address recipient) external onlyOwner nonReentrant {
-        if (depositsEnabled) revert MigrationWhileLive();
+        if (depositsEnabled || hNest.totalSupply() != 0) revert MigrationWhileLive();
         if (recipient == address(0)) revert ZeroAddress();
         uint256 principal = nestPrincipal[tokenId];
         if (principal == 0) revert UnknownNft(tokenId);
