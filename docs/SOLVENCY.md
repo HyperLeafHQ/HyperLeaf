@@ -309,9 +309,9 @@ Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decay
 | Accounting unit | 1 hveAERO = 1 AERO locked in a **permanent** NFT. Not voting power. Not liquid AERO |
 | Core invariant | dest supply ≤ sum of recorded `principalOf` ≤ on-chain `locked.amount` of held ids |
 | Mint / redeem | C1, market-only (`LeafClosedOFT`). No protocol NFT return. No `createLock` of AERO |
-| Accept | `escrowType == NORMAL`, `isPermanent`, not `voted`, `attachments == 0`. Reject LOCKED / MANAGED / decaying / tokenId 0 |
-| Never | `merge` / `split` / `withdraw` / `unlockPermanent` / `vote` / wrap liquid AERO / `DeployClosed` |
-| Yield | Rebase stays inside the NFT (NAV of the pool, no 1% skim until a split path exists). Bribe/fee ERC-20s on the lockbox → converter → HYPE 99/1. Never pull the NFT or AERO |
+| Accept | `escrowType == NORMAL` at wrap, then `depositManaged` → `LOCKED` in veAERO Maxi (`mTokenId` 10298). Still reject MANAGED / decaying / voted / attached / tokenId 0 |
+| Never | `withdrawManaged` / `vote` / `merge` / `split` / `unlockPermanent` / wrap liquid AERO / iAERO (5%+20% haircut) |
+| Yield | Maxi compounds bribes+fees+rebase into `locked.amount`. dest shares stay wrap-time principal; surplus is NAV. No HYPE skim until a split path exists |
 | Failure | Aerodrome unlocks permanent; we accepted a decaying/voted/attached NFT (code rejects); mixing veUP into this listing |
 | Auto-pause | `reportNftHealth` (permissionless): unlock, amount drop, NFT left **or burned** (`ownerOf` revert) → Degraded. Owner `restoreHealth(Normal)` re-checks the same proof. `maxPrincipalPerNft` 100k AERO. `maxNfts` 64 |
 | Worst-case loss | C1 cap. First-batch listing is **not** MainnetBatches (cannot `BATCH=n`). Scripts: `DeployNftLockbox` / `ConfigureNftListing` |

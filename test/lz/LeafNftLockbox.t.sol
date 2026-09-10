@@ -80,7 +80,10 @@ contract LeafNftLockboxTest is PegReady {
         assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.VOTE));
         assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.MERGE));
         assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.UNLOCK_PERMANENT));
-        assertFalse(LeafVePolicy.isForbiddenVe(bytes4(0xf5f8d365))); // getReward — not a ve mutation
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.WITHDRAW_MANAGED));
+        assertFalse(LeafVePolicy.isForbiddenVe(LeafVePolicy.DEPOSIT_MANAGED));
+        assertEq(LeafVePolicy.RELAY_MAXI, 0xc9814f18a8751214F719De15C54D01b3D78EF14f);
+        assertEq(LeafVePolicy.MAXI_ID, 10298);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._requireBatch("hveaero", 4);
     }
@@ -241,6 +244,15 @@ contract LeafNftLockboxTest is PegReady {
         ve.burn(32);
         box.reportNftHealth();
         assertEq(uint8(box.health()), uint8(LeafOApp.Health.Degraded));
+    }
+
+    function testLockedAfterWrapIsHealthy() public {
+        _wrap(7, 50 ether);
+        ve.setType(7, IVeNft.EscrowType.LOCKED);
+        ve.setLocked(7, int128(uint128(55 ether)), true, 0);
+        box.reportNftHealth();
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Normal));
+        assertTrue(LeafVePolicy.heldOk(IVeNft(address(ve)), address(box), 7, 50 ether));
     }
 
     function testRebaseDoesNotDegrade() public {

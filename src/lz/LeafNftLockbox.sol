@@ -15,7 +15,8 @@ import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 /// @notice C1 source for permanent veNFTs (hveAERO first). Mints dest ClosedOFT
 ///         shares = locked AERO amount. Time-locked / managed / decaying NFTs
 ///         are rejected — those cannot share a fungible ticket.
-///         No protocol redeem. No vote / merge / split / withdraw / unlockPermanent.
+///         No protocol redeem. No vote / merge / split / withdrawManaged.
+///         After take, Base wraps call Voter.depositManaged into veAERO Maxi.
 contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Receiver {
     using SafeERC20 for IERC20;
 
@@ -82,17 +83,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     /// @notice Burned / left / unlocked / short of wrap principal → false.
     function nftHealthy(uint256 id) public view returns (bool) {
         if (principalOf[id] == 0) return false;
-        address o;
-        try ve.ownerOf(id) returns (address got) {
-            o = got;
-        } catch {
-            return false;
-        }
-        if (o != address(this)) return false;
-        IVeNft.LockedBalance memory L = ve.locked(id);
-        if (!L.isPermanent || ve.escrowType(id) != IVeNft.EscrowType.NORMAL) return false;
-        if (L.amount <= 0) return false;
-        return uint256(int256(L.amount)) >= principalOf[id];
+        return LeafVePolicy.heldOk(ve, address(this), id, principalOf[id]);
     }
 
     /// @notice Anyone. Permanent lock broken, amount below wrap principal, or NFT left.
@@ -208,5 +199,11 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         _expectedSender = address(0);
         _expectedTokenId = 0;
         if (ve.ownerOf(tokenId) != address(this)) revert BadNft();
+        if (block.chainid == 8453) {
+            (bool ok,) = LeafVePolicy.VOTER.call(
+                abi.encodeWithSelector(LeafVePolicy.DEPOSIT_MANAGED, tokenId, LeafVePolicy.MAXI_ID)
+            );
+            if (!ok || ve.escrowType(tokenId) != IVeNft.EscrowType.LOCKED) revert BadNft();
+        }
     }
 }

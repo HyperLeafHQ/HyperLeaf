@@ -378,15 +378,35 @@
       "exit": "market-or-custom",
       "infra": "evm",
       "yield": {
-        "inner": "aero-rebase-and-bribes",
+        "inner": "relay-maxi-compound",
         "pullInner": false,
-        "toHype": [
-          "bribe-erc20s"
-        ]
+        "toHype": []
       },
-      "note": "NFT lockbox LeafNftLockbox. Permanent NORMAL veNFT only. Shares = locked AERO amount. Reject voted/attached/LOCKED/MANAGED/decaying. Not a MainnetBatches id. C1 market exit. No vote/merge/split. DeployNftLockbox, not DeployClosed.",
+      "note": "Path 2: wrap permanent NORMAL then Voter.depositManaged into official veAERO Maxi (0xc981…, mTokenId 10298). Compounder locks bribes/fees back into locked.amount — dest does not rebase, NAV grows. Never withdrawManaged. Do not route through iAERO (5% principal + 20% reward cut). hiAERO is a separate later listing for people who already hold iAERO. Not a MainnetBatches id. C1. DeployNftLockbox.",
       "status": "later",
       "priority": 15
+    },
+    {
+      "id": "hiaero",
+      "kind": "closed",
+      "symbol": "hiAERO",
+      "name": "Hyperleaf iAERO",
+      "innerSymbol": "iAERO",
+      "innerToken": "0x81034Fb34009115F215f5d5F564AAc9FfA46a1Dc",
+      "underlying": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+      "source": "base",
+      "sourceChainId": 8453,
+      "sourceEid": 30184,
+      "exit": "market-or-custom",
+      "infra": "evm",
+      "yield": {
+        "inner": "stiaero-80pct-voting",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Path 3 only for wallets that ALREADY hold iAERO. Do not dump veNFTs into PermalockVault (5% principal + 20% reward haircut). If listed: wrap iAERO, stake to stiAERO 0x72C135B8 to keep the 80% voting rewards. Not the hveAERO path. productionEvm false.",
+      "status": "later",
+      "priority": 16
     },
     {
       "id": "hveup",
