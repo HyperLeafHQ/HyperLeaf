@@ -42,6 +42,7 @@ Register: [5609229978](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issueco
 | hsFF | `docs/SFF.md` · `feat/sff` | later. Flexible sFF only. Never Prime |
 | hsSUI | `docs/SSUI.md` · `feat/ssui` | later after Jito. Wrap SpringSui sSUI only |
 | JUP / jupSOL | catalog `hjup` skip · `hjupsol` later-after-msol | **skip proxy JUP**. jupSOL after mSOL |
+| PUMP / DASH / OKB / MNT | catalog skip | PUMP official HyperEVM. DASH masternode. OKB no LST. MNT official spot + no MNT LST |
 | hsKCS | `docs` skip · `feat/kcs` | skip. ~3k sKCS, no LZ KCC |
 | hsPOL | `feat/hspol` | later. Official sPOL, not child |
 | stATOM | Axelar ~8 tokens | parked. Don't copy Axelar |
