@@ -432,19 +432,12 @@ contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, 
     // ============ Internal ============
 
     function _bookYield(uint256 y) internal {
-        uint256 feeAssets = (y * feeBps) / BASIS_POINTS;
-        uint256 supply = hNest.totalSupply();
+        // Adapter-reported HEV yield can later be written down. Do not mint
+        // fee shares against it — those cannot be clawed from feeRecipient.
+        // Protocol take on this path waits for economically realized NEST.
+        // Realized HYPE still takes 1% in harvest().
         totalNestLocked += y;
-        uint256 feeShares;
-        if (feeAssets > 0 && supply > 0 && totalNestLocked > feeAssets) {
-            feeShares = (feeAssets * supply) / (totalNestLocked - feeAssets);
-            if (feeShares > 0) {
-                if (hNest.balanceOf(feeRecipient) > 0) _claimResidualHypeInternal(feeRecipient);
-                hNest.mint(feeRecipient, feeShares);
-                hypeRewardDebt[feeRecipient] = (hNest.balanceOf(feeRecipient) * accHypePerShare) / 1e18;
-            }
-        }
-        emit YieldBooked(y, feeAssets, feeShares);
+        emit YieldBooked(y, 0, 0);
         emit NestCompoundRecorded(y);
     }
 

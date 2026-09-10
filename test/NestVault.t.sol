@@ -433,7 +433,7 @@ contract NestVaultTest is Test {
         assertLt(block.timestamp, HNestCirculation.claimableAt(vault.attachedAt(tokenId)));
     }
 
-    function test_BookVerifiedYieldSkimsOnePercentAndRaisesNav() public {
+    function test_BookVerifiedYieldRaisesNavWithoutFeeShares() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
@@ -447,7 +447,7 @@ contract NestVaultTest is Test {
         assertEq(vault.pendingVerifiedYield(), 0);
         assertEq(vault.bookedLockedShare(tokenId), 10 ether);
         assertEq(vault.totalNestLocked(), 110 ether);
-        assertGt(vault.hNest().balanceOf(feeRecipient), 0);
+        assertEq(vault.hNest().balanceOf(feeRecipient), 0);
         assertEq(vault.sharePrice() > 1e18, true);
 
         vm.prank(keeper);

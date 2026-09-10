@@ -91,7 +91,7 @@ contract NestVaultSecurityHardeningTest is Test {
         assertEq(vault.hNest().totalSupply(), 0);
     }
 
-    function test_OwnerTransferRevertsWhileFeeSharesOutstanding() public {
+    function test_BookVerifiedYieldDoesNotLeaveFeeSharesAfterUserExit() public {
         vm.prank(alice);
         vault.deposit(100 ether);
         uint256 tokenId = vault.getVeNFTId(0);
@@ -101,12 +101,13 @@ contract NestVaultSecurityHardeningTest is Test {
         uint256 aliceShares = vault.hNest().balanceOf(alice);
         vm.prank(alice);
         vault.requestWithdraw(aliceShares);
-        assertGt(vault.hNest().totalSupply(), 0);
+        assertEq(vault.hNest().totalSupply(), 0);
+        assertEq(vault.hNest().balanceOf(feeRecipient), 0);
 
         address recipient = makeAddr("migrate");
         vault.setDepositsEnabled(false);
-        vm.expectRevert(NestVault.MigrationWhileLive.selector);
         vault.ownerTransferVeNFT(tokenId, recipient);
+        assertEq(ve.ownerOf(tokenId), recipient);
     }
 
     function test_OwnerTransferUnknownNftReverts() public {

@@ -1,23 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IVVVStaking} from "../interfaces/IVVVStaking.sol";
-
-interface IERC20Like {
-    function approve(address spender, uint256 amount) external returns (bool);
-    function transfer(address to, uint256 amount) external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
-}
 
 /// @notice Verification-stage Position Adapter for Venice VVV staking.
 /// @dev Framework only. Live Base StakingV2 is a UUPS proxy and its unstake path
 ///      is cooldown-based; this adapter intentionally does not pretend withdrawal is instant.
 contract VVVStakingAdapter {
+    using SafeERC20 for IERC20;
+
     error NotVault();
     error RateJump();
     error InvalidConfig();
 
-    IERC20Like public immutable VVV;
+    IERC20 public immutable VVV;
     IVVVStaking public immutable STAKING;
     address public immutable vault;
 
@@ -27,7 +25,7 @@ contract VVVStakingAdapter {
 
     constructor(address vvv_, address staking_, address vault_) {
         if (vvv_ == address(0) || staking_ == address(0) || vault_ == address(0)) revert InvalidConfig();
-        VVV = IERC20Like(vvv_);
+        VVV = IERC20(vvv_);
         STAKING = IVVVStaking(staking_);
         vault = vault_;
     }
@@ -37,11 +35,10 @@ contract VVVStakingAdapter {
         _;
     }
 
-    /// @notice Economic NAV before HyperLeaf fees.
-    /// @dev sVVV balance is the staked principal/receipt; pendingRewards are separately
-    ///      claimable VVV and must be confirmed as economically realizable before inclusion.
+    /// @notice Realized NAV only: staked receipt + VVV already sitting here.
+    ///         pendingRewards are not liabilities until harvest() claims them.
     function totalAssets() public view returns (uint256) {
-        return STAKING.balanceOf(address(this)) + STAKING.pendingRewards(address(this));
+        return STAKING.balanceOf(address(this)) + VVV.balanceOf(address(this));
     }
 
     function emissionRatePerSecond() external view returns (uint256) {
@@ -58,7 +55,7 @@ contract VVVStakingAdapter {
 
     function deposit(uint256 amount) external onlyVault {
         if (!depositsEnabled) revert InvalidConfig();
-        VVV.approve(address(STAKING), amount);
+        VVV.forceApprove(address(STAKING), amount);
         STAKING.stake(address(this), amount);
     }
 
@@ -74,11 +71,13 @@ contract VVVStakingAdapter {
         STAKING.initiateUnstake(amount);
     }
 
-    /// @notice Finalize an already completed cooldown.
+    /// @notice Finalize an already completed cooldown. Pays the unstake delta only;
+    ///         previously harvested VVV stays until the vault sweeps it.
     function finalizeWithdraw(address recipient) external onlyVault {
+        uint256 before = VVV.balanceOf(address(this));
         STAKING.finalizeUnstake();
-        uint256 balance = VVV.balanceOf(address(this));
-        if (balance != 0) VVV.transfer(recipient, balance);
+        uint256 got = VVV.balanceOf(address(this)) - before;
+        if (got != 0) VVV.safeTransfer(recipient, got);
     }
 
     function verifyHealth(uint256 liabilities) external view returns (bool) {
