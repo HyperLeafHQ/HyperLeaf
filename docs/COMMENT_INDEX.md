@@ -38,6 +38,7 @@ Register: [5609229978](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issueco
 | Asset | Comment / branch | Decision |
 | --- | --- | --- |
 | hsGHO | [5621505679](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5621505679) · `docs/SGHO.md` · `feat/sgho` | later. Wrap sGHO only, not App 6% |
+| hsUSDf | `docs/SUSDF.md` · `feat/susdf` | later. Wrap Falcon sUSDf only, not USDf / FF |
 | hsKCS | `docs` skip · `feat/kcs` | skip. ~3k sKCS, no LZ KCC |
 | hsPOL | `feat/hspol` | later. Official sPOL, not child |
 | stATOM | Axelar ~8 tokens | parked. Don't copy Axelar |

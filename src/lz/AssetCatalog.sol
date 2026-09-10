@@ -390,6 +390,23 @@ library AssetCatalog {
                 false
             );
         }
+        if (k == keccak256("hsusdf") || k == keccak256("hsUSDf")) {
+            return Listing(
+                Kind.Liquid,
+                "hsusdf",
+                "Hyperleaf sUSDf",
+                "hsUSDf",
+                "sUSDf",
+                1,
+                30101,
+                40161,
+                0,
+                0,
+                0xc8CF6D7991f15525488b2A83Df53468D682Ba4B0,
+                10_000 ether,
+                false
+            );
+        }
         if (k == keccak256("hveaero") || k == keccak256("hveAERO")) {
             return Listing(
                 Kind.Closed,

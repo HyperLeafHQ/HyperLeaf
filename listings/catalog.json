@@ -683,6 +683,31 @@
       "priority": 24
     },
     {
+      "id": "hsusdf",
+      "kind": "L",
+      "symbol": "hsUSDf",
+      "name": "Hyperleaf sUSDf",
+      "innerSymbol": "sUSDf",
+      "innerToken": "0xc8CF6D7991f15525488b2A83Df53468D682Ba4B0",
+      "underlying": "0xFa2B947eEc368f42195f24F36d2aF29f7c24CeC2",
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "sourceEidTest": 40161,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "4626-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
+      },
+      "note": "Falcon sUSDf 0xc8CF\u20264B0 only (ETH ERC-4626, asset=USDf). convertToAssets ~1.134 + retain 1%. Never USDf / FF / sFF / sFF-Prime / BSC USDf. Never deposit/redeem; Falcon daily 21:00 GMT+8 queue stays on Falcon. Proxy impl 0x0d13\u20263f34 \u2014 pin proxy. Do not advertise 4.51%. HyperEVM empty. productionEvm false. NotThisBatch. docs/SUSDF.md.",
+      "status": "later",
+      "priority": 23
+    },
+    {
       "id": "hstnear",
       "kind": "L",
       "symbol": "hstNEAR",

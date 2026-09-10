@@ -12,6 +12,7 @@ import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 import {LeafSpolPolicy} from "src/lz/LeafSpolPolicy.sol";
 import {LeafHbarxPolicy} from "src/lz/LeafHbarxPolicy.sol";
 import {LeafSghoPolicy} from "src/lz/LeafSghoPolicy.sol";
+import {LeafSusdfPolicy} from "src/lz/LeafSusdfPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -83,6 +84,13 @@ contract ConfigureMainnetListing is Script {
             LeafSghoPolicy.requireSgho(address(box.innerToken()));
             require(address(box.innerToken()) != LeafSghoPolicy.GHO, "gho");
             require(box.rewardsSelector() == bytes4(0), "sgho poke");
+            box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+            box.setRetainRateYield(true);
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hsusdf")) {
+            LeafSusdfPolicy.requireSusdf(address(box.innerToken()));
+            require(address(box.innerToken()) != LeafSusdfPolicy.USDF, "usdf");
+            require(box.rewardsSelector() == bytes4(0), "susdf poke");
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
         }

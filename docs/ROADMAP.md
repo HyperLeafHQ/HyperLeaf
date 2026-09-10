@@ -32,6 +32,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | skip | **hsKCS** | L | KCC | sKCS.io ~3k supply, no LZ KCC. Never KuCoin Earn / raw KCS |
 | later | **hHBARX** | L | Hedera 295 | Stader **HBARX** HTS `0x0000…cba44`. Never raw HBAR. LZ 30316. Need HTS associate. After current EVM batches |
 | later | **hsGHO** | L | Ethereum | Aave **sGHO** `0xE175…ca1d` only. App 6% is a shell. Never GHO / App vault / aUSDC. `convertToAssets` 1% |
+| later | **hsUSDf** | L | Ethereum | Falcon **sUSDf** `0xc8CF…4B0` only. Never USDf / FF / sFF. `convertToAssets` 1% |
 | later | **hstNEAR** | L | Aurora 1313161554 | Meta Pool **STNEAR** 24-dec. Never NEAR. LZ 30211. Blocked on OFT 24-dec path |
 | watch | **hXM** | L | MemeCore 4352 | Docs mention X$M; address unpinned. Never $M / BSC M / stM. LZ 30466 missing Horizen+Canary |
 | watch | **hbwBTW** | L | Bitway | bwBTW only, never raw BTW. ~5% + volatile. Low priority |
