@@ -12,6 +12,10 @@ Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67) v3 + audit [5635
 
 First canary: **Variational points** (`hPerVarPts-{price}-{1|2}X`). Tiers **{1x, 2x} only** — 1x so sellers will list; 2x is the HyperLeaf guarantee. No 3x.
 
+On-chain a seller series is still one ERC-20. The UI **aggregates the book by (deal price, tier)** — user sees depth of `$20 / 2x`, then the fill routes to a specific seller series. Fragmentation stays on-chain; the board looks like one book.
+
+Canary bands (owner `setPriceBands`): **$10 / $20 / $50**. 1x and 2x both allowed on those prices. No $17 series. Widen only after volume.
+
 ## Constants
 
 `DELIVERY_WINDOW = 48h` from series `resolve()`. `EXPIRY = 365d` from first mint. `RESOLVE_GRACE = 48h`. Tiers {1x, 2x}. Floors $1. Protocol take = 100% of vault surplus (interest). No claim deadline.

@@ -72,6 +72,20 @@ contract PreMarketTest is Test {
         factory.createSeries(marketId, 30_000, 20e18);
     }
 
+    function testPriceBands() public {
+        uint256[] memory bands = new uint256[](3);
+        bands[0] = 10e18;
+        bands[1] = 20e18;
+        bands[2] = 50e18;
+        vm.prank(owner);
+        factory.setPriceBands(marketId, bands);
+        vm.prank(bob);
+        factory.createSeries(marketId, 20_000, 10e18);
+        vm.prank(bob);
+        vm.expectRevert(PreMarketFactory.Floor.selector);
+        factory.createSeries(marketId, 20_000, 17e18);
+    }
+
     function testPrimaryFillThenDeliver() public {
         vm.prank(alice);
         factory.buyFromSeries(seriesId, 100e18);
