@@ -16,7 +16,7 @@ App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https:/
 
 HyperLeaf's core job is to bring productive or otherwise constrained positions into a common HyperEVM-native asset format without hiding the underlying risks.
 
-The listing model is intentionally split into four economic paths:
+The asset model is intentionally split into four peer paths:
 
 - **L — Liquid receipt:** the underlying protocol supports direct redemption.
 - **C1 — Market exit:** there is no protocol redemption; exit depends on a buyer in a claim market.
@@ -99,20 +99,22 @@ These add Avalanche and Ethereum integrations with asset-specific rate logic, re
 
 These assets do not have an honest protocol redemption path, so the correct product is a **claim market**, not a synthetic redemption guarantee. `hORDER` is Arbitrum-only and uses the dedicated inbound lockbox path; there is no CREATE2 twin on another chain.
 
-### C2 and other queued claims
+### C2 — Queued claims
 
-C2 assets remain a separate rollout class for positions whose underlying redemption is real but delayed by a queue or cooldown. They are added only when the burn / exit path and its timing semantics can be verified on-chain.
+C2 assets are the peer class for positions whose underlying redemption is real but delayed by a queue or cooldown. They are added only when the burn / exit path and its timing semantics can be verified on-chain.
 
 ### Pre — Pre-TGE claims
 
-Pre-TGE claims are treated as a first-class asset path alongside L / C1 / C2 rather than as an unrelated product layer.
+Pre-TGE claims are a peer asset class alongside **L / C1 / C2**, not a separate liquidity product.
 
-The current implementation is the standalone **Pre-Market Guarantee Market** on `feat/premarket`: seller collateral and buyer payments are held in bilateral escrow, the claim can trade before TGE, and settlement follows resolver-confirmed delivery or default rules.
+The current canary is **Variational points**, with the ticker format `hPre{Token}Pts{tier}x{price}` (for example, `hPreVarPts2x20`). The current tiers are **1x and 2x** only. Deal price is free discovery above the $1 floor; the market aggregates depth by deal price and tier, while each seller series remains its own ERC-20 claim.
+
+The standalone implementation is being developed on `feat/premarket`: seller collateral and buyer payments are held in bilateral escrow, claims can trade before TGE, and settlement follows resolver-confirmed delivery or default rules.
 
 Current implementation snapshot:
 
 - Branch: `feat/premarket`
-- Reviewed snapshot: `c26f4f8`
+- Reviewed snapshot: `811a182`
 - Scope: standalone `src/premarket/*`
 - Not deployed
 - Not imported into the live Leaf path
@@ -174,7 +176,7 @@ Core principles:
 3. Move the first C1 listings through the claim-market path and validate real secondary-market behavior.
 4. Finish the NFT lockbox canary path for `hveAERO` before expanding the ve-NFT family.
 5. Bring **hJitoSOL** through the Solana mainnet path after the EVM 0–4 rollout is sufficiently proven.
-6. Continue hardening the standalone pre-market implementation before considering any production deployment.
+6. Continue hardening the standalone Pre implementation before considering any production deployment.
 
 ## Mid term
 
