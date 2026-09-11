@@ -8,36 +8,21 @@ HyperLeaf turns productive, locked, delayed, or otherwise difficult-to-trade pos
 
 App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https://x.com/HyperLeafHQ)
 
-> **Status:** early-stage infrastructure. Mainnet / HyperEVM 999 deployments are deliberately capped and rollout is incremental. Most new integrations remain on feature branches until their accounting, bridge path, and operational tests are verified. **Contracts are not externally audited. Do not deposit funds you cannot afford to lose.**
+> **Status:** early-stage infrastructure. HyperEVM mainnet deployments are deliberately capped and rolled out one path at a time. **Contracts are not externally audited. Do not deposit funds you cannot afford to lose.**
 
 ---
 
 ## What HyperLeaf is building
 
-HyperLeaf has two complementary tracks:
+HyperLeaf's core job is to bring productive or otherwise constrained positions into a common HyperEVM-native asset format without hiding the underlying risks.
 
-### 1. Leaf infrastructure
+The listing model is intentionally split into three economic paths:
 
-Bring productive assets from Base, BSC, Ethereum, Avalanche, Berachain, Solana and other supported environments into a HyperEVM-native market format.
+- **L — Liquid receipt:** the underlying protocol supports direct redemption.
+- **C1 — Market exit:** there is no protocol redemption; exit depends on a buyer in a claim market.
+- **C2 — Queued exit:** the Leaf can be burned into the underlying claim, but the protocol withdrawal remains subject to its queue or cooldown.
 
-The current listing model is intentionally split into:
-
-- **L — Liquid receipt:** direct protocol redemption where supported.
-- **C1 — Market exit:** no protocol redemption; exit depends on a market participant.
-- **C2 — Queued exit:** burn the Leaf and wait for the underlying withdrawal window.
-
-The economic rule is simple: **preserve the underlying claim and make its risks explicit.** HyperLeaf does not turn a locked position into a fake 1:1 spot token and does not run a permanent treasury bid.
-
-### 2. Market infrastructure
-
-HyperLeaf is also building reusable market primitives around productive and pre-TGE claims:
-
-- Claim / C1 market infrastructure for otherwise illiquid positions.
-- Generic LP position-management infrastructure separating **strategy → policy → venue adapter**.
-- Stable-asset risk / exit policy infrastructure that sits below the market rather than pretending to be a treasury bid.
-- A standalone **Pre-Market Guarantee Market** for pre-TGE points, currently developed off-main.
-
-These are separate product layers. New market infrastructure does not automatically become part of the live Leaf deployment path.
+The key rule is **economic fidelity**: a Leaf should preserve the actual underlying claim, including rate accrual, lock periods, queue mechanics, bridge constraints, and loss conditions. HyperLeaf does not manufacture a 1:1 redemption promise where the source protocol does not provide one, and it does not maintain a permanent treasury bid or NAV floor.
 
 ---
 
@@ -47,11 +32,11 @@ These are separate product layers. New market infrastructure does not automatica
 
 ### hNEST
 
-The current production anchor is **hNEST on HyperEVM 999**, with a deliberately small cap.
+The current native production anchor is **hNEST on HyperEVM 999**, deployed with a deliberately small cap.
 
 `NEST → NestVault → HEV / veNEST → hNEST`
 
-The product preserves the underlying staking / withdrawal constraints rather than promising instant 1:1 redemption.
+hNEST is a C1-style product: the underlying position is productive but does not expose a UI instant-redeem path. Exit is through the market, while the underlying staking / withdrawal constraints remain explicit.
 
 Current HyperEVM 999 addresses:
 
@@ -62,81 +47,88 @@ Current HyperEVM 999 addresses:
 | HevAdapter | `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2` |
 | NEST | `0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035` |
 
-### Rollout discipline
+### Base → HyperEVM L path
 
-Live deployment is intentionally slower than feature development:
+The first production cross-chain L paths are now established:
+
+- **hxSQUID — Live v3**
+- **hAVNT — Live**
+
+Both follow the same Base corridor proven by the mainnet canary, with conservative caps and final owner / operational checks before unrestricted rollout.
+
+### Deployment discipline
+
+HyperLeaf deliberately moves slower than feature development:
 
 `source verification → accounting review → fork / smoke tests → bridge configuration → cap / quota checks → deploy → post-deploy verification`
 
-Feature branches are not treated as production merely because the code compiles or a unit-test suite is green.
+A green unit-test suite or a feature branch is not, by itself, a production approval.
 
 ---
 
-# In progress
+# Current rollout order
 
-## L / C1 / C2 integrations
+The mainline roadmap is **asset-by-asset**, not a general-purpose framework-first roadmap.
 
-The repository currently contains a growing set of researched and partially implemented listing paths. The deployment order is intentionally conservative and can change as bridge, venue, and accounting evidence improves.
+### Phase 0 — Mainnet canary
 
-Near-term examples already in the engineering pipeline include:
+`hCANARY / LEAFTEST` on Base ↔ HyperEVM 999 proves the real LayerZero security stack with a tiny cap and closes after redemption. It is a test instrument, not a reusable production listing.
 
-`hxSQUID → hAVNT → hcbETH → hgSOON → hsWBERA → hsAVAX → hLBTC → hstkwaUSDC → BLUAI4Y → hORDER → specialized EVM assets → hJitoSOL`
+### Phase 1 — Proven Base L paths
 
-A number of additional assets remain **watch / parked / blocked** because their staking, reward, queue, NFT, cross-chain-holder, or bridge mechanics need a different implementation rather than a superficial wrapper.
+`hxSQUID → hAVNT`
 
-Detailed asset evaluation history remains tracked in **Issue #7** and the corresponding repository docs / listing catalog.
+These reuse the already-proven Base corridor and establish the first real cross-chain Leaf integrations.
 
----
+### Phase 2 — Rate-bearing L assets
 
-## Generic LP position management
+`hgSOON → hsWBERA`
 
-A reusable LP-management framework has been developed as a separate branch / PR rather than being mixed into the core listing path.
+These use share / asset conversion accounting with the source protocol's yield skim. `hcbETH` is parked because Base cbETH does not expose the required `exchangeRate` path. `hslisBNB` follows the same BSC corridor later and wraps **Lista slisBNB only**, never native BNB.
 
-The intended abstraction is:
+### Phase 3 — Additional mature L paths
 
-```text
-Strategy chooses WHEN / WHERE
-        ↓
-Manager enforces WHETHER
-        ↓
-Adapter implements HOW
-```
+`hsAVAX → hstkwaUSDC → hLBTC`
 
-The manager boundary includes authorization, cooldowns, deadlines, token spend caps, slippage limits, output floors, and adapter post-conditions. Concrete DEX integrations stay separate until venue-specific accounting and fork tests are available.
+These add Avalanche and Ethereum integrations with asset-specific rate logic, reward accounting, decimals, and jump protection rather than forcing them through a generic adapter assumption.
 
----
+### Phase 4 — C1 claim markets
 
-## Stable-asset protection
+`BLUAI4Y → hORDER`
 
-HyperLeaf is also building a separate policy layer for stable-asset-backed Leaf markets.
+These assets do not have an honest protocol redemption path, so the correct product is a **claim market**, not a synthetic redemption guarantee. `hORDER` is Arbitrum-only and uses the dedicated inbound lockbox path; there is no CREATE2 twin on another chain.
 
-The purpose is to distinguish:
+### NFT and special-position paths
 
-- external peg health;
-- primary redemption capacity;
-- immediately available exit coverage;
-- stale / degraded evidence;
-- ordinary market liquidity discounts versus underlying impairment.
+The next non-standard family is **ve-NFT / NFT lockbox** infrastructure. `hveAERO` is being developed with `LeafNftLockbox`; the intended mode is permanent NORMAL wrapping, not a generic fungible conversion. Other NFT claims such as `hveUP` follow only after the lockbox path is proven.
 
-This layer is **not** an AMM, not a treasury standing bid, and not a second stablecoin. Concrete asset adapters are expected to arrive separately with evidence-backed tests.
+### Phase 5 — Solana
+
+**hJitoSOL** is the first Solana target.
+
+The model is a rate-bearing LST: the Leaf follows the stake-pool share rate rather than pretending to be a fixed 1:1 SOL claim. The Solana integration uses its own program / lockbox path and LayerZero endpoint rather than reusing the EVM adapter unchanged.
+
+Later Solana candidates such as JupSOL, mSOL, and VRT-based positions remain behind hJitoSOL because their share, queue, or slash semantics require additional verification.
 
 ---
 
-## Solana
+# What is being built around the listings
 
-Solana is treated as a separate integration domain rather than pretending the EVM lockbox model is reusable unchanged.
+## Claim-market infrastructure
 
-The first major target is **hJitoSOL**, using a rate-bearing LST model and chain-specific share / asset accounting. More Solana assets can follow after the lockbox and accounting path is proven.
+For C1 assets and other positions without protocol redemption, HyperLeaf is developing a peer claim-market model rather than promising liquidity itself.
 
-Long-window or slash-sensitive Solana claim assets remain later-stage work because their queue and loss semantics do not fit a simple EVM LST wrapper.
+The design direction is:
 
----
+`Leaf / claim → market participants → negotiated exit`
 
-# New product: Pre-Market Guarantee Market
+The protocol does not seed a permanent HyperEVM AMM, does not act as an always-on buyer, and does not create a treasury NAV floor. The market exists to make the underlying economic claim tradable, not to erase its liquidity risk.
 
-A standalone pre-TGE market is under active development on **`feat/premarket`**, not on `main`.
+## Pre-Market Guarantee Market
 
-Current implementation target:
+A separate pre-TGE claim market is being developed on **`feat/premarket`**, not on `main`.
+
+The current product model uses bilateral escrow around pre-TGE point claims:
 
 ```text
 Seller
@@ -150,25 +142,15 @@ Buyer exposure
   └── DEFAULTED → escrow refund + collateral penalty
 ```
 
-The current design uses **bilateral escrow**:
-
-- Seller collateral is locked before claims are issued.
-- Primary buyer payments are escrowed by the protocol.
-- The seller does not receive buyer funds before settlement.
-- The resolver identifies the official TGE token and points-to-token rate.
-- Each series gets its own 48-hour delivery window.
-- VOID / EXPIRED paths unwind both sides rather than inventing a token conversion when no honest per-point rate exists.
-- The design explicitly excludes seller-held inventory from the terminal buyer pool.
-
-Current engineering snapshot:
+Current implementation snapshot:
 
 - Branch: `feat/premarket`
-- Reviewed implementation commit: `c26f4f8`
+- Reviewed snapshot: `c26f4f8`
 - Scope: standalone `src/premarket/*`
 - Not deployed
-- Not imported by live Nest / Gate / Leaf Market code
+- Not imported into the live Leaf path
 
-The current branch has already gone through product review and code-level audit rounds. Before any production deployment, the remaining accounting and delivery hardening must be resolved and backed by stronger invariant / edge-case tests.
+Before production use, the remaining delivery and settlement accounting hardening must be completed together with stronger invariant and edge-case testing.
 
 ---
 
@@ -176,18 +158,17 @@ The current branch has already gone through product review and code-level audit 
 
 HyperLeaf is **not trustless today**.
 
-The system deliberately uses owner / guardian / keeper powers where they are needed for an early, capped deployment. The engineering direction is to replace discretionary assumptions with explicit constraints wherever possible:
+Early deployment intentionally uses bounded owner / guardian / keeper powers, small caps, operational checks, and asset-specific configuration. The long-term direction is to replace discretionary assumptions with explicit constraints where practical.
 
-> **Prefer a hard-coded constraint over an admin promise.**
+> **Prefer a hard constraint over an admin promise.**
 
-Important principles:
+Core principles:
 
 - **No fake liquidity.** HyperLeaf does not promise an AMM, treasury bid, or NAV floor.
-- **Listing isolation.** One listing's accounting or pause state must not silently become a global assumption.
-- **Economic fidelity.** Principal, realized yield, lock periods, bridge state, and market-exit conditions remain explicit.
-- **Deployment discipline.** New code stays off `main` until its specific verification path is complete.
-
-Public trust / admin-reduction planning is tracked separately in the project's governance and roadmap work.
+- **Listing isolation.** An issue in one asset path should not silently become a global accounting assumption.
+- **Economic fidelity.** Rate accrual, principal, queues, lock periods, bridge state, and market-exit conditions remain explicit.
+- **Asset-specific verification.** Different protocols get different adapters and tests when their economics differ.
+- **Production discipline.** New code stays off `main` until its specific deployment and verification path is complete.
 
 ---
 
@@ -195,34 +176,35 @@ Public trust / admin-reduction planning is tracked separately in the project's g
 
 ## Near term
 
-1. Continue the one-listing-at-a-time rollout of verified Leaf integrations.
-2. Finish the next L paths and the highest-confidence C1 market-exit integrations.
-3. Prove the Solana lockbox / rate-accounting path with hJitoSOL.
-4. Expand permissionless harvesting and reusable execution infrastructure without weakening accounting controls.
-5. Finish the remaining pre-market settlement / delivery accounting hardening on `feat/premarket` before considering any production deployment.
+1. Complete the currently ordered L rollout after the proven Base paths.
+2. Continue Phase 2 / 3 integrations one asset at a time, with conservative caps and source-specific accounting.
+3. Move the first C1 listings through the claim-market path and validate real secondary-market behavior.
+4. Finish the NFT lockbox canary path for `hveAERO` before expanding the ve-NFT family.
+5. Bring **hJitoSOL** through the Solana mainnet path after the EVM 0–4 rollout is sufficiently proven.
+6. Continue hardening the standalone pre-market implementation before considering any production deployment.
 
 ## Mid term
 
-- Make Leaf assets easier for other HyperEVM protocols to integrate as collateral, LP inventory, and margin collateral.
-- Move technical reference material from README into a canonical Wiki / docs surface.
-- Reduce admin dependence through harder invariants, stronger operational guards, and progressively safer governance boundaries.
-- Add more chain-specific adapters where the underlying economics justify them.
+- Expand the catalog with additional high-confidence L / C1 / C2 assets from Ethereum, BSC, Avalanche, Berachain, Robinhood, Solana, and other supported environments.
+- Add chain-specific integrations where the underlying protocol economics require their own lockbox, NFT, queue, or accounting model.
+- Improve permissionless operational flows such as harvesting without weakening asset-level accounting controls.
+- Gradually reduce admin dependence through stronger invariants, operational guards, and governance boundaries.
 
 ## Long term
 
-HyperLeaf is intended to become an **ingress layer for productive assets and claim markets on HyperEVM**:
+HyperLeaf is intended to become an **ingress layer for productive assets and explicit claim markets on HyperEVM**:
 
 ```text
-Productive position
-      ↓
-explicit economic claim
-      ↓
-HyperEVM Leaf / Claim
-      ↓
-markets + collateral + LP + integrations
+Productive / constrained position
+            ↓
+   explicit economic claim
+            ↓
+     HyperEVM Leaf / Claim
+            ↓
+     markets + collateral + integrations
 ```
 
-The goal is not to make every asset look liquid. The goal is to make productive claims **legible, composable, and tradable without hiding their risks**.
+The goal is not to make every asset look liquid. The goal is to make productive and constrained claims **legible, composable, and tradable without hiding their risks**.
 
 ---
 
@@ -233,7 +215,7 @@ The goal is not to make every asset look liquid. The goal is to make productive 
 | `src/` | Core contracts and live deployment infrastructure |
 | `src/premarket/` | Standalone pre-TGE market implementation on feature branches |
 | `docs/` | Technical design and operational notes |
-| `listings/` | Listing catalog / configuration references |
+| `listings/` | Listing catalog and asset configuration |
 | `keeper/` | Off-chain keeper / execution infrastructure |
 | `solana/` | Solana-specific integration work |
 | `test/` | Unit and invariant tests |
@@ -249,4 +231,4 @@ Key references:
 
 ## Disclaimer
 
-HyperLeaf is experimental software. Integrations may be incomplete, paused, capped, or intentionally left off `main`. External audits do not currently cover the full system. Read the relevant listing / product documentation before interacting with any deployment.
+HyperLeaf is experimental software. Integrations may be incomplete, paused, capped, parked, or blocked. Feature branches are not production deployments. External audits do not currently cover the full system. Read the relevant listing and product documentation before interacting with any deployment.
