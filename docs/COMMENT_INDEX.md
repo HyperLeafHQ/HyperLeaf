@@ -40,7 +40,7 @@ Only **formal asset evaluations** receive a numbered `#NN` entry. Rank-screening
 
 | Asset | Classification | Index treatment |
 | --- | --- | --- |
-| EURC | **Selected — P2 research / capped pilot** | Formal evaluation **#89**; preferred position = Base Steakhouse Prime EURC `steakEURC` ERC-4626; never raw EURC; never EURCV |
+| EURC | **Selected — P2 research / capped pilot** | Formal evaluation **#89**; preferred position = Base Steakhouse Prime EURC `steakEURC` ERC-4626; **Morpho is the selected productive venue**; never raw EURC; never EURCV |
 | SPX6900 / SPX | **No-Go / meme** | Watchlist / consolidated rejected pool; **no standalone formal report** |
 | VIRTUAL | **Already evaluated / skip** | Do not create another evaluation; existing `hVIRTUALMAX` remains the canonical prior evaluation, currently blocked by CREATE2 holder constraints |
 | PONS | **Watchlist / No-Go** | Consolidated watchlist; buyback/burn is token-level value capture, not Leaf yield; no standalone formal report |
@@ -56,7 +56,7 @@ The ranking number is **not** the HyperLeaf evaluation number. VIRTUAL being ran
 The English comments that explicitly supersede Chinese originals are mirrors, not new evaluations:
 
 - EURC English mirror: [5630151972](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630151972) → supersedes [5623789248](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623789248)
-- Batch index English mirror: [5630154906](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630154906) → supersedes [5623791940](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623791940)
+- Batch index English mirror: [5630154906](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5633791940) → supersedes [5623791940](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623791940)
 - PI English mirror: [5630142069](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630142069) → supersedes [5618970421](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5618970421)
 
 ## Product / wrap-up memo
