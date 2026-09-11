@@ -13,6 +13,8 @@ Register: [5609229978](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issueco
 
 ## Evaluation series (issue #7)
 
+Only **formal asset evaluations** receive a numbered `#NN` entry. Rank-screening batches, watchlist/no-go items, and “already evaluated / already exists” skips are indexed separately and do not consume a new formal evaluation number.
+
 | ID | Comment | Asset |
 | --- | --- | --- |
 | #00 | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) | method |
@@ -30,11 +32,36 @@ Register: [5609229978](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issueco
 | #12 | [5609266200](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609266200) | hLINK |
 | #13 | [5609267997](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609267997) | hDAI / Gauntlet |
 | #14 | [5609270716](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609270716) | slisBNB |
-| #89 | [5623789248](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623789248) | EURC / Circle Euro Coin (Selected — P2 capped pilot) |
+| #89 | [5623789248](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623789248) | EURC / Circle Euro Coin |
 
-Batch #89–#91 (2026-09-11, CMC rank snapshot SlickCharts 2026-09-11 02:39 UTC): #89 EURC Selected/P2 (report above); #90 SPX6900 No-Go (pure meme); #91 VIRTUAL skipped — already evaluated as `hVIRTUALMAX` (Blocked), slid to #92 PONS → Watchlist/No-Go (buyback-burn only). Index update comment: [5623791940](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623791940). Entries #15–#88 predate this index update; see issue #7 comment thread.
+### Latest batch screening / status updates
 
-New memos: next `#NN` on **#7**, then ROADMAP / catalog. No tmp issues. No new eval comments on #4.
+**Batch #89–#91, 2026-09-11:** [index update 5623791940](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623791940)
+
+| Asset | Classification | Index treatment |
+| --- | --- | --- |
+| EURC | **Selected — P2 research / capped pilot** | Formal evaluation **#89**; preferred position = Base Steakhouse Prime EURC `steakEURC` ERC-4626; never raw EURC; never EURCV |
+| SPX6900 / SPX | **No-Go / meme** | Watchlist / consolidated rejected pool; **no standalone formal report** |
+| VIRTUAL | **Already evaluated / skip** | Do not create another evaluation; existing `hVIRTUALMAX` remains the canonical prior evaluation, currently blocked by CREATE2 holder constraints |
+| PONS | **Watchlist / No-Go** | Consolidated watchlist; buyback/burn is token-level value capture, not Leaf yield; no standalone formal report |
+
+The ranking number is **not** the HyperLeaf evaluation number. VIRTUAL being rank #91 and PONS rolling to rank #92 does not create `#90/#91` formal evaluation records.
+
+### Additional recent standalone evaluation
+
+- **PI / Pi Network** — [5618970421](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5618970421) (English duplicate: [5630142069](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630142069)) — **Watchlist / No-Go**, no formal Leaf candidate, no hPI deployment plan. This is a standalone research conclusion but intentionally remains outside the numbered formal `#NN` series because it is a rejection/watchlist item.
+
+### Duplicate-language comments
+
+The English comments that explicitly supersede Chinese originals are mirrors, not new evaluations:
+
+- EURC English mirror: [5630151972](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630151972) → supersedes [5623789248](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623789248)
+- Batch index English mirror: [5630154906](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630154906) → supersedes [5623791940](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5623791940)
+- PI English mirror: [5630142069](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630142069) → supersedes [5618970421](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5618970421)
+
+## Product / wrap-up memo
+
+[5630137867](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630137867) is the English wrap-up mirror of the product memo [5609846444](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609846444). It is **not an asset evaluation** and should not be counted in the evaluation series.
 
 ## Deploy / audit (historical, PR #4)
 
