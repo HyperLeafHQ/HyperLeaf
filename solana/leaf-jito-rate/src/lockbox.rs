@@ -13,6 +13,10 @@ pub const INTERCEPTOR: &str = "5TAiuAh3YGDbwjEruC1ZpXTJWdNDS7Ur7VeqNNiHMmGV";
 pub const VAULT_PROGRAM: &str = "Vau1t6sLNxnzB7ZDsef8TLbPLfyZMYXH8WTNqUdm9g8";
 /// Jito Restaking program. Forbidden.
 pub const RESTAKING_PROGRAM: &str = "RestkWeAVL8fRGgzhfeoqFhsqKRchg6aa1XrcH96z4Q";
+/// NCN VRTs. Never wrap, never harvest_other.
+pub const FRAGSOL_MINT: &str = "FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo";
+pub const KYSOL_MINT: &str = "kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B";
+pub const EZSOL_MINT: &str = "ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Lockbox {
@@ -65,6 +69,9 @@ impl Lockbox {
     /// `pool_mint` must be JitoSOL (caller-checked).
     pub fn harvest_rate(&mut self, total_lamports: u64, pool_token_supply: u64) -> Result<u128, Error> {
         let rate = crate::rate(total_lamports, pool_token_supply).ok_or(Error::BadRate)?;
+        if rate == 0 {
+            return Err(Error::BadRate);
+        }
         if self.last_rate == 0 {
             self.last_rate = rate;
             return Ok(0);
@@ -156,7 +163,7 @@ impl Lockbox {
     /// Side-token ATA on the PDA (airdrop snapshot). Never JitoSOL.
     /// Whole balance is yield: 1% protocol, 99% stays for converter → WHYPE.
     pub fn harvest_other(&self, mint: &str) -> Result<(), Error> {
-        if mint == JITO_MINT {
+        if mint == JITO_MINT || mint == FRAGSOL_MINT || mint == KYSOL_MINT || mint == EZSOL_MINT {
             return Err(Error::HarvestInner);
         }
         Ok(())
@@ -255,6 +262,9 @@ mod tests {
     fn cannot_harvest_jitosol_as_side_token() {
         let b = Lockbox::new(1);
         assert_eq!(b.harvest_other(JITO_MINT), Err(Error::HarvestInner));
+        assert_eq!(b.harvest_other(FRAGSOL_MINT), Err(Error::HarvestInner));
+        assert_eq!(b.harvest_other(KYSOL_MINT), Err(Error::HarvestInner));
+        assert_eq!(b.harvest_other(EZSOL_MINT), Err(Error::HarvestInner));
         assert!(b.harvest_other("SomeAirdropMint111111111111111111111111111").is_ok());
     }
 

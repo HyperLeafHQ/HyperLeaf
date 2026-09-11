@@ -138,6 +138,12 @@ contract LeafJitoRateTest is Test, PegReady {
     function testHarvestOtherRejectsJitoMint() public {
         vm.expectRevert(LeafJitoPolicy.CannotHarvestInner.selector);
         this._harvestOther(LeafJitoPolicy.JITO_MINT);
+        vm.expectRevert(LeafJitoPolicy.CannotHarvestInner.selector);
+        this._harvestOther(LeafJitoPolicy.FRAGSOL_MINT);
+        vm.expectRevert(LeafJitoPolicy.CannotHarvestInner.selector);
+        this._harvestOther(LeafJitoPolicy.KYSOL_MINT);
+        vm.expectRevert(LeafJitoPolicy.CannotHarvestInner.selector);
+        this._harvestOther(LeafJitoPolicy.EZSOL_MINT);
         LeafJitoPolicy.requireHarvestOther(bytes32(uint256(2)));
     }
 
