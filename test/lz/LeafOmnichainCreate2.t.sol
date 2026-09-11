@@ -269,6 +269,15 @@ contract LeafOmnichainCreate2Test is PegReady {
         vm.prank(user);
         vm.expectRevert(LeafClosedOFT.ExitViaMarketOnly.selector);
         oft.send(30110, bytes32(uint256(uint160(user))), 1, user);
+        vm.prank(owner);
+        vm.expectRevert(LeafClosedOFT.ExitViaMarketOnly.selector);
+        oft.setRedeemEnabled(true);
+    }
+
+    function testOrderNeverOpensShareExit() public {
+        vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.setShareExit(true);
     }
 
     function testCannotAcknowledgeWithoutIdleOrder() public {

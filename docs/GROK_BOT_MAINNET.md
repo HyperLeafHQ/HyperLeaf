@@ -278,7 +278,9 @@ Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this ba
 
 ## 4. C1 — BLUAI4Y then hORDER
 
-`BATCH=4`. `DeployClosed`. `redeemEnabled` stays **false**. Exit is Claim Board, **after** wrap smoke. No `setShareExit`. No CREATE2 twin for ORDER (Arb only).
+**Branch: `feat/batch4-c1`.** Not on `main` until wrap smoke. Do **not** deploy from `main`.
+
+`BATCH=4`. `DeployClosed`. `redeemEnabled` stays **false**. Exit is Leaf Market, **after** wrap smoke. No `setShareExit`. No CREATE2 twin for ORDER (Arb only). hORDER `lockSeconds=0` **cannot** `setRedeemEnabled`. BLUAI share-exit only after `farmUnlockAt` (4y).
 
 ```
 BATCH=4 ASSET=$ASSET INNER_TOKEN=$INNER OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT DEPOSIT_CAP=$CAP \
