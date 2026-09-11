@@ -11,10 +11,10 @@ Wrap **shares** only. Cap **100k DAI** ≈ 85k shares. Do not advertise APY. Fre
 
 ## hRLUSD — later, same Morpho family
 
-Sentora RLUSD Main V2 `0x6dc58a0fdfc8d694e571dc59b9a52eeea780e6bf` Ethereum.
-`symbol=senRLUSDv2` · `asset()=RLUSD 0x8292Bb45…17eD` (Ripple official) · `convertToAssets(1e18)=1.011e18` · `totalAssets≈350M`.
+Sentora RLUSD Main V2 `0x6dC58a0FdfC8D694e571DC59B9A52EEEa780E6bf` Ethereum.
+`symbol=senRLUSDv2` · `asset()=RLUSD 0x8292Bb45bf1Ee4d140127049757C2E0fF06317eD` · `convertToAssets(1e18)=1.01149e18` · `totalAssets≈353.7M` (RPC 2026-09-11).
 
-Wrap **senRLUSDv2** only. Never RLUSD, never Blue. 1% skim on `convertToAssets`. One vault = one listing. Do not auto-list every Morpho vault.
+Wrap **senRLUSDv2** only. Never RLUSD, never Blue. 1% skim. `feat/hrlusd` · `docs/HRLUSD.md`. `productionEvm=false`.
 
 ## BTWUSDT — research (BSC, CeDeFi)
 

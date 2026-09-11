@@ -24,7 +24,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |
 | later | **hsteakUSDC** | L | Base Morpho | steakUSDC `0xBEEF010f…8183`. Same L family as hsteakUSDG |
 | later | **hDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 `0x500331c9…74a5`. Wrap **vault shares**, never DAI. **Cap 100k DAI** ≈ 85k shares. `feat/hdai`. Not BATCH |
-| later | **hRLUSD** | L | Ethereum Morpho | Sentora RLUSD Main V2 `0x6dc58a0f…e6bf` senRLUSDv2. Wrap **shares**, never RLUSD, never Blue |
+| later | **hRLUSD** | L | Ethereum Morpho | Sentora RLUSD Main V2 `0x6dC5…E6bf` senRLUSDv2. Wrap **shares**, never RLUSD, never Blue. `feat/hrlusd`. Not BATCH |
 | later | **hUSDT** | L | BSC Bitway | Core Alpha **BTWUSDT** `0x73af543D…3A1`. Never raw USDT. CeDeFi. Not BATCH |
 | later | **hsteakUSDG** | L | Robinhood Morpho | steakUSDG `0xBeEf…09dd`. Never deposit/redeem USDG |
 | later | **asBNB** | L | BSC | After **hslisBNB**. Aster Earn on BSC still live. Never wrap $ASTER / Aster Chain ve |
