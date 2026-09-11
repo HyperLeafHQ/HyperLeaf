@@ -491,7 +491,7 @@ contract PreMarketFactory {
     }
 
     function _ticker(string memory base, uint256 refPriceUsd, uint16 tierBps) internal pure returns (string memory) {
-        return string.concat("hPer", base, "Pts-", _u(refPriceUsd / 1e18), "-", _u(uint256(tierBps) / BPS), "X");
+        return string.concat("hPre", base, "Pts", _u(uint256(tierBps) / BPS), "x", _u(refPriceUsd / 1e18));
     }
 
     function _u(uint256 n) internal pure returns (string memory) {

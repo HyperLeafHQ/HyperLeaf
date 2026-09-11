@@ -1,4 +1,4 @@
-# Pre-market guarantee (hPerVarPts) — feat/premarket
+# Pre-market guarantee (hPreVarPts) — feat/premarket
 
 Standalone. Zero imports from Nest / Gate / Leaf Market. Not a batch. Not main.
 
@@ -10,7 +10,7 @@ Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67) v3 + audit [5635
 2. **SETTLED asset is the resolver `officialToken` on the settlement chain.** That ERC-20 is what holders receive. Cross-chain lockbox may only credit that same token. Origin lock is how the token gets here, not a second ticker. Bridge risk is the lockbox of that token, Section 12.
 3. **~1% refund variance is primary-fill only** (Leaf Market 1% buyer reward). Direct `buyFromSeries` has no reward. Secondary purchase price is never refunded.
 
-First canary: **Variational points** (`hPerVarPts-{price}-{1|2}X`). Tiers **{1x, 2x} only** — 1x so sellers will list; 2x is the HyperLeaf guarantee. No 3x.
+First canary: **Variational points**. Ticker `hPre{Token}Pts{tier}x{price}` — e.g. `hPreVarPts2x20`. Tiers **{1x, 2x} only** — 1x so sellers will list; 2x is the HyperLeaf guarantee. No 3x.
 
 On-chain a seller series is still one ERC-20. Deal price is **free discovery** (any ≥ $1) — the chain must not reject a $17 book. The UI **aggregates the book by (deal price, tier)** — user sees depth at each price, then the fill routes to a specific seller series. Suggested pins ($10/$20/$50) are UI defaults only.
 
@@ -20,4 +20,4 @@ On-chain a seller series is still one ERC-20. Deal price is **free discovery** (
 
 ## Example
 
-`hPerVarPts-20-2X` — Variational points, $20/pt, 2x. Collateral $40/claim. Not a Leaf.
+`hPreVarPts2x20` — Variational points, 2x, $20/pt. Collateral $40/claim. Not a Leaf.

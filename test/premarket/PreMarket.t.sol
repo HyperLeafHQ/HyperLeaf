@@ -57,7 +57,7 @@ contract PreMarketTest is Test {
 
     function testTickerAndFloor() public view {
         address tok = factory.seriesClaim(seriesId);
-        assertEq(ClaimSeriesToken(tok).symbol(), "hPerVarPts-20-2X");
+        assertEq(ClaimSeriesToken(tok).symbol(), "hPreVarPts2x20");
         assertEq(factory.seriesUnit(seriesId), 40e6);
         assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.OPEN));
     }
@@ -66,7 +66,7 @@ contract PreMarketTest is Test {
         vm.prank(bob);
         bytes32 s1 = factory.createSeries(marketId, 10_000, 20e18);
         assertEq(factory.seriesUnit(s1), 20e6);
-        assertEq(ClaimSeriesToken(factory.seriesClaim(s1)).symbol(), "hPerVarPts-20-1X");
+        assertEq(ClaimSeriesToken(factory.seriesClaim(s1)).symbol(), "hPreVarPts1x20");
         vm.prank(bob);
         vm.expectRevert(PreMarketFactory.BadTier.selector);
         factory.createSeries(marketId, 30_000, 20e18);
@@ -75,7 +75,7 @@ contract PreMarketTest is Test {
     function testAnyDealPrice() public {
         vm.prank(bob);
         bytes32 odd = factory.createSeries(marketId, 20_000, 17e18);
-        assertEq(ClaimSeriesToken(factory.seriesClaim(odd)).symbol(), "hPerVarPts-17-2X");
+        assertEq(ClaimSeriesToken(factory.seriesClaim(odd)).symbol(), "hPreVarPts2x17");
         assertEq(factory.seriesUnit(odd), 34e6);
     }
 
