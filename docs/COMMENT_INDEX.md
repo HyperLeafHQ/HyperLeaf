@@ -50,7 +50,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #39 | EURC / Circle Euro Coin | Morpho Steakhouse Prime EURC V1 `steakEURC` on Base | P2 / Capped Pilot | [5630151972](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630151972) |
 | #40 | MON / shMON (shMonad) | shMON liquid-staking receipt; `hshMON` on HyperEVM | Selected / P1 Research / Production Pending Canonical LZ Route | [5638131885](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5638131885) |
 | #41 | LUNC / Terra Classic | Native LUNC staking position; mature canonical LST preferred if later verified | P1 Research / Conditional | [5638554642](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5638554642) |
-| #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [TBD](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
+| #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
 
 ## Numbering reconciliation
 
@@ -64,11 +64,22 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 
 | Asset | Decision | Comment |
 |---|---|---|
+| KITE / Kite AI | Strong Watch / Strategic Candidate; AI-agent identity + programmable payments + PoS staking; native KITE is productive, but HyperEVM canonical route not established. Observation only; no Leaf implementation yet. | New observation below |
 | LDO | No-Go / Watchlist as standalone Leaf; prefer stETH/wstETH or a productive Lido position | 5637940642 |
 | BTT | P1 Research Candidate / native BTTC staking position; canonical HyperEVM route still required | 5637959434 |
 | GNO | P1 Strategic Candidate; staking thesis superseded by pending Gnosis EEZ economic transition; do not implement yet | 5638008710 |
 | PI | Watchlist / No-Go; no standalone Leaf | 5630142069 (English canonical mirror) |
 | FLR | P1 Research Candidate; previously mislabeled as #32, intentionally non-numbered | Historical standalone evaluation; no canonical #NN |
+
+## KITE observation report
+
+KITE remains a **strong watch / strategic candidate**, not a formal numbered evaluation.
+
+The thesis is materially stronger than a generic AI token: Kite has launched a production PoS EVM-compatible L1 with Chain ID 2366, Agent Passport for scoped agent spending and verifiable payment receipts, and an explicit agent-payment architecture. Official materials describe KITE as the native token for staking, governance and ecosystem access, with service-commission conversion into KITE intended to link token economics to real agent-service usage. PayPal Ventures and General Catalyst have publicly backed the agentic-commerce thesis. Mainnet is live.
+
+For HyperLeaf, the attractive route is **productive KITE staking**, not raw KITE wrapping. Official mainnet docs expose validator/delegator staking contracts and a separate LST/StakingVault architecture, so a future evaluation can investigate rate-bearing KITE staking or the official LST rather than inventing a spot wrapper.
+
+Current blockers are canonical cross-chain representation and exit topology: no official Tezos-style/Hyperliquid-confirmed canonical KITE → HyperEVM route has been established in the reviewed material. Until that is verified, KITE should remain observation/watch status rather than implementation candidate.
 
 ## Methodology
 
