@@ -72,13 +72,10 @@ contract PreMarketFactory {
     mapping(bytes32 => uint256) public sellerClaimableC;
     mapping(bytes32 => uint256) public sellerClaimableR;
     mapping(bytes32 => uint256) public paidOut;
-    mapping(bytes32 => mapping(uint256 => bool)) public priceBand;
-    mapping(bytes32 => bool) public priceBanded;
     uint256 public marketsCreated;
     mapping(address => uint256) public sellerNonce;
 
     event MarketCreated(bytes32 indexed marketId, address asset, string name);
-    event PriceBandsSet(bytes32 indexed marketId, uint256[] prices);
     event SeriesCreated(bytes32 indexed seriesId, bytes32 marketId, address seller, address claimToken);
     event Minted(bytes32 indexed seriesId, uint256 claims);
     event PrimaryFill(bytes32 indexed seriesId, address buyer, uint256 claims, uint256 paid);
@@ -148,20 +145,8 @@ contract PreMarketFactory {
         emit MarketCreated(marketId, asset, name);
     }
 
-    /// @dev Canary: pin deal prices so books don't fragment. Empty = any price >= $1.
-    ///      VAR first: $10 / $20 / $50. Frontend still aggregates by (price, tier).
-    function setPriceBands(bytes32 marketId, uint256[] calldata prices) external onlyOwner {
-        if (!markets[marketId].live) revert Unknown();
-        if (prices.length == 0 || prices.length > 8) revert Floor();
-        for (uint256 i; i < prices.length; i++) {
-            if (prices[i] < MIN_REFERENCE_PRICE_USD) revert Floor();
-            priceBand[marketId][prices[i]] = true;
-        }
-        priceBanded[marketId] = true;
-        emit PriceBandsSet(marketId, prices);
-    }
-
     /// @dev 1x = seller-friendly listing. 2x = HyperLeaf guarantee. No 3x.
+    ///      Deal price is free discovery: any refPriceUsd >= $1.
     function createSeries(bytes32 marketId, uint16 tierBps, uint256 refPriceUsd)
         external
         returns (bytes32 seriesId)
@@ -170,7 +155,6 @@ contract PreMarketFactory {
         if (!m.live) revert Unknown();
         if (tierBps != 10_000 && tierBps != 20_000) revert BadTier();
         if (refPriceUsd < MIN_REFERENCE_PRICE_USD) revert Floor();
-        if (priceBanded[marketId] && !priceBand[marketId][refPriceUsd]) revert Floor();
         uint256 unit = _unitRequirement(refPriceUsd, tierBps, m.assetDecimals);
         if (unit < 10 ** m.assetDecimals) revert Floor();
         uint256 nonce = ++sellerNonce[msg.sender];
