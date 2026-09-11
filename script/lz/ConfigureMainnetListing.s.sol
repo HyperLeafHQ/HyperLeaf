@@ -14,6 +14,7 @@ import {LeafHbarxPolicy} from "src/lz/LeafHbarxPolicy.sol";
 import {LeafSghoPolicy} from "src/lz/LeafSghoPolicy.sol";
 import {LeafSusdfPolicy} from "src/lz/LeafSusdfPolicy.sol";
 import {LeafSffPolicy} from "src/lz/LeafSffPolicy.sol";
+import {LeafDaiPolicy} from "src/lz/LeafDaiPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -108,6 +109,17 @@ contract ConfigureMainnetListing is Script {
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
             require(box.maxRateJumpBps() == LeafSffPolicy.MAX_RATE_JUMP_BPS, "sff jump");
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hdai")) {
+            LeafDaiPolicy.requireGtdaiLive(address(box.innerToken()));
+            require(address(box.innerToken()) != LeafDaiPolicy.DAI, "dai");
+            require(address(box.innerToken()) != LeafDaiPolicy.MORPHO_BLUE, "blue");
+            require(address(box.innerToken()) != LeafDaiPolicy.SMOKEHOUSE_DAI, "smoke");
+            require(box.rewardsSelector() == bytes4(0), "hdai poke");
+            box.setMaxRateJumpBps(LeafDaiPolicy.MAX_RATE_JUMP_BPS);
+            box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+            box.setRetainRateYield(true);
+            require(box.maxRateJumpBps() == LeafDaiPolicy.MAX_RATE_JUMP_BPS, "hdai jump");
         }
         if (keccak256(bytes(a.id)) == keccak256("hspol")) {
             LeafSpolPolicy.requireSpol(address(box.innerToken()));

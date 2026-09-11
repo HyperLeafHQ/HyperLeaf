@@ -520,18 +520,21 @@
       "name": "Hyperleaf Gauntlet DAI",
       "innerSymbol": "gtDAI",
       "innerToken": "0x500331c9fF24D9d11aee6B07734Aa72343EA74a5",
-      "underlying": "DAI",
+      "underlying": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
       "source": "ethereum",
       "sourceChainId": 1,
       "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
+      "productionEvm": false,
       "yield": {
-        "inner": "erc4626-rate",
-        "pullInner": false,
-        "toHype": []
+        "inner": "4626-rate",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
       },
-      "note": "Morpho Gauntlet DAI Core V1. Verified 2026-09-10: gtDAIcore, asset=DAI, convertToAssets(1e18)=1.176e18, totalAssets~2.14M. Wrap vault shares only — never DAI, never Blue. Cap 100_000 DAI. Do not advertise APY. Freeze asset()==DAI. docs/STABLE_VAULTS.md.",
+      "note": "Morpho Gauntlet DAI Core V1 only. RPC 2026-09-11: gtDAIcore, asset=DAI, convertToAssets(1e18)=1.17698e18, totalAssets~2.135M. Wrap shares — never DAI, never Blue 0xBBB…, never Smokehouse DAI. Cap 100k DAI ≈ 85k shares. convertToAssets + retain 1% + jump 300bps. Do not advertise APY. productionEvm false. NotThisBatch. docs/HDAI.md.",
       "status": "later-capped-pilot",
       "priority": 27
     },

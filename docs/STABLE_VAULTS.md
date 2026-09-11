@@ -5,9 +5,9 @@ Never wrap the stable. Wrap the **receipt**. HyperEVM empty on all four.
 ## hDAI — later, capped
 
 Gauntlet DAI Core V1 `0x500331c9fF24D9d11aee6B07734Aa72343EA74a5` Ethereum.
-`symbol=gtDAIcore` · `asset()=DAI 0x6B17…1d0F` · `convertToAssets(1e18)=1.176e18` · `totalAssets≈2.14M DAI`.
+`symbol=gtDAIcore` · `asset()=DAI 0x6B175474E89094C44Da98b954EedeAC495271d0F` · `convertToAssets(1e18)=1.17698e18` · `totalAssets≈2.135M DAI` (RPC 2026-09-11).
 
-Wrap **shares** only. Cap **100k DAI**. Do not advertise APY. Freeze `asset()==DAI`. Never Blue market.
+Wrap **shares** only. Cap **100k DAI** ≈ 85k shares. Do not advertise APY. Freeze `asset()==DAI`. Never Blue. Never Smokehouse DAI. `feat/hdai` · `docs/HDAI.md`. `productionEvm=false`.
 
 ## hRLUSD — later, same Morpho family
 
