@@ -64,22 +64,12 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 
 | Asset | Decision | Comment |
 |---|---|---|
-| KITE / Kite AI | Strong Watch / Strategic Candidate; AI-agent identity + programmable payments + PoS staking; native KITE is productive, but HyperEVM canonical route not established. Observation only; no Leaf implementation yet. | New observation below |
+| KITE / Kite AI | Strong Watch / Strategic Candidate; AI-agent identity + programmable payments + PoS staking; native KITE is productive, but HyperEVM canonical route not established. Observation only; no Leaf implementation yet. | [5639729999](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639729999) |
 | LDO | No-Go / Watchlist as standalone Leaf; prefer stETH/wstETH or a productive Lido position | 5637940642 |
 | BTT | P1 Research Candidate / native BTTC staking position; canonical HyperEVM route still required | 5637959434 |
 | GNO | P1 Strategic Candidate; staking thesis superseded by pending Gnosis EEZ economic transition; do not implement yet | 5638008710 |
 | PI | Watchlist / No-Go; no standalone Leaf | 5630142069 (English canonical mirror) |
 | FLR | P1 Research Candidate; previously mislabeled as #32, intentionally non-numbered | Historical standalone evaluation; no canonical #NN |
-
-## KITE observation report
-
-KITE remains a **strong watch / strategic candidate**, not a formal numbered evaluation.
-
-The thesis is materially stronger than a generic AI token: Kite has launched a production PoS EVM-compatible L1 with Chain ID 2366, Agent Passport for scoped agent spending and verifiable payment receipts, and an explicit agent-payment architecture. Official materials describe KITE as the native token for staking, governance and ecosystem access, with service-commission conversion into KITE intended to link token economics to real agent-service usage. PayPal Ventures and General Catalyst have publicly backed the agentic-commerce thesis. Mainnet is live.
-
-For HyperLeaf, the attractive route is **productive KITE staking**, not raw KITE wrapping. Official mainnet docs expose validator/delegator staking contracts and a separate LST/StakingVault architecture, so a future evaluation can investigate rate-bearing KITE staking or the official LST rather than inventing a spot wrapper.
-
-Current blockers are canonical cross-chain representation and exit topology: no official Tezos-style/Hyperliquid-confirmed canonical KITE → HyperEVM route has been established in the reviewed material. Until that is verified, KITE should remain observation/watch status rather than implementation candidate.
 
 ## Methodology
 
@@ -107,3 +97,13 @@ Core rule:
 `totalLeafLiability <= verified economically realizable NAV of productive position`
 
 Keep **Backing / Yield / Incentives / Market Price / Exit Value** separate. Unverified appreciation must never create Leaf liabilities.
+
+## KITE observation report
+
+KITE remains a **strong watch / strategic candidate**, not a formal numbered evaluation.
+
+Kite now has a live PoS EVM-compatible mainnet (Chain ID 2366), with Agent Passport providing scoped spending sessions, programmable controls and verifiable payment receipts. Official materials explicitly position Kite as an agent-payment and settlement layer; KITE is the native token for staking and governance, with ecosystem access and planned service-commission conversion into KITE linking the economic design to agent-service usage. PayPal Ventures and General Catalyst have publicly backed the agentic-commerce thesis.
+
+For HyperLeaf, the relevant thesis is **productive KITE staking**, not spot wrapping. Kite's official mainnet contract list exposes validator/delegator staking infrastructure and a separate StakingVault/LST architecture. This gives HyperLeaf a plausible productive-position path once the representation and rate model are fully verified.
+
+The thesis remains observation-only because a canonical KITE → HyperEVM route has not been established. KITE becomes a stronger implementation candidate only after canonical bridge/representation, productive-position accounting, liquidity and exit topology are verified.
