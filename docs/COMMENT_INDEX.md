@@ -50,7 +50,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #39 | EURC / Circle Euro Coin | Morpho Steakhouse Prime EURC V1 `steakEURC` on Base | P2 / Capped Pilot | [5630151972](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5630151972) |
 | #40 | MON / shMON (shMonad) | shMON liquid-staking receipt; `hshMON` on HyperEVM | Selected / P1 Research / Production Pending Canonical LZ Route | [5638131885](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5638131885) |
 | #41 | LUNC / Terra Classic | Native LUNC staking position; mature canonical LST preferred if later verified | P1 Research / Conditional | [5638554642](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5638554642) |
-| #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | Canonical #42 record on issue #7 |
+| #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [TBD](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 
 ## Numbering reconciliation
 
