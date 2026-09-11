@@ -356,6 +356,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("hb3") || k == keccak256("hB3")) {
+            return Listing(
+                Kind.Closed,
+                "hb3",
+                "Hyperleaf staked B3",
+                "hB3",
+                "B3",
+                8453,
+                30184,
+                40245,
+                0,
+                0,
+                0xB3B32F9f8827D4634fE7d973Fa1034Ec9fdDB3B3,
+                50 ether,
+                false
+            );
+        }
         if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) {
             return Listing(
                 Kind.Liquid,

@@ -138,8 +138,8 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Base Coinbase wrapped ETH. Live token has **no exchangeRate()** — cannot retainRateYield. Parked, not BATCH 2. Do not wrap as a 1:1 ETH OFT. Ethereum wstETH is a separate later listing.",
-      "status": "blocked-no-rate",
+      "note": "ETH LST last. Base cbETH has no exchangeRate(). Official weETH already on HyperEVM (ether.fi). Do not wrap as 1:1 ETH. hwstETH is the only ETH LST still in catalog, also last.",
+      "status": "last",
       "testnet": {
         "sourceChain": "base-sepolia",
         "mockInner": true
@@ -160,13 +160,13 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Later. Canonical Lido wstETH on Ethereum L1. Do not mix with hcbETH supply.",
+      "note": "ETH LST last. Canonical Lido wstETH on Ethereum L1. Official weETH already on HyperEVM — do not list weETH/ezETH. Do not mix with hcbETH. After Solana + C1, not BATCH 2/3.",
       "testnet": {
         "sourceChain": "sepolia",
         "mockInner": true
       },
-      "status": "later",
-      "priority": 20
+      "status": "last",
+      "priority": 90
     },
     {
       "id": "hvirtualmax",
@@ -1128,9 +1128,11 @@
         ]
       },
       "refs": {
-        "stakeTx": "0x7ebe5e08df256dd06fe356e9470deaa85ec9e86a2b43a8f4bba136f80d72e340"
+        "stakeTx": "0x7ebe5e08df256dd06fe356e9470deaa85ec9e86a2b43a8f4bba136f80d72e340",
+        "winQueueTx": "0x58016b6a293a757544183e7e82b5f4d5a6f4920894ee830e4ab42dd83ca77ae3",
+        "winClaimTx": "0x087ce4a030b8ec0d0a7736570c04a1ee7da1b9b07477491c6406989ec49effd9"
       },
-      "note": "Live path 2026-08-31: stakeFor(user, amount) 0x2ee40908 on proxy 0x18541 (stakingToken=B3, totalStaked~20.7M). No receipt NFT/ERC-20. B3 then leaves the stake contract to EOA 0x8D06 (no bytecode) \u2014 principal is team custody, not a contract lock. Must stakeFor(lockbox, amt) so the Staked event user is the lockbox. WIN not in this tx \u2014 still need a harvest/claim tx. 45d unstake unused (C1).",
+      "note": "Flow: stakeFor B3 on 0x18541 (principal then EOA 0x8D06) -> queue WIN on 0xe69b -> wait 24h -> claim B3. WIN is not an ERC-20. Queue 0x24cf0593(winAmount, recipient) via ERC-4337 tx 0x58016b6a: 22340.427 WIN -> ~223.40 B3 (100:1), Request 1451, recipient 0x11356, no B3 moved. Claim claimDelayedWithdrawal(index) 0xf41ba29c tx 0x087ce4a0: index 5, Request 1431, 252.67 B3 to stored recipient. Lockbox must be the queue recipient. Never submit the UserOp from the lockbox. 45d unstake unused (C1).",
       "status": "research",
       "priority": 9
     },
