@@ -16,13 +16,14 @@ App: [hyperleaf.finance](https://hyperleaf.finance) · X: [@HyperLeafHQ](https:/
 
 HyperLeaf's core job is to bring productive or otherwise constrained positions into a common HyperEVM-native asset format without hiding the underlying risks.
 
-The listing model is intentionally split into three economic paths:
+The listing model is intentionally split into four economic paths:
 
 - **L — Liquid receipt:** the underlying protocol supports direct redemption.
 - **C1 — Market exit:** there is no protocol redemption; exit depends on a buyer in a claim market.
 - **C2 — Queued exit:** the Leaf can be burned into the underlying claim, but the protocol withdrawal remains subject to its queue or cooldown.
+- **Pre — Pre-TGE claim:** a claim on pre-TGE points or similar future token economics, with settlement determined by the eventual TGE outcome rather than an existing redemption route.
 
-The key rule is **economic fidelity**: a Leaf should preserve the actual underlying claim, including rate accrual, lock periods, queue mechanics, bridge constraints, and loss conditions. HyperLeaf does not manufacture a 1:1 redemption promise where the source protocol does not provide one, and it does not maintain a permanent treasury bid or NAV floor.
+The key rule is **economic fidelity**: a Leaf or claim should preserve the actual underlying economics, including rate accrual, lock periods, queue mechanics, bridge constraints, settlement conditions, and loss conditions. HyperLeaf does not manufacture a 1:1 redemption promise where the source protocol does not provide one, and it does not maintain a permanent treasury bid or NAV floor.
 
 ---
 
@@ -98,6 +99,26 @@ These add Avalanche and Ethereum integrations with asset-specific rate logic, re
 
 These assets do not have an honest protocol redemption path, so the correct product is a **claim market**, not a synthetic redemption guarantee. `hORDER` is Arbitrum-only and uses the dedicated inbound lockbox path; there is no CREATE2 twin on another chain.
 
+### C2 and other queued claims
+
+C2 assets remain a separate rollout class for positions whose underlying redemption is real but delayed by a queue or cooldown. They are added only when the burn / exit path and its timing semantics can be verified on-chain.
+
+### Pre — Pre-TGE claims
+
+Pre-TGE claims are treated as a first-class asset path alongside L / C1 / C2 rather than as an unrelated product layer.
+
+The current implementation is the standalone **Pre-Market Guarantee Market** on `feat/premarket`: seller collateral and buyer payments are held in bilateral escrow, the claim can trade before TGE, and settlement follows resolver-confirmed delivery or default rules.
+
+Current implementation snapshot:
+
+- Branch: `feat/premarket`
+- Reviewed snapshot: `c26f4f8`
+- Scope: standalone `src/premarket/*`
+- Not deployed
+- Not imported into the live Leaf path
+
+Before production use, the remaining delivery and settlement accounting hardening must be completed together with stronger invariant and edge-case testing.
+
 ### NFT and special-position paths
 
 The next non-standard family is **ve-NFT / NFT lockbox** infrastructure. `hveAERO` is being developed with `LeafNftLockbox`; the intended mode is permanent NORMAL wrapping, not a generic fungible conversion. Other NFT claims such as `hveUP` follow only after the lockbox path is proven.
@@ -112,11 +133,9 @@ Later Solana candidates such as JupSOL, mSOL, and VRT-based positions remain beh
 
 ---
 
-# What is being built around the listings
+# Market model
 
-## Claim-market infrastructure
-
-For C1 assets and other positions without protocol redemption, HyperLeaf is developing a peer claim-market model rather than promising liquidity itself.
+For C1 and other non-redeemable claims, HyperLeaf is developing a peer claim-market model rather than promising liquidity itself.
 
 The design direction is:
 
@@ -124,33 +143,7 @@ The design direction is:
 
 The protocol does not seed a permanent HyperEVM AMM, does not act as an always-on buyer, and does not create a treasury NAV floor. The market exists to make the underlying economic claim tradable, not to erase its liquidity risk.
 
-## Pre-Market Guarantee Market
-
-A separate pre-TGE claim market is being developed on **`feat/premarket`**, not on `main`.
-
-The current product model uses bilateral escrow around pre-TGE point claims:
-
-```text
-Seller
-  ↓ locks collateral
-Claim series token
-  ↓ primary / secondary trading
-Buyer exposure
-  ↓ TGE resolution
-48h delivery window
-  ├── SETTLED → official token
-  └── DEFAULTED → escrow refund + collateral penalty
-```
-
-Current implementation snapshot:
-
-- Branch: `feat/premarket`
-- Reviewed snapshot: `c26f4f8`
-- Scope: standalone `src/premarket/*`
-- Not deployed
-- Not imported into the live Leaf path
-
-Before production use, the remaining delivery and settlement accounting hardening must be completed together with stronger invariant and edge-case testing.
+Pre-TGE claims use a specialized bilateral-escrow settlement path because the final official token and conversion rate do not exist until TGE resolution.
 
 ---
 
@@ -185,7 +178,7 @@ Core principles:
 
 ## Mid term
 
-- Expand the catalog with additional high-confidence L / C1 / C2 assets from Ethereum, BSC, Avalanche, Berachain, Robinhood, Solana, and other supported environments.
+- Expand the catalog with additional high-confidence L / C1 / C2 assets and carefully evaluated Pre-TGE claims from Ethereum, BSC, Avalanche, Berachain, Robinhood, Solana, and other supported environments.
 - Add chain-specific integrations where the underlying protocol economics require their own lockbox, NFT, queue, or accounting model.
 - Improve permissionless operational flows such as harvesting without weakening asset-level accounting controls.
 - Gradually reduce admin dependence through stronger invariants, operational guards, and governance boundaries.
