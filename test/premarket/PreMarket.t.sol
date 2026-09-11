@@ -62,6 +62,16 @@ contract PreMarketTest is Test {
         assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.OPEN));
     }
 
+    function testOneXAndRejectThreeX() public {
+        vm.prank(bob);
+        bytes32 s1 = factory.createSeries(marketId, 10_000, 20e18);
+        assertEq(factory.seriesUnit(s1), 20e6);
+        assertEq(ClaimSeriesToken(factory.seriesClaim(s1)).symbol(), "hPerVarPts-20-1X");
+        vm.prank(bob);
+        vm.expectRevert(PreMarketFactory.BadTier.selector);
+        factory.createSeries(marketId, 30_000, 20e18);
+    }
+
     function testPrimaryFillThenDeliver() public {
         vm.prank(alice);
         factory.buyFromSeries(seriesId, 100e18);

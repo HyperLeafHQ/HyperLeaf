@@ -145,13 +145,14 @@ contract PreMarketFactory {
         emit MarketCreated(marketId, asset, name);
     }
 
+    /// @dev 1x = seller-friendly listing. 2x = HyperLeaf guarantee. No 3x.
     function createSeries(bytes32 marketId, uint16 tierBps, uint256 refPriceUsd)
         external
         returns (bytes32 seriesId)
     {
         Market storage m = markets[marketId];
         if (!m.live) revert Unknown();
-        if (tierBps != 10_000 && tierBps != 20_000 && tierBps != 30_000) revert BadTier();
+        if (tierBps != 10_000 && tierBps != 20_000) revert BadTier();
         if (refPriceUsd < MIN_REFERENCE_PRICE_USD) revert Floor();
         uint256 unit = _unitRequirement(refPriceUsd, tierBps, m.assetDecimals);
         if (unit < 10 ** m.assetDecimals) revert Floor();

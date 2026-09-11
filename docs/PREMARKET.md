@@ -10,9 +10,11 @@ Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67) v3 + audit [5635
 2. **SETTLED asset is the resolver `officialToken` on the settlement chain.** That ERC-20 is what holders receive. Cross-chain lockbox may only credit that same token. Origin lock is how the token gets here, not a second ticker. Bridge risk is the lockbox of that token, Section 12.
 3. **~1% refund variance is primary-fill only** (Leaf Market 1% buyer reward). Direct `buyFromSeries` has no reward. Secondary purchase price is never refunded.
 
+First canary: **Variational points** (`hPerVarPts-{price}-{1|2}X`). Tiers **{1x, 2x} only** — 1x so sellers will list; 2x is the HyperLeaf guarantee. No 3x.
+
 ## Constants
 
-`DELIVERY_WINDOW = 48h` from series `resolve()`. `EXPIRY = 365d` from first mint. `RESOLVE_GRACE = 48h`. Tiers {1x,2x,3x}. Floors $1. Protocol take = 100% of vault surplus (interest). No claim deadline.
+`DELIVERY_WINDOW = 48h` from series `resolve()`. `EXPIRY = 365d` from first mint. `RESOLVE_GRACE = 48h`. Tiers {1x, 2x}. Floors $1. Protocol take = 100% of vault surplus (interest). No claim deadline.
 
 ## Example
 
