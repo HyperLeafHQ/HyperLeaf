@@ -11,7 +11,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
 | #01–#41 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 | #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
-| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [CFX report](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-PLACEHOLDER) |
+| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [PLACEHOLDER](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 
 ## Numbering reconciliation
 
