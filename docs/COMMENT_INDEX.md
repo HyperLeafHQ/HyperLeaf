@@ -17,7 +17,8 @@ See the canonical index comment for the full #01–#42 historical series and met
 
 | Asset | Decision | Comment |
 |---|---|---|
-| KITE / Kite AI | Strong Watch / Strategic Candidate; agent-payment infrastructure + PoS staking; observation only until canonical KITE → HyperEVM representation, productive accounting, liquidity and exits are verified. | TBD |
+| KITE / Kite AI | Strong Watch / Strategic Candidate; agent-payment infrastructure + PoS staking; observation only until canonical KITE → HyperEVM representation, productive accounting, liquidity and exits are verified. | [5639822315](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639822315) |
+| STREAM / Streamflow | Strong Watch / Strategic Candidate; real Solana infrastructure, protocol revenue and staking/governance utility, but no current canonical STREAM → HyperEVM route and no direct claim on protocol revenue. Observation only. | [5653220142](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653220142) |
 | LDO | No-Go / Watchlist as standalone Leaf; prefer stETH/wstETH or productive Lido position | 5637940642 |
 | BTT | P1 Research Candidate / native BTTC staking; canonical HyperEVM route required | 5637959434 |
 | GNO | P1 Strategic Candidate; do not implement yet | 5638008710 |
@@ -27,6 +28,14 @@ See the canonical index comment for the full #01–#42 historical series and met
 ## KITE observation
 
 Kite is a strong strategic watch because its product is specifically aimed at autonomous-agent identity, authorization and payments. Kite Mainnet is a PoS EVM-compatible L1 (Chain ID 2366); Agent Passport provides scoped spending controls and verifiable receipts; official tokenomics tie KITE to staking, governance, ecosystem access and planned service-commission conversion. The key HyperLeaf thesis is productive KITE staking, not spot wrapping. Mainnet contract documentation exposes native staking plus a StakingVault/LST architecture. The remaining blocker is a canonical KITE → HyperEVM route and verified cross-chain exit/accounting, so this remains observation-only.
+
+## STREAM observation
+
+Streamflow is a Solana-native token distribution / payment infrastructure protocol. Its production stack includes vesting, locks, airdrops, streaming payments, staking and developer SDKs. STREAM is documented for governance, staking, premium access and discounts, while the protocol generates revenue from protocol fees, platform access and custom offerings.
+
+The economic limitation for HyperLeaf is important: Streamflow explicitly describes STREAM as a utility/governance token and states that holding STREAM does not confer rights to Streamflow revenue or assets. Protocol revenue therefore cannot be counted as STREAM backing. A future Leaf would have to represent a verifiable productive staking position rather than capitalize treasury or fee value.
+
+No official Streamflow documentation or repository reviewed establishes a canonical STREAM deployment or bridge to HyperEVM. Keep STREAM at Strong Watch / Strategic Candidate until canonical representation, staking receipt/rate mechanics, liquidity and exit topology are independently verified.
 
 ## Methodology
 
@@ -48,3 +57,5 @@ Kite is a strong strategic watch because its product is specifically aimed at au
 16. Implementation requirements
 
 Core rule: productive position > spot-token wrapping. `totalLeafLiability <= verified economically realizable NAV of productive position`.
+
+Keep **Backing / Yield / Incentives / Market Price / Exit Value** separate. Unverified appreciation must never create Leaf liabilities.
