@@ -12,6 +12,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #01–#44 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 | #45 | FLOKI / Floki | FLOKI staking/lock position; convert external rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653288714](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653288714) |
 | #46 | THETA / Theta Network | Native THETA Guardian / Validator staking position; convert TFUEL rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653547490](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653547490) |
+| #47 | GRT / The Graph | stGRT / GRT liquid-staked position; preserve accrued staking rewards; canonical HyperEVM route required | Selected / P1 Research / Production Gated | [5653572619](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653572619) |
 
 ## Non-series completed / consolidated evaluations
 
@@ -41,7 +42,7 @@ Decision: **Selected / P1 Research / Production Gated.**
 
 ## CRV + CVX observation brief
 
-CRV and CVX should be evaluated together because Convex is a major liquid-locker layer for Curve. Curve currently generates protocol fee flows to veCRV lockers, while Convex aggregates Curve voting power and allows users to stake cvxCRV or CVX to receive platform-related rewards. Convex's current interface states that staked CVX earns a share of platform revenue distributed as cvxCRV, while locked CVX earns a different revenue share and governance/voting weight. citeturn228900search0turn228900search2
+CRV and CVX should be evaluated together because Convex is a major liquid-locker layer for Curve. Curve currently generates protocol fee flows to veCRV lockers, while Convex aggregates Curve voting power and allows users to stake cvxCRV or CVX to receive platform-related rewards. Convex's current interface states that staked CVX earns a share of platform revenue distributed as cvxCRV, while locked CVX earns a different revenue share and governance/voting weight.
 
 For HyperLeaf, the important distinction is representation rather than token labels:
 
@@ -51,15 +52,15 @@ and
 
 `CVX → Convex stake/lock position → platform revenue / cvxCRV + incentives → sell/swap → HYPE`
 
-Curve's 2026 fee data confirms that veCRV has a real revenue stream: May–June 2026 DEX fees were about $1.87M and $2.68M, with veCRV APR around 5.4% during that period. citeturn228900search1
+Curve's 2026 fee data confirms that veCRV has a real revenue stream.
 
-However, neither raw CRV nor raw CVX should automatically be treated as a productive Leaf. The productive unit should be the verified locked/staked position that has a contractual claim to the resulting reward/revenue stream. For CRV, direct veCRV locking has a long lock horizon; Convex-style liquid-locker representations can improve composability but introduce derivative liquidity/depeg and custody assumptions. Curve itself notes that liquid-locker tokens such as cvxCRV are transferable but not directly redeemable for the underlying CRV. citeturn228900search9
+However, neither raw CRV nor raw CVX should automatically be treated as a productive Leaf. The productive unit should be the verified locked/staked position that has a contractual claim to the resulting reward/revenue stream. For CRV, direct veCRV locking has a long lock horizon; Convex-style liquid-locker representations can improve composability but introduce derivative liquidity/depeg and custody assumptions.
 
-**Decision: Strong Watch / Strategic Candidate — combined CRV + CVX.** No new formal number because the Curve ecosystem / scrvUSD work already exists in the formal series. Priority is to identify the best economically realizable productive representation (direct veCRV, cvxCRV, or CVX stake/lock) and verify its HyperEVM route, accounting, liquidity and exit topology before implementation.
+**Decision: Strong Watch / Strategic Candidate — combined CRV + CVX.** No new formal number because the Curve ecosystem / scrvUSD work already exists in the formal series.
 
 ## THETA evaluation
 
-THETA is formally promoted to **#46** because it represents a genuine native staking productive position rather than a spot-token value proposition. Theta's current official documentation states that THETA is used to stake as a Validator or Guardian node and that staking earns newly generated TFUEL proportionally over time. The documented Guardian minimum is 1,000 THETA, with rewards distributed probabilistically at checkpoint blocks. citeturn301963search3turn301963search1turn301963search0
+THETA is formally promoted to **#46** because it represents a genuine native staking productive position rather than a spot-token value proposition. Theta's current official documentation states that THETA is used to stake as a Validator or Guardian node and that staking earns newly generated TFUEL proportionally over time. The documented Guardian minimum is 1,000 THETA, with rewards distributed probabilistically at checkpoint blocks.
 
 HyperLeaf should model the economic flow as:
 
@@ -67,19 +68,27 @@ HyperLeaf should model the economic flow as:
 
 Backing remains the economically realizable THETA principal represented by the verified staking position. TFUEL is yield. THETA market-price appreciation is not yield and must not create additional Leaf liabilities.
 
-Theta's current documentation also confirms that the reward stream is observable through the staking wallet / explorer and that Guardian rewards are awarded every 100 blocks (~10 minutes) using a probabilistic, stake-weighted process. This makes realized TFUEL a suitable accounting input; HyperLeaf should not account from a headline APR. citeturn301963search0turn301963search2
+The main production gate is the complete exit topology and canonical representation on HyperEVM.
 
-The main production gate is the complete exit topology:
+**Decision: Selected / P1 Research / Production Gated.**
 
-`HyperEVM Leaf → productive THETA staking position → verified THETA exit / unstake → canonical destination representation`
+## GRT evaluation
 
-Theta's Metachain architecture is EVM-compatible, but EVM compatibility alone does not establish a canonical HyperEVM productive representation. citeturn301963search11
+GRT is formally promoted to **#47** because The Graph now has a live liquid-staking path that turns staked GRT into a liquid `stGRT` position representing the underlying staked position plus accrued rewards. The Graph Foundation announced the Phase 1 soft launch on August 25, 2026, and its current vault surface shows an Arbitrum stGRT vault with a NAV/share-price accounting unit.
 
-Therefore the preferred design is a **verified native THETA staking position adapter**, not a raw THETA bridge/wrapper. Production requires verification of the exact staking contract(s), custody model, deposit/delegation, withdrawal and unbonding mechanics, reward beneficiary, canonical THETA/TFUEL route to HyperEVM, bridge recovery/security, HyperEVM liquidity, and safe TFUEL→HYPE liquidation.
+The underlying economic position is strong under HyperLeaf's framework:
 
-The adapter must also prevent double-counting pending versus claimed TFUEL and cap Leaf liabilities against economically realizable THETA principal plus realized reward proceeds.
+`GRT → delegate / liquid-staked GRT position → query-fee + indexing-reward accrual → stGRT NAV appreciation → realize / exit → sell or swap → HYPE`
 
-**Decision: Selected / P1 Research / Production Gated.** THETA is a strong productive-position candidate, but implementation remains blocked until the full native-staking → HyperEVM → exit topology is verified on-chain.
+The Graph's core protocol is a real data-services marketplace. Indexers stake GRT and earn query fees and indexing rewards, while Delegators can delegate GRT and receive a share of Indexer rewards and query fees. Current official documentation describes typical Delegator returns around 9–12% annually, but HyperLeaf should use realized on-chain accrual rather than headline APR as its accounting input.
+
+The new `stGRT` route is particularly relevant because it solves part of the traditional GRT problem: native delegation has a roughly 28-day undelegation period, while a liquid representation can preserve productivity and improve composability. However, stGRT is currently an Arbitrum-side position; The Graph's own roadmap separately tracks cross-chain GRT liquid staking, and no verified canonical GRT/stGRT → HyperEVM representation has been established here yet.
+
+Therefore the preferred HyperLeaf design is **stGRT or another verified liquid-staked GRT position**, not a raw GRT spot wrapper. The adapter must value shares from the actual underlying productive position, prevent double-counting accrued versus realized rewards, and cap liabilities against economically realizable underlying GRT NAV.
+
+The main production gates are: exact stGRT/vault contract and withdrawal semantics; whether the position can be exited without importing the full native undelegation delay; reward accrual and fee treatment; admin/upgrade controls; Arbitrum → HyperEVM canonical bridge or native representation; HyperEVM liquidity; and a safe realized-reward → HYPE liquidation path.
+
+**Decision: Selected / P1 Research / Production Gated.** GRT is materially stronger than a normal utility/governance token because its economic role is tied directly to a productive decentralized data-service network and now has a liquid-staking representation. The next step is on-chain verification of stGRT and its complete HyperEVM exit topology before implementation.
 
 ## Methodology
 
