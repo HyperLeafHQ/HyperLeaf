@@ -13,6 +13,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #45 | FLOKI / Floki | FLOKI staking/lock position; convert external rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653288714](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653288714) |
 | #46 | THETA / Theta Network | Native THETA Guardian / Validator staking position; convert TFUEL rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653547490](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653547490) |
 | #47 | GRT / The Graph | stGRT / GRT liquid-staked position; preserve accrued staking rewards; canonical HyperEVM route required | Selected / P1 Research / Production Gated | [5653572619](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653572619) |
+| #48 | COMP + UNI | Productive Compound / Uniswap fee-capture positions; no raw spot-token wrapper | Strong Watch / Strategic Candidate | [5653660029](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653660029) |
 
 ## Non-series completed / consolidated evaluations
 
@@ -89,6 +90,81 @@ Therefore the preferred HyperLeaf design is **stGRT or another verified liquid-s
 The main production gates are: exact stGRT/vault contract and withdrawal semantics; whether the position can be exited without importing the full native undelegation delay; reward accrual and fee treatment; admin/upgrade controls; Arbitrum → HyperEVM canonical bridge or native representation; HyperEVM liquidity; and a safe realized-reward → HYPE liquidation path.
 
 **Decision: Selected / P1 Research / Production Gated.** GRT is materially stronger than a normal utility/governance token because its economic role is tied directly to a productive decentralized data-service network and now has a liquid-staking representation. The next step is on-chain verification of stGRT and its complete HyperEVM exit topology before implementation.
+
+## COMP + UNI evaluation
+
+COMP and UNI are evaluated together as **DeFi protocol value-capture / governance tokens**. The key HyperLeaf question is not whether Compound or Uniswap generates real economic activity, but whether the token itself represents a sufficiently direct, verifiable and realizable productive economic position that can safely back a Leaf.
+
+### COMP — Compound
+
+Compound is a genuine productive lending protocol: users supply and borrow assets, creating interest and protocol-level revenue/reserve flows. However, raw COMP does **not** represent a direct pro-rata claim on those lending cash flows.
+
+Economic structure:
+
+`Compound lending activity → interest / protocol revenue → protocol reserves / governance`
+
+This is materially different from:
+
+`COMP holder → contractual claim on Compound revenue`
+
+Therefore HyperLeaf should **not** treat spot COMP appreciation, DAO treasury value, or protocol revenue as COMP backing. Any future Compound implementation should instead target an explicitly productive position such as a verified lending/vault receipt whose NAV and accrued interest are contractually attributable to the position holder.
+
+Preferred direction:
+
+`productive Compound position → interest accrual → realize/swap → HYPE`
+
+Not:
+
+`COMP → HYPE`
+
+**COMP decision: Strong Watch / Strategic Watch.**
+
+Main gates: direct token-holder revenue rights if the protocol changes its economics; canonical HyperEVM representation; exact productive receipt / vault contract; NAV accounting; withdrawal/exit topology; liquidity; and proof that liabilities are capped by realizable productive NAV.
+
+### UNI — Uniswap
+
+UNI is also a governance token, but its economic position is stronger than a pure governance asset because Uniswap's protocol-fee mechanism now creates an explicit token-level value-capture path.
+
+Current protocol-fee architecture routes protocol fees into TokenJar contracts and uses the fee/releaser mechanism to process accumulated assets. The resulting mechanism includes UNI burn / value-capture for UNI holders rather than simply leaving all protocol revenue at the DAO level.
+
+Economic structure:
+
+`Uniswap trading → protocol fees → TokenJar → fee/releaser mechanism → UNI burn / UNI value capture`
+
+This is a real protocol-level economic linkage, but HyperLeaf should still distinguish **value capture from direct redeemable cashflow**. A burn mechanism can increase the economic value of remaining UNI without making each UNI a stable, directly redeemable claim on a fixed amount of protocol assets.
+
+Therefore raw UNI should not automatically be treated as rate-bearing Leaf collateral. The stronger future direction is a verified position that directly captures Uniswap fee economics, if/when such a position has clear accounting and exit semantics.
+
+Preferred direction:
+
+`Uniswap productive / fee-capture position → protocol fee value accrual → realizable value → HYPE`
+
+Not:
+
+`raw UNI → HYPE yield`
+
+**UNI decision: Strong Watch / Strategic Candidate.**
+
+Main gates: canonical HyperEVM UNI route; exact current fee/releaser implementation per chain; whether the holder's economic benefit is measurable as NAV or realized proceeds; redemption/exit topology; governance/admin dependencies; and safe HYPE liquidation.
+
+### Combined HyperLeaf classification
+
+| Asset | Productive economic link | Value capture | Preferred HyperLeaf object | Decision |
+|---|---|---|---|---|
+| COMP | Protocol activity is productive, but raw COMP lacks direct revenue claim | Weak / indirect | Verified Compound lending position | **Strong Watch / Strategic Watch** |
+| UNI | Protocol fees create explicit token-level value capture | Medium / indirect-to-token | Verified fee-capture / productive Uniswap position | **Strong Watch / Strategic Candidate** |
+
+The important distinction is:
+
+> **Protocol revenue is not automatically token backing.**
+
+HyperLeaf should only issue liabilities against a productive position whose economically realizable NAV can be verified. Burn-induced appreciation, governance treasury assets, incentives, and market-price appreciation must not be counted as backing unless there is a contractual and realizable claim.
+
+Core invariant remains:
+
+`totalLeafLiability <= verified economically realizable NAV of productive position`
+
+**Final Decision: #48 — COMP + UNI: Strong Watch / Strategic Candidate (combined).** UNI is the stronger candidate because its protocol-fee architecture provides a clearer token-level value-capture path. COMP remains structurally interesting but is weaker as a standalone Leaf until a direct productive/revenue-bearing representation exists. Neither should be implemented as a raw spot-token wrapper at this stage.
 
 ## Methodology
 
