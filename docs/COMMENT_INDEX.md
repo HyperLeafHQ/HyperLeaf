@@ -11,7 +11,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
 | #01–#41 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 | #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
-| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [5639829001](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639829001) |
+| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [5653229999](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653229999) |
 
 ## Numbering reconciliation
 
@@ -50,6 +50,8 @@ or, once a mature canonical staking receipt exists:
 `CFX → canonical rate-bearing staking receipt → HyperEVM Leaf`
 
 Do not treat unstaked eSpace CFX as a staked productive position. Do not capitalize CFX market-price appreciation as yield. Staking rewards must be separated from inflation, incentives, market price and bridge liquidity.
+
+CFX has meaningful protocol utility across gas, storage, governance and PoS participation. Its monetary model is inflationary from PoW and PoS issuance, with protocol burn mechanisms; accounting must distinguish staking reward accrual from broader token-supply dilution.
 
 Decision: **Selected / P1 Research / Production Gated.** Production is blocked until HyperLeaf verifies exact Core-space staking custody, reward accrual/accounting, validator/slashing behavior, Core → eSpace → HyperEVM exit topology, exact HyperEVM token contract and bridge controls, bridge failure/recovery procedures, and capped solvency limits against verified economically realizable NAV.
 
