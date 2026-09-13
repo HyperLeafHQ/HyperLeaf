@@ -11,6 +11,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
 | #01–#44 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 | #45 | FLOKI / Floki | FLOKI staking/lock position; convert external rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653288714](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653288714) |
+| #46 | THETA / Theta Network | Native THETA Guardian / Validator staking position; convert TFUEL rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653547490](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653547490) |
 
 ## Non-series completed / consolidated evaluations
 
@@ -55,6 +56,30 @@ Curve's 2026 fee data confirms that veCRV has a real revenue stream: May–June 
 However, neither raw CRV nor raw CVX should automatically be treated as a productive Leaf. The productive unit should be the verified locked/staked position that has a contractual claim to the resulting reward/revenue stream. For CRV, direct veCRV locking has a long lock horizon; Convex-style liquid-locker representations can improve composability but introduce derivative liquidity/depeg and custody assumptions. Curve itself notes that liquid-locker tokens such as cvxCRV are transferable but not directly redeemable for the underlying CRV. citeturn228900search9
 
 **Decision: Strong Watch / Strategic Candidate — combined CRV + CVX.** No new formal number because the Curve ecosystem / scrvUSD work already exists in the formal series. Priority is to identify the best economically realizable productive representation (direct veCRV, cvxCRV, or CVX stake/lock) and verify its HyperEVM route, accounting, liquidity and exit topology before implementation.
+
+## THETA evaluation
+
+THETA is formally promoted to **#46** because it represents a genuine native staking productive position rather than a spot-token value proposition. Theta's current official documentation states that THETA is used to stake as a Validator or Guardian node and that staking earns newly generated TFUEL proportionally over time. The documented Guardian minimum is 1,000 THETA, with rewards distributed probabilistically at checkpoint blocks. citeturn301963search3turn301963search1turn301963search0
+
+HyperLeaf should model the economic flow as:
+
+`THETA → Guardian / Validator staking position → TFUEL rewards → sell/swap → HYPE → protocol fee → Leaf yield`
+
+Backing remains the economically realizable THETA principal represented by the verified staking position. TFUEL is yield. THETA market-price appreciation is not yield and must not create additional Leaf liabilities.
+
+Theta's current documentation also confirms that the reward stream is observable through the staking wallet / explorer and that Guardian rewards are awarded every 100 blocks (~10 minutes) using a probabilistic, stake-weighted process. This makes realized TFUEL a suitable accounting input; HyperLeaf should not account from a headline APR. citeturn301963search0turn301963search2
+
+The main production gate is the complete exit topology:
+
+`HyperEVM Leaf → productive THETA staking position → verified THETA exit / unstake → canonical destination representation`
+
+Theta's Metachain architecture is EVM-compatible, but EVM compatibility alone does not establish a canonical HyperEVM productive representation. citeturn301963search11
+
+Therefore the preferred design is a **verified native THETA staking position adapter**, not a raw THETA bridge/wrapper. Production requires verification of the exact staking contract(s), custody model, deposit/delegation, withdrawal and unbonding mechanics, reward beneficiary, canonical THETA/TFUEL route to HyperEVM, bridge recovery/security, HyperEVM liquidity, and safe TFUEL→HYPE liquidation.
+
+The adapter must also prevent double-counting pending versus claimed TFUEL and cap Leaf liabilities against economically realizable THETA principal plus realized reward proceeds.
+
+**Decision: Selected / P1 Research / Production Gated.** THETA is a strong productive-position candidate, but implementation remains blocked until the full native-staking → HyperEVM → exit topology is verified on-chain.
 
 ## Methodology
 
