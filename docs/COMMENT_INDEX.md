@@ -10,6 +10,9 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 |---|---|---|---|---|
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
 | #01–#44 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
+| #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
+| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [5653229999](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653229999) |
+| #44 | IMX / Immutable | Verified Immutable staking position; no spot wrapper | P1 Research / Conditional | [5653271541](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653271541) |
 | #45 | FLOKI / Floki | FLOKI staking/lock position; convert external rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653288714](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653288714) |
 
 ## Numbering reconciliation
@@ -51,7 +54,11 @@ Preferred architecture:
 
 `FLOKI → verified staking/locking position → reward asset → swap/sell → HYPE → protocol fee → Leaf yield`
 
-Do not build a raw 1:1 FLOKI spot wrapper and call the reward token FLOKI yield. Production still requires verification of the staking contract, lock/withdrawal rules, reward accrual and funding, admin controls, reward liquidity, swap/slippage controls, canonical HyperEVM representation, bridge custody/failure recovery, and solvency caps against economically realizable principal and realized HYPE proceeds.
+The Leaf should represent the verified productive position and its realized HYPE-denominated reward stream. A raw 1:1 FLOKI spot wrapper is not the intended architecture.
+
+Production gates remain: exact staking contract(s), lock duration and withdrawal mechanics, reward accrual/funding, admin/pause/upgrade authority, source-chain custody, reward-asset liquidity, swap execution and slippage controls, canonical HyperEVM representation, bridge custody/failure recovery, and a solvency cap against economically realizable principal plus only realized HYPE rewards actually available to the protocol.
+
+FLOKI's ecosystem fee/burn mechanisms may create long-run token-supply effects, but HyperLeaf must not count those effects as backing. Likewise, FLOKI market-price appreciation must never create additional Leaf liabilities.
 
 Decision: **Selected / P1 Research / Production Gated.** FLOKI qualifies because its staking/locking position produces a real, monetizable reward stream. The relevant product property is productive reward generation, not whether the reward token itself is FLOKI.
 
