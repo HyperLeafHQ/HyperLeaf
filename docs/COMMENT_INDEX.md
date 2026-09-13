@@ -35,25 +35,25 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 
 ## CFX evaluation
 
-CFX qualifies for a formal HyperLeaf evaluation because it has a native, protocol-level productive position: Conflux PoS staking. Conflux's official documentation states that CFX staking earns PoS rewards, and current staking mechanics include a 13-day locking period followed by a normal 1-day unlocking period after unstake; early unstake can extend the period up to 14 days. CFX therefore represents a real productive consensus position rather than a passive spot balance.
+CFX qualifies for a formal HyperLeaf evaluation because it has a native, protocol-level productive position: Conflux PoS staking. Conflux's official documentation states that CFX staking earns PoS rewards, and current staking mechanics include a 13-day locking period followed by a normal 1-day unlocking period after unstake; early unstake can extend the period up to 14 days.
 
-Conflux has two execution spaces: Core Space, where native CFX staking and PoS functionality live, and eSpace, which is EVM-compatible. The Core/eSpace split is an important accounting and custody consideration for HyperLeaf. Conflux provides an official CrossSpace mechanism for moving CFX between Core and eSpace, but a CFX balance on eSpace is not itself a staking position.
+Conflux has two execution spaces: Core Space, where native CFX staking and PoS functionality live, and eSpace, which is EVM-compatible. The Core/eSpace split is an important accounting and custody consideration for HyperLeaf. Conflux provides an official CrossSpace mechanism for moving CFX between Core and eSpace, but a balance on eSpace is not itself a staking position.
 
-Cross-chain canonicality is materially stronger than for many candidates: Conflux publicly announced Stargate support for CFX transfers involving Conflux eSpace, Ethereum, HyperEVM and Kaia in November 2025. This proves an operational CFX → HyperEVM bridge route exists, but it is still an external omnichain route rather than a native Hyperliquid canonical asset deployment. Hyperliquid documentation likewise permits external bridges and permissionless EVM token deployments. Therefore the HyperEVM representation must be verified at contract, custody, bridge and exit layers before production.
+Cross-chain canonicality is materially stronger than for many candidates: Conflux publicly announced Stargate support for CFX transfers involving Conflux eSpace, Ethereum, HyperEVM and Kaia in November 2025. This proves an operational CFX → HyperEVM route exists, but it is still an external omnichain route rather than a native Hyperliquid canonical asset deployment. Hyperliquid documentation permits external bridges and permissionless EVM token deployments. Therefore the HyperEVM representation must be verified at contract, custody, bridge and exit layers before production.
 
-The preferred HyperLeaf architecture is therefore:
+Preferred architecture:
 
 `CFX → Core PoS staking position → verified exit/unlock → canonical bridge route → HyperEVM Leaf`
 
-or, where a mature canonical staking receipt becomes available:
+or, once a mature canonical staking receipt exists:
 
 `CFX → canonical rate-bearing staking receipt → HyperEVM Leaf`
 
 Do not back a Leaf with unstaked eSpace CFX while representing it as though the underlying position is staked. Do not capitalize CFX price appreciation as yield. Staking rewards must be separated from market price, inflation, incentives and bridge liquidity.
 
-CFX has meaningful protocol-level utility: gas, storage, governance and PoS participation. Current official materials also document ongoing inflation from PoW and PoS issuance and corresponding burn mechanisms. This means NAV/accounting must explicitly distinguish staking reward accrual from dilution of the broader token supply.
+CFX has meaningful protocol utility across gas, storage, governance and PoS participation. Its monetary model is inflationary from PoW and PoS issuance, with protocol burn mechanisms; accounting must distinguish staking reward accrual from broader token-supply dilution.
 
-Decision: **Selected / P1 Research / Production Gated.** The asset is support-worthy, but production is blocked until HyperLeaf verifies: (1) exact Core-space staking custody model, (2) reward accrual/accounting, (3) validator/slashing/force-retire behavior, (4) the full CFX Core → eSpace → HyperEVM exit topology, (5) the exact HyperEVM token contract and bridge controls, (6) bridge failure/recovery procedures, and (7) capped solvency limits against verified economically realizable NAV.
+Decision: **Selected / P1 Research / Production Gated.** Production is blocked until HyperLeaf verifies: exact Core-space staking custody, reward accrual/accounting, validator/slashing behavior, full Core → eSpace → HyperEVM exit topology, exact HyperEVM token contract and bridge controls, bridge failure/recovery procedures, and capped solvency limits against verified economically realizable NAV.
 
 ## Methodology
 
