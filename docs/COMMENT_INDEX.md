@@ -10,7 +10,15 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 |---|---|---|---|---|
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
 | #01–#42 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
-| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [PENDING](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
+| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | TBD |
+
+## Numbering reconciliation
+
+- **#40 = MON / shMON**, **#41 = LUNC**, **#42 = XTZ / Tezos**, **#43 = CFX / Conflux**.
+- Old EURC `#89` is retired and is not part of the formal evaluation series.
+- MON / shMON is one consolidated record with the existing `hshMON` implementation; do not create another MON evaluation.
+- LUNC legacy WLUNC has official historical Terra/Shuttle provenance, but this does **not** establish a current canonical Terra Classic → HyperEVM deployment.
+- Tezos' official XTZ → Etherlink route is canonical for Etherlink, not for HyperEVM.
 
 ## Non-series completed / consolidated evaluations
 
@@ -26,25 +34,17 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 
 ## CFX evaluation
 
-CFX qualifies for a formal HyperLeaf evaluation because it has a native, protocol-level productive position: Conflux PoS staking. Conflux's official documentation states that CFX staking earns PoS rewards, with a normal 13-day lock after staking and a 1-day unlocking period after unstake; early exit can extend the total waiting period up to 14 days.
+CFX qualifies for a formal HyperLeaf evaluation because it has a native protocol-level productive position: Conflux PoS staking. Conflux documents staking rewards and a 13-day lock followed by a 1-day normal unlock after unstake; early exit can extend waiting up to 14 days.
 
-Conflux has two execution spaces: Core Space, where native CFX staking and PoS functionality live, and eSpace, which is EVM-compatible. The Core/eSpace split is an important accounting and custody consideration for HyperLeaf. Conflux provides an official CrossSpace mechanism for moving CFX between Core and eSpace, but an unstaked eSpace balance is not itself a staking position.
+Conflux has Core Space for native staking and eSpace for EVM-compatible execution. CrossSpace provides an official Core/eSpace CFX transfer mechanism, but an unstaked eSpace CFX balance is not a staking position.
 
-Conflux publicly announced Stargate support for CFX transfers involving Conflux eSpace, Ethereum, HyperEVM and Kaia in November 2025. This establishes an operational CFX → HyperEVM route, but not a native Hyperliquid canonical asset deployment. Hyperliquid documentation also permits external bridges and permissionless EVM token deployments, so the exact HyperEVM token, custody and bridge route must still be verified.
+Conflux publicly announced Stargate support for CFX transfers involving Conflux eSpace, Ethereum, HyperEVM and Kaia in November 2025. This establishes an operational CFX → HyperEVM route, but not a native Hyperliquid canonical asset deployment. The exact HyperEVM token, custody, bridge and exit topology therefore remain production gates.
 
-Preferred architecture:
+Preferred architecture: `CFX → Core PoS staking position → verified exit/unlock → canonical bridge route → HyperEVM Leaf`. A mature canonical rate-bearing staking receipt would be preferred if one becomes available.
 
-`CFX → Core PoS staking position → verified exit/unlock → canonical bridge route → HyperEVM Leaf`
+Do not represent unstaked eSpace CFX as staked backing. Do not treat CFX price appreciation as yield. Separate staking rewards from inflation, incentives, market price and bridge liquidity.
 
-or, once a mature canonical staking receipt exists:
-
-`CFX → canonical rate-bearing staking receipt → HyperEVM Leaf`
-
-Do not treat unstaked eSpace CFX as a staked productive position. Do not capitalize CFX market-price appreciation as yield. Staking rewards must be separated from inflation, incentives, market price and bridge liquidity.
-
-CFX has meaningful protocol utility across gas, storage, governance and PoS participation. Its monetary model is inflationary from PoW and PoS issuance, with protocol burn mechanisms; accounting must distinguish staking reward accrual from broader token-supply dilution.
-
-Decision: **Selected / P1 Research / Production Gated.** Production is blocked until HyperLeaf verifies exact Core-space staking custody, reward accrual/accounting, validator/slashing behavior, Core → eSpace → HyperEVM exit topology, exact HyperEVM token contract and bridge controls, bridge failure/recovery procedures, and capped solvency limits against verified economically realizable NAV.
+Decision: **Selected / P1 Research / Production Gated.** Production requires verification of Core staking custody, reward accounting, validator/slashing behavior, Core → eSpace → HyperEVM exit topology, exact HyperEVM token/bridge contracts, bridge failure recovery and capped solvency against verified economically realizable NAV.
 
 ## Methodology
 
@@ -67,4 +67,4 @@ Decision: **Selected / P1 Research / Production Gated.** Production is blocked u
 
 Core rule: productive position > spot-token wrapping. `totalLeafLiability <= verified economically realizable NAV of productive position`.
 
-Keep **Backing / Yield / Incentives / Market Price / Exit Value** separate. Unverified appreciation must never create Leaf liabilities.
+Keep Backing / Yield / Incentives / Market Price / Exit Value separate. Unverified appreciation must never create Leaf liabilities.
