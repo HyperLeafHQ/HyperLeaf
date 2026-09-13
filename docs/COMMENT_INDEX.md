@@ -9,17 +9,8 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | # | Asset / evaluation | Preferred representation / direction | Status | Comment |
 |---|---|---|---|---|
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
-| #01–#41 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
-| #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
-| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [PLACEHOLDER](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
-
-## Numbering reconciliation
-
-- **#40 = MON / shMON**, **#41 = LUNC**, **#42 = XTZ / Tezos**, **#43 = CFX / Conflux**.
-- Old EURC `#89` is retired and is not part of the formal evaluation series.
-- MON / shMON is one consolidated record with the existing `hshMON` implementation; do not create another MON evaluation.
-- LUNC legacy WLUNC has official historical Terra/Shuttle provenance, but this does **not** establish a current canonical Terra Classic → HyperEVM deployment.
-- Tezos' official XTZ → Etherlink route is canonical for Etherlink, not for HyperEVM.
+| #01–#42 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
+| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [PENDING](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 
 ## Non-series completed / consolidated evaluations
 
@@ -39,7 +30,7 @@ CFX qualifies for a formal HyperLeaf evaluation because it has a native, protoco
 
 Conflux has two execution spaces: Core Space, where native CFX staking and PoS functionality live, and eSpace, which is EVM-compatible. The Core/eSpace split is an important accounting and custody consideration for HyperLeaf. Conflux provides an official CrossSpace mechanism for moving CFX between Core and eSpace, but an unstaked eSpace balance is not itself a staking position.
 
-Cross-chain canonicality is materially stronger than many candidates: Conflux publicly announced Stargate support for CFX transfers involving Conflux eSpace, Ethereum, HyperEVM and Kaia in November 2025. This establishes an operational CFX → HyperEVM route, but not a native Hyperliquid canonical asset deployment. Hyperliquid documentation also permits external bridges and permissionless EVM token deployments, so the exact HyperEVM token, custody and bridge route must still be verified.
+Conflux publicly announced Stargate support for CFX transfers involving Conflux eSpace, Ethereum, HyperEVM and Kaia in November 2025. This establishes an operational CFX → HyperEVM route, but not a native Hyperliquid canonical asset deployment. Hyperliquid documentation also permits external bridges and permissionless EVM token deployments, so the exact HyperEVM token, custody and bridge route must still be verified.
 
 Preferred architecture:
 
