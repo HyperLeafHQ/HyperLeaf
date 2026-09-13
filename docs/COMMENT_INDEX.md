@@ -15,14 +15,6 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #44 | IMX / Immutable | Verified Immutable staking position; no spot wrapper | P1 Research / Conditional | [5653271541](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653271541) |
 | #45 | FLOKI / Floki | FLOKI staking/lock position; convert external rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653288714](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653288714) |
 
-## Numbering reconciliation
-
-- **#40 = MON / shMON**, **#41 = LUNC**, **#42 = XTZ / Tezos**, **#43 = CFX / Conflux**, **#44 = IMX / Immutable**, **#45 = FLOKI**.
-- Old EURC `#89` is retired and is not part of the formal evaluation series.
-- MON / shMON is one consolidated record with the existing `hshMON` implementation; do not create another MON evaluation.
-- LUNC legacy WLUNC has official historical Terra/Shuttle provenance, but this does **not** establish a current canonical Terra Classic → HyperEVM deployment.
-- Tezos' official XTZ → Etherlink route is canonical for Etherlink, not for HyperEVM.
-
 ## Non-series completed / consolidated evaluations
 
 | Asset | Decision | Comment |
