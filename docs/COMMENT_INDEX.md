@@ -9,12 +9,14 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | # | Asset / evaluation | Preferred representation / direction | Status | Comment |
 |---|---|---|---|---|
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
-| #01–#42 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
-| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | TBD |
+| #01–#41 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
+| #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
+| #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [5653229999](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653229999) |
+| #44 | IMX / Immutable | Verified Immutable staking position; no spot wrapper | P1 Research / Conditional | [5653271541](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653271541) |
 
 ## Numbering reconciliation
 
-- **#40 = MON / shMON**, **#41 = LUNC**, **#42 = XTZ / Tezos**, **#43 = CFX / Conflux**.
+- **#40 = MON / shMON**, **#41 = LUNC**, **#42 = XTZ / Tezos**, **#43 = CFX / Conflux**, **#44 = IMX / Immutable**.
 - Old EURC `#89` is retired and is not part of the formal evaluation series.
 - MON / shMON is one consolidated record with the existing `hshMON` implementation; do not create another MON evaluation.
 - LUNC legacy WLUNC has official historical Terra/Shuttle provenance, but this does **not** establish a current canonical Terra Classic → HyperEVM deployment.
@@ -31,20 +33,6 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | GNO | P1 Strategic Candidate; do not implement yet | 5638008710 |
 | PI | Watchlist / No-Go; no standalone Leaf | 5630142069 |
 | FLR | P1 Research Candidate; intentionally non-numbered | Historical standalone evaluation |
-
-## CFX evaluation
-
-CFX qualifies for a formal HyperLeaf evaluation because it has a native protocol-level productive position: Conflux PoS staking. Conflux documents staking rewards and a 13-day lock followed by a 1-day normal unlock after unstake; early exit can extend waiting up to 14 days.
-
-Conflux has Core Space for native staking and eSpace for EVM-compatible execution. CrossSpace provides an official Core/eSpace CFX transfer mechanism, but an unstaked eSpace CFX balance is not a staking position.
-
-Conflux publicly announced Stargate support for CFX transfers involving Conflux eSpace, Ethereum, HyperEVM and Kaia in November 2025. This establishes an operational CFX → HyperEVM route, but not a native Hyperliquid canonical asset deployment. The exact HyperEVM token, custody, bridge and exit topology therefore remain production gates.
-
-Preferred architecture: `CFX → Core PoS staking position → verified exit/unlock → canonical bridge route → HyperEVM Leaf`. A mature canonical rate-bearing staking receipt would be preferred if one becomes available.
-
-Do not represent unstaked eSpace CFX as staked backing. Do not treat CFX price appreciation as yield. Separate staking rewards from inflation, incentives, market price and bridge liquidity.
-
-Decision: **Selected / P1 Research / Production Gated.** Production requires verification of Core staking custody, reward accounting, validator/slashing behavior, Core → eSpace → HyperEVM exit topology, exact HyperEVM token/bridge contracts, bridge failure recovery and capped solvency against verified economically realizable NAV.
 
 ## Methodology
 
