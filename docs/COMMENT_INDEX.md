@@ -13,7 +13,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
 | #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [5653229999](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653229999) |
 | #44 | IMX / Immutable | Verified Immutable staking position; no spot wrapper | P1 Research / Conditional | [5653271541](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653271541) |
-| #45 | FLOKI / Floki | FLOKI staking/lock position with TOKEN incentive separated from principal NAV; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653290000](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653290000) |
+| #45 | FLOKI / Floki | FLOKI staking/lock position with TOKEN incentive separated from principal NAV; no raw spot wrapper | Selected / P1 Research / Production Gated | TBD |
 
 ## Numbering reconciliation
 
@@ -37,11 +37,11 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 
 ## FLOKI evaluation
 
-FLOKI is formally promoted from the prior observation-only memo to **#45**. The reason is not that FLOKI is a PoS base-layer asset; it is that the ecosystem has a live, protocol-controlled staking/locking position in which users lock FLOKI and receive TOKEN as a separate reward asset. Floki's official site currently describes FLOKI staking as “Stake your FLOKI token and earn … TOKEN” and presents Valhalla, TokenFi, FlokiFi, Floki Name Service and the Trading Bot as ecosystem products. FLOKI is deployed on Ethereum and BNB Smart Chain.
+FLOKI is formally promoted from the prior observation-only memo to **#45**. Floki's current official materials describe a staking program in which users stake/lock FLOKI and earn TOKEN, while the ecosystem includes Valhalla, TokenFi, FlokiFi, Floki Name Service and the Trading Bot. FLOKI is deployed on Ethereum and BNB Smart Chain. citeturn845482search0turn845482search1
 
-The productive-position interpretation must be strict. The locked FLOKI principal is the backing position. TOKEN received from staking is **incentive yield**, not an automatic increase in FLOKI principal NAV. HyperLeaf must therefore keep principal, TOKEN rewards, market-price movement, and burn/value-capture effects as separate accounting dimensions.
+The productive-position interpretation is deliberately strict. The locked FLOKI principal is the backing position. TOKEN received from staking is **incentive yield**, not an automatic increase in FLOKI principal NAV. HyperLeaf must keep principal, TOKEN rewards, market-price movement, and burn/value-capture effects as separate accounting dimensions.
 
-Floki also has protocol-level fee/burn mechanisms. The official site currently states that 25% of FlokiFi Locker fees and 1% of prepaid-card fees are burned. These burns may affect token supply/value capture but are not a directly redeemable claim on protocol revenue and must not be booked as Leaf backing.
+Floki also has protocol-level fee/burn mechanisms. Its official site currently states that 25% of FlokiFi Locker fees and 1% of prepaid-card fees are burned. These burns may affect token supply/value capture but are not a directly redeemable claim on protocol revenue and must not be booked as Leaf backing. citeturn845482search0
 
 Preferred architecture:
 
@@ -49,7 +49,7 @@ Preferred architecture:
 
 Do not build a raw FLOKI 1:1 spot wrapper and call TOKEN rewards “FLOKI yield”. A production adapter must verify the exact staking contract, lock duration / withdrawal rules, reward accrual, emergency controls, TOKEN transferability, contract upgrade/admin authority, source-chain custody, canonical HyperEVM representation, bridge controls and economically realizable exit liquidity.
 
-Decision: **Selected / P1 Research / Production Gated.** FLOKI is materially more interesting than a pure meme-token spot wrapper, but the staking mechanism is an ecosystem incentive program rather than native PoS. Production therefore remains gated on exact contract/on-chain verification and a fully solvent exit route.
+Decision: **Selected / P1 Research / Production Gated.** FLOKI is materially more interesting than a pure meme-token spot wrapper, but the staking mechanism is an ecosystem incentive/locking program rather than native PoS. Production therefore remains gated on exact contract/on-chain verification and a fully solvent exit route.
 
 ## Methodology
 
