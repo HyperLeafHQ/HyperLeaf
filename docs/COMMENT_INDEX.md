@@ -9,11 +9,11 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | # | Asset / evaluation | Preferred representation / direction | Status | Comment |
 |---|---|---|---|---|
 | #00 | Methodology / canonical index | Gate 0 + productive-position framework | Canonical index | [5609277559](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5609277559) |
-| #01–#44 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
+| #01–#41 | Existing canonical series | See canonical #00 index | Existing records | [Issue #7](https://github.com/HyperLeafHQ/HyperLeaf/issues/7) |
 | #42 | XTZ / Tezos | Native Tezos staking position; official sTEZ only if/when mainnet activated | P1 Research / Conditional | [5639725930](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639725930) |
 | #43 | CFX / Conflux | Native CFX PoS productive position; bridge to HyperEVM only through a verified canonical route | Selected / P1 Research / Production Gated | [5653229999](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653229999) |
 | #44 | IMX / Immutable | Verified Immutable staking position; no spot wrapper | P1 Research / Conditional | [5653271541](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653271541) |
-| #45 | FLOKI / Floki | FLOKI staking/lock position with TOKEN incentive separated from principal NAV; no raw spot wrapper | Selected / P1 Research / Production Gated | TBD |
+| #45 | FLOKI / Floki | FLOKI staking/lock position; convert external rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653288714](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653288714) |
 
 ## Numbering reconciliation
 
@@ -37,19 +37,30 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 
 ## FLOKI evaluation
 
-FLOKI is formally promoted from the prior observation-only memo to **#45**. Floki's current official materials describe a staking program in which users stake/lock FLOKI and earn TOKEN, while the ecosystem includes Valhalla, TokenFi, FlokiFi, Floki Name Service and the Trading Bot. FLOKI is deployed on Ethereum and BNB Smart Chain. citeturn845482search0turn845482search1
+FLOKI is formally promoted from the prior observation-only memo to **#45**. Floki's current official materials describe a staking program in which users stake/lock FLOKI and earn TOKEN, while the ecosystem includes Valhalla, TokenFi, FlokiFi, Floki Name Service and the Trading Bot. FLOKI is deployed on Ethereum and BNB Smart Chain.
 
-The productive-position interpretation is deliberately strict. The locked FLOKI principal is the backing position. TOKEN received from staking is **incentive yield**, not an automatic increase in FLOKI principal NAV. HyperLeaf must keep principal, TOKEN rewards, market-price movement, and burn/value-capture effects as separate accounting dimensions.
+For HyperLeaf, the key question is not the identity of the reward token. The underlying FLOKI staking/locking position is the productive position, while TOKEN or other earned assets are simply **external reward flows**. Once those rewards are verifiably accrued and liquid, HyperLeaf can sell/swap them into HYPE. The resulting HYPE is the user-facing yield, after the applicable protocol fee. The reward asset therefore does not need to be FLOKI or be folded into FLOKI principal.
 
-Floki also has protocol-level fee/burn mechanisms. Its official site currently states that 25% of FlokiFi Locker fees and 1% of prepaid-card fees are burned. These burns may affect token supply/value capture but are not a directly redeemable claim on protocol revenue and must not be booked as Leaf backing. citeturn845482search0
+Accounting must keep the following dimensions separate:
+
+- **Backing:** locked FLOKI principal actually controlled by the staking position.
+- **Reward flow:** TOKEN or other assets produced by the position.
+- **HYPE yield:** realized reward proceeds after swap/sale into HYPE and protocol fee.
+- **Market price:** FLOKI price movement, which is not yield.
+- **Value capture:** fee/burn effects on FLOKI supply, which are not directly redeemable revenue claims.
+- **Exit value:** what can actually be withdrawn from the source staking position and transferred to the HyperEVM route.
 
 Preferred architecture:
 
-`FLOKI → verified staking/locking position → TOKEN rewards + principal → verified exit → canonical bridge route → HyperEVM Leaf`
+`FLOKI → verified staking/locking position → reward asset → swap/sell → HYPE → protocol fee → Leaf yield`
 
-Do not build a raw FLOKI 1:1 spot wrapper and call TOKEN rewards “FLOKI yield”. A production adapter must verify the exact staking contract, lock duration / withdrawal rules, reward accrual, emergency controls, TOKEN transferability, contract upgrade/admin authority, source-chain custody, canonical HyperEVM representation, bridge controls and economically realizable exit liquidity.
+The Leaf should represent the verified productive position and its realized HYPE-denominated reward stream. A raw 1:1 FLOKI spot wrapper is not the intended architecture.
 
-Decision: **Selected / P1 Research / Production Gated.** FLOKI is materially more interesting than a pure meme-token spot wrapper, but the staking mechanism is an ecosystem incentive/locking program rather than native PoS. Production therefore remains gated on exact contract/on-chain verification and a fully solvent exit route.
+Production gates remain: exact staking contract(s), lock duration and withdrawal mechanics, reward accrual/funding, admin/pause/upgrade authority, source-chain custody, reward-asset liquidity, swap execution and slippage controls, canonical HyperEVM representation, bridge custody/failure recovery, and a solvency cap against economically realizable principal plus only realized HYPE rewards that are actually available to the protocol.
+
+FLOKI's ecosystem fee/burn mechanisms may create long-run token-supply effects, but HyperLeaf must not count those effects as backing. Likewise, FLOKI market-price appreciation must never create additional Leaf liabilities.
+
+Decision: **Selected / P1 Research / Production Gated.** FLOKI qualifies because it provides a real ecosystem staking/locking position with an observable reward stream that can be converted into HYPE. The distinction from a meme-token spot wrapper is therefore operational yield generation, not the particular ticker of the reward token.
 
 ## Methodology
 
