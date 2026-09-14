@@ -93,6 +93,10 @@ contract AssetCatalogTest is Test {
     function testMainnetInnersSetForEvmAssets() public pure {
         assertTrue(AssetCatalog.get("hkaito").innerMainnet != address(0));
         assertTrue(AssetCatalog.get("hxsquid").innerMainnet != address(0));
+        assertEq(AssetCatalog.get("hxsquid").symbol, "hQUID");
+        assertEq(AssetCatalog.get("hquid").id, "hquid");
+        assertEq(AssetCatalog.get("hxsquid").defaultCap, 0);
+        assertEq(AssetCatalog.get("havnt").defaultCap, 0);
         assertTrue(AssetCatalog.get("hcbeth").innerMainnet != address(0));
         assertEq(AssetCatalog.get("hcbeth").symbol, "hcbETH");
         assertEq(AssetCatalog.get("hcbeth").sourceChainIdMain, 8453);
@@ -149,6 +153,7 @@ contract AssetCatalogTest is Test {
     function testMainnetBatchesByFramework() public {
         assertEq(MainnetBatches.batchOf("hcanary"), 0);
         assertEq(MainnetBatches.batchOf("hxsquid"), 1);
+        assertEq(MainnetBatches.batchOf("hquid"), 1);
         assertEq(MainnetBatches.batchOf("havnt"), 1);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._batch("hcbeth");

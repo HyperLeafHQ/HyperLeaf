@@ -67,12 +67,12 @@ library AssetCatalog {
                 true
             );
         }
-        if (k == keccak256("hxsquid")) {
+        if (k == keccak256("hxsquid") || k == keccak256("hquid")) {
             return Listing(
                 Kind.Liquid,
-                "hxsquid",
-                "Hyperleaf xSQUID",
-                "hxSQUID",
+                "hquid",
+                "Hyperleaf QUID",
+                "hQUID",
                 "xSQUID",
                 8453,
                 30184,
@@ -80,7 +80,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x13af2Db622d167745518aBfD59a8C4FFEe54937a,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -97,7 +97,7 @@ library AssetCatalog {
                 0,
                 0,
                 0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -389,7 +389,7 @@ library AssetCatalog {
     function allIds() internal pure returns (string[15] memory ids) {
         ids = [
             string("hkaito"),
-            string("hxsquid"),
+            string("hquid"),
             string("hcbeth"),
             string("hsavax"),
             string("hvirtualmax"),
