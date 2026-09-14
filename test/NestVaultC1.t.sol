@@ -144,4 +144,61 @@ contract NestVaultC1Test is Test {
         vm.expectRevert(NestVaultC1.GateRequired.selector);
         v2.setDepositsEnabled(true);
     }
+
+    function testEnableDepositsNeedsMerkleAndAdapter() public {
+        MockHevAdapter tmp = new MockHevAdapter(address(ve), address(hype), address(0));
+        NestVaultC1 v2 = new NestVaultC1(
+            address(nest),
+            address(ve),
+            address(hype),
+            address(0),
+            feeRecipient,
+            keeper,
+            guardian,
+            0,
+            address(0),
+            address(0)
+        );
+        v2.setDepositGate(gate);
+        vm.expectRevert(NestVaultC1.MerkleNotSet.selector);
+        v2.setDepositsEnabled(true);
+        v2.setHevAdapter(address(tmp));
+        v2.setMerkleAirdrop(address(merkle));
+        v2.setDepositsEnabled(true);
+        assertTrue(v2.depositsEnabled());
+    }
+
+    function testPendingIncludesUnsettledMerkle() public {
+        _deposit(100 ether);
+        hype.mint(address(merkle), 1 ether);
+        merkle.setEntitlement(address(vault), 1 ether);
+        bytes32[] memory proof;
+        vm.prank(stranger);
+        merkle.claim(proof, address(vault), 1 ether);
+        uint256 expectedNet = 1 ether - (1 ether / 100);
+        assertEq(vault.pendingResidualHype(gate), expectedNet);
+        vm.prank(gate);
+        vault.claimResidualHype();
+        assertEq(hype.balanceOf(gate), expectedNet);
+        assertEq(hype.balanceOf(feeRecipient), 1 ether / 100);
+    }
+
+    function testPauseDoesNotBlockSettle() public {
+        _deposit(100 ether);
+        vm.prank(guardian);
+        vault.pause();
+        hype.mint(address(merkle), 1 ether);
+        merkle.setEntitlement(address(vault), 1 ether);
+        bytes32[] memory proof;
+        vault.claimMerkle(proof, 1 ether);
+        assertEq(hype.balanceOf(feeRecipient), 1 ether / 100);
+    }
+
+    function testZeroSupplyLeavesHypeUnaccounted() public {
+        hype.mint(address(vault), 1 ether);
+        vault.settleInboundHype();
+        assertEq(hype.balanceOf(feeRecipient), 0);
+        _deposit(100 ether);
+        assertEq(hype.balanceOf(feeRecipient), 1 ether / 100);
+    }
 }

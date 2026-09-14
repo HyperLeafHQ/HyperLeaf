@@ -150,8 +150,6 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         if (nestAmount == 0) revert ZeroAmount();
         if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
 
-        _settleInboundHype();
-
         uint256 totalSupply = hNest.totalSupply();
         uint256 hNestToMint = totalSupply == 0 || totalNestLocked == 0
             ? nestAmount
@@ -173,10 +171,13 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         totalNestLocked += nestAmount;
         hNest.mint(msg.sender, hNestToMint);
         hypeRewardDebt[msg.sender] = (hNest.balanceOf(msg.sender) * accHypePerShare) / 1e18;
+        _settleInboundHype();
         emit Deposited(msg.sender, nestAmount, hNestToMint);
     }
 
-    /// @notice Anyone. Submits the vault's merkle leaf. WHYPE lands here, then 1% is taken.
+    /// @notice Anyone. Submits the vault's merkle leaf to Nest 0x33afCe… claim(0xca21b177).
+    ///         `addr_` is always this vault — caller cannot redirect. amount is cumulative.
+    ///         Proof length is not fixed (live week-1 was 11). Pause does not block this.
     function claimMerkle(bytes32[] calldata proof, uint256 amount) external nonReentrant {
         if (address(merkleAirdrop) == address(0)) revert MerkleNotSet();
         merkleAirdrop.claim(proof, address(this), amount);
@@ -184,7 +185,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         _settleInboundHype();
     }
 
-    /// @notice Anyone. Fees unsolicited / third-party merkle WHYPE sitting on the vault.
+    /// @notice Anyone. Fees inbound WHYPE (merkle, HEV sweep, or donation) then credits net.
+    ///         Unsolicited WHYPE is treated as campaign yield — owner-accepted (audit M-02).
+    ///         Not paused: fee collection must stay live if deposits are frozen.
     function settleInboundHype() external nonReentrant {
         _settleInboundHype();
     }
@@ -266,8 +269,16 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     }
 
     function pendingResidualHype(address user) external view returns (uint256) {
+        uint256 supply = hNest.totalSupply();
+        uint256 acc = accHypePerShare;
+        uint256 bal = hypeToken.balanceOf(address(this));
+        if (bal > hypeAccounted && supply > 0) {
+            uint256 gross = bal - hypeAccounted;
+            uint256 net = gross - (gross * feeBps) / BASIS_POINTS;
+            acc += (net * 1e18) / supply;
+        }
         uint256 userBalance = hNest.balanceOf(user);
-        uint256 accrued = (userBalance * accHypePerShare) / 1e18;
+        uint256 accrued = (userBalance * acc) / 1e18;
         if (accrued <= hypeRewardDebt[user]) return 0;
         return accrued - hypeRewardDebt[user];
     }
@@ -289,6 +300,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
 
     function setDepositsEnabled(bool enabled) external onlyOwner {
         if (enabled && depositGate == address(0)) revert GateRequired();
+        if (enabled && (address(hevAdapter) == address(0) || address(merkleAirdrop) == address(0))) {
+            revert MerkleNotSet();
+        }
         depositsEnabled = enabled;
         emit DepositsEnabledUpdated(enabled);
     }
@@ -348,14 +362,15 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     function _settleInboundHype() internal {
         uint256 bal = hypeToken.balanceOf(address(this));
         if (bal <= hypeAccounted) return;
+        uint256 supply = hNest.totalSupply();
+        if (supply == 0) return;
         uint256 gross = bal - hypeAccounted;
         uint256 fee = (gross * feeBps) / BASIS_POINTS;
         if (fee > 0) {
             hypeToken.safeTransfer(feeRecipient, fee);
             gross -= fee;
         }
-        uint256 supply = hNest.totalSupply();
-        if (supply > 0 && gross > 0) {
+        if (gross > 0) {
             accHypePerShare += (gross * 1e18) / supply;
         }
         hypeAccounted += gross;
