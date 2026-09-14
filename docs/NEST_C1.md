@@ -20,7 +20,7 @@ Replaces live v1 `0x4f6615…` for product use. v1 has only test TVL — abandon
 - First-deposit capture: WHYPE that lands before the first deposit (donation, early merkle claim) settles right after the first mint — net goes to the sole holder (the gate, which redistributes via its residual index), 1% fee to `feeRecipient`.
 - **No ERC20 rescue.** There is no `recoverERC20`; any non-WHYPE token or direct NEST transfer to the vault is stranded by design.
 - Deposits revert during Nest Voter distribution windows (first/last hour of the weekly epoch, ~Thursday 00:00 UTC boundaries) — expected; schedule around them.
-- `bookVerifiedYield` pagination: once `veNFTIds.length` approaches **~150**, keepers must use `bookVerifiedYield(start, end)` — the full sweep bricks around ~200-300 NFTs under HyperEVM's 3M small-block gas limit. The weekly 10% book cap accumulates across paginated calls.
+- `bookVerifiedYield` pagination: once `veNFTIds.length` approaches **~150**, keepers must use `bookVerifiedYield(start, end)` — the full sweep bricks around ~200-300 NFTs under HyperEVM's 3M small-block gas limit. The weekly 10% book cap accumulates across paginated calls; because the cap base (`totalNestLocked`) grows as each paginated call books, the effective weekly cap under pagination is ≈10.5-11% of week-start `totalNestLocked` rather than exactly 10% (accepted, keeper-only). Keepers must still cover the full `[0, totalVeNFTs())` range at least once per epoch — the contract does not enforce full coverage; skipped NFTs defer write-downs and leave the share price stale.
 - `setFee` has **no timelock** — owner policy: announce fee changes ahead of weekly settlements.
 - Keeper runbook: see `docs/DEPLOYMENT_CHECKLIST.md` ops notes (a)-(i).
 

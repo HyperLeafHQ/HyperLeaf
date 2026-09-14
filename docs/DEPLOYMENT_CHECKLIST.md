@@ -19,16 +19,27 @@ Testnet may collapse roles for drills. **Copying testnet role collapse to mainne
 
 ## Deployment flow (C1)
 
-1. [ ] **(Optional) Pre-deploy HNest** if gas is tight (HyperEVM block gasLimit = 3M): `new HNest(predictedVault)` requires nonce prediction — otherwise let `script/DeployNestVaultC1.s.sol` deploy it inline (it does the nonce math).
-2. [ ] `forge script script/DeployNestVaultC1.s.sol --rpc-url hyperevm --broadcast` with env: `PRIVATE_KEY`, `FEE_RECIPIENT`, `KEEPER`, optional `GUARDIAN`, `DEPOSIT_CAP`, `HNEST` (pre-deployed), `HYPE_TOKEN` (defaults to WHYPE `0x5555…5555`), `NEST_TOKEN`, `VE_NEST`, HEV wiring overrides. Script enforces `chainid == 999`, deploys `HevAdapter → HNest → NestVaultC1` with nonce prediction, wires `adapter.setVault`, and asserts `hNest.vault() == vault` and the pinned merkle `0x33afCe…0905`.
-3. [ ] Verify script output: `depositsEnabled == false`, `depositGate == address(0)`.
-4. [ ] Deploy the gate: `VAULT_ADDRESS=<vault> forge script script/DeployEpochHNestGate.s.sol --rpc-url hyperevm --broadcast` (script refuses an empty `VAULT_ADDRESS`). Owner of the gate must `acceptOwnership`.
-5. [ ] Owner: `vault.setDepositGate(gate)` — **one-shot**, verify the gate address twice before calling (ops note e).
-6. [ ] Readback verification: `gate.vault() == vault` **and** `vault.depositGate() == gate`.
-7. [ ] Ownable2Step handoff to Owner `0x24458f0b…156e` complete (`acceptOwnership`).
-8. [ ] Confirm roles: `setGuardian` / `setKeeper` / `setFeeRecipient` per the table above (constructor args already set them; verify on-chain).
-9. [ ] Confirm `depositsEnabled == false` until step 10.
-10. [ ] Smoke checks (small gated deposit via gate, `settleInboundHype`, `bookVerifiedYield(0, n)`) → only then Owner `setDepositsEnabled(true)`.
+> **Nonce race rule:** never use the deployer key for any other transaction between simulation and broadcast — an extra tx shifts the nonce and invalidates the predicted vault address (`new HNest(predictedVault)` and the `vault address mismatch` assert depend on it).
+
+1. [ ] **(Optional) Pre-deploy HNest** if gas is tight (HyperEVM block gasLimit = 3M): `new HNest(predictedVault)` requires nonce prediction — otherwise let `script/DeployNestVaultC1.s.sol` deploy it inline (it does the nonce math). A pre-deployed HNest must target `computeCreateAddress(deployer, n0 + 1)` under the **same account and nonce base `n0`** the deploy script will see at broadcast time (the script deploys the vault at `n0 + 1` when `HNEST` is set, `n0 + 2` otherwise) — otherwise the vault constructor reverts `InvalidHNest`.
+2. [ ] `forge script script/DeployNestVaultC1.s.sol --rpc-url hyperevm --broadcast` with env: `PRIVATE_KEY`, `FEE_RECIPIENT`, `KEEPER`, optional `GUARDIAN`, `DEPOSIT_CAP`, `HNEST` (pre-deployed), `HYPE_TOKEN` (defaults to WHYPE `0x5555…5555`), `NEST_TOKEN`, `VE_NEST`, HEV wiring overrides. Script enforces `chainid == 999`, deploys `HevAdapter → HNest → NestVaultC1` with nonce prediction, wires `adapter.setVault`, asserts `hNest.vault() == vault` and the pinned merkle `0x33afCe…0905`, and rejects env-overridden contract addresses with no code.
+3. [ ] **Post-broadcast on-chain readback** (script output / simulation is not enough — read the chain directly):
+   ```
+   cast call $VAULT "hNest()(address)" --rpc-url hyperevm          # == deployed HNest
+   cast call $HNEST "vault()(address)" --rpc-url hyperevm          # == $VAULT
+   cast call $ADAPTER "vault()(address)" --rpc-url hyperevm        # == $VAULT
+   cast call $VAULT "merkleAirdrop()(address)" --rpc-url hyperevm  # == 0x33afCe556508A39181a0609288c3E93611a00905
+   cast call $VAULT "depositsEnabled()(bool)" --rpc-url hyperevm   # == false
+   ```
+   All five must match expectations before continuing.
+4. [ ] Verify script output: `depositsEnabled == false`, `depositGate == address(0)`.
+5. [ ] Deploy the gate: `VAULT_ADDRESS=<vault> forge script script/DeployEpochHNestGate.s.sol --rpc-url hyperevm --broadcast` (script refuses an empty `VAULT_ADDRESS` or one with no code). Owner of the gate must `acceptOwnership`.
+6. [ ] Owner: `vault.setDepositGate(gate)` — **one-shot**, verify the gate address twice before calling (ops note e).
+7. [ ] Readback verification: `gate.vault() == vault` **and** `vault.depositGate() == gate`.
+8. [ ] Ownable2Step handoff to Owner `0x24458f0b…156e` complete (`acceptOwnership`).
+9. [ ] Confirm roles: `setGuardian` / `setKeeper` / `setFeeRecipient` per the table above (constructor args already set them; verify on-chain).
+10. [ ] Confirm `depositsEnabled == false` until step 11.
+11. [ ] Smoke checks (small gated deposit via gate, `settleInboundHype`, `bookVerifiedYield(0, n)`) → only then Owner `setDepositsEnabled(true)`.
 
 ## Security gates already in code (C1)
 
@@ -48,7 +59,7 @@ Testnet may collapse roles for drills. **Copying testnet role collapse to mainne
 - **(c) Proof rotation.** The merkle root rotates every Thursday 00:00 UTC. Refetch the proof after each rotation: `GET https://app.usenest.xyz/api/liveprograms/api/hype-distribution/merkle-proof/{vault}`. `amount` is cumulative — use the latest value.
 - **(d) depositCap includes booked yield.** `depositCap` is measured against `totalNestLocked`, which grows when `bookVerifiedYield` books HEV share growth. A cap set against principal only will bite earlier than expected.
 - **(e) setDepositGate is one-shot.** It cannot be changed or re-called. Verify the gate address twice (and `gate.vault() == vault`) before calling; a mistake bricks deposits permanently.
-- **(f) Keeper pagination.** `veNFTIds` grows by one per deposit. Once it approaches **~150**, keepers must switch from `bookVerifiedYield()` to paginated `bookVerifiedYield(start, end)` — the full sweep bricks around ~200-300 NFTs under HyperEVM's 3M small-block gas limit.
+- **(f) Keeper pagination.** `veNFTIds` grows by one per deposit. Once it approaches **~150**, keepers must switch from `bookVerifiedYield()` to paginated `bookVerifiedYield(start, end)` — the full sweep bricks around ~200-300 NFTs under HyperEVM's 3M small-block gas limit. Paginated or not, the keeper MUST cover the full `[0, totalVeNFTs())` range at least once per epoch — the contract does not enforce full coverage; skipped NFTs defer write-downs and leave the share price stale. Note the weekly cap base (`totalNestLocked`) grows as each paginated call books, so under pagination the effective weekly cap is ≈10.5-11% of week-start `totalNestLocked`, not exactly 10% (accepted, keeper-only).
 - **(g) setFee has no timelock.** Fee changes take effect on the next settle. Owner ops policy: announce fee changes ahead of weekly settlements; never change the fee between a merkle root rotation and its settlement.
 - **(h) No ERC20 rescue.** There is intentionally no `recoverERC20`. Any non-WHYPE token, or NEST sent directly to the vault (not via `deposit`), is stranded by design. Donations of WHYPE are treated as campaign yield (fee applies).
 - **(i) Guardian may be address(0).** This disables the pause role entirely. Decide explicitly at deploy time; `setGuardian` can install one later (Owner-only).

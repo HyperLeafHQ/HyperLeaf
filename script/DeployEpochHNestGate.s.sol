@@ -15,6 +15,7 @@ contract DeployEpochHNestGate is Script {
         require(block.chainid == 999, "HyperEVM 999");
         address vault = vm.envAddress("VAULT_ADDRESS");
         require(vault != address(0), "VAULT_ADDRESS required");
+        require(vault.code.length > 0, "VAULT_ADDRESS has no code");
         address owner = vm.envAddress("OWNER");
         address keeper = vm.envAddress("KEEPER");
         address guardian = vm.envAddress("GUARDIAN");

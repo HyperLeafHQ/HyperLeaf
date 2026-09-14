@@ -42,13 +42,20 @@ contract DeployNestVaultC1 is Script {
         uint256 depositCap = vm.envOr("DEPOSIT_CAP", uint256(0));
         address nestToken = vm.envOr("NEST_TOKEN", HyperEVMAddresses.NEST);
         address veNest = vm.envOr("VE_NEST", HyperEVMAddresses.VE_NEST);
-        address hypeToken = vm.envOr("HYPE_TOKEN", WHYPE);
+        address hypeOverride = vm.envOr("HYPE_TOKEN", address(0));
+        address hypeToken = hypeOverride == address(0) ? WHYPE : hypeOverride;
         address preHNest = vm.envOr("HNEST", address(0));
         address voter = vm.envOr("VOTER", HyperEVMAddresses.VOTER);
         address virtualRewarder = vm.envOr("VIRTUAL_REWARDER", HyperEVMAddresses.VIRTUAL_REWARDER);
         address veNestDistributor = vm.envOr("VE_NEST_DISTRIBUTOR", HyperEVMAddresses.VE_NEST_DISTRIBUTOR);
         uint256 managedTokenId = vm.envOr("HEV_MANAGED_TOKEN_ID", HyperEVMAddresses.HEV_MANAGED_TOKEN_ID);
         address merkle = HyperEVMAddresses.NEST_HYPE_MERKLE;
+
+        // Code-size guards on every env-overridable contract address (fat-finger protection).
+        require(nestToken.code.length > 0, "NEST_TOKEN has no code");
+        require(veNest.code.length > 0, "VE_NEST has no code");
+        if (hypeOverride != address(0)) require(hypeToken.code.length > 0, "HYPE_TOKEN override has no code");
+        if (preHNest != address(0)) require(preHNest.code.length > 0, "HNEST has no code");
 
         uint64 n0 = vm.getNonce(deployer);
         // With a fresh HNest the vault is the 3rd tx (n0+2); with a pre-deployed HNEST it is the 2nd (n0+1).
