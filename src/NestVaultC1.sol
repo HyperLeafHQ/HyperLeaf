@@ -65,8 +65,22 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     uint256 public hypeAccounted;
     uint256 public totalHypeDistributed;
 
+    /// @dev Time-weighted HYPE. Closed epochs pay `points / epochPoints * pot`.
+    ///      Same-block settles with no elapsed time fall back to accHypePerShare.
+    uint256 public lastHypeGlobal;
+    uint256 public hypePointsSupply;
+    uint256 public hypeEpochId;
+    mapping(uint256 => uint256) public hypeEpochPot;
+    mapping(uint256 => uint256) public hypeEpochPoints;
+    mapping(uint256 => uint256) public hypeEpochClosedAt;
+    mapping(address => uint256) public hypePoints;
+    mapping(address => uint256) public lastHypePoke;
+    mapping(address => uint256) public userHypeEpoch;
+    mapping(address => uint256) public hypeStored;
+
     event Deposited(address indexed user, uint256 nestAmount, uint256 hNestMinted);
     event InboundHypeSettled(uint256 gross, uint256 fee, uint256 net);
+    event HypeEpochClosed(uint256 indexed epochId, uint256 pot, uint256 points);
     /// @dev `received` is the actual WHYPE delta this call brought in — the merkle
     ///      `amount` argument is cumulative, so it would mislead indexers on later weeks.
     event MerkleClaimed(address indexed caller, uint256 received);
@@ -149,6 +163,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             if (hNest.vault() != address(this)) revert InvalidHNest();
         }
         nestToken.forceApprove(address(veNEST), type(uint256).max);
+        lastHypeGlobal = block.timestamp;
     }
 
     function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
@@ -185,6 +200,8 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         totalNestLocked += nestAmount;
         hNest.mint(msg.sender, hNestToMint);
         hypeRewardDebt[msg.sender] = (hNest.balanceOf(msg.sender) * accHypePerShare) / 1e18;
+        lastHypePoke[msg.sender] = block.timestamp;
+        userHypeEpoch[msg.sender] = hypeEpochId;
         _settleInboundHype();
         emit Deposited(msg.sender, nestAmount, hNestToMint);
     }
@@ -279,6 +296,8 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
                 _claimResidualHypeInternal(feeRecipient);
                 hNest.mint(feeRecipient, feeShares);
                 hypeRewardDebt[feeRecipient] = (hNest.balanceOf(feeRecipient) * accHypePerShare) / 1e18;
+                lastHypePoke[feeRecipient] = block.timestamp;
+                userHypeEpoch[feeRecipient] = hypeEpochId;
             }
         }
         emit YieldBooked(y, feeAssets, feeShares);
@@ -296,21 +315,12 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     function updateDebt(address user) external override {
         if (msg.sender != address(hNest)) revert OnlyHNest();
         hypeRewardDebt[user] = (hNest.balanceOf(user) * accHypePerShare) / 1e18;
+        lastHypePoke[user] = block.timestamp;
     }
 
     function pendingResidualHype(address user) external view returns (uint256) {
-        uint256 supply = hNest.totalSupply();
-        uint256 acc = accHypePerShare;
-        uint256 bal = hypeToken.balanceOf(address(this));
-        if (bal > hypeAccounted && supply > 0) {
-            uint256 gross = bal - hypeAccounted;
-            uint256 net = gross - (gross * feeBps) / BASIS_POINTS;
-            acc += (net * 1e18) / supply;
-        }
-        uint256 userBalance = hNest.balanceOf(user);
-        uint256 accrued = (userBalance * acc) / 1e18;
-        if (accrued <= hypeRewardDebt[user]) return 0;
-        return accrued - hypeRewardDebt[user];
+        (uint256 stored,, uint256 snapPend) = _pendingHypeView(user);
+        return stored + snapPend;
     }
 
     function totalVeNFTs() external view returns (uint256) {
@@ -400,12 +410,10 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         IERC721(token).safeTransferFrom(address(this), to, tokenId);
     }
 
-    /// @dev Settles any WHYPE balance above `hypeAccounted` into accHypePerShare.
-    ///      Returns (gross, fee, net) actually settled this call — all zero when nothing
-    ///      was distributed (no holders, zero balance delta, or sub-distributable dust).
-    ///      Sub-distributable dust (deltaAcc == 0) settles nothing: no fee is taken and no
-    ///      event emitted. The fee is deferred, not lost — when the dust later accumulates
-    ///      past the distribution threshold the fee applies to the cumulative inbound.
+    /// @dev Inbound WHYPE: 1% fee, 99% to holders. If any time has elapsed since
+    ///      the last poke, split by balance-seconds (time-weighted). Same-block
+    ///      (zero elapsed) keeps accHypePerShare snapshot so tests/ops that settle
+    ///      immediately still pay current holders.
     function _settleInboundHype() internal returns (uint256 gross, uint256 fee, uint256 net) {
         uint256 bal = hypeToken.balanceOf(address(this));
         if (bal <= hypeAccounted) return (0, 0, 0);
@@ -414,24 +422,41 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         uint256 inbound = bal - hypeAccounted;
         fee = (inbound * feeBps) / BASIS_POINTS;
         net = inbound - fee;
-        uint256 deltaAcc = (net * 1e18) / supply;
-        if (deltaAcc == 0) return (0, 0, 0);
-        if (fee > 0) {
-            hypeToken.safeTransfer(feeRecipient, fee);
+        _accrueGlobal();
+        if (hypePointsSupply == 0) {
+            uint256 deltaAcc = (net * 1e18) / supply;
+            if (deltaAcc == 0) return (0, 0, 0);
+            if (fee > 0) hypeToken.safeTransfer(feeRecipient, fee);
+            uint256 distributed = (deltaAcc * supply) / 1e18;
+            accHypePerShare += deltaAcc;
+            hypeAccounted += distributed;
+            emit InboundHypeSettled(distributed + fee, fee, distributed);
+            return (distributed + fee, fee, distributed);
         }
-        uint256 distributed = (deltaAcc * supply) / 1e18;
-        accHypePerShare += deltaAcc;
-        hypeAccounted += distributed;
-        emit InboundHypeSettled(distributed + fee, fee, distributed);
-        return (distributed + fee, fee, distributed);
+        if (net == 0) return (0, 0, 0);
+        if (fee > 0) hypeToken.safeTransfer(feeRecipient, fee);
+        uint256 e = hypeEpochId;
+        hypeEpochPot[e] = net;
+        hypeEpochPoints[e] = hypePointsSupply;
+        hypeEpochClosedAt[e] = block.timestamp;
+        emit HypeEpochClosed(e, net, hypePointsSupply);
+        hypeEpochId = e + 1;
+        hypePointsSupply = 0;
+        lastHypeGlobal = block.timestamp;
+        hypeAccounted += net;
+        emit InboundHypeSettled(inbound, fee, net);
+        return (inbound, fee, net);
     }
 
     function _claimResidualHypeInternal(address user) internal {
         _settleInboundHype();
+        _accrueUser(user);
         uint256 userBalance = hNest.balanceOf(user);
         uint256 accrued = (userBalance * accHypePerShare) / 1e18;
-        uint256 pending = accrued > hypeRewardDebt[user] ? accrued - hypeRewardDebt[user] : 0;
+        uint256 snapPend = accrued > hypeRewardDebt[user] ? accrued - hypeRewardDebt[user] : 0;
         hypeRewardDebt[user] = accrued;
+        uint256 pending = hypeStored[user] + snapPend;
+        hypeStored[user] = 0;
         if (pending > 0) {
             hypeToken.safeTransfer(user, pending);
             if (hypeAccounted >= pending) hypeAccounted -= pending;
@@ -439,5 +464,99 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             totalHypeDistributed += pending;
             emit ResidualHypeClaimed(user, pending);
         }
+    }
+
+    function _accrueGlobal() internal {
+        if (lastHypeGlobal == 0) lastHypeGlobal = block.timestamp;
+        if (block.timestamp <= lastHypeGlobal) return;
+        uint256 dt = block.timestamp - lastHypeGlobal;
+        uint256 supply = hNest.totalSupply();
+        if (supply > 0) hypePointsSupply += supply * dt;
+        lastHypeGlobal = block.timestamp;
+    }
+
+    function _accrueUser(address user) internal {
+        if (user == address(0)) return;
+        _accrueGlobal();
+        uint256 bal = hNest.balanceOf(user);
+        if (lastHypePoke[user] == 0) {
+            lastHypePoke[user] = block.timestamp;
+            userHypeEpoch[user] = hypeEpochId;
+            return;
+        }
+        _creditClosedEpochs(user, bal);
+        uint256 last = lastHypePoke[user];
+        if (userHypeEpoch[user] == hypeEpochId && block.timestamp > last) {
+            hypePoints[user] += bal * (block.timestamp - last);
+            lastHypePoke[user] = block.timestamp;
+        }
+    }
+
+    function _creditClosedEpochs(address user, uint256 bal) internal {
+        while (userHypeEpoch[user] < hypeEpochId) {
+            uint256 e = userHypeEpoch[user];
+            uint256 closeT = hypeEpochClosedAt[e];
+            uint256 last = lastHypePoke[user];
+            if (closeT > last) hypePoints[user] += bal * (closeT - last);
+            uint256 tot = hypeEpochPoints[e];
+            if (tot > 0 && hypePoints[user] > 0) {
+                hypeStored[user] += (hypePoints[user] * hypeEpochPot[e]) / tot;
+            }
+            hypePoints[user] = 0;
+            lastHypePoke[user] = closeT;
+            userHypeEpoch[user] = e + 1;
+        }
+    }
+
+    function _pendingHypeView(address user)
+        internal
+        view
+        returns (uint256 stored, uint256 snapAcc, uint256 snapPend)
+    {
+        stored = hypeStored[user];
+        uint256 supply = hNest.totalSupply();
+        uint256 acc = accHypePerShare;
+        uint256 ptsSupply = hypePointsSupply;
+        uint256 lastG = lastHypeGlobal;
+        uint256 epoch = hypeEpochId;
+        uint256 balTok = hypeToken.balanceOf(address(this));
+        uint256 inbound;
+        if (balTok > hypeAccounted && supply > 0) {
+            inbound = balTok - hypeAccounted;
+        }
+        uint256 dt = block.timestamp > lastG ? block.timestamp - lastG : 0;
+        uint256 openPts = ptsSupply + supply * dt;
+        uint256 userPts = hypePoints[user];
+        uint256 last = lastHypePoke[user];
+        uint256 userEpoch = userHypeEpoch[user];
+        uint256 userBal = hNest.balanceOf(user);
+        if (last == 0) {
+            last = block.timestamp;
+            userEpoch = epoch;
+        }
+        while (userEpoch < epoch) {
+            uint256 closeT = hypeEpochClosedAt[userEpoch];
+            if (closeT > last) userPts += userBal * (closeT - last);
+            uint256 tot = hypeEpochPoints[userEpoch];
+            if (tot > 0 && userPts > 0) stored += (userPts * hypeEpochPot[userEpoch]) / tot;
+            userPts = 0;
+            last = closeT;
+            userEpoch += 1;
+        }
+        if (userEpoch == epoch && block.timestamp > last) {
+            userPts += userBal * (block.timestamp - last);
+        }
+        if (inbound > 0) {
+            uint256 fee = (inbound * feeBps) / BASIS_POINTS;
+            uint256 net = inbound - fee;
+            if (openPts == 0) {
+                uint256 deltaAcc = (net * 1e18) / supply;
+                acc += deltaAcc;
+            } else if (net > 0 && userPts > 0) {
+                stored += (userPts * net) / (openPts);
+            }
+        }
+        snapAcc = (userBal * acc) / 1e18;
+        snapPend = snapAcc > hypeRewardDebt[user] ? snapAcc - hypeRewardDebt[user] : 0;
     }
 }

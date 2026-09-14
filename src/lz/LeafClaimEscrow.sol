@@ -12,11 +12,19 @@ interface IClaimHype {
     function pending(bytes32 id, address user) external view returns (uint256);
 }
 
+/// @dev Nest vault residual WHYPE. Market is just another hNEST holder; time-weighted
+///      points accrue to this contract while listed, then we forward the payout.
+interface INestResidualHype {
+    function claimResidualHype() external;
+    function hypeToken() external view returns (address);
+}
+
 /// @title LeafClaimEscrow
 /// @notice Leaf Market dest escrow. Protocol is never the counterparty. No mint. Execution
-///         fee is 0. 1% of ask is a **buyer incentive**. Occupancy HYPE while
-///         listed → `feeRecipient` **only if** this listing's Rewarder is set.
-///         hNEST has no Rewarder; do not invent occupancy HYPE for it.
+///         fee is 0. 1% of ask is a **buyer incentive**. Occupancy while listed
+///         → `feeRecipient`: Rewarder via `claimOccupancy`; hNEST via time-weighted
+///         vault points on this address, then `skimNestHype` / cancel/fill forward.
+///         Cancel is not locked. VAR pre-market harvests 4626 surplus in EscrowVault.
 ///         Product name is Leaf Market. Do not surface this contract name in UI.
 ///
 /// Settlement events (do not treat dest `Status.Filled` as cash settled):
@@ -48,6 +56,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
 
     address public feeRecipient;
     IClaimHype public rewarder;
+    mapping(address leaf => address vault) public nestHypeVault;
 
     enum Status {
         None,
@@ -88,6 +97,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     /// @dev Dest Leaf left escrow. Source `Paid` is still pending on LZ.
     event LeafReleased(uint256 indexed id, address indexed buyer, uint256 leafAmount);
     event OccupancyClaimed(bytes32 indexed rewardId, uint256 amount);
+    event NestHypeVaultSet(address indexed leaf, address indexed vault);
+    event NestOccupancySkimmed(address indexed leaf, uint256 amount);
     event Aborted(uint256 indexed id);
     event AckRetried(uint256 indexed id);
     event RefundRetried(uint256 indexed id);
@@ -115,9 +126,20 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         rewarder = IClaimHype(r);
     }
 
+    function setNestHypeVault(address leaf, address vault) external onlyOwner {
+        if (leaf == address(0)) revert ZeroAddress();
+        nestHypeVault[leaf] = vault;
+        emit NestHypeVaultSet(leaf, vault);
+    }
+
+    /// @notice Permissionless. Forwards this contract's Nest time-weighted WHYPE to feeRecipient.
+    function skimNestHype(address leaf) external nonReentrant {
+        _forwardNestHype(leaf);
+    }
+
     /// @notice Allowlist a Leaf against the inner used as ask.
-    ///         C1 first. hNEST: same-chain `wantToken` = NEST. Share-price: only
-    ///         if you accept occupancy = 0 on cancel.
+    ///         C1 first. hNEST: same-chain `wantToken` = NEST. Also
+    ///         `setNestHypeVault(hNEST, NestVaultC1)` so listed-time HYPE is protocol.
     function setMarket(address leaf, address wantToken, bytes32 rewardId, bool allowed) external onlyOwner {
         if (leaf == address(0) || wantToken == address(0)) revert ZeroAddress();
         markets[leaf][wantToken] = Market(allowed, rewardId);
@@ -161,6 +183,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         if (o.status != Status.Open) revert NotOpen();
         o.status = Status.Cancelled;
         IERC20(o.leaf).safeTransfer(o.seller, o.leafAmount);
+        _forwardNestHype(o.leaf);
         emit Cancelled(id);
         if (srcEid != 0 && peers[srcEid] != bytes32(0) && msg.value > 0) {
             _lzSend(srcEid, abi.encode(OP_REFUND, id), msg.sender);
@@ -173,6 +196,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         if (block.timestamp < o.expiry) revert NotExpired();
         o.status = Status.Expired;
         IERC20(o.leaf).safeTransfer(o.seller, o.leafAmount);
+        _forwardNestHype(o.leaf);
         emit Expired(id);
         if (srcEid != 0 && peers[srcEid] != bytes32(0) && msg.value > 0) {
             _lzSend(srcEid, abi.encode(OP_REFUND, id), msg.sender);
@@ -186,6 +210,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         if (block.timestamp >= o.expiry) revert NotExpired();
         if (msg.sender == o.seller) revert SameParty();
         _payoutLeaf(o, msg.sender);
+        _forwardNestHype(o.leaf);
         (uint256 toSeller, uint256 reward) = _split(o.wantAmount);
         IERC20 want = IERC20(o.wantToken);
         want.safeTransferFrom(msg.sender, address(this), o.wantAmount);
@@ -252,6 +277,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
             return;
         }
         _payoutLeaf(o, buyer);
+        _forwardNestHype(o.leaf);
         emit LeafReleased(id, buyer, o.leafAmount);
         _lzSend(origin.srcEid, abi.encode(OP_ACK, id), address(this));
     }
@@ -259,6 +285,18 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     function _payoutLeaf(Order storage o, address buyer) private {
         o.status = Status.Filled;
         IERC20(o.leaf).safeTransfer(buyer, o.leafAmount);
+    }
+
+    function _forwardNestHype(address leaf) internal {
+        address vault = nestHypeVault[leaf];
+        if (vault == address(0)) return;
+        try INestResidualHype(vault).claimResidualHype() {} catch {}
+        address hype = INestResidualHype(vault).hypeToken();
+        if (hype == address(0)) return;
+        uint256 bal = IERC20(hype).balanceOf(address(this));
+        if (bal == 0) return;
+        IERC20(hype).safeTransfer(feeRecipient, bal);
+        emit NestOccupancySkimmed(leaf, bal);
     }
 
     function _split(uint256 wantAmount) internal pure returns (uint256 toSeller, uint256 reward) {

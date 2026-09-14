@@ -778,6 +778,34 @@ contract NestVaultC1Test is Test {
         assertEq(hype.balanceOf(gate), 1 ether - fee);
         assertEq(hype.balanceOf(address(vault)), 0);
     }
+
+    /// Time-weight: holder who sat longer gets more of the Thursday pot than a late buyer.
+    function testHypeTimeWeightLongerHolderGetsMore() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+        skip(7 days);
+        vm.prank(alice);
+        hNest.transfer(bob, 50 ether);
+        assertEq(hNest.balanceOf(alice), 50 ether);
+        assertEq(hNest.balanceOf(bob), 50 ether);
+        skip(7 days);
+        hype.mint(address(vault), 100 ether);
+        vault.settleInboundHype();
+        uint256 fee = 1 ether;
+        uint256 net = 99 ether;
+        vm.prank(alice);
+        vault.claimResidualHype();
+        vm.prank(bob);
+        vault.claimResidualHype();
+        uint256 a = hype.balanceOf(alice);
+        uint256 b = hype.balanceOf(bob);
+        assertEq(hype.balanceOf(feeRecipient), fee);
+        assertGt(a, b);
+        assertApproxEqRel(a, (net * 3) / 4, 0.02e18);
+        assertApproxEqRel(b, net / 4, 0.02e18);
+        assertEq(a + b, net);
+    }
 }
 
 contract StrayNft is ERC721 {
