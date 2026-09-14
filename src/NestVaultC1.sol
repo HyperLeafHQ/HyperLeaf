@@ -150,6 +150,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         if (nestAmount == 0) revert ZeroAmount();
         if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
 
+        // Existing holders keep any unsettled inbound WHYPE. No-op if supply is 0.
+        _settleInboundHype();
+
         uint256 totalSupply = hNest.totalSupply();
         uint256 hNestToMint = totalSupply == 0 || totalNestLocked == 0
             ? nestAmount

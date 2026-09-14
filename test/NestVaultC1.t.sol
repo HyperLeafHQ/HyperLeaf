@@ -201,4 +201,22 @@ contract NestVaultC1Test is Test {
         _deposit(100 ether);
         assertEq(hype.balanceOf(feeRecipient), 1 ether / 100);
     }
+
+    function testNewDepositDoesNotTakePriorUnsettledHype() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+
+        hype.mint(address(vault), 1 ether);
+        uint256 net = 1 ether - (1 ether / 100);
+
+        _deposit(100 ether);
+
+        assertEq(vault.pendingResidualHype(alice), net);
+        assertEq(vault.pendingResidualHype(gate), 0);
+        vm.prank(alice);
+        vault.claimResidualHype();
+        assertEq(hype.balanceOf(alice), net);
+        assertEq(hype.balanceOf(gate), 0);
+    }
 }
