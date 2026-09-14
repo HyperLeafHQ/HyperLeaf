@@ -15,8 +15,9 @@ contract DeployPremarketVar is Script {
         uint256 pk = vm.envUint("PRIVATE_KEY");
         address owner = vm.envOr("OWNER", PremarketAddresses.OWNER);
         address fee = vm.envOr("FEE_RECIPIENT", PremarketAddresses.FEE_RECIPIENT);
-        address collateral = vm.envOr("COLLATERAL", PremarketAddresses.USDC);
+        address collateral = vm.envOr("COLLATERAL", PremarketAddresses.SUSDM);
         require(collateral.code.length > 0, "COLLATERAL has no code");
+        address susdv = vm.envOr("SUSDV", address(0));
 
         vm.startBroadcast(pk);
         MultisigResolver resolver = new MultisigResolver(vm.addr(pk));
@@ -25,6 +26,12 @@ contract DeployPremarketVar is Script {
         box.setFactory(address(factory));
         factory.setLockbox(address(box));
         bytes32 marketId = factory.createMarket("Variational points", "Var", collateral);
+        if (susdv != address(0)) {
+            require(susdv.code.length > 0, "SUSDV has no code");
+            bytes32 m2 = factory.createMarket("Variational points sUSDV", "Var", susdv);
+            console2.log("VAR sUSDV marketId");
+            console2.logBytes32(m2);
+        }
         resolver.transferOwnership(owner);
         factory.transferOwnership(owner);
         box.transferOwnership(owner);

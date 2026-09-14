@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -36,11 +37,13 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     }
 
     struct Market {
-        address asset;
+        address asset; // ERC-4626 share (sUSDM / sUSDV)
         uint8 assetDecimals;
         string name;
         string symbolBase;
         bool live;
+        address underlying; // USDM / USDV
+        uint8 underlyingDecimals;
     }
 
     struct Series {
@@ -138,9 +141,13 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     {
         uint8 dec = IERC20Metadata(asset).decimals();
         if (dec < MIN_COLLATERAL_DECIMALS || dec > MAX_COLLATERAL_DECIMALS) revert BadAsset();
+        address underlying = IERC4626(asset).asset();
+        if (underlying == address(0)) revert BadAsset();
+        uint8 udec = IERC20Metadata(underlying).decimals();
+        if (udec < MIN_COLLATERAL_DECIMALS || udec > MAX_COLLATERAL_DECIMALS) revert BadAsset();
         marketId = keccak256(abi.encode(name, asset, ++marketsCreated));
-        markets[marketId] = Market(asset, dec, name, symbolBase, true);
-        vaultOf[marketId] = new EscrowVault(address(this), IERC20(asset), feeRecipient);
+        markets[marketId] = Market(asset, dec, name, symbolBase, true, underlying, udec);
+        vaultOf[marketId] = new EscrowVault(address(this), IERC4626(asset), feeRecipient);
         emit MarketCreated(marketId, asset, name);
     }
 
@@ -155,8 +162,8 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (!m.live) revert Unknown();
         if (tierBps != 10_000 && tierBps != 20_000) revert BadTier();
         if (refPriceUsd < MIN_REFERENCE_PRICE_USD) revert Floor();
-        uint256 unit = _unitRequirement(refPriceUsd, tierBps, m.assetDecimals);
-        if (unit < 10 ** m.assetDecimals) revert Floor();
+        uint256 unit = _unitRequirement(refPriceUsd, tierBps, m.underlyingDecimals);
+        if (unit < 10 ** m.underlyingDecimals) revert Floor();
         uint256 nonce = ++sellerNonce[msg.sender];
         seriesId = keccak256(abi.encode(marketId, tierBps, refPriceUsd, msg.sender, nonce));
         address clone = address(new ClaimSeriesToken());
@@ -191,7 +198,8 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (claimAmount == 0) revert Zero();
         if (s.createdAt == 0) s.createdAt = uint64(block.timestamp);
         uint256 col = Math.mulDiv(claimAmount, s.unitRequirement, 1e18, Math.Rounding.Ceil);
-        IERC20(markets[s.marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[s.marketId]), col);
+        uint256 shares = vaultOf[s.marketId].sharesCeil(col);
+        IERC20(markets[s.marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[s.marketId]), shares);
         vaultOf[s.marketId].credit(seriesId, col, true);
         ClaimSeriesToken(s.claimToken).mint(address(this), claimAmount);
         emit Minted(seriesId, claimAmount);
@@ -206,7 +214,8 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (t.balanceOf(address(this)) < amount) revert Cap();
         uint256 price = _priceAtoms(s);
         uint256 paid = Math.mulDiv(amount, price, 1e18, Math.Rounding.Ceil);
-        IERC20(markets[s.marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[s.marketId]), paid);
+        uint256 shares = vaultOf[s.marketId].sharesCeil(paid);
+        IERC20(markets[s.marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[s.marketId]), shares);
         vaultOf[s.marketId].credit(seriesId, paid, false);
         s.soldSupply += amount;
         require(t.transfer(msg.sender, amount), "xfer");
@@ -337,6 +346,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (s.state != State.SETTLED && s.state != State.EXPIRED && s.state != State.VOIDED && s.state != State.CLOSED) {
             revert BadState();
         }
+        vaultOf[s.marketId].harvest(seriesId);
         uint256 c = sellerClaimableC[seriesId];
         uint256 r = sellerClaimableR[seriesId];
         sellerClaimableC[seriesId] = 0;
@@ -434,6 +444,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     function _settle(bytes32 seriesId, address holder) internal {
         Series storage s = seriesOf[seriesId];
         if (!s.snapshotted) revert BadState();
+        vaultOf[s.marketId].harvest(seriesId);
         ClaimSeriesToken t = ClaimSeriesToken(s.claimToken);
         uint256 amt = t.balanceOf(holder);
         if (amt == 0) revert Zero();
@@ -473,7 +484,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     }
 
     function _priceAtoms(Series storage s) internal view returns (uint256) {
-        return Math.mulDiv(s.refPriceUsd, 10 ** markets[s.marketId].assetDecimals, 1e18, Math.Rounding.Ceil);
+        return Math.mulDiv(s.refPriceUsd, 10 ** markets[s.marketId].underlyingDecimals, 1e18, Math.Rounding.Ceil);
     }
 
     function _openSeller(bytes32 seriesId) internal view returns (Series storage s) {

@@ -8,13 +8,47 @@ import {MultisigResolver} from "src/premarket/MultisigResolver.sol";
 import {ClaimSeriesToken} from "src/premarket/ClaimSeriesToken.sol";
 import {DeliveryLockbox} from "src/premarket/DeliveryLockbox.sol";
 
-contract MockUsd is ERC20 {
-    constructor() ERC20("USDL", "USDL") {}
+contract MockUsdm is ERC20 {
+    constructor() ERC20("USDM", "USDM") {}
     function decimals() public pure override returns (uint8) {
         return 6;
     }
     function mint(address to, uint256 a) external {
         _mint(to, a);
+    }
+}
+
+/// @dev 12-dec 4626 like sUSDM. rate is USDM (6d) per 1e12 shares.
+contract MockSusdm is ERC20 {
+    MockUsdm public immutable assetToken;
+    uint256 public rate = 1e6; // 1e12 shares = 1e6 USDM
+
+    constructor(MockUsdm a) ERC20("sUSDM", "sUSDM") {
+        assetToken = a;
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 12;
+    }
+
+    function asset() external view returns (address) {
+        return address(assetToken);
+    }
+
+    function convertToAssets(uint256 shares) public view returns (uint256) {
+        return (shares * rate) / 1e12;
+    }
+
+    function convertToShares(uint256 assets) public view returns (uint256) {
+        return (assets * 1e12) / rate;
+    }
+
+    function mintShares(address to, uint256 shares) external {
+        _mint(to, shares);
+    }
+
+    function setRate(uint256 r) external {
+        rate = r;
     }
 }
 
@@ -28,7 +62,8 @@ contract MockVar is ERC20 {
 contract PreMarketTest is Test {
     PreMarketFactory factory;
     MultisigResolver resolver;
-    MockUsd usd;
+    MockUsdm usdm;
+    MockSusdm susdm;
     MockVar varTok;
     address owner = address(0xA11CE);
     address fee = address(0xFEE);
@@ -40,19 +75,20 @@ contract PreMarketTest is Test {
     function setUp() public {
         resolver = new MultisigResolver(owner);
         factory = new PreMarketFactory(owner, address(resolver), fee);
-        usd = new MockUsd();
+        usdm = new MockUsdm();
+        susdm = new MockSusdm(usdm);
         varTok = new MockVar();
         vm.prank(owner);
-        marketId = factory.createMarket("Variational points", "Var", address(usd));
-        usd.mint(bob, 10_000e6);
-        usd.mint(alice, 10_000e6);
+        marketId = factory.createMarket("Variational points", "Var", address(susdm));
+        susdm.mintShares(bob, 20_000e12);
+        susdm.mintShares(alice, 20_000e12);
         vm.startPrank(bob);
-        usd.approve(address(factory), type(uint256).max);
+        susdm.approve(address(factory), type(uint256).max);
         seriesId = factory.createSeries(marketId, 20_000, 20e18);
         factory.depositAndMint(seriesId, 100e18);
         vm.stopPrank();
         vm.prank(alice);
-        usd.approve(address(factory), type(uint256).max);
+        susdm.approve(address(factory), type(uint256).max);
     }
 
     function testTickerAndFloor() public view {
@@ -102,9 +138,10 @@ contract PreMarketTest is Test {
         factory.redeemPull(seriesId);
         assertEq(varTok.balanceOf(alice), 100e18);
 
+        uint256 bobBefore = susdm.balanceOf(bob);
         vm.prank(bob);
         factory.withdrawSettlement(seriesId);
-        assertEq(usd.balanceOf(bob), 10_000e6 - 4_000e6 + 4_000e6 + 2_000e6);
+        assertGt(susdm.balanceOf(bob), bobBefore);
     }
 
     function testDefaultPaysHoldersNotSellerHeld() public {
@@ -124,10 +161,10 @@ contract PreMarketTest is Test {
         assertEq(factory.seriesFinalSold(seriesId), 60e18);
         assertEq(ClaimSeriesToken(factory.seriesClaim(seriesId)).balanceOf(bob), 0);
 
-        uint256 aliceUsd = usd.balanceOf(alice);
+        uint256 aliceShares = susdm.balanceOf(alice);
         vm.prank(alice);
         factory.redeemPull(seriesId);
-        assertEq(usd.balanceOf(alice) - aliceUsd, 2_000e6 + 2_400e6);
+        assertGt(susdm.balanceOf(alice), aliceShares);
     }
 
     function testVoidRefundsBoth() public {
@@ -138,10 +175,10 @@ contract PreMarketTest is Test {
         factory.voidSeries(seriesId);
         vm.prank(alice);
         factory.redeemPull(seriesId);
-        assertEq(usd.balanceOf(alice), 10_000e6);
         vm.prank(bob);
         factory.withdrawSettlement(seriesId);
-        assertEq(usd.balanceOf(bob), 10_000e6);
+        assertApproxEqAbs(susdm.convertToAssets(susdm.balanceOf(alice)), 20_000e6, 2);
+        assertApproxEqAbs(susdm.convertToAssets(susdm.balanceOf(bob)), 20_000e6, 2);
     }
 
     function testExpireRefundsBoth() public {
@@ -153,16 +190,26 @@ contract PreMarketTest is Test {
         factory.redeemPull(seriesId);
         vm.prank(bob);
         factory.withdrawSettlement(seriesId);
-        assertEq(usd.balanceOf(alice), 10_000e6);
-        assertEq(usd.balanceOf(bob), 10_000e6);
+        assertApproxEqAbs(susdm.convertToAssets(susdm.balanceOf(alice)), 20_000e6, 2);
+        assertApproxEqAbs(susdm.convertToAssets(susdm.balanceOf(bob)), 20_000e6, 2);
     }
 
-    function testHarvestInterestToFee() public {
+    function testGrowthIsProtocolIncomeNavUnchanged() public {
         vm.prank(alice);
         factory.buyFromSeries(seriesId, 100e18);
-        usd.mint(address(factory.vaultOf(marketId)), 50e6);
-        factory.harvest(seriesId);
-        assertEq(usd.balanceOf(fee), 50e6);
+        susdm.setRate(1.10e6);
+        vm.prank(owner);
+        resolver.voidMarket(marketId);
+        factory.voidSeries(seriesId);
+        uint256 aliceBefore = susdm.convertToAssets(susdm.balanceOf(alice));
+        uint256 bobBefore = susdm.convertToAssets(susdm.balanceOf(bob));
+        vm.prank(alice);
+        factory.redeemPull(seriesId);
+        vm.prank(bob);
+        factory.withdrawSettlement(seriesId);
+        assertApproxEqAbs(susdm.convertToAssets(susdm.balanceOf(alice)) - aliceBefore, 2_000e6, 5);
+        assertApproxEqAbs(susdm.convertToAssets(susdm.balanceOf(bob)) - bobBefore, 4_000e6, 5);
+        assertApproxEqAbs(susdm.convertToAssets(susdm.balanceOf(fee)), 600e6, 5);
     }
 
     function testOfficialTokenIsSettlementAsset() public {
@@ -206,7 +253,7 @@ contract PreMarketTest is Test {
         assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.CLOSED));
         vm.prank(bob);
         factory.withdrawSettlement(seriesId);
-        assertEq(usd.balanceOf(bob), 10_000e6);
+        assertApproxEqAbs(susdm.balanceOf(bob), 20_000e12, 2);
     }
 
     function testPartialDeliveryDefaultReclaim() public {
@@ -236,13 +283,20 @@ contract PreMarketTest is Test {
 
     function testTwoSellersSamePrice() public {
         address carol = address(0xCA);
-        usd.mint(carol, 1_000e6);
+        susdm.mintShares(carol, 1_000e12);
         vm.startPrank(carol);
-        usd.approve(address(factory), type(uint256).max);
+        susdm.approve(address(factory), type(uint256).max);
         bytes32 other = factory.createSeries(marketId, 20_000, 20e18);
         factory.depositAndMint(other, 5e18);
         vm.stopPrank();
         assertTrue(other != seriesId);
         assertEq(ClaimSeriesToken(factory.seriesClaim(other)).symbol(), "hPreVarPts2x20");
+    }
+
+    function testRejectPlainUsdc() public {
+        MockUsdm raw = new MockUsdm();
+        vm.prank(owner);
+        vm.expectRevert();
+        factory.createMarket("nope", "X", address(raw));
     }
 }
