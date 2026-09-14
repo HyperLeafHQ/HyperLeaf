@@ -129,6 +129,33 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         return seriesOf[seriesId].unitRequirement;
     }
 
+    /// @notice Underlying NAV and 4626 shares a seller must send to mint `claimAmount`.
+    ///         Books are USDM/USDV, not share count. Shares round up.
+    function previewDepositAndMint(bytes32 seriesId, uint256 claimAmount)
+        external
+        view
+        returns (uint256 assets, uint256 shares)
+    {
+        Series storage s = seriesOf[seriesId];
+        if (s.claimToken == address(0)) revert Unknown();
+        if (claimAmount == 0) revert Zero();
+        assets = Math.mulDiv(claimAmount, s.unitRequirement, 1e18, Math.Rounding.Ceil);
+        shares = vaultOf[s.marketId].sharesCeil(assets);
+    }
+
+    /// @notice Underlying NAV and 4626 shares a buyer must send for `claimAmount`.
+    function previewBuy(bytes32 seriesId, uint256 claimAmount)
+        external
+        view
+        returns (uint256 assets, uint256 shares)
+    {
+        Series storage s = seriesOf[seriesId];
+        if (s.claimToken == address(0)) revert Unknown();
+        if (claimAmount == 0) revert Zero();
+        assets = Math.mulDiv(claimAmount, _priceAtoms(s), 1e18, Math.Rounding.Ceil);
+        shares = vaultOf[s.marketId].sharesCeil(assets);
+    }
+
     function seriesFinalSold(bytes32 seriesId) external view returns (uint256) {
         return seriesOf[seriesId].finalSoldSupply;
     }

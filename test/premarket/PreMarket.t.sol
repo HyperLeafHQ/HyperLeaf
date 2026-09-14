@@ -108,6 +108,24 @@ contract PreMarketTest is Test {
         factory.createSeries(marketId, 30_000, 20e18);
     }
 
+    function testPreviewOneXTwentyUsesNavNotShareCount() public {
+        vm.prank(bob);
+        bytes32 s1 = factory.createSeries(marketId, 10_000, 20e18);
+        (uint256 assets, uint256 shares) = factory.previewDepositAndMint(s1, 1e18);
+        assertEq(assets, 20e6);
+        assertEq(shares, 20e12);
+        (uint256 buyA, uint256 buyS) = factory.previewBuy(s1, 1e18);
+        assertEq(buyA, 20e6);
+        assertEq(buyS, 20e12);
+
+        susdm.setRate(1_100_000);
+        (uint256 a2, uint256 s2) = factory.previewDepositAndMint(s1, 1e18);
+        assertEq(a2, 20e6);
+        uint256 raw = (uint256(20e6) * 1e12) / 1_100_000;
+        if (susdm.convertToAssets(raw) < 20e6) raw += 1;
+        assertEq(s2, raw);
+    }
+
     function testAnyDealPrice() public {
         vm.prank(bob);
         bytes32 odd = factory.createSeries(marketId, 20_000, 17e18);
