@@ -806,6 +806,26 @@ contract NestVaultC1Test is Test {
         assertApproxEqRel(b, net / 4, 0.02e18);
         assertEq(a + b, net);
     }
+
+    /// P1-01: dust settles intra-week must not open extra time-weight epochs.
+    function testDustSettleDoesNotOpenWeeklyEpoch() public {
+        _deposit(100 ether);
+        skip(1 days);
+        hype.mint(address(vault), 1 ether);
+        vault.settleInboundHype();
+        assertEq(vault.hypeEpochId(), 0);
+        skip(1 days);
+        hype.mint(address(vault), 1);
+        vault.settleInboundHype();
+        assertEq(vault.hypeEpochId(), 0);
+        skip(5 days);
+        hype.mint(address(vault), 1 ether);
+        vault.settleInboundHype();
+        assertEq(vault.hypeEpochId(), 1);
+        vm.prank(gate);
+        hNest.transfer(alice, 50 ether);
+        assertEq(hNest.balanceOf(alice), 50 ether);
+    }
 }
 
 contract StrayNft is ERC721 {

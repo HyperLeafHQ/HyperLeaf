@@ -65,9 +65,14 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     uint256 public hypeAccounted;
     uint256 public totalHypeDistributed;
 
-    /// @dev Time-weighted HYPE. Closed epochs pay `points / epochPoints * pot`.
-    ///      Same-block settles with no elapsed time fall back to accHypePerShare.
+    /// @dev Time-weighted HYPE. At most one closed epoch per `HYPE_EPOCH_MIN`
+    ///      (kills permissionless dust-spam). User claim/transfer credits at most
+    ///      `HYPE_CREDIT_BATCH` closed epochs per tx (O(1) gas). Remainder stays
+    ///      checkpointable via `checkpointHype`.
+    uint256 public constant HYPE_EPOCH_MIN = 7 days;
+    uint256 public constant HYPE_CREDIT_BATCH = 52;
     uint256 public lastHypeGlobal;
+    uint256 public lastHypeSettle;
     uint256 public hypePointsSupply;
     uint256 public hypeEpochId;
     mapping(uint256 => uint256) public hypeEpochPot;
@@ -164,6 +169,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         }
         nestToken.forceApprove(address(veNEST), type(uint256).max);
         lastHypeGlobal = block.timestamp;
+        lastHypeSettle = block.timestamp;
     }
 
     function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
@@ -307,6 +313,11 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         _claimResidualHypeInternal(msg.sender);
     }
 
+    /// @notice Anyone. Advances `user`'s closed-epoch HYPE checkpoint by one batch.
+    function checkpointHype(address user) external nonReentrant {
+        _claimResidualHypeInternal(user);
+    }
+
     function settleResidualHype(address user) external override {
         if (msg.sender != address(hNest)) revert OnlyHNest();
         _claimResidualHypeInternal(user);
@@ -423,7 +434,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         fee = (inbound * feeBps) / BASIS_POINTS;
         net = inbound - fee;
         _accrueGlobal();
-        if (hypePointsSupply == 0) {
+        bool weekly = hypePointsSupply > 0
+            && (lastHypeSettle == 0 || block.timestamp >= lastHypeSettle + HYPE_EPOCH_MIN);
+        if (!weekly) {
             uint256 deltaAcc = (net * 1e18) / supply;
             if (deltaAcc == 0) return (0, 0, 0);
             if (fee > 0) hypeToken.safeTransfer(feeRecipient, fee);
@@ -443,6 +456,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         hypeEpochId = e + 1;
         hypePointsSupply = 0;
         lastHypeGlobal = block.timestamp;
+        lastHypeSettle = block.timestamp;
         hypeAccounted += net;
         emit InboundHypeSettled(inbound, fee, net);
         return (inbound, fee, net);
@@ -493,7 +507,8 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     }
 
     function _creditClosedEpochs(address user, uint256 bal) internal {
-        while (userHypeEpoch[user] < hypeEpochId) {
+        uint256 n;
+        while (userHypeEpoch[user] < hypeEpochId && n < HYPE_CREDIT_BATCH) {
             uint256 e = userHypeEpoch[user];
             uint256 closeT = hypeEpochClosedAt[e];
             uint256 last = lastHypePoke[user];
@@ -505,6 +520,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             hypePoints[user] = 0;
             lastHypePoke[user] = closeT;
             userHypeEpoch[user] = e + 1;
+            unchecked {
+                ++n;
+            }
         }
     }
 
@@ -534,7 +552,8 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             last = block.timestamp;
             userEpoch = epoch;
         }
-        while (userEpoch < epoch) {
+        uint256 n;
+        while (userEpoch < epoch && n < HYPE_CREDIT_BATCH) {
             uint256 closeT = hypeEpochClosedAt[userEpoch];
             if (closeT > last) userPts += userBal * (closeT - last);
             uint256 tot = hypeEpochPoints[userEpoch];
@@ -542,6 +561,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             userPts = 0;
             last = closeT;
             userEpoch += 1;
+            unchecked {
+                ++n;
+            }
         }
         if (userEpoch == epoch && block.timestamp > last) {
             userPts += userBal * (block.timestamp - last);
@@ -549,8 +571,10 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         if (inbound > 0) {
             uint256 fee = (inbound * feeBps) / BASIS_POINTS;
             uint256 net = inbound - fee;
-            if (openPts == 0) {
-                uint256 deltaAcc = (net * 1e18) / supply;
+            bool weekly = openPts > 0
+                && (lastHypeSettle == 0 || block.timestamp >= lastHypeSettle + HYPE_EPOCH_MIN);
+            if (!weekly) {
+                uint256 deltaAcc = supply == 0 ? 0 : (net * 1e18) / supply;
                 acc += deltaAcc;
             } else if (net > 0 && userPts > 0) {
                 stored += (userPts * net) / (openPts);

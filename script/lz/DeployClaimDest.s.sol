@@ -6,7 +6,7 @@ import {LeafClaimEscrow} from "src/lz/LeafClaimEscrow.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 
 /// @notice HyperEVM mainnet Leaf Market escrow. After the Leaf exists.
-///         hNEST: LEAF=hNEST WANT=NEST REWARDER unset. Do not deploy Fill.
+///         hNEST: LEAF=hNEST WANT=NEST NEST_VAULT=NestVaultC1 REWARDER unset. Do not deploy Fill.
 contract DeployClaimDest is Script {
     function run() external {
         address owner = vm.envAddress("OWNER");
@@ -18,16 +18,23 @@ contract DeployClaimDest is Script {
         address want = vm.envAddress("WANT");
         address rewarder = vm.envOr("REWARDER", address(0));
         bytes32 rewardId = vm.envOr("REWARD_ID", bytes32(0));
+        address nestVault = vm.envOr("NEST_VAULT", address(0));
 
         vm.startBroadcast();
         LeafClaimEscrow escrow = new LeafClaimEscrow(A.ENDPOINT_HYPEREVM, owner, guardian, feeRecipient);
         escrow.setMarket(leaf, want, rewardId, true);
         if (rewarder != address(0)) escrow.setRewarder(rewarder);
+        if (nestVault != address(0)) escrow.setNestHypeVault(leaf, nestVault);
         vm.stopBroadcast();
 
         console2.log("LeafClaimEscrow", address(escrow));
         console2.log("LEAF", leaf);
         console2.log("WANT", want);
+        if (nestVault != address(0)) {
+            console2.log("nestHypeVault", nestVault);
+        } else {
+            console2.log("WARN NEST_VAULT unset — listed hNEST WHYPE stays in Market");
+        }
         console2.log("next: deploy Fill on source, then WirePeers OAPP=escrow PEER=fill ASSET=...");
     }
 }
