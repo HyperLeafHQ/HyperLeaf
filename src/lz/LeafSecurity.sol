@@ -8,6 +8,8 @@ import {LayerZeroAddresses as A} from "./LayerZeroAddresses.sol";
 ///         Default: optional 2-of-3 (LZ Labs, Horizen, Canary). Arrays MUST
 ///         be strictly ascending. Nethermind is not in the stack.
 ///         If `hyperleafDvn != 0`, it is a REQUIRED DVN (veto).
+///         `requiredDVNCount = 0` means inherit the SendLib default (DeadDVN
+///         on these pathways). Empty required must be `NIL` (255) = none.
 library LeafSecurity {
     struct UlnConfig {
         uint64 confirmations;
@@ -17,6 +19,9 @@ library LeafSecurity {
         address[] requiredDVNs;
         address[] optionalDVNs;
     }
+
+    /// @dev LayerZero `NIL_DVN_COUNT` — override default to an empty set.
+    uint8 public constant NIL = type(uint8).max;
 
     struct ExecutorConfig {
         uint32 maxMessageSize;
@@ -86,7 +91,7 @@ library LeafSecurity {
         }
         UlnConfig memory cfg = UlnConfig({
             confirmations: confirmations,
-            requiredDVNCount: uint8(required.length),
+            requiredDVNCount: hyperleafDvn == address(0) ? NIL : uint8(required.length),
             optionalDVNCount: uint8(optionalDvns.length),
             optionalDVNThreshold: 2,
             requiredDVNs: required,
