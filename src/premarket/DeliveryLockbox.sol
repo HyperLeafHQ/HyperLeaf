@@ -3,6 +3,8 @@ pragma solidity 0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 interface IDeliverySink {
     function onDeliveryCredit(bytes32 seriesId, uint256 amount) external;
@@ -12,29 +14,19 @@ interface IDeliverySink {
 /// @notice Credits delivery of the resolver's officialToken on the settlement chain.
 ///         That ERC-20 is what holders receive on SETTLED. Cross-chain is only a
 ///         way to move that same token here — not a second representation.
-contract DeliveryLockbox {
+contract DeliveryLockbox is Ownable2Step {
     using SafeERC20 for IERC20;
 
-    address public owner;
     IDeliverySink public factory;
     mapping(bytes32 => uint256) public lockedOrigin;
     mapping(bytes32 => bool) public credited;
 
-    error NotOwner();
     error BadToken();
-    error NotFactory();
 
     event Credited(bytes32 indexed seriesId, uint256 amount);
     event OriginLocked(bytes32 indexed seriesId, uint256 amount);
 
-    constructor(address owner_) {
-        owner = owner_;
-    }
-
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
-    }
+    constructor(address owner_) Ownable(owner_) {}
 
     function setFactory(address f) external onlyOwner {
         factory = IDeliverySink(f);

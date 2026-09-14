@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IConversionResolver} from "./IConversionResolver.sol";
 
-/// @notice Owner is the oracle. One-shot. A voided market can never resolve.
-contract MultisigResolver is IConversionResolver {
-    address public owner;
-
+/// @notice Resolution key for the VAR canary. Owner should be a Safe in production.
+///         One-shot resolve / void. A voided market can never resolve.
+contract MultisigResolver is IConversionResolver, Ownable2Step {
     struct Res {
         address token;
         uint256 rateX18;
@@ -19,27 +20,13 @@ contract MultisigResolver is IConversionResolver {
 
     event Resolved(bytes32 indexed marketId, address token, uint256 rateX18);
     event MarketVoided(bytes32 indexed marketId);
-    event OwnerTransferred(address indexed oldOwner, address indexed newOwner);
 
     error AlreadyResolved();
     error MarketAlreadyVoided();
-    error NotOwner();
     error ZeroAddressOrRate();
 
-    constructor(address owner_) {
+    constructor(address owner_) Ownable(owner_) {
         if (owner_ == address(0)) revert ZeroAddressOrRate();
-        owner = owner_;
-    }
-
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
-    }
-
-    function transferOwnership(address n) external onlyOwner {
-        if (n == address(0)) revert ZeroAddressOrRate();
-        emit OwnerTransferred(owner, n);
-        owner = n;
     }
 
     function resolve(bytes32 marketId, address token, uint256 rateX18) external onlyOwner {

@@ -5,12 +5,16 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IConversionResolver} from "./IConversionResolver.sol";
 import {ClaimSeriesToken} from "./ClaimSeriesToken.sol";
 import {EscrowVault} from "./EscrowVault.sol";
 
 /// @notice Pre-TGE bilateral-escrow claim factory. Standalone. Core must not import this.
-contract PreMarketFactory {
+///         First canary: Variational points (`hPreVarPts{tier}x{price}`).
+contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint64 public constant DELIVERY_WINDOW = 48 hours;
@@ -62,7 +66,6 @@ contract PreMarketFactory {
     }
 
     IConversionResolver public immutable resolver;
-    address public owner;
     address public lockbox;
     address public feeRecipient;
 
@@ -97,13 +100,8 @@ contract PreMarketFactory {
     error Cap();
     error NotLockbox();
 
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
-    }
-
-    constructor(address owner_, address resolver_, address feeRecipient_) {
-        owner = owner_;
+    constructor(address owner_, address resolver_, address feeRecipient_) Ownable(owner_) {
+        if (owner_ == address(0) || resolver_ == address(0) || feeRecipient_ == address(0)) revert Zero();
         resolver = IConversionResolver(resolver_);
         feeRecipient = feeRecipient_;
     }
@@ -135,6 +133,7 @@ contract PreMarketFactory {
     function createMarket(string calldata name, string calldata symbolBase, address asset)
         external
         onlyOwner
+        nonReentrant
         returns (bytes32 marketId)
     {
         uint8 dec = IERC20Metadata(asset).decimals();
@@ -149,6 +148,7 @@ contract PreMarketFactory {
     ///      Deal price is free discovery: any refPriceUsd >= $1.
     function createSeries(bytes32 marketId, uint16 tierBps, uint256 refPriceUsd)
         external
+        nonReentrant
         returns (bytes32 seriesId)
     {
         Market storage m = markets[marketId];
@@ -186,7 +186,7 @@ contract PreMarketFactory {
         emit SeriesCreated(seriesId, marketId, msg.sender, clone);
     }
 
-    function depositAndMint(bytes32 seriesId, uint256 claimAmount) external {
+    function depositAndMint(bytes32 seriesId, uint256 claimAmount) external nonReentrant {
         Series storage s = _openSeller(seriesId);
         if (claimAmount == 0) revert Zero();
         if (s.createdAt == 0) s.createdAt = uint64(block.timestamp);
@@ -197,7 +197,7 @@ contract PreMarketFactory {
         emit Minted(seriesId, claimAmount);
     }
 
-    function buyFromSeries(bytes32 seriesId, uint256 amount) external {
+    function buyFromSeries(bytes32 seriesId, uint256 amount) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.claimToken == address(0)) revert Unknown();
         if (s.state != State.OPEN) revert BadState();
@@ -213,7 +213,7 @@ contract PreMarketFactory {
         emit PrimaryFill(seriesId, msg.sender, amount, paid);
     }
 
-    function burnClaims(bytes32 seriesId, uint256 amount) external {
+    function burnClaims(bytes32 seriesId, uint256 amount) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.state != State.OPEN && s.state != State.RESOLVED) revert BadState();
         ClaimSeriesToken(s.claimToken).burn(msg.sender, amount);
@@ -221,7 +221,7 @@ contract PreMarketFactory {
         else s.soldSupply = 0;
     }
 
-    function burnUnsoldAndWithdrawExcess(bytes32 seriesId) external {
+    function burnUnsoldAndWithdrawExcess(bytes32 seriesId) external nonReentrant {
         Series storage s = _openOrResolvedSeller(seriesId);
         ClaimSeriesToken t = ClaimSeriesToken(s.claimToken);
         uint256 inv = t.balanceOf(address(this));
@@ -233,7 +233,7 @@ contract PreMarketFactory {
         }
     }
 
-    function resolve(bytes32 seriesId) external {
+    function resolve(bytes32 seriesId) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.state != State.OPEN) revert BadState();
         if (s.createdAt == 0) revert BadState();
@@ -256,7 +256,7 @@ contract PreMarketFactory {
         emit ResolvedSeries(seriesId, tok, rate);
     }
 
-    function deliver(bytes32 seriesId, uint256 amount) external {
+    function deliver(bytes32 seriesId, uint256 amount) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.state != State.RESOLVED) revert BadState();
         if (msg.sender != s.seller) revert NotSeller();
@@ -266,7 +266,7 @@ contract PreMarketFactory {
         _credit(seriesId, amount);
     }
 
-    function onDeliveryCredit(bytes32 seriesId, uint256 amount) external {
+    function onDeliveryCredit(bytes32 seriesId, uint256 amount) external nonReentrant {
         if (msg.sender != lockbox) revert NotLockbox();
         Series storage s = seriesOf[seriesId];
         if (s.state != State.RESOLVED) revert BadState();
@@ -274,7 +274,7 @@ contract PreMarketFactory {
         _credit(seriesId, amount);
     }
 
-    function finalize(bytes32 seriesId) external {
+    function finalize(bytes32 seriesId) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.state != State.RESOLVED) revert BadState();
         if (block.timestamp <= s.seriesResolvedAt + DELIVERY_WINDOW) revert Window();
@@ -283,7 +283,7 @@ contract PreMarketFactory {
         else _toDefaulted(seriesId);
     }
 
-    function expire(bytes32 seriesId) external {
+    function expire(bytes32 seriesId) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.state != State.OPEN) revert BadState();
         if (s.createdAt == 0) revert BadState();
@@ -298,14 +298,14 @@ contract PreMarketFactory {
         _toRefundBoth(seriesId, State.EXPIRED);
     }
 
-    function voidSeries(bytes32 seriesId) external {
+    function voidSeries(bytes32 seriesId) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.state != State.OPEN) revert BadState();
         if (!resolver.voided(s.marketId)) revert NotResolved();
         _toRefundBoth(seriesId, State.VOIDED);
     }
 
-    function closeSeries(bytes32 seriesId) external {
+    function closeSeries(bytes32 seriesId) external nonReentrant {
         Series storage s = _openOrResolvedSeller(seriesId);
         if (ClaimSeriesToken(s.claimToken).totalSupply() != 0) revert Cap();
         if (s.delivered != 0) revert Cap();
@@ -318,20 +318,20 @@ contract PreMarketFactory {
         emit Terminal(seriesId, State.CLOSED, 0, 0, 0);
     }
 
-    function harvest(bytes32 seriesId) external {
+    function harvest(bytes32 seriesId) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         vaultOf[s.marketId].harvest(seriesId);
     }
 
-    function redeemPull(bytes32 seriesId) external {
+    function redeemPull(bytes32 seriesId) external nonReentrant {
         _settle(seriesId, msg.sender);
     }
 
-    function pushSettle(bytes32 seriesId, address holder) external {
+    function pushSettle(bytes32 seriesId, address holder) external nonReentrant {
         _settle(seriesId, holder);
     }
 
-    function withdrawSettlement(bytes32 seriesId) external {
+    function withdrawSettlement(bytes32 seriesId) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (msg.sender != s.seller) revert NotSeller();
         if (s.state != State.SETTLED && s.state != State.EXPIRED && s.state != State.VOIDED && s.state != State.CLOSED) {
@@ -345,7 +345,7 @@ contract PreMarketFactory {
         if (r > 0) vaultOf[s.marketId].release(seriesId, s.seller, r, false);
     }
 
-    function reclaimPartialDelivery(bytes32 seriesId) external {
+    function reclaimPartialDelivery(bytes32 seriesId) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (msg.sender != s.seller) revert NotSeller();
         if (s.state != State.DEFAULTED && !(s.state == State.SETTLED && s.finalSoldSupply == 0)) revert BadState();

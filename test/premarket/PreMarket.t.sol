@@ -186,4 +186,63 @@ contract PreMarketTest is Test {
         factory.redeemPull(seriesId);
         assertEq(varTok.balanceOf(alice), 100e18);
     }
+
+    function testOneXPrimaryFill() public {
+        vm.startPrank(bob);
+        bytes32 s1 = factory.createSeries(marketId, 10_000, 20e18);
+        factory.depositAndMint(s1, 10e18);
+        vm.stopPrank();
+        vm.prank(alice);
+        factory.buyFromSeries(s1, 10e18);
+        assertEq(factory.vaultOf(marketId).escrowOf(s1), 200e6);
+        assertEq(factory.vaultOf(marketId).collateralOf(s1), 200e6);
+    }
+
+    function testCloseUnsoldSeries() public {
+        vm.startPrank(bob);
+        factory.burnUnsoldAndWithdrawExcess(seriesId);
+        factory.closeSeries(seriesId);
+        vm.stopPrank();
+        assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.CLOSED));
+        vm.prank(bob);
+        factory.withdrawSettlement(seriesId);
+        assertEq(usd.balanceOf(bob), 10_000e6);
+    }
+
+    function testPartialDeliveryDefaultReclaim() public {
+        vm.prank(alice);
+        factory.buyFromSeries(seriesId, 100e18);
+        vm.prank(owner);
+        resolver.resolve(marketId, address(varTok), 1e18);
+        factory.resolve(seriesId);
+        varTok.mint(bob, 40e18);
+        vm.startPrank(bob);
+        varTok.approve(address(factory), type(uint256).max);
+        factory.deliver(seriesId, 40e18);
+        vm.stopPrank();
+        vm.warp(block.timestamp + 49 hours);
+        factory.finalize(seriesId);
+        assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.DEFAULTED));
+        vm.prank(bob);
+        factory.reclaimPartialDelivery(seriesId);
+        assertEq(varTok.balanceOf(bob), 40e18);
+    }
+
+    function testRejectSubDollarPrice() public {
+        vm.prank(bob);
+        vm.expectRevert(PreMarketFactory.Floor.selector);
+        factory.createSeries(marketId, 20_000, 1e18 - 1);
+    }
+
+    function testTwoSellersSamePrice() public {
+        address carol = address(0xCA);
+        usd.mint(carol, 1_000e6);
+        vm.startPrank(carol);
+        usd.approve(address(factory), type(uint256).max);
+        bytes32 other = factory.createSeries(marketId, 20_000, 20e18);
+        factory.depositAndMint(other, 5e18);
+        vm.stopPrank();
+        assertTrue(other != seriesId);
+        assertEq(ClaimSeriesToken(factory.seriesClaim(other)).symbol(), "hPreVarPts2x20");
+    }
 }

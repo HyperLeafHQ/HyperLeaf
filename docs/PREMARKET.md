@@ -1,23 +1,21 @@
-# Pre-market guarantee (hPreVarPts) — feat/premarket
+# Pre-market guarantee — `feat/premarket`
 
-Standalone. Zero imports from Nest / Gate / Leaf Market. Not a batch. Not main.
+Standalone. Zero imports from Nest / Gate / Leaf Market. Not a batch. Not `main`.
 
-Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67) v3 + audit [5635942604](https://github.com/HyperLeafHQ/HyperLeaf/issues/67#issuecomment-5635942604).
+Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67). First canary: **Variational points**.
 
-## Product decisions (audit P1s)
+## Product
 
-1. **Seller-held claims at terminal are unsold inventory.** Factory inventory and the seller's own balance are burned before the snapshot. They get collateral back as excess (same as unsold), **not** a share of the payment pool or the default penalty. Remaining external holders get the pools. Affiliates can still reacquire — disclosed, not solvable without KYC. Honest path is `burnClaims` before terminal.
-2. **SETTLED asset is the resolver `officialToken` on the settlement chain.** That ERC-20 is what holders receive. Cross-chain lockbox may only credit that same token. Origin lock is how the token gets here, not a second ticker. Bridge risk is the lockbox of that token, Section 12.
-3. **~1% refund variance is primary-fill only** (Leaf Market 1% buyer reward). Direct `buyFromSeries` has no reward. Secondary purchase price is never refunded.
+- Ticker `hPre{Token}Pts{tier}x{price}` — `hPreVarPts2x20`, `hPreVarPts1x20`.
+- Tiers **{1x, 2x} only**. 1x so sellers list; 2x is the HyperLeaf guarantee.
+- Deal price is **free discovery** (any ≥ $1). Chain must not reject a $17 book. UI aggregates by `(price, tier)`.
+- Collateral: Circle native USDC on HyperEVM `0xb88339CB7199b77E23DB6E890353E22632Ba630f`.
+- Protocol take = 100% of vault surplus (interest). No trade/settlement fee.
+- `DELIVERY_WINDOW = 48h` from `resolve()`. `EXPIRY = 365d`. `RESOLVE_GRACE = 48h`.
+- Resolution key is `MultisigResolver` (Ownable2Step; wrap in a Safe before TVL).
 
-First canary: **Variational points**. Ticker `hPre{Token}Pts{tier}x{price}` — e.g. `hPreVarPts2x20`. Tiers **{1x, 2x} only** — 1x so sellers will list; 2x is the HyperLeaf guarantee. No 3x.
+## Deploy
 
-On-chain a seller series is still one ERC-20. Deal price is **free discovery** (any ≥ $1) — the chain must not reject a $17 book. The UI **aggregates the book by (deal price, tier)** — user sees depth at each price, then the fill routes to a specific seller series. Suggested pins ($10/$20/$50) are UI defaults only.
+`script/DeployPremarketVar.s.sol` — factory + resolver + lockbox + **one** VAR market. Does not mint series. Owner `acceptOwnership`. Sellers call `createSeries`.
 
-## Constants
-
-`DELIVERY_WINDOW = 48h` from series `resolve()`. `EXPIRY = 365d` from first mint. `RESOLVE_GRACE = 48h`. Tiers {1x, 2x}. Floors $1. Protocol take = 100% of vault surplus (interest). No claim deadline.
-
-## Example
-
-`hPreVarPts2x20` — Variational points, 2x, $20/pt. Collateral $40/claim. Not a Leaf.
+Do not merge to `main` until a VAR series has been smoke-filled on HyperEVM.
