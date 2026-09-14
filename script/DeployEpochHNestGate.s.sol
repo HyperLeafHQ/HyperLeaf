@@ -6,12 +6,15 @@ import {EpochHNestGate} from "../src/EpochHNestGate.sol";
 
 /// @notice HyperEVM 999 only. Wrap-branch Gate (5-arg ctor). Do NOT use
 ///         feat/nest-8d-withdraw-gate / 7cd3134 (4-arg, no guardian, no tranches).
+///         Target vault comes from env VAULT_ADDRESS (NestVaultC1) — the v1 vault
+///         0x4f6615761A772e10d7f802B1C29654ABD90fF30d is abandoned; do not hardcode it.
 contract DeployEpochHNestGate is Script {
-    address constant LIVE_VAULT = 0x4f6615761A772e10d7f802B1C29654ABD90fF30d;
     address constant WHYPE = 0x5555555555555555555555555555555555555555;
 
     function run() external {
         require(block.chainid == 999, "HyperEVM 999");
+        address vault = vm.envAddress("VAULT_ADDRESS");
+        require(vault != address(0), "VAULT_ADDRESS required");
         address owner = vm.envAddress("OWNER");
         address keeper = vm.envAddress("KEEPER");
         address guardian = vm.envAddress("GUARDIAN");
@@ -20,7 +23,7 @@ contract DeployEpochHNestGate is Script {
         require(guardian != address(0) && keeper != address(0) && feeRecipient != address(0), "zero role");
 
         vm.startBroadcast();
-        EpochHNestGate gate = new EpochHNestGate(LIVE_VAULT, WHYPE, keeper, guardian, feeRecipient);
+        EpochHNestGate gate = new EpochHNestGate(vault, WHYPE, keeper, guardian, feeRecipient);
         gate.transferOwnership(owner);
         vm.stopBroadcast();
 
