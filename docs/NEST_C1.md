@@ -10,6 +10,8 @@ Replaces live v1 `0x4f6615…` for product use. v1 has only test TVL — abandon
 - Token received is **WHYPE**. Nest UI may say MEGAHYPE; the transfer is WHYPE `0x555…555`.
 - Direct `Merkle.claim(proof, vault, amount)` by a third party is the same money; `pendingResidualHype` already shows the net-of-fee, and `claimResidualHype` / `settleInboundHype` take the 1%.
 - Deposit settles inbound WHYPE **before** minting (M-04) so a new depositor cannot take prior holders' unclaimed week.
+- Rounding dust stays unaccounted (`hypeAccounted` only rises by what `accHypePerShare` can pay) and rolls into the next settle (L-03).
+- `onERC721Received` accepts veNEST only. Owner may `recoverERC721` a stray token; registered veNEST cannot be pulled (L-04).
 - Pause freezes deposits only. Merkle/settle stay live.
 - Unsolicited WHYPE is treated as campaign yield (1% fee) — accepted (audit M-02).
 - Inbound WHYPE is **not** holder yield until `settleInboundHype` takes **1%** (`feeBps`). Third-party claims to the vault are the same: anyone can settle.

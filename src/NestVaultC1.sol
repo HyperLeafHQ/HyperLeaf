@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -97,6 +98,8 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     error GateRequired();
     error YieldBookTooLarge(uint256 y, uint256 cap);
     error MerkleNotSet();
+    error UnknownNft();
+    error ProtectedVeNft();
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -358,8 +361,18 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         _unpause();
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external view returns (bytes4) {
+        if (msg.sender != address(veNEST)) revert UnknownNft();
         return IERC721Receiver.onERC721Received.selector;
+    }
+
+    /// @notice Owner can pull a stray NFT. Registered veNEST positions cannot be rescued.
+    function recoverERC721(address token, uint256 tokenId, address to) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+        if (token == address(veNEST) && (nestPrincipal[tokenId] != 0 || inHev[tokenId])) {
+            revert ProtectedVeNft();
+        }
+        IERC721(token).safeTransferFrom(address(this), to, tokenId);
     }
 
     function _settleInboundHype() internal {
@@ -367,17 +380,18 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         if (bal <= hypeAccounted) return;
         uint256 supply = hNest.totalSupply();
         if (supply == 0) return;
-        uint256 gross = bal - hypeAccounted;
-        uint256 fee = (gross * feeBps) / BASIS_POINTS;
+        uint256 inbound = bal - hypeAccounted;
+        uint256 fee = (inbound * feeBps) / BASIS_POINTS;
         if (fee > 0) {
             hypeToken.safeTransfer(feeRecipient, fee);
-            gross -= fee;
+            inbound -= fee;
         }
-        if (gross > 0) {
-            accHypePerShare += (gross * 1e18) / supply;
-        }
-        hypeAccounted += gross;
-        emit InboundHypeSettled(gross + fee, fee, gross);
+        if (inbound == 0) return;
+        uint256 deltaAcc = (inbound * 1e18) / supply;
+        uint256 distributed = (deltaAcc * supply) / 1e18;
+        accHypePerShare += deltaAcc;
+        hypeAccounted += distributed;
+        emit InboundHypeSettled(distributed + fee, fee, distributed);
     }
 
     function _claimResidualHypeInternal(address user) internal {

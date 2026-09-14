@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {NestVaultC1} from "../src/NestVaultC1.sol";
 import {HNest} from "../src/HNest.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
@@ -218,5 +219,53 @@ contract NestVaultC1Test is Test {
         vault.claimResidualHype();
         assertEq(hype.balanceOf(alice), net);
         assertEq(hype.balanceOf(gate), 0);
+    }
+
+    function testRoundingDustCarriesToNextSettle() public {
+        _deposit(3 ether);
+        hype.mint(address(vault), 101);
+        vault.settleInboundHype();
+        assertEq(hype.balanceOf(feeRecipient), 1);
+        assertEq(vault.pendingResidualHype(gate), 99);
+        assertEq(hype.balanceOf(address(vault)), 100);
+
+        vault.settleInboundHype();
+        assertEq(vault.pendingResidualHype(gate), 99);
+
+        hype.mint(address(vault), 2);
+        vault.settleInboundHype();
+        assertEq(vault.pendingResidualHype(gate), 102);
+        vm.prank(gate);
+        vault.claimResidualHype();
+        assertEq(hype.balanceOf(gate), 102);
+        assertEq(hype.balanceOf(address(vault)), 0);
+    }
+
+    function testRejectsForeignNft() public {
+        StrayNft nft = new StrayNft();
+        nft.mint(alice, 1);
+        vm.prank(alice);
+        vm.expectRevert(NestVaultC1.UnknownNft.selector);
+        nft.safeTransferFrom(alice, address(vault), 1);
+    }
+
+    function testOwnerCanRescueStrayNftNotRegisteredVe() public {
+        _deposit(1 ether);
+        StrayNft nft = new StrayNft();
+        nft.mint(address(vault), 7);
+        vault.recoverERC721(address(nft), 7, alice);
+        assertEq(nft.ownerOf(7), alice);
+
+        uint256 veId = vault.getVeNFTId(0);
+        vm.expectRevert(NestVaultC1.ProtectedVeNft.selector);
+        vault.recoverERC721(address(ve), veId, alice);
+    }
+}
+
+contract StrayNft is ERC721 {
+    constructor() ERC721("Stray", "STRAY") {}
+
+    function mint(address to, uint256 id) external {
+        _mint(to, id);
     }
 }
