@@ -137,6 +137,16 @@ contract PreMarketTest is Test {
         factory.depositAndMint(s1, 1e18, quoted);
     }
 
+    function testBuyMaxSharesProtectsStaleQuote() public {
+        (, uint256 quoted) = factory.previewBuy(seriesId, 1e18);
+        vm.prank(alice);
+        vm.expectRevert(PreMarketFactory.Slippage.selector);
+        factory.buyFromSeries(seriesId, 1e18, quoted - 1);
+        vm.prank(alice);
+        factory.buyFromSeries(seriesId, 1e18, quoted);
+        assertEq(ClaimSeriesToken(factory.seriesClaim(seriesId)).balanceOf(alice), 1e18);
+    }
+
     function testAnyDealPrice() public {
         vm.prank(bob);
         bytes32 odd = factory.createSeries(marketId, 20_000, 17e18);
