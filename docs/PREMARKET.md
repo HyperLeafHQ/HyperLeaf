@@ -14,6 +14,7 @@ Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67). First canary: *
 - Optional second market: Delpho **sUSDV** via `SUSDV` env (same wrap-from-USDV pattern) once the stake token is confirmed.
 - Books are in **underlying NAV**. Share-price growth is protocol income (`harvest` surplus shares; never redeem — sUSDM unstake has a cooldown).
 - Each series has its own share bag. A falling sUSDM rate cannot `Shortfall`-freeze other series' mint/buy.
+- If a series is underwater, `release` splits remaining shares pro-rata by remaining booked NAV. First redeemer does not take the bag.
 - `DELIVERY_WINDOW = 48h` from `resolve()`. `EXPIRY = 365d`. `RESOLVE_GRACE = 48h`.
 - Resolution key is `MultisigResolver` (Owner EOA for canary; wrap in a Safe before TVL). One-shot resolve/void.
 

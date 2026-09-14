@@ -356,4 +356,35 @@ contract PreMarketTest is Test {
         vm.expectRevert();
         factory.createMarket("nope", "X", address(raw));
     }
+
+    function testNavDropTwoHoldersProRataNotFirstCome() public {
+        vm.prank(alice);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
+        address claim = factory.seriesClaim(seriesId);
+        address carol = address(0xCA);
+        vm.prank(alice);
+        ClaimSeriesToken(claim).transfer(carol, 50e18);
+
+        vm.prank(owner);
+        resolver.resolve(marketId, address(varTok), 1e18);
+        factory.resolve(seriesId);
+        vm.warp(block.timestamp + 49 hours);
+        factory.finalize(seriesId);
+        assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.DEFAULTED));
+
+        susdm.setRate(500_000);
+
+        vm.prank(alice);
+        factory.redeemPull(seriesId);
+        uint256 aliceGot = susdm.balanceOf(alice);
+        vm.prank(carol);
+        factory.redeemPull(seriesId);
+        uint256 carolGot = susdm.balanceOf(carol);
+
+        assertGt(carolGot, 0);
+        assertApproxEqAbs(aliceGot, carolGot, 2);
+        uint256 bag = aliceGot + carolGot;
+        assertLt(aliceGot, bag);
+        assertApproxEqAbs(aliceGot * 2, bag, 2);
+    }
 }

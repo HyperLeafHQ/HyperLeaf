@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @notice Users pay *underlying* (USDM). This vault wraps to ERC-4626 shares (sUSDM)
 ///         and books NAV. Yield is share-price: harvest skims surplus shares per series.
@@ -61,20 +62,23 @@ contract EscrowVault {
     }
 
     function release(bytes32 seriesId, address to, uint256 assets, bool collateral) external onlyFactory {
+        if (assets == 0) return;
+        uint256 bucket = collateral ? collateralOf[seriesId] : escrowOf[seriesId];
+        if (bucket < assets) revert Insufficient();
+        // Pro-rata remaining shares against remaining booked NAV *before* deducting.
+        // Never dump the bag on the first holder when the 4626 rate has fallen.
+        uint256 booked = collateralOf[seriesId] + escrowOf[seriesId];
+        uint256 have = sharesOf[seriesId];
+        uint256 shares = assets == booked ? have : Math.mulDiv(have, assets, booked);
         if (collateral) {
-            if (collateralOf[seriesId] < assets) revert Insufficient();
             unchecked {
-                collateralOf[seriesId] -= assets;
+                collateralOf[seriesId] = bucket - assets;
             }
         } else {
-            if (escrowOf[seriesId] < assets) revert Insufficient();
             unchecked {
-                escrowOf[seriesId] -= assets;
+                escrowOf[seriesId] = bucket - assets;
             }
         }
-        uint256 shares = _sharesCeil(assets);
-        uint256 have = sharesOf[seriesId];
-        if (shares > have) shares = have;
         sharesOf[seriesId] = have - shares;
         if (shares > 0) IERC20(address(vaultToken)).safeTransfer(to, shares);
         emit Released(seriesId, collateral, to, assets, shares);
