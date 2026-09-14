@@ -1,0 +1,379 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+
+import {HNest} from "./HNest.sol";
+import {IVotingEscrow} from "./interfaces/IVotingEscrow.sol";
+import {IHevAdapter} from "./interfaces/IHevAdapter.sol";
+import {INestVaultHype} from "./interfaces/INestVaultHype.sol";
+import {INestMerkleAirdrop} from "./interfaces/INestMerkleAirdrop.sol";
+import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
+
+/**
+ * @title NestVaultC1
+ * @notice Next Nest vault. C1: no redeem, no idle buffer, full lock + HEV attach.
+ *         Exit is Leaf Market. Circulation is EpochHNestGate (8d).
+ *
+ *         Live v1 0x4f6615… is abandoned (test TVL). Do not patch it.
+ *
+ *         HYPE: anyone may Merkle.claim the vault's leaf (tokens always land here).
+ *         Inbound WHYPE is not holder yield until settleInboundHype takes 1%.
+ *         veNEST growth → bookVerifiedYield so later deposits are not 1:1.
+ */
+contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, INestVaultHype {
+    using SafeERC20 for IERC20;
+
+    uint256 public constant MAX_LOCK_DURATION = 26 weeks;
+    uint256 public constant BASIS_POINTS = 10_000;
+    uint256 public constant MAX_FEE_BPS = 500;
+    uint256 public constant MAX_YIELD_BOOK_BPS = 1_000;
+
+    IERC20 public immutable nestToken;
+    IVotingEscrow public immutable veNEST;
+    IERC20 public immutable hypeToken;
+    HNest public immutable hNest;
+
+    IHevAdapter public hevAdapter;
+    INestMerkleAirdrop public merkleAirdrop;
+    address public keeper;
+    address public guardian;
+    address public feeRecipient;
+    uint256 public feeBps = 100;
+    uint256 public depositCap;
+    bool public depositsEnabled;
+    address public depositGate;
+
+    uint256[] public veNFTIds;
+    mapping(uint256 => bool) public inHev;
+    mapping(uint256 => uint256) public nestPrincipal;
+    uint256 public totalNestLocked;
+    mapping(uint256 => uint256) public bookedLockedShare;
+    uint256 public yieldBookedThisEpoch;
+    uint256 public yieldBookEpochStart;
+
+    mapping(address => uint256) public hypeRewardDebt;
+    uint256 public accHypePerShare;
+    /// @dev Holder-owned WHYPE still in the vault (net of fee, not yet claimed).
+    uint256 public hypeAccounted;
+    uint256 public totalHypeDistributed;
+
+    event Deposited(address indexed user, uint256 nestAmount, uint256 hNestMinted);
+    event InboundHypeSettled(uint256 gross, uint256 fee, uint256 net);
+    event MerkleClaimed(address indexed caller, uint256 amount);
+    event ResidualHypeClaimed(address indexed user, uint256 amount);
+    event YieldBooked(uint256 addedNest, uint256 feeAssets, uint256 feeShares);
+    event YieldWrittenDown(uint256 removedNest);
+    event HarvestExecuted(uint256 hypeClaimed, uint256 feesTaken);
+    event DepositGateUpdated(address indexed gate);
+    event DepositsEnabledUpdated(bool enabled);
+    event KeeperUpdated(address oldKeeper, address newKeeper);
+    event GuardianUpdated(address oldGuardian, address newGuardian);
+    event FeeUpdated(uint256 oldFee, uint256 newFee);
+    event DepositCapUpdated(uint256 oldCap, uint256 newCap);
+    event HevAdapterUpdated(address oldAdapter, address newAdapter);
+    event MerkleAirdropUpdated(address indexed merkle);
+
+    error ZeroAmount();
+    error ZeroAddress();
+    error NotKeeper();
+    error NotGuardianOrOwner();
+    error ZeroShares();
+    error DepositCapExceeded();
+    error FeeTooHigh();
+    error OnlyHNest();
+    error InvalidHNest();
+    error DepositsDisabled();
+    error HevAdapterNotSet();
+    error HevAdapterChangeWhileLive();
+    error OnlyDepositGate();
+    error DepositGateFrozen();
+    error GateRequired();
+    error YieldBookTooLarge(uint256 y, uint256 cap);
+    error MerkleNotSet();
+
+    modifier onlyKeeper() {
+        if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
+        _;
+    }
+
+    modifier onlyGuardianOrOwner() {
+        if (msg.sender != guardian && msg.sender != owner()) revert NotGuardianOrOwner();
+        _;
+    }
+
+    constructor(
+        address _nestToken,
+        address _veNEST,
+        address _hypeToken,
+        address _hevAdapter,
+        address _feeRecipient,
+        address _keeper,
+        address _guardian,
+        uint256 _depositCap,
+        address _hNest,
+        address _merkle
+    ) Ownable(msg.sender) {
+        if (
+            _nestToken == address(0) || _veNEST == address(0) || _hypeToken == address(0) || _feeRecipient == address(0)
+                || _keeper == address(0)
+        ) revert ZeroAddress();
+
+        nestToken = IERC20(_nestToken);
+        veNEST = IVotingEscrow(_veNEST);
+        hypeToken = IERC20(_hypeToken);
+        hevAdapter = IHevAdapter(_hevAdapter);
+        feeRecipient = _feeRecipient;
+        keeper = _keeper;
+        guardian = _guardian;
+        depositCap = _depositCap;
+        merkleAirdrop = INestMerkleAirdrop(_merkle);
+
+        if (_hNest == address(0)) {
+            hNest = new HNest(address(this));
+        } else {
+            hNest = HNest(_hNest);
+            if (hNest.vault() != address(this)) revert InvalidHNest();
+        }
+        nestToken.forceApprove(address(veNEST), type(uint256).max);
+    }
+
+    function deposit(uint256 nestAmount) external nonReentrant whenNotPaused {
+        if (!depositsEnabled) revert DepositsDisabled();
+        if (depositGate == address(0) || msg.sender != depositGate) revert OnlyDepositGate();
+        if (nestAmount == 0) revert ZeroAmount();
+        if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
+
+        _settleInboundHype();
+
+        uint256 totalSupply = hNest.totalSupply();
+        uint256 hNestToMint = totalSupply == 0 || totalNestLocked == 0
+            ? nestAmount
+            : (nestAmount * totalSupply) / totalNestLocked;
+        if (hNestToMint == 0) revert ZeroShares();
+
+        nestToken.safeTransferFrom(msg.sender, address(this), nestAmount);
+        uint256 tokenId = veNEST.createLockFor(
+            nestAmount, MAX_LOCK_DURATION, address(this), false, true, HyperEVMAddresses.HEV_MANAGED_TOKEN_ID
+        );
+        veNFTIds.push(tokenId);
+        nestPrincipal[tokenId] = nestAmount;
+        if (address(hevAdapter) != address(0)) {
+            veNEST.approve(address(hevAdapter), tokenId);
+            hevAdapter.depositVeNFT(tokenId);
+            inHev[tokenId] = true;
+        }
+
+        totalNestLocked += nestAmount;
+        hNest.mint(msg.sender, hNestToMint);
+        hypeRewardDebt[msg.sender] = (hNest.balanceOf(msg.sender) * accHypePerShare) / 1e18;
+        emit Deposited(msg.sender, nestAmount, hNestToMint);
+    }
+
+    /// @notice Anyone. Submits the vault's merkle leaf. WHYPE lands here, then 1% is taken.
+    function claimMerkle(bytes32[] calldata proof, uint256 amount) external nonReentrant {
+        if (address(merkleAirdrop) == address(0)) revert MerkleNotSet();
+        merkleAirdrop.claim(proof, address(this), amount);
+        emit MerkleClaimed(msg.sender, amount);
+        _settleInboundHype();
+    }
+
+    /// @notice Anyone. Fees unsolicited / third-party merkle WHYPE sitting on the vault.
+    function settleInboundHype() external nonReentrant {
+        _settleInboundHype();
+    }
+
+    function harvest() external onlyKeeper nonReentrant {
+        uint256 before = hypeToken.balanceOf(address(this));
+        if (address(hevAdapter) != address(0) && veNFTIds.length > 0) {
+            hevAdapter.sweepResidualHype(veNFTIds, address(this));
+        }
+        _settleInboundHype();
+        uint256 afterBal = hypeToken.balanceOf(address(this));
+        emit HarvestExecuted(afterBal > before ? afterBal - before : 0, 0);
+    }
+
+    function bookVerifiedYield() external onlyKeeper nonReentrant {
+        if (address(hevAdapter) == address(0)) revert HevAdapterNotSet();
+        uint256 y;
+        uint256 down;
+        uint256 n = veNFTIds.length;
+        for (uint256 i; i < n; ++i) {
+            uint256 tokenId = veNFTIds[i];
+            if (!inHev[tokenId]) continue;
+            uint256 pending = hevAdapter.pendingLockedNestShare(tokenId);
+            uint256 booked = bookedLockedShare[tokenId];
+            if (pending > booked) {
+                y += pending - booked;
+                bookedLockedShare[tokenId] = pending;
+            } else if (pending < booked) {
+                down += booked - pending;
+                bookedLockedShare[tokenId] = pending;
+            }
+        }
+        if (down > 0) {
+            if (down > totalNestLocked) down = totalNestLocked;
+            totalNestLocked -= down;
+            emit YieldWrittenDown(down);
+        }
+        if (y == 0) {
+            if (down == 0) revert ZeroShares();
+            return;
+        }
+        if (totalNestLocked > 0) {
+            uint256 week = (block.timestamp / 7 days) * 7 days;
+            if (week != yieldBookEpochStart) {
+                yieldBookEpochStart = week;
+                yieldBookedThisEpoch = 0;
+            }
+            uint256 cap = (totalNestLocked * MAX_YIELD_BOOK_BPS) / BASIS_POINTS;
+            if (yieldBookedThisEpoch + y > cap) revert YieldBookTooLarge(y, cap - yieldBookedThisEpoch);
+            yieldBookedThisEpoch += y;
+        }
+        uint256 feeAssets = (y * feeBps) / BASIS_POINTS;
+        uint256 supply = hNest.totalSupply();
+        totalNestLocked += y;
+        uint256 feeShares;
+        if (feeAssets > 0 && supply > 0 && totalNestLocked > feeAssets) {
+            feeShares = (feeAssets * supply) / (totalNestLocked - feeAssets);
+            if (feeShares > 0) {
+                _claimResidualHypeInternal(feeRecipient);
+                hNest.mint(feeRecipient, feeShares);
+                hypeRewardDebt[feeRecipient] = (hNest.balanceOf(feeRecipient) * accHypePerShare) / 1e18;
+            }
+        }
+        emit YieldBooked(y, feeAssets, feeShares);
+    }
+
+    function claimResidualHype() external nonReentrant {
+        _claimResidualHypeInternal(msg.sender);
+    }
+
+    function settleResidualHype(address user) external override {
+        if (msg.sender != address(hNest)) revert OnlyHNest();
+        _claimResidualHypeInternal(user);
+    }
+
+    function updateDebt(address user) external override {
+        if (msg.sender != address(hNest)) revert OnlyHNest();
+        hypeRewardDebt[user] = (hNest.balanceOf(user) * accHypePerShare) / 1e18;
+    }
+
+    function pendingResidualHype(address user) external view returns (uint256) {
+        uint256 userBalance = hNest.balanceOf(user);
+        uint256 accrued = (userBalance * accHypePerShare) / 1e18;
+        if (accrued <= hypeRewardDebt[user]) return 0;
+        return accrued - hypeRewardDebt[user];
+    }
+
+    function totalVeNFTs() external view returns (uint256) {
+        return veNFTIds.length;
+    }
+
+    function getVeNFTId(uint256 i) external view returns (uint256) {
+        return veNFTIds[i];
+    }
+
+    function setDepositGate(address _gate) external onlyOwner {
+        if (_gate == address(0)) revert ZeroAddress();
+        if (depositGate != address(0)) revert DepositGateFrozen();
+        depositGate = _gate;
+        emit DepositGateUpdated(_gate);
+    }
+
+    function setDepositsEnabled(bool enabled) external onlyOwner {
+        if (enabled && depositGate == address(0)) revert GateRequired();
+        depositsEnabled = enabled;
+        emit DepositsEnabledUpdated(enabled);
+    }
+
+    function setKeeper(address _keeper) external onlyOwner {
+        if (_keeper == address(0)) revert ZeroAddress();
+        emit KeeperUpdated(keeper, _keeper);
+        keeper = _keeper;
+    }
+
+    function setGuardian(address _guardian) external onlyOwner {
+        emit GuardianUpdated(guardian, _guardian);
+        guardian = _guardian;
+    }
+
+    function setFee(uint256 _feeBps) external onlyOwner {
+        if (_feeBps > MAX_FEE_BPS) revert FeeTooHigh();
+        emit FeeUpdated(feeBps, _feeBps);
+        feeBps = _feeBps;
+    }
+
+    function setFeeRecipient(address _feeRecipient) external onlyOwner {
+        if (_feeRecipient == address(0)) revert ZeroAddress();
+        feeRecipient = _feeRecipient;
+    }
+
+    function setDepositCap(uint256 _depositCap) external onlyOwner {
+        emit DepositCapUpdated(depositCap, _depositCap);
+        depositCap = _depositCap;
+    }
+
+    function setHevAdapter(address _hevAdapter) external onlyOwner {
+        if (_hevAdapter == address(0)) revert ZeroAddress();
+        if (totalNestLocked != 0) revert HevAdapterChangeWhileLive();
+        emit HevAdapterUpdated(address(hevAdapter), _hevAdapter);
+        hevAdapter = IHevAdapter(_hevAdapter);
+    }
+
+    function setMerkleAirdrop(address _merkle) external onlyOwner {
+        if (totalNestLocked != 0) revert HevAdapterChangeWhileLive();
+        merkleAirdrop = INestMerkleAirdrop(_merkle);
+        emit MerkleAirdropUpdated(_merkle);
+    }
+
+    function pause() external onlyGuardianOrOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    function _settleInboundHype() internal {
+        uint256 bal = hypeToken.balanceOf(address(this));
+        if (bal <= hypeAccounted) return;
+        uint256 gross = bal - hypeAccounted;
+        uint256 fee = (gross * feeBps) / BASIS_POINTS;
+        if (fee > 0) {
+            hypeToken.safeTransfer(feeRecipient, fee);
+            gross -= fee;
+        }
+        uint256 supply = hNest.totalSupply();
+        if (supply > 0 && gross > 0) {
+            accHypePerShare += (gross * 1e18) / supply;
+        }
+        hypeAccounted += gross;
+        emit InboundHypeSettled(gross + fee, fee, gross);
+    }
+
+    function _claimResidualHypeInternal(address user) internal {
+        _settleInboundHype();
+        uint256 userBalance = hNest.balanceOf(user);
+        uint256 accrued = (userBalance * accHypePerShare) / 1e18;
+        uint256 pending = accrued > hypeRewardDebt[user] ? accrued - hypeRewardDebt[user] : 0;
+        hypeRewardDebt[user] = accrued;
+        if (pending > 0) {
+            hypeToken.safeTransfer(user, pending);
+            if (hypeAccounted >= pending) hypeAccounted -= pending;
+            else hypeAccounted = 0;
+            totalHypeDistributed += pending;
+            emit ResidualHypeClaimed(user, pending);
+        }
+    }
+}

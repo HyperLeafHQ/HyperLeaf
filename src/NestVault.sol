@@ -37,7 +37,7 @@ import {HyperEVMAddresses} from "./config/HyperEVMAddresses.sol";
  * Product layer is C1-style (docs/NEST_PRODUCT_POLICY.md): frontend does not offer
  * redeem. `requestWithdraw` stays as a hidden on-chain backstop. This source cannot
  * change the already-deployed immutable live vault at 0x4f6615761A772e10d7f802B1C29654ABD90fF30d.
- * Do not deploy NestVaultC1 for the current product.
+ * Next vault is NestVaultC1 (`feat/nest-c1`) — no redeem, merkle HYPE 1% settlement.
  */
 contract NestVault is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver, INestVaultHype {
     using SafeERC20 for IERC20;
