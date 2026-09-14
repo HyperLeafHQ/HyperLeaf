@@ -2,11 +2,18 @@
 
 ## Decision
 
-The current mainnet hNEST product continues to use the **existing deployed `NestVault`** at `0x4f6615761A772e10d7f802B1C29654ABD90fF30d`.
+**Current product (not yet open for deposits):** `NestVaultC1` + `EpochHNestGate` (8d mint) + Leaf Market occupancy skim.
 
-We are **not** migrating the live product to a new `NestVaultC1` contract. The deployed NestVault is an immutable legacy deployment, so adding a new function (or changing a constant) in this repository **cannot** change the already deployed contract.
+Abandoned immutable deployments — do **not** point the frontend or bot at these:
 
-Instead, hNEST is served **as a C1-style asset at the product layer** while retaining the existing protocol redemption path on-chain as a backstop.
+- v1 NestVault `0x4f6615761A772e10d7f802B1C29654ABD90fF30d` (test TVL, 6-month redeem, no merkle fee)
+- First C1 `0x4a508cc55608ae37A2c68D803D817A72B02064Fe` (snapshot HYPE; superseded by time-weighted accounting)
+
+A new C1 + Gate + Market must be deployed from `feat/market-nest-occupancy` (or its successor) **before** `setDepositsEnabled(true)`. Leaf Market must `setNestHypeVault(newHNest, newVault)` in the same rollout (`NEST_VAULT` on `DeployClaimDest`).
+
+Time-weighted HYPE: Thursday WHYPE is split by balance-seconds. At most one closed epoch per 7 days (dust intra-week uses the snapshot fallback). Cancel on Leaf Market is instant; listed-time WHYPE forwards to `feeRecipient`.
+
+The old v1 `requestWithdraw` path is **not** part of this product.
 
 ## Why C1-style
 
@@ -66,7 +73,7 @@ New HyperLeaf deposits (when Gate is wired):
 - vault residual HYPE earned while Gate holds hNEST is a separate index (accounting-fix)
 - Future vaults: `setDepositGate` is one-shot and cannot be cleared. Live `0x4f6615…` has no such setter.
 
-`requestWithdraw` stays a hidden backstop.
+C1 has no `requestWithdraw`. Exit is Leaf Market only.
 
 ## Detach (4 days, HEV custody)
 
@@ -81,33 +88,28 @@ This function **does not exist** on the already-deployed live vault. It cannot m
 
 ## Security and accounting posture
 
-Keep: adapter freeze while live, bounded withdrawal processing, O(1) pending-withdraw accounting, zero-share redemption guard, HEV vault freeze while NFTs are deposited.
+Keep: adapter freeze while live, bounded HYPE epoch close (7d min), batched user HYPE checkpoint (52/tx), zero-share deposit guard, HEV vault freeze while NFTs are deposited.
 
-Do **not** revive NestVaultC1, depositGate, or a second vault as the current product.
+v1 `0x4f6615…` is abandoned. Do not revive it as the current product. Do not wire Gate to it.
 
 ## Frontend integration rule
 
-For the live hNEST listing:
+For the current hNEST listing (after the replacement C1 is live and deposits are enabled):
 
 ```text
 Deposit NEST
     ↓
-Existing mainnet NestVault
+EpochHNestGate (8d) → NestVaultC1
     ↓
-hNEST
+hNEST (claim after delay)
     ↓
-Use / hold / LP / lend / trade
+Hold / Leaf Market
     ↓
-Primary exit = Leaf Market / DEX
-
-Direct NestVault.requestWithdraw
-    ↑
-Hidden from normal UI
-Manual / emergency / backend backstop only
+Primary exit = Leaf Market (occupancy WHYPE → protocol)
 ```
 
-The frontend may still surface factual risk information such as the existence of a contract-level redemption backstop, but it should not create a prominent redeem CTA or imply that protocol redemption is the normal exit.
+Do not show redeem/withdraw. Do not send users to `0x4f6615…` or the first C1.
 
 ## Deployment rule
 
-Do not deploy `NestVaultC1` for the current hNEST product. Do not tell grok bot to replace the live vault. Any future Vault replacement must be treated as a separate migration with explicit backing movement, hNEST supply migration, ownership transfer, user communication, and audit review.
+Deploy `NestVaultC1` + Gate + **new** Leaf Market together. Pass `NEST_VAULT` to `DeployClaimDest` so occupancy cannot stick in the Market. Do not tell grok bot to "upgrade" an already-broadcast C1 — it is immutable; a semantics change is a replacement set.

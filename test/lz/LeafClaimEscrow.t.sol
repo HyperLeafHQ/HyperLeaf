@@ -593,4 +593,46 @@ contract LeafClaimEscrowTest is PegReady {
         vm.expectRevert(LeafClaimPeer.ConfigFrozen.selector);
         escrow.setEndpointConfig(address(1), params);
     }
+
+    function testNestOccupancySkimOnCancelNoLock() public {
+        MockToken hnest = new MockToken("hNEST", "hNEST");
+        MockToken nest = new MockToken("NEST", "NEST");
+        MockNestResidual vault = new MockNestResidual(address(whype));
+        vm.startPrank(owner);
+        escrow.setMarket(address(hnest), address(nest), bytes32(0), true);
+        escrow.setNestHypeVault(address(hnest), address(vault));
+        vm.stopPrank();
+        hnest.mint(alice, 10e18);
+        vm.startPrank(alice);
+        hnest.approve(address(escrow), 10e18);
+        uint256 id = escrow.list(address(hnest), 10e18, address(nest), 9e18, alice, uint64(block.timestamp + 7 days));
+        vm.stopPrank();
+        whype.mint(address(vault), 5e18);
+        vault.seed(address(escrow), 5e18);
+        uint256 feeBefore = whype.balanceOf(feeTo);
+        vm.prank(alice);
+        escrow.cancel(id, 0);
+        assertEq(hnest.balanceOf(alice), 10e18);
+        assertEq(whype.balanceOf(feeTo), feeBefore + 5e18);
+        assertEq(whype.balanceOf(alice), 0);
+    }
+}
+
+contract MockNestResidual {
+    address public hypeToken;
+    mapping(address => uint256) public pending;
+
+    constructor(address hype) {
+        hypeToken = hype;
+    }
+
+    function seed(address user, uint256 amt) external {
+        pending[user] = amt;
+    }
+
+    function claimResidualHype() external {
+        uint256 amt = pending[msg.sender];
+        pending[msg.sender] = 0;
+        if (amt > 0) MockToken(hypeToken).transfer(msg.sender, amt);
+    }
 }

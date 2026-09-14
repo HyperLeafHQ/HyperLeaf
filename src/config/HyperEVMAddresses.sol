@@ -33,5 +33,8 @@ library HyperEVMAddresses {
     /// @notice veNEST reward distributor
     address constant VE_NEST_DISTRIBUTOR = 0x22350F14c6ee70992f1bbc7498e4C291B8B7682f;
 
+    /// @notice Nest weekly WHYPE merkle airdrop. Root rotates Thursday 00:00 UTC.
+    address constant NEST_HYPE_MERKLE = 0x33afCe556508A39181a0609288c3E93611a00905;
+
     uint256 constant HYPEREVM_CHAIN_ID = 999;
 }

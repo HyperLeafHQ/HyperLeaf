@@ -33,7 +33,7 @@ Dead, never wire: hCANARY any address; hxSQUID v2 `0x6586351861c31A8Adea414e18E1
 
 Do **not** show as depositable: hcbETH, hgSOON, hsWBERA, hslisBNB.
 
-`L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. If a user sees those strings, the frontend is wrong.
+`L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. Never print those strings in the app, marketing site, or board. User copy is **Sell on Leaf Market** or **Burn to unwrap**.
 
 ### 看板 (do this in the same job)
 
