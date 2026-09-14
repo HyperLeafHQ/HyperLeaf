@@ -67,7 +67,9 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
 
     event Deposited(address indexed user, uint256 nestAmount, uint256 hNestMinted);
     event InboundHypeSettled(uint256 gross, uint256 fee, uint256 net);
-    event MerkleClaimed(address indexed caller, uint256 amount);
+    /// @dev `received` is the actual WHYPE delta this call brought in — the merkle
+    ///      `amount` argument is cumulative, so it would mislead indexers on later weeks.
+    event MerkleClaimed(address indexed caller, uint256 received);
     event ResidualHypeClaimed(address indexed user, uint256 amount);
     event YieldBooked(uint256 addedNest, uint256 feeAssets, uint256 feeShares);
     event YieldWrittenDown(uint256 removedNest);
@@ -77,6 +79,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     event KeeperUpdated(address oldKeeper, address newKeeper);
     event GuardianUpdated(address oldGuardian, address newGuardian);
     event FeeUpdated(uint256 oldFee, uint256 newFee);
+    event FeeRecipientUpdated(address indexed oldRecipient, address indexed newRecipient);
     event DepositCapUpdated(uint256 oldCap, uint256 newCap);
     event HevAdapterUpdated(address oldAdapter, address newAdapter);
     event MerkleAirdropUpdated(address indexed merkle);
@@ -97,6 +100,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     error DepositGateFrozen();
     error GateRequired();
     error YieldBookTooLarge(uint256 y, uint256 cap);
+    error InvalidBookRange(uint256 start, uint256 end, uint256 length);
     error MerkleNotSet();
     error UnknownNft();
     error ProtectedVeNft();
@@ -153,8 +157,12 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         if (nestAmount == 0) revert ZeroAmount();
         if (depositCap > 0 && totalNestLocked + nestAmount > depositCap) revert DepositCapExceeded();
 
-        // Existing holders keep any unsettled inbound WHYPE. No-op if supply is 0.
-        _settleInboundHype();
+        // Settle inbound WHYPE AND pay the caller's accrued pending before minting.
+        // Normally a no-op claim: deposits are gate-only and EpochHNestGate syncs its
+        // residual in the same tx before calling deposit. This protects edge paths
+        // (gate migration, failed sync) where pending WHYPE would otherwise be zeroed
+        // by the post-mint reward-debt overwrite and permanently stranded.
+        _claimResidualHypeInternal(msg.sender);
 
         uint256 totalSupply = hNest.totalSupply();
         uint256 hNestToMint = totalSupply == 0 || totalNestLocked == 0
@@ -184,10 +192,14 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     /// @notice Anyone. Submits the vault's merkle leaf to Nest 0x33afCe… claim(0xca21b177).
     ///         `addr_` is always this vault — caller cannot redirect. amount is cumulative.
     ///         Proof length is not fixed (live week-1 was 11). Pause does not block this.
+    ///         Emits MerkleClaimed with the actual WHYPE delta received (amount is cumulative,
+    ///         so on later weeks the delta is smaller than `amount`).
     function claimMerkle(bytes32[] calldata proof, uint256 amount) external nonReentrant {
         if (address(merkleAirdrop) == address(0)) revert MerkleNotSet();
+        uint256 before = hypeToken.balanceOf(address(this));
         merkleAirdrop.claim(proof, address(this), amount);
-        emit MerkleClaimed(msg.sender, amount);
+        uint256 received = hypeToken.balanceOf(address(this)) - before;
+        emit MerkleClaimed(msg.sender, received);
         _settleInboundHype();
     }
 
@@ -199,21 +211,33 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
     }
 
     function harvest() external onlyKeeper nonReentrant {
-        uint256 before = hypeToken.balanceOf(address(this));
         if (address(hevAdapter) != address(0) && veNFTIds.length > 0) {
             hevAdapter.sweepResidualHype(veNFTIds, address(this));
         }
-        _settleInboundHype();
-        uint256 afterBal = hypeToken.balanceOf(address(this));
-        emit HarvestExecuted(afterBal > before ? afterBal - before : 0, 0);
+        (uint256 gross, uint256 fee,) = _settleInboundHype();
+        emit HarvestExecuted(gross, fee);
     }
 
+    /// @notice Full-range wrapper. Fine while the NFT count is small; on HyperEVM's 3M
+    ///         small-block gas limit the loop bricks around ~200-300 veNFTs, at which point
+    ///         keepers MUST switch to the paginated overload below (~150 is the alert line).
     function bookVerifiedYield() external onlyKeeper nonReentrant {
+        _bookVerifiedYield(0, veNFTIds.length);
+    }
+
+    /// @notice Paginated keeper path: processes veNFTIds[start:end] only.
+    ///         The weekly MAX_YIELD_BOOK_BPS cap still applies cumulatively —
+    ///         yieldBookedThisEpoch accumulates across paginated calls within a week.
+    function bookVerifiedYield(uint256 start, uint256 end) external onlyKeeper nonReentrant {
+        if (start >= end || end > veNFTIds.length) revert InvalidBookRange(start, end, veNFTIds.length);
+        _bookVerifiedYield(start, end);
+    }
+
+    function _bookVerifiedYield(uint256 start, uint256 end) internal {
         if (address(hevAdapter) == address(0)) revert HevAdapterNotSet();
         uint256 y;
         uint256 down;
-        uint256 n = veNFTIds.length;
-        for (uint256 i; i < n; ++i) {
+        for (uint256 i = start; i < end; ++i) {
             uint256 tokenId = veNFTIds[i];
             if (!inHev[tokenId]) continue;
             uint256 pending = hevAdapter.pendingLockedNestShare(tokenId);
@@ -332,6 +356,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
 
     function setFeeRecipient(address _feeRecipient) external onlyOwner {
         if (_feeRecipient == address(0)) revert ZeroAddress();
+        emit FeeRecipientUpdated(feeRecipient, _feeRecipient);
         feeRecipient = _feeRecipient;
     }
 
@@ -375,23 +400,30 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         IERC721(token).safeTransferFrom(address(this), to, tokenId);
     }
 
-    function _settleInboundHype() internal {
+    /// @dev Settles any WHYPE balance above `hypeAccounted` into accHypePerShare.
+    ///      Returns (gross, fee, net) actually settled this call — all zero when nothing
+    ///      was distributed (no holders, zero balance delta, or sub-distributable dust).
+    ///      Sub-distributable dust (deltaAcc == 0) settles nothing: no fee is taken and no
+    ///      event emitted. The fee is deferred, not lost — when the dust later accumulates
+    ///      past the distribution threshold the fee applies to the cumulative inbound.
+    function _settleInboundHype() internal returns (uint256 gross, uint256 fee, uint256 net) {
         uint256 bal = hypeToken.balanceOf(address(this));
-        if (bal <= hypeAccounted) return;
+        if (bal <= hypeAccounted) return (0, 0, 0);
         uint256 supply = hNest.totalSupply();
-        if (supply == 0) return;
+        if (supply == 0) return (0, 0, 0);
         uint256 inbound = bal - hypeAccounted;
-        uint256 fee = (inbound * feeBps) / BASIS_POINTS;
+        fee = (inbound * feeBps) / BASIS_POINTS;
+        net = inbound - fee;
+        uint256 deltaAcc = (net * 1e18) / supply;
+        if (deltaAcc == 0) return (0, 0, 0);
         if (fee > 0) {
             hypeToken.safeTransfer(feeRecipient, fee);
-            inbound -= fee;
         }
-        if (inbound == 0) return;
-        uint256 deltaAcc = (inbound * 1e18) / supply;
         uint256 distributed = (deltaAcc * supply) / 1e18;
         accHypePerShare += deltaAcc;
         hypeAccounted += distributed;
         emit InboundHypeSettled(distributed + fee, fee, distributed);
+        return (distributed + fee, fee, distributed);
     }
 
     function _claimResidualHypeInternal(address user) internal {
