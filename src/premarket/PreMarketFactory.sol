@@ -102,6 +102,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     error Zero();
     error Cap();
     error NotLockbox();
+    error Slippage();
 
     constructor(address owner_, address resolver_, address feeRecipient_) Ownable(owner_) {
         if (owner_ == address(0) || resolver_ == address(0) || feeRecipient_ == address(0)) revert Zero();
@@ -220,30 +221,25 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         emit SeriesCreated(seriesId, marketId, msg.sender, clone);
     }
 
-    function depositAndMint(bytes32 seriesId, uint256 claimAmount) external nonReentrant {
+    function depositAndMint(bytes32 seriesId, uint256 claimAmount, uint256 maxShares) external nonReentrant {
         Series storage s = _openSeller(seriesId);
         if (claimAmount == 0) revert Zero();
         if (s.createdAt == 0) s.createdAt = uint64(block.timestamp);
         uint256 col = Math.mulDiv(claimAmount, s.unitRequirement, 1e18, Math.Rounding.Ceil);
-        uint256 shares = vaultOf[s.marketId].sharesCeil(col);
-        IERC20(markets[s.marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[s.marketId]), shares);
-        vaultOf[s.marketId].credit(seriesId, col, true);
+        _pull(s.marketId, seriesId, col, true, maxShares);
         ClaimSeriesToken(s.claimToken).mint(address(this), claimAmount);
         emit Minted(seriesId, claimAmount);
     }
 
-    function buyFromSeries(bytes32 seriesId, uint256 amount) external nonReentrant {
+    function buyFromSeries(bytes32 seriesId, uint256 amount, uint256 maxShares) external nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (s.claimToken == address(0)) revert Unknown();
         if (s.state != State.OPEN) revert BadState();
         if (amount == 0) revert Zero();
         ClaimSeriesToken t = ClaimSeriesToken(s.claimToken);
         if (t.balanceOf(address(this)) < amount) revert Cap();
-        uint256 price = _priceAtoms(s);
-        uint256 paid = Math.mulDiv(amount, price, 1e18, Math.Rounding.Ceil);
-        uint256 shares = vaultOf[s.marketId].sharesCeil(paid);
-        IERC20(markets[s.marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[s.marketId]), shares);
-        vaultOf[s.marketId].credit(seriesId, paid, false);
+        uint256 paid = Math.mulDiv(amount, _priceAtoms(s), 1e18, Math.Rounding.Ceil);
+        _pull(s.marketId, seriesId, paid, false, maxShares);
         s.soldSupply += amount;
         require(t.transfer(msg.sender, amount), "xfer");
         emit PrimaryFill(seriesId, msg.sender, amount, paid);
@@ -512,6 +508,13 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
 
     function _priceAtoms(Series storage s) internal view returns (uint256) {
         return Math.mulDiv(s.refPriceUsd, 10 ** markets[s.marketId].underlyingDecimals, 1e18, Math.Rounding.Ceil);
+    }
+
+    function _pull(bytes32 marketId, bytes32 seriesId, uint256 assets, bool collateral, uint256 maxShares) internal {
+        uint256 shares = vaultOf[marketId].sharesCeil(assets);
+        if (shares > maxShares) revert Slippage();
+        IERC20(markets[marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[marketId]), shares);
+        vaultOf[marketId].credit(seriesId, assets, collateral);
     }
 
     function _openSeller(bytes32 seriesId) internal view returns (Series storage s) {

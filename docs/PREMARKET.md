@@ -34,6 +34,7 @@ Quote on-chain before signing:
 ```
 
 `assets` is USDM/USDV (6 dec). `shares` is what the wallet must `approve` and send.
+Mint/buy take `maxShares` and revert `Slippage` if the live 4626 rate would pull more than the quote.
 
 Exit pays that **booked NAV** back in shares at the then-current rate. Extra share-price growth is `harvest` → feeRecipient. A falling rate (sUSDV) can pay out below the original USD.
 - If NAV falls (sUSDV negative funding), exits still pay remaining shares; USD value can be below book. Disclosed.

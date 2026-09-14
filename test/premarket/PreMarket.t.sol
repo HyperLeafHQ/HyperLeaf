@@ -85,7 +85,7 @@ contract PreMarketTest is Test {
         vm.startPrank(bob);
         susdm.approve(address(factory), type(uint256).max);
         seriesId = factory.createSeries(marketId, 20_000, 20e18);
-        factory.depositAndMint(seriesId, 100e18);
+        factory.depositAndMint(seriesId, 100e18, type(uint256).max);
         vm.stopPrank();
         vm.prank(alice);
         susdm.approve(address(factory), type(uint256).max);
@@ -126,6 +126,17 @@ contract PreMarketTest is Test {
         assertEq(s2, raw);
     }
 
+    function testMaxSharesProtectsStaleQuote() public {
+        vm.prank(bob);
+        bytes32 s1 = factory.createSeries(marketId, 10_000, 20e18);
+        (, uint256 quoted) = factory.previewDepositAndMint(s1, 1e18);
+        vm.prank(bob);
+        vm.expectRevert(PreMarketFactory.Slippage.selector);
+        factory.depositAndMint(s1, 1e18, quoted - 1);
+        vm.prank(bob);
+        factory.depositAndMint(s1, 1e18, quoted);
+    }
+
     function testAnyDealPrice() public {
         vm.prank(bob);
         bytes32 odd = factory.createSeries(marketId, 20_000, 17e18);
@@ -135,7 +146,7 @@ contract PreMarketTest is Test {
 
     function testPrimaryFillThenDeliver() public {
         vm.prank(alice);
-        factory.buyFromSeries(seriesId, 100e18);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         address tok = factory.seriesClaim(seriesId);
         assertEq(ClaimSeriesToken(tok).balanceOf(alice), 100e18);
         assertEq(factory.vaultOf(marketId).escrowOf(seriesId), 2_000e6);
@@ -164,7 +175,7 @@ contract PreMarketTest is Test {
 
     function testDefaultPaysHoldersNotSellerHeld() public {
         vm.prank(alice);
-        factory.buyFromSeries(seriesId, 100e18);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         address claim = factory.seriesClaim(seriesId);
         vm.prank(alice);
         ClaimSeriesToken(claim).transfer(bob, 40e18);
@@ -187,7 +198,7 @@ contract PreMarketTest is Test {
 
     function testVoidRefundsBoth() public {
         vm.prank(alice);
-        factory.buyFromSeries(seriesId, 100e18);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         vm.prank(owner);
         resolver.voidMarket(marketId);
         factory.voidSeries(seriesId);
@@ -201,7 +212,7 @@ contract PreMarketTest is Test {
 
     function testExpireRefundsBoth() public {
         vm.prank(alice);
-        factory.buyFromSeries(seriesId, 100e18);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         vm.warp(block.timestamp + 365 days + 1);
         factory.expire(seriesId);
         vm.prank(alice);
@@ -214,7 +225,7 @@ contract PreMarketTest is Test {
 
     function testGrowthIsProtocolIncomeNavUnchanged() public {
         vm.prank(alice);
-        factory.buyFromSeries(seriesId, 100e18);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         susdm.setRate(1.10e6);
         vm.prank(owner);
         resolver.voidMarket(marketId);
@@ -237,7 +248,7 @@ contract PreMarketTest is Test {
         vm.prank(owner);
         factory.setLockbox(address(box));
         vm.prank(alice);
-        factory.buyFromSeries(seriesId, 100e18);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         vm.prank(owner);
         resolver.resolve(marketId, address(varTok), 1e18);
         factory.resolve(seriesId);
@@ -255,10 +266,10 @@ contract PreMarketTest is Test {
     function testOneXPrimaryFill() public {
         vm.startPrank(bob);
         bytes32 s1 = factory.createSeries(marketId, 10_000, 20e18);
-        factory.depositAndMint(s1, 10e18);
+        factory.depositAndMint(s1, 10e18, type(uint256).max);
         vm.stopPrank();
         vm.prank(alice);
-        factory.buyFromSeries(s1, 10e18);
+        factory.buyFromSeries(s1, 10e18, type(uint256).max);
         assertEq(factory.vaultOf(marketId).escrowOf(s1), 200e6);
         assertEq(factory.vaultOf(marketId).collateralOf(s1), 200e6);
     }
@@ -276,7 +287,7 @@ contract PreMarketTest is Test {
 
     function testPartialDeliveryDefaultReclaim() public {
         vm.prank(alice);
-        factory.buyFromSeries(seriesId, 100e18);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         vm.prank(owner);
         resolver.resolve(marketId, address(varTok), 1e18);
         factory.resolve(seriesId);
@@ -305,7 +316,7 @@ contract PreMarketTest is Test {
         vm.startPrank(carol);
         susdm.approve(address(factory), type(uint256).max);
         bytes32 other = factory.createSeries(marketId, 20_000, 20e18);
-        factory.depositAndMint(other, 5e18);
+        factory.depositAndMint(other, 5e18, type(uint256).max);
         vm.stopPrank();
         assertTrue(other != seriesId);
         assertEq(ClaimSeriesToken(factory.seriesClaim(other)).symbol(), "hPreVarPts2x20");
