@@ -103,6 +103,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     error Cap();
     error NotLockbox();
     error Slippage();
+    error AlreadySet();
 
     constructor(address owner_, address resolver_, address feeRecipient_) Ownable(owner_) {
         if (owner_ == address(0) || resolver_ == address(0) || feeRecipient_ == address(0)) revert Zero();
@@ -111,7 +112,15 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     }
 
     function setLockbox(address l) external onlyOwner {
+        if (lockbox != address(0)) revert AlreadySet();
+        if (l == address(0)) revert Zero();
         lockbox = l;
+    }
+
+    function setFeeRecipient(bytes32 marketId, address n) external onlyOwner {
+        if (n == address(0)) revert Zero();
+        feeRecipient = n;
+        vaultOf[marketId].setFeeRecipient(n);
     }
 
     function officialTokenOf(bytes32 seriesId) external view returns (address) {
@@ -130,8 +139,8 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         return seriesOf[seriesId].unitRequirement;
     }
 
-    /// @notice Underlying NAV and 4626 shares a seller must send to mint `claimAmount`.
-    ///         Books are USDM/USDV, not share count. Shares round up.
+    /// @notice USDM/USDV the user must send, and sUSDM shares the wrap should mint (maxShares).
+    ///         Users pay underlying; the vault wraps. UI keys orders by seriesId, not ticker.
     function previewDepositAndMint(bytes32 seriesId, uint256 claimAmount)
         external
         view
@@ -144,7 +153,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         shares = vaultOf[s.marketId].sharesCeil(assets);
     }
 
-    /// @notice Underlying NAV and 4626 shares a buyer must send for `claimAmount`.
+    /// @notice USDM/USDV the buyer must send, and max sUSDM shares for the wrap.
     function previewBuy(bytes32 seriesId, uint256 claimAmount)
         external
         view
@@ -511,10 +520,9 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     }
 
     function _pull(bytes32 marketId, bytes32 seriesId, uint256 assets, bool collateral, uint256 maxShares) internal {
-        uint256 shares = vaultOf[marketId].sharesCeil(assets);
-        if (shares > maxShares) revert Slippage();
-        IERC20(markets[marketId].asset).safeTransferFrom(msg.sender, address(vaultOf[marketId]), shares);
-        vaultOf[marketId].credit(seriesId, assets, collateral);
+        address vault = address(vaultOf[marketId]);
+        IERC20(markets[marketId].underlying).safeTransferFrom(msg.sender, vault, assets);
+        vaultOf[marketId].wrapAndCredit(seriesId, assets, collateral, maxShares);
     }
 
     function _openSeller(bytes32 seriesId) internal view returns (Series storage s) {

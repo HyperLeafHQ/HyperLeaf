@@ -18,25 +18,20 @@ contract DeliveryLockbox is Ownable2Step {
     using SafeERC20 for IERC20;
 
     IDeliverySink public factory;
-    mapping(bytes32 => uint256) public lockedOrigin;
     mapping(bytes32 => bool) public credited;
 
     error BadToken();
+    error AlreadySet();
+    error Zero();
 
     event Credited(bytes32 indexed seriesId, uint256 amount);
-    event OriginLocked(bytes32 indexed seriesId, uint256 amount);
 
     constructor(address owner_) Ownable(owner_) {}
 
     function setFactory(address f) external onlyOwner {
+        if (address(factory) != address(0)) revert AlreadySet();
+        if (f == address(0)) revert Zero();
         factory = IDeliverySink(f);
-    }
-
-    /// @dev Origin-chain lock (book-keeping for tests / later LZ). Does not
-    ///      extend the 48h window. Credit on HyperEVM is a separate call.
-    function lockOrigin(bytes32 seriesId, uint256 amount) external {
-        lockedOrigin[seriesId] += amount;
-        emit OriginLocked(seriesId, amount);
     }
 
     /// @dev Settlement-chain credit. Token MUST be the series officialToken.
