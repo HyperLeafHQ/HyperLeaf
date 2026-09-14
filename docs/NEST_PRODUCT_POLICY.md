@@ -2,14 +2,22 @@
 
 ## Decision
 
-**Current product (not yet open for deposits):** `NestVaultC1` + `EpochHNestGate` (8d mint) + Leaf Market occupancy skim.
+**Current product (HyperEVM, deposits open after Gate smoke):** occupancy `NestVaultC1` + `EpochHNestGate` (8d mint) + new Leaf Market.
 
-Abandoned immutable deployments — do **not** point the frontend or bot at these:
+| | address |
+|---|---|
+| Vault | `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c` |
+| HNest | `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` |
+| Adapter | `0xCaCBfE2e5F67CBDE8f7Cbc3588C9Ca94Ec89A131` |
+| Gate | `0x900b53081E91EE9aeC318de2869772BA5c46a6A7` |
+| Leaf Market | `0x6f29EA2894570b893B00C3f2305c184D7080CB34` |
 
-- v1 NestVault `0x4f6615761A772e10d7f802B1C29654ABD90fF30d` (test TVL, 6-month redeem, no merkle fee)
-- First C1 `0x4a508cc55608ae37A2c68D803D817A72B02064Fe` (snapshot HYPE; superseded by time-weighted accounting)
+Abandoned — do **not** point the frontend or bot at these:
 
-A new C1 + Gate + Market must be deployed from `feat/market-nest-occupancy` (or its successor) **before** `setDepositsEnabled(true)`. Leaf Market must `setNestHypeVault(newHNest, newVault)` in the same rollout (`NEST_VAULT` on `DeployClaimDest`).
+- v1 NestVault `0x4f6615761A772e10d7f802B1C29654ABD90fF30d`
+- First C1 `0x4a508cc55608ae37A2c68D803D817A72B02064Fe`
+- Old gates `0xE1b8B697ac1669da4A0eC6A49d320500CC96F13c` / `0xB4C43e9cE08ff5540e0E240dB7784f47231d519B`
+- Old Leaf Market `0xFa77Dfb30DeCca4D9597C6764A698996B226b53A`
 
 Time-weighted HYPE: Thursday WHYPE is split by balance-seconds. At most one closed epoch per 7 days (dust intra-week uses the snapshot fallback). Cancel on Leaf Market is instant; listed-time WHYPE forwards to `feeRecipient`.
 
