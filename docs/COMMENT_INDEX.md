@@ -14,6 +14,8 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #46 | THETA / Theta Network | Native THETA Guardian / Validator staking position; convert TFUEL rewards to HYPE; no raw spot wrapper | Selected / P1 Research / Production Gated | [5653547490](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653547490) |
 | #47 | GRT / The Graph | stGRT / GRT liquid-staked position; preserve accrued staking rewards; canonical HyperEVM route required | Selected / P1 Research / Production Gated | [5653572619](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653572619) |
 | #48 | COMP + UNI | Productive Compound / Uniswap fee-capture positions; no raw spot-token wrapper | Strong Watch / Strategic Candidate | [5653660029](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653660029) |
+| #49 | KAIA / Kaia | Native / public-delegation staking position; productive staking accounting; canonical HyperEVM route required | Selected / P1 Research / Production Gated | [5653691020](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653691020) |
+| #50 | DTF / Down To Finance | Verified DTF staking-position / future rebasing claim representation; no raw DTF wrapper | Selected / P1 Research / Production Gated | [5659805040](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5659805040) |
 
 ## Non-series completed / consolidated evaluations
 
@@ -26,6 +28,22 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | GNO | P1 Strategic Candidate; do not implement yet | 5638008710 |
 | PI | Watchlist / No-Go; no standalone Leaf | 5630142069 |
 | FLR | P1 Research Candidate; intentionally non-numbered | Historical standalone evaluation |
+
+## DTF evaluation
+
+DTF is formally promoted to **#50** as a productive staking-position candidate, not as a raw spot-token wrapper.
+
+The current IndexedEx / Down To Finance product defines a DETF (Decentralized ETF) as one token representing a chosen basket or strategy. The protocol-owned product is DTF-DETF, and the official site identifies DTF as the fee-accruing token; current product pages state that app fees buy back DTF. The current staking interface is explicitly a temporary DTF stake while the protocol DETF is being prepared, with a reward reserve and a planned migration into a rebasing claim token.
+
+HyperLeaf should therefore model the economic object as:
+
+`DTF → verified staking position → funded rewards / fee-capture economics → productive claim → HyperEVM Leaf → realize/swap → HYPE`
+
+Raw DTF must not be treated as rate-bearing backing. Market-price appreciation, speculative future protocol growth and protocol-owned treasury assets are not backing unless there is a direct, contractual and realizable claim.
+
+The preferred implementation is a verified staking-position / rebasing claim representation. Production remains gated on the exact staking contract, reward funding mechanics, migration semantics, admin controls, audit status, Robinhood Chain → HyperEVM canonical route, liquidity and complete exit topology.
+
+**Decision: Selected / P1 Research / Production Gated.**
 
 ## FLOKI evaluation
 
@@ -169,7 +187,7 @@ Core invariant remains:
 ## Methodology
 
 1. Market / protocol discovery
-2. Gate 0 — HyperEVM canonicality
+2. Gate 0 — HyperEVM existing-asset / canonicality
 3. Canonical asset identity
 4. Productive position
 5. Canonical backing
@@ -185,4 +203,4 @@ Core invariant remains:
 15. Final decision
 16. Implementation requirements
 
-Core rule: productive position > spot-token wrapping. `totalLeafLiability <= verified economically realizable NAV of productive position`.
+Core principle: productive position > spot-token wrapping. `totalLeafLiability <= verified economically realizable NAV of productive position`.
