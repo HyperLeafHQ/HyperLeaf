@@ -18,7 +18,7 @@ library MainnetBatches {
     function batchOf(string memory id) internal pure returns (uint8) {
         bytes32 k = keccak256(bytes(id));
         if (k == keccak256("hcanary")) return CANARY;
-        if (k == keccak256("hxsquid") || k == keccak256("havnt")) return SIDE_TOKEN;
+        if (k == keccak256("hxsquid") || k == keccak256("hquid") || k == keccak256("havnt")) return SIDE_TOKEN;
         // Rate L. Base cbETH has no exchangeRate — do not ship hcbeth in this batch.
         if (k == keccak256("hgsoon") || k == keccak256("hswbera")) return RATE_L;
         if (

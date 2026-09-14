@@ -75,10 +75,10 @@
       "priority": 50
     },
     {
-      "id": "hxsquid",
+      "id": "hquid",
       "kind": "L",
-      "symbol": "hxSQUID",
-      "name": "Hyperleaf xSQUID",
+      "symbol": "hQUID",
+      "name": "Hyperleaf QUID",
       "innerSymbol": "xSQUID",
       "innerToken": "0x13af2Db622d167745518aBfD59a8C4FFEe54937a",
       "rewardToken": "0x1a44233FAe8D50F1AeB3a5d58dd426ff4814Cb53",

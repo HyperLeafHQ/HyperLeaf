@@ -41,7 +41,7 @@ contract ConfigureMainnetListing is Script {
         box.setConvertYieldToHype(true);
         box.setHarvester(harvester);
         box.setConverter(converter);
-        if (keccak256(bytes(a.id)) == keccak256("hxsquid") || keccak256(bytes(a.id)) == keccak256("havnt")) {
+        if (keccak256(bytes(a.id)) == keccak256("hquid") || keccak256(bytes(a.id)) == keccak256("havnt")) {
             box.setRewardsSelector(QUID_REWARDS);
         }
         if (keccak256(bytes(a.id)) == keccak256("hswbera") || keccak256(bytes(a.id)) == keccak256("hgsoon")) {

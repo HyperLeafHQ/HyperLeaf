@@ -66,15 +66,9 @@ contract LeafOFT is LeafOApp, ERC20 {
     }
 
     function setSupplyCap(uint256 cap) public onlyOwner {
-        if (cap == 0) revert LimitsUnset();
-        if (supplyCap != 0 && cap > supplyCap) revert CapIncrease();
+        if (supplyCap != 0 && (cap == 0 || cap > supplyCap)) revert CapIncrease();
         supplyCap = cap;
         emit SupplyCapSet(cap);
-    }
-
-    function openBridge() public override onlyOwner {
-        if (supplyCap == 0) revert LimitsUnset();
-        super.openBridge();
     }
 
     function send(uint32 dstEid, bytes32 to, uint256 amount, address refund)
@@ -114,7 +108,7 @@ contract LeafOFT is LeafOApp, ERC20 {
         if (to == address(0) || amount == 0) revert ZeroAmount();
         _requireMint();
         _takeQuota(amount);
-        if (totalSupply() + amount > supplyCap) revert SupplyCapExceeded();
+        if (supplyCap != 0 && totalSupply() + amount > supplyCap) revert SupplyCapExceeded();
         _mint(to, amount);
         emit BridgedIn(to, origin.srcEid, amount, guid);
     }

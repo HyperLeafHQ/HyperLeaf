@@ -176,8 +176,8 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         uint256 shares = _sharesForAssets(innerToken, got, totalLocked, 0);
         if (shares == 0) revert ZeroAmount();
         if (rateKind != RateKind.None) {
-            if (lastAccounted + got > depositCap) revert CapExceeded();
-        } else if (totalLocked + shares > depositCap) {
+            if (depositCap != 0 && lastAccounted + got > depositCap) revert CapExceeded();
+        } else if (depositCap != 0 && totalLocked + shares > depositCap) {
             revert CapExceeded();
         }
         totalLocked += shares;

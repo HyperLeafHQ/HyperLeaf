@@ -116,8 +116,10 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         emit ListingTagSet(tag);
     }
 
+    /// @notice 0/0 = no intake cap. Partial zero is invalid. Non-zero may only fall.
     function setLimits(uint256 maxTx, uint256 maxDay) public onlyOwner {
-        if (maxTx == 0 || maxDay == 0 || maxTx > maxDay) revert LimitsUnset();
+        if ((maxTx == 0) != (maxDay == 0)) revert LimitsUnset();
+        if (maxTx != 0 && maxTx > maxDay) revert LimitsUnset();
         if (maxPerTx != 0 && maxTx > maxPerTx) revert CapIncrease();
         if (maxPerDay != 0 && maxDay > maxPerDay) revert CapIncrease();
         maxPerTx = maxTx;
@@ -179,7 +181,6 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
     ///         There is no Endpoint delegate; live `setConfig` cannot go around this wrapper.
     function openBridge() public virtual onlyOwner {
         if (listingTag == bytes32(0)) revert NoListingTag();
-        if (maxPerTx == 0 || maxPerDay == 0) revert LimitsUnset();
         peersFrozen = true;
         bridgeOpen = true;
         emit BridgeOpened();
@@ -288,6 +289,7 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
 
     function _takeQuota(uint256 amount) internal {
         if (!bridgeOpen) revert BridgeClosedErr();
+        if (maxPerTx == 0) return;
         if (amount > maxPerTx) revert TxCapExceeded();
         if (block.timestamp >= uint256(windowStart) + WINDOW) {
             windowStart = uint64(block.timestamp);

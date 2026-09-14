@@ -83,12 +83,41 @@ contract LeafPegTest is PegReady {
         vm.expectRevert(LeafOApp.NoListingTag.selector);
         adapter.openBridge();
         adapter.setListingTag(TAG);
-        vm.expectRevert(LeafOApp.LimitsUnset.selector);
-        adapter.openBridge();
-        adapter.setLimits(10e18, 10e18);
         adapter.openBridge();
         vm.stopPrank();
         assertTrue(adapter.bridgeOpen());
+        assertEq(adapter.maxPerTx(), 0);
+    }
+
+    function testPartialZeroLimitsRevert() public {
+        vm.startPrank(owner);
+        vm.expectRevert(LeafOApp.LimitsUnset.selector);
+        adapter.setLimits(0, 10e18);
+        vm.expectRevert(LeafOApp.LimitsUnset.selector);
+        adapter.setLimits(10e18, 0);
+        adapter.setLimits(0, 0);
+        assertEq(adapter.maxPerTx(), 0);
+        vm.stopPrank();
+    }
+
+    function testUnlimitedIntakeWrapsAboveOldCanary() public {
+        vm.startPrank(owner);
+        adapter.setInnerSupplyCeiling(type(uint256).max);
+        adapter.setListingTag(TAG);
+        adapter.setLimits(0, 0);
+        adapter.setDepositCap(0);
+        adapter.openBridge();
+        oft.setListingTag(TAG);
+        oft.setLimits(0, 0);
+        oft.setSupplyCap(0);
+        oft.openBridge();
+        vm.stopPrank();
+        token.mint(user, 10_000e18);
+        vm.startPrank(user);
+        token.approve(address(adapter), 2_000e18);
+        adapter.sendTo{value: 0.01 ether}(DST, user, 2_000e18);
+        vm.stopPrank();
+        assertEq(adapter.totalLocked(), 2_000e18);
     }
 
     function testDegradedStopsMintAllowsRedeemPath() public {

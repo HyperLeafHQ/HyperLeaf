@@ -163,5 +163,15 @@ contract LeafWrapTest is PegReady {
         assertEq(sendP.length, 2);
         assertEq(recvP.length, 1);
         assertTrue(keccak256(sendP[0].config) != keccak256(recvP[0].config));
+        LeafSecurity.UlnConfig memory sendU = abi.decode(sendP[0].config, (LeafSecurity.UlnConfig));
+        assertEq(sendU.requiredDVNCount, LeafSecurity.NIL);
+        assertEq(sendU.requiredDVNs.length, 0);
+        assertEq(sendU.optionalDVNCount, 3);
+        assertEq(sendU.optionalDVNThreshold, 2);
+        SetConfigParam[] memory veto =
+            LeafSecurity.paramsForPathway(A.EID_BASE, 5, address(0xBEEF), dvns, address(1));
+        LeafSecurity.UlnConfig memory vetoU = abi.decode(veto[0].config, (LeafSecurity.UlnConfig));
+        assertEq(vetoU.requiredDVNCount, 1);
+        assertEq(vetoU.requiredDVNs[0], address(0xBEEF));
     }
 }

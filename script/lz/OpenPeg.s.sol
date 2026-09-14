@@ -10,10 +10,8 @@ import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 
 /// @notice Set listingTag + per-tx/day caps. OFT also gets supplyCap.
-///         Set OPEN_BRIDGE=true only after peers and DVN are verified on-chain.
-///         PEG_CAP is always dest share units. If unset, cap = defaultCap * shareScaleOf(id).
-///         That fallback is 5e16 for hlbtc (5e6 sats * 1e10). Pass PEG_CAP only to override,
-///         or when defaultCap is 0 (hstkwausdc).
+///         cap 0 = no HyperLeaf intake limit (hxSQUID / hAVNT). Inner ceiling
+///         still required on source. Set OPEN_BRIDGE=true only after peers+DVN.
 contract OpenPeg is Script {
     function run() external {
         address oapp = vm.envAddress("OAPP");
@@ -25,7 +23,7 @@ contract OpenPeg is Script {
         uint256 cap = explicitCap != 0 ? explicitCap : a.defaultCap * LeafLbtcPolicy.shareScaleOf(id);
         uint256 ceiling = vm.envOr("INNER_SUPPLY_CEILING", uint256(0));
         bool open = vm.envOr("OPEN_BRIDGE", false);
-        require(cap != 0, "zero peg cap - pass PEG_CAP");
+        // cap 0 = no HyperLeaf intake limit. Inner ceiling still required on source.
 
         // Source lockbox: ceiling is an anti-print tripwire on the *inner token's
         // global supply*, not HyperLeaf's deposit cap. Mixing the two is

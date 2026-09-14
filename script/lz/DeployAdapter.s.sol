@@ -33,7 +33,6 @@ contract DeployAdapter is Script {
         require(owner != guardian, "OWNER == GUARDIAN");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
         uint256 cap = explicitCap != 0 ? explicitCap : a.defaultCap;
-        require(cap != 0, "zero deposit cap");
         vm.startBroadcast();
         LeafOFTAdapter adapter =
             new LeafOFTAdapter(a.innerMainnet, endpoint(block.chainid), owner, guardian, feeRecipient, cap);
