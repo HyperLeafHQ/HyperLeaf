@@ -168,4 +168,10 @@ contract LeafClaimFill is LeafClaimPeer, ReentrancyGuard {
         reward = (wantAmount * BUYER_REWARD_BPS) / BPS;
         toSeller = wantAmount - reward;
     }
+
+    function rescueNative(address to) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+        (bool ok,) = to.call{value: address(this).balance}("");
+        if (!ok) revert BadFill();
+    }
 }

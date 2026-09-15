@@ -91,8 +91,8 @@ Luna `239ce2f` / wrap-fill:
 
 **v1 allowlist**
 
-1. Closed C1 (`BLUAI4Y`, `hVIRTUALMAX`, `hORDER`, …) — `LeafClaimFill` on source.
-2. hNEST — `fillLocal` on HyperEVM (pay NEST, receive hNEST). No NestVault changes. Residual HYPE occupancy is whatever already follows the holder address; do not add a Nest-specific claim path until it is a one-line `claimOccupancy` plug.
+1. Closed C1 (`BLUAI4Y`, `hVIRTUALMAX`, `hORDER`, …) — `setRemoteMarket` + `LeafClaimFill` on the inner's chain. `fillLocal` reverts `WrongChain`.
+2. hNEST — `setMarket` + `fillLocal` on HyperEVM (pay NEST, receive hNEST).
 3. Share-price / other Liquid — **no new Solidity.** Owner `setMarket` if they want; otherwise leave off. Instant unwrap already exists.
 
 ## Wrap-fill (the actual product)
@@ -114,13 +114,14 @@ Never: Seller → HyperLeaf treasury, never HyperLeaf → Buyer.
 Example, C1 `BLUAI4Y`:
 
 ```
-Alice: 100 hBLUAI4Y into escrow. Ask = 70 BLUAI.
-Bob was about to wrap 70 BLUAI.
-Fill:
-  69.3 BLUAI → Alice
-  0.7 BLUAI  → Bob   (buyer reward, 1% of ask — not a protocol fee)
-  100 Leaf   → Bob   (already minted)
+Alice lists 100 BLUAI4Y on HyperEVM. Ask = 70 BLUAI (BSC, EID 30102).
+Bob on BSC: LeafClaimFill.fill → LZ → dest releases Leaf → ACK →
+  69.3 BLUAI → Alice (BSC)
+  0.7 BLUAI  → Bob
+  100 Leaf   → Bob (HyperEVM)
 ```
+
+`setRemoteMarket(BLUAI4Y, bscBluai, 0, true, 30102)`. Do not `fillLocal` that pair. Live hNEST board stays `setMarket` / `fillLocal`. Remote pairs need a Leaf Market that has a BSC Fill peer (one EID per dest escrow).
 
 Discount = 30% is **C1 secondary liquidity price**, not a depeg.
 No new Leaf. `totalLocked` does not move.

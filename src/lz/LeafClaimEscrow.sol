@@ -80,6 +80,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     struct Market {
         bool allowed;
         bytes32 rewardId;
+        /// @dev 0 = same-chain `fillLocal`. Non-zero = LZ EID of the want token (e.g. BSC 30102).
+        uint32 wantEid;
     }
 
     uint256 public nextId = 1;
@@ -109,6 +111,7 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
     error NotOpen();
     error NotExpired();
     error SameParty();
+    error WrongChain();
 
     constructor(address endpoint_, address owner_, address guardian_, address feeRecipient_)
         LeafClaimPeer(endpoint_, owner_, guardian_)
@@ -137,12 +140,24 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         _forwardNestHype(leaf);
     }
 
-    /// @notice Allowlist a Leaf against the inner used as ask.
-    ///         C1 first. hNEST: same-chain `wantToken` = NEST. Also
-    ///         `setNestHypeVault(hNEST, NestVaultC1)` so listed-time HYPE is protocol.
+    /// @notice Allowlist a Leaf against a same-chain ask (`fillLocal` only).
     function setMarket(address leaf, address wantToken, bytes32 rewardId, bool allowed) external onlyOwner {
+        _setMarket(leaf, wantToken, rewardId, allowed, 0);
+    }
+
+    /// @notice Allowlist a Leaf against a remote inner. Buyers fill on that chain via LeafClaimFill.
+    ///         `wantEid` is the LZ endpoint id of the want token (BSC BLUAI = 30102).
+    function setRemoteMarket(address leaf, address wantToken, bytes32 rewardId, bool allowed, uint32 wantEid)
+        external
+        onlyOwner
+    {
+        if (wantEid == 0) revert BadOrder();
+        _setMarket(leaf, wantToken, rewardId, allowed, wantEid);
+    }
+
+    function _setMarket(address leaf, address wantToken, bytes32 rewardId, bool allowed, uint32 wantEid) internal {
         if (leaf == address(0) || wantToken == address(0)) revert ZeroAddress();
-        markets[leaf][wantToken] = Market(allowed, rewardId);
+        markets[leaf][wantToken] = Market(allowed, rewardId, wantEid);
         emit MarketSet(leaf, wantToken, rewardId, allowed);
     }
 
@@ -209,6 +224,8 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         if (o.status != Status.Open) revert NotOpen();
         if (block.timestamp >= o.expiry) revert NotExpired();
         if (msg.sender == o.seller) revert SameParty();
+        Market memory m = markets[o.leaf][o.wantToken];
+        if (m.wantEid != 0) revert WrongChain();
         _payoutLeaf(o, msg.sender);
         _forwardNestHype(o.leaf);
         (uint256 toSeller, uint256 reward) = _split(o.wantAmount);
@@ -268,10 +285,11 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
         (, , address buyer, uint256 wantAmount, address payout, address wantToken) =
             abi.decode(message, (uint8, uint256, address, uint256, address, address));
         Order storage o = orders[id];
+        Market memory m = markets[o.leaf][o.wantToken];
         if (
             aborted[id] || o.status != Status.Open || block.timestamp >= o.expiry || buyer == address(0)
                 || buyer == o.seller || wantAmount != o.wantAmount || payout != o.sourceRecipient
-                || wantToken != o.wantToken
+                || wantToken != o.wantToken || m.wantEid == 0 || origin.srcEid != m.wantEid
         ) {
             _lzSend(origin.srcEid, abi.encode(OP_REFUND, id), address(this));
             return;
@@ -310,5 +328,11 @@ contract LeafClaimEscrow is LeafClaimPeer, ReentrancyGuard {
 
     function split(uint256 wantAmount) external pure returns (uint256 toSeller, uint256 reward) {
         return _split(wantAmount);
+    }
+
+    function rescueNative(address to) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+        (bool ok,) = to.call{value: address(this).balance}("");
+        if (!ok) revert BadOrder();
     }
 }

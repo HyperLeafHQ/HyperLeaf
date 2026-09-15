@@ -114,6 +114,11 @@ contract LeafClaimEscrowTest is PegReady {
         vm.stopPrank();
     }
 
+    function _remoteBluai() internal {
+        vm.prank(owner);
+        escrow.setRemoteMarket(address(oft), address(bluai), ID, true, SRC);
+    }
+
     function testFillLocalBuyerRewardNoMint() public {
         _mintAlice(100e18);
         uint256 supply = oft.totalSupply();
@@ -130,6 +135,36 @@ contract LeafClaimEscrowTest is PegReady {
         assertEq(oft.totalSupply(), supply);
         (,,,,,,, LeafClaimEscrow.Status st) = escrow.orders(id);
         assertEq(uint8(st), uint8(LeafClaimEscrow.Status.Filled));
+    }
+
+    function testRemoteMarketBlocksFillLocal() public {
+        _remoteBluai();
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(escrow), 70e18);
+        vm.expectRevert(LeafClaimEscrow.WrongChain.selector);
+        escrow.fillLocal(id);
+        vm.stopPrank();
+    }
+
+    function testLocalMarketLzFillRefunds() public {
+        _mintAlice(100e18);
+        uint256 id = _list(100e18, 70e18);
+        bluai.mint(bob, 70e18);
+        vm.startPrank(bob);
+        bluai.approve(address(filler), 70e18);
+        filler.fill{value: 0.01 ether}(id, DST, address(bluai), 70e18, alice);
+        vm.stopPrank();
+        bytes memory fillMsg = abi.encode(uint8(1), id, bob, uint256(70e18), alice, address(bluai));
+        ILayerZeroEndpointV2.Origin memory oFill = ILayerZeroEndpointV2.Origin({
+            srcEid: SRC, sender: bytes32(uint256(uint160(address(filler)))), nonce: 1
+        });
+        vm.prank(address(epDst));
+        escrow.lzReceive{value: 0.01 ether}(oFill, bytes32(uint256(1)), fillMsg, address(0), "");
+        assertEq(oft.balanceOf(address(escrow)), 100e18);
+        assertEq(oft.balanceOf(bob), 0);
     }
 
     function testFillDoesNotTouchLockbox() public {
@@ -220,6 +255,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testLzFillThenAck() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 supply = oft.totalSupply();
         uint256 id = _list(100e18, 70e18);
@@ -260,6 +296,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testLzWrongAskRefunds() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 1e18);
@@ -310,6 +347,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testBuyerAbortTooEarly() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
@@ -322,6 +360,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testGuardianAbortRefunds() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
@@ -349,6 +388,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testAbortLosesToFill() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
@@ -376,6 +416,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testRetryAckPaysSeller() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
@@ -400,6 +441,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testLateFillAfterAbortRefunds() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
@@ -456,6 +498,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testCancelWithoutGasThenRetryRefund() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
@@ -477,6 +520,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testCancelWithoutGasThenLateFillRefunds() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
@@ -505,6 +549,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testWrongWantTokenRefunds() public {
+        _remoteBluai();
         MockToken junk = new MockToken("JUNK", "JUNK");
         vm.prank(owner);
         filler.setInner(address(junk), true);
@@ -530,6 +575,7 @@ contract LeafClaimEscrowTest is PegReady {
     }
 
     function testAckFromWrongEidIgnored() public {
+        _remoteBluai();
         _mintAlice(100e18);
         uint256 id = _list(100e18, 70e18);
         bluai.mint(bob, 70e18);
