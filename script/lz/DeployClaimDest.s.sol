@@ -18,15 +18,21 @@ contract DeployClaimDest is Script {
         address rewarder = vm.envOr("REWARDER", address(0));
         bytes32 rewardId = vm.envOr("REWARD_ID", bytes32(0));
         address nestVault = vm.envOr("NEST_VAULT", address(0));
+        uint32 wantEid = uint32(vm.envOr("WANT_EID", uint256(0)));
         if (want == H.NEST) {
             require(nestVault != address(0), "NEST market requires NEST_VAULT");
+            require(wantEid == 0, "NEST is fillLocal");
         } else {
             require(nestVault == address(0), "NEST_VAULT only for NEST market");
         }
 
         vm.startBroadcast();
         LeafClaimEscrow escrow = new LeafClaimEscrow(A.ENDPOINT_HYPEREVM, owner, guardian, feeRecipient);
-        escrow.setMarket(leaf, want, rewardId, true);
+        if (wantEid == 0) {
+            escrow.setMarket(leaf, want, rewardId, true);
+        } else {
+            escrow.setRemoteMarket(leaf, want, rewardId, true, wantEid);
+        }
         if (rewarder != address(0)) escrow.setRewarder(rewarder);
         if (nestVault != address(0)) escrow.setNestHypeVault(leaf, nestVault);
         vm.stopBroadcast();
@@ -34,6 +40,7 @@ contract DeployClaimDest is Script {
         console2.log("LeafClaimEscrow", address(escrow));
         console2.log("LEAF", leaf);
         console2.log("WANT", want);
+        console2.log("WANT_EID", wantEid);
         if (nestVault != address(0)) console2.log("nestHypeVault", nestVault);
         console2.log("next: deploy Fill on source, then WirePeers OAPP=escrow PEER=fill ASSET=...");
     }
