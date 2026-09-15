@@ -54,6 +54,17 @@ library LeafJitoPolicy {
     bytes32 internal constant DVN_NETHERMIND_SOLANA =
         0xe4b2ac493a2dd060e66df3200996f7050bced9c0a465bedc1261272a1bb24330;
 
+    /// NCN VRTs — different product. Never wrap, never harvest_other.
+    /// @dev FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo
+    bytes32 internal constant FRAGSOL_MINT =
+        0xd634089bb695733914837de852fbd24cff284e2722a63480697643ca75f76c92;
+    /// @dev kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B
+    bytes32 internal constant KYSOL_MINT =
+        0x0b43cc0a2dd3f0a2f3bc24b9c9b1728ad21779cf61e48a20f910715caa82fb7a;
+    /// @dev ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC
+    bytes32 internal constant EZSOL_MINT =
+        0x09bb716781926395856a2fa15ebb001ba965368cb3d6138e9313a9420b144a49;
+
     uint32 internal constant DEST_EID = 30367; // HyperEVM
     uint32 internal constant SOURCE_EID = 30168; // Solana
 
@@ -71,10 +82,14 @@ library LeafJitoPolicy {
         if (isForbiddenProgram(program)) revert ForbiddenProgram();
     }
 
+    function isVrtMint(bytes32 mint) internal pure returns (bool) {
+        return mint == FRAGSOL_MINT || mint == KYSOL_MINT || mint == EZSOL_MINT;
+    }
+
     /// @dev Side-token airdrop ATAs on the PDA (e.g. a future JTO-style snapshot).
-    ///      Never this path for JitoSOL — that is rate skim only.
+    ///      Never this path for JitoSOL — that is rate skim only. Never NCN VRTs.
     function requireHarvestOther(bytes32 mint) internal pure {
-        if (mint == JITO_MINT || mint == bytes32(0)) revert CannotHarvestInner();
+        if (mint == JITO_MINT || mint == bytes32(0) || isVrtMint(mint)) revert CannotHarvestInner();
     }
 
     function isSolanaRequiredDvn(bytes32 dvn) internal pure returns (bool) {
