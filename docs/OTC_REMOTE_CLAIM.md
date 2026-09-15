@@ -35,7 +35,11 @@ Pre-market (VAR) is a different product: same-chain USDM escrow + future officia
 | `OtcSameChainMailbox` | tests | Immediate mint/release |
 | LeafClaimEscrow | HyperEVM | `setMarket(claim, hevmUsdc, 0, true)` |
 
-Guardian can pause lock / claim / LZ mailbox. Owner unpauses. Mailbox, lock, and claim ends are one-shot.
+Guardian pause stops outbound **and inbound** (`_lzReceive` + `release`). Owner unpauses. Mailbox, lock, and claim ends are one-shot.
+
+LZ native fee refund is an explicit `refundTo` on `deposit` / `redeem`. It must not be the lock or claim contract. `rescueNative` is owner last-resort only.
+
+Decimals: both mailboxes take `expectedDecimals`. `setLock` / `setClaim` check locally; every LZ payload carries decimals and inbound reverts on mismatch.
 
 Later corridors swap the lock token + LZ EIDs. Do not fork Leaf Market.
 
@@ -45,4 +49,4 @@ Wrap layer: 0. Leaf Market already takes the 1% buyer incentive and occupancy ru
 
 ## LZ in-flight
 
-`deposit` credits `totalLocked` before dest mint. If dest `lzReceive` never runs, inventory sits until the executor retries. Do not skip the nonce. Same on redeem: burn first, source `release` on message.
+`deposit` credits `totalLocked` before dest mint. If dest `lzReceive` never runs, inventory sits until the executor retries. Pause on dest will cause inbound mint to revert until unpaused — executor retries after. Same on redeem: burn first, source `release` on message; paused source will not release.

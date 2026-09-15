@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {OtcRemoteLock} from "src/otc/OtcRemoteLock.sol";
 import {OtcClaim} from "src/otc/OtcClaim.sol";
 import {OtcSameChainMailbox} from "src/otc/OtcSameChainMailbox.sol";
@@ -22,10 +23,12 @@ contract MockUsdc is ERC20 {
 
 contract MockEndpoint is ILayerZeroEndpointV2 {
     uint32 public eid;
+    address public lastRefund;
     constructor(uint32 eid_) {
         eid = eid_;
     }
-    function send(MessagingParams calldata p, address) external payable returns (MessagingReceipt memory r) {
+    function send(MessagingParams calldata p, address refund) external payable returns (MessagingReceipt memory r) {
+        lastRefund = refund;
         r.guid = keccak256(abi.encode(p, block.number));
         r.nonce = 1;
         r.fee = MessagingFee(msg.value, 0);
@@ -75,7 +78,7 @@ contract OtcRemoteClaimTest is Test {
     function testDepositMintsOneToOne() public {
         vm.startPrank(seller);
         arcUsdc.approve(address(lock), 100e6);
-        lock.deposit(100e6, seller);
+        lock.deposit(100e6, seller, seller);
         vm.stopPrank();
         assertEq(claim.balanceOf(seller), 100e6);
         assertEq(claim.decimals(), 6);
@@ -86,8 +89,8 @@ contract OtcRemoteClaimTest is Test {
     function testRedeemReleasesSource() public {
         vm.startPrank(seller);
         arcUsdc.approve(address(lock), 40e6);
-        lock.deposit(40e6, seller);
-        claim.redeem(40e6, seller);
+        lock.deposit(40e6, seller, seller);
+        claim.redeem(40e6, seller, seller);
         vm.stopPrank();
         assertEq(claim.totalSupply(), 0);
         assertEq(lock.totalLocked(), 0);
@@ -97,17 +100,17 @@ contract OtcRemoteClaimTest is Test {
     function testLeafMarketFillThenBuyerRedeems() public {
         vm.startPrank(seller);
         arcUsdc.approve(address(lock), 50e6);
-        lock.deposit(50e6, seller);
+        lock.deposit(50e6, seller, seller);
         claim.approve(address(market), 50e6);
         uint256 id = market.list(address(claim), 50e6, address(hevmUsdc), 200e6, seller, uint64(block.timestamp + 7 days));
         vm.stopPrank();
         vm.startPrank(buyer);
         hevmUsdc.approve(address(market), 200e6);
         market.fillLocal(id);
-        claim.redeem(50e6, buyer);
+        claim.redeem(50e6, buyer, buyer);
         vm.stopPrank();
         assertEq(arcUsdc.balanceOf(buyer), 50e6);
-        assertEq(hevmUsdc.balanceOf(seller), 198e6); // 1% buyer incentive
+        assertEq(hevmUsdc.balanceOf(seller), 198e6);
         assertEq(hevmUsdc.balanceOf(buyer), 2_000e6 - 200e6 + 2e6);
         assertEq(claim.totalSupply(), 0);
         assertEq(lock.totalLocked(), 0);
@@ -116,7 +119,7 @@ contract OtcRemoteClaimTest is Test {
     function testSamePartyCannotFillOwnOrder() public {
         vm.startPrank(seller);
         arcUsdc.approve(address(lock), 10e6);
-        lock.deposit(10e6, seller);
+        lock.deposit(10e6, seller, seller);
         claim.approve(address(market), 10e6);
         uint256 id = market.list(address(claim), 10e6, address(hevmUsdc), 20e6, seller, uint64(block.timestamp + 1 days));
         hevmUsdc.mint(seller, 20e6);
@@ -132,7 +135,7 @@ contract OtcRemoteClaimTest is Test {
         vm.startPrank(seller);
         arcUsdc.approve(address(lock), 1e6);
         vm.expectRevert();
-        lock.deposit(1e6, seller);
+        lock.deposit(1e6, seller, seller);
         vm.stopPrank();
     }
 
@@ -142,19 +145,22 @@ contract OtcRemoteClaimTest is Test {
         vm.startPrank(seller);
         arcUsdc.approve(address(lock), 11e6);
         vm.expectRevert(OtcRemoteLock.Cap.selector);
-        lock.deposit(11e6, seller);
-        lock.deposit(10e6, seller);
+        lock.deposit(11e6, seller, seller);
+        lock.deposit(10e6, seller, seller);
         vm.stopPrank();
         assertEq(lock.totalLocked(), 10e6);
     }
 
-    function testLzMailboxRoundTrip() public {
-        MockEndpoint epSrc = new MockEndpoint(30184);
+    function _wireLz()
+        internal
+        returns (MockEndpoint epSrc, OtcRemoteLock lock2, OtcClaim claim2, OtcLzMailbox srcBox, OtcLzMailbox dstBox)
+    {
+        epSrc = new MockEndpoint(30184);
         MockEndpoint epHevm = new MockEndpoint(30367);
-        OtcRemoteLock lock2 = new OtcRemoteLock(owner, guardian, arcUsdc);
-        OtcClaim claim2 = new OtcClaim(owner, guardian, "hArcUSDC", "hArcUSDC", 6);
-        OtcLzMailbox srcBox = new OtcLzMailbox(address(epSrc), owner, guardian, true);
-        OtcLzMailbox dstBox = new OtcLzMailbox(address(epHevm), owner, guardian, false);
+        lock2 = new OtcRemoteLock(owner, guardian, arcUsdc);
+        claim2 = new OtcClaim(owner, guardian, "hArcUSDC", "hArcUSDC", 6);
+        srcBox = new OtcLzMailbox(address(epSrc), owner, guardian, true, 6);
+        dstBox = new OtcLzMailbox(address(epHevm), owner, guardian, false, 6);
         vm.startPrank(owner);
         srcBox.setLock(address(lock2));
         dstBox.setClaim(address(claim2));
@@ -163,17 +169,22 @@ contract OtcRemoteClaimTest is Test {
         lock2.setMailbox(address(srcBox));
         claim2.setMailbox(address(dstBox));
         vm.stopPrank();
+    }
+
+    function testLzMailboxRoundTrip() public {
+        (MockEndpoint epSrc, OtcRemoteLock lock2, OtcClaim claim2, OtcLzMailbox srcBox, OtcLzMailbox dstBox) = _wireLz();
 
         vm.deal(seller, 1 ether);
         vm.startPrank(seller);
         arcUsdc.approve(address(lock2), 25e6);
-        lock2.deposit{value: 0.01 ether}(25e6, seller);
+        lock2.deposit{value: 0.01 ether}(25e6, seller, seller);
         vm.stopPrank();
         assertEq(lock2.totalLocked(), 25e6);
-        assertEq(claim2.totalSupply(), 0); // mint still in flight
+        assertEq(claim2.totalSupply(), 0);
+        assertEq(epSrc.lastRefund(), seller);
 
-        bytes memory mintMsg = abi.encode(uint8(1), seller, uint256(25e6));
-        vm.prank(address(epHevm));
+        bytes memory mintMsg = abi.encode(uint8(1), seller, uint256(25e6), uint8(6));
+        vm.prank(address(dstBox.endpoint()));
         dstBox.lzReceive(
             ILayerZeroEndpointV2.Origin(30184, bytes32(uint256(uint160(address(srcBox)))), 1),
             bytes32(uint256(1)),
@@ -183,13 +194,12 @@ contract OtcRemoteClaimTest is Test {
         );
         assertEq(claim2.balanceOf(seller), 25e6);
 
-        vm.deal(seller, 1 ether);
         vm.prank(seller);
-        claim2.redeem{value: 0.01 ether}(25e6, seller);
+        claim2.redeem{value: 0.01 ether}(25e6, seller, seller);
         assertEq(claim2.totalSupply(), 0);
 
-        bytes memory relMsg = abi.encode(uint8(2), seller, uint256(25e6));
-        vm.prank(address(epSrc));
+        bytes memory relMsg = abi.encode(uint8(2), seller, uint256(25e6), uint8(6));
+        vm.prank(address(srcBox.endpoint()));
         srcBox.lzReceive(
             ILayerZeroEndpointV2.Origin(30367, bytes32(uint256(uint160(address(dstBox)))), 1),
             bytes32(uint256(2)),
@@ -199,6 +209,86 @@ contract OtcRemoteClaimTest is Test {
         );
         assertEq(lock2.totalLocked(), 0);
         assertEq(arcUsdc.balanceOf(seller), 1_000e6);
+    }
+
+    function testExcessLzFeeRefundsToUser() public {
+        (MockEndpoint epSrc, OtcRemoteLock lock2,,,) = _wireLz();
+        vm.deal(seller, 1 ether);
+        vm.startPrank(seller);
+        arcUsdc.approve(address(lock2), 5e6);
+        lock2.deposit{value: 0.05 ether}(5e6, seller, seller);
+        vm.stopPrank();
+        assertEq(epSrc.lastRefund(), seller);
+        assertEq(address(lock2).balance, 0);
+    }
+
+    function testPausedMailboxBlocksInboundLz() public {
+        (, OtcRemoteLock lock2, OtcClaim claim2, OtcLzMailbox srcBox, OtcLzMailbox dstBox) = _wireLz();
+        vm.deal(seller, 1 ether);
+        vm.startPrank(seller);
+        arcUsdc.approve(address(lock2), 5e6);
+        lock2.deposit{value: 0.01 ether}(5e6, seller, seller);
+        vm.stopPrank();
+
+        vm.prank(guardian);
+        dstBox.pause();
+
+        bytes memory mintMsg = abi.encode(uint8(1), seller, uint256(5e6), uint8(6));
+        vm.prank(address(dstBox.endpoint()));
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        dstBox.lzReceive(
+            ILayerZeroEndpointV2.Origin(30184, bytes32(uint256(uint160(address(srcBox)))), 1),
+            bytes32(uint256(1)),
+            mintMsg,
+            address(0),
+            ""
+        );
+        assertEq(claim2.totalSupply(), 0);
+
+        vm.prank(guardian);
+        srcBox.pause();
+        bytes memory relMsg = abi.encode(uint8(2), seller, uint256(5e6), uint8(6));
+        vm.prank(address(srcBox.endpoint()));
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        srcBox.lzReceive(
+            ILayerZeroEndpointV2.Origin(30367, bytes32(uint256(uint160(address(dstBox)))), 1),
+            bytes32(uint256(2)),
+            relMsg,
+            address(0),
+            ""
+        );
+        assertEq(lock2.totalLocked(), 5e6);
+    }
+
+    function testMismatchedDecimalsRejected() public {
+        OtcClaim claim18 = new OtcClaim(owner, guardian, "bad", "bad", 18);
+        OtcSameChainMailbox box2 = new OtcSameChainMailbox(owner);
+        vm.prank(owner);
+        vm.expectRevert(OtcSameChainMailbox.DecimalMismatch.selector);
+        box2.setEnds(address(lock), address(claim18));
+
+        MockEndpoint epHevm = new MockEndpoint(30367);
+        OtcLzMailbox dstBox = new OtcLzMailbox(address(epHevm), owner, guardian, false, 6);
+        vm.prank(owner);
+        vm.expectRevert(OtcLzMailbox.DecimalMismatch.selector);
+        dstBox.setClaim(address(claim18));
+
+        OtcLzMailbox dst18 = new OtcLzMailbox(address(epHevm), owner, guardian, false, 18);
+        vm.prank(owner);
+        dst18.setClaim(address(claim18));
+        bytes memory mintMsg = abi.encode(uint8(1), seller, uint256(1e6), uint8(6));
+        // no peer yet — OnlyPeer. set a dummy peer then pause not needed
+        vm.prank(owner);
+        dst18.setPeer(30184, address(0xBEEF));
+        vm.prank(address(epHevm));
+        vm.expectRevert(OtcLzMailbox.DecimalMismatch.selector);
+        dst18.lzReceive(
+            ILayerZeroEndpointV2.Origin(30184, bytes32(uint256(uint160(address(0xBEEF)))), 1),
+            bytes32(uint256(1)),
+            mintMsg,
+            address(0),
+            ""
+        );
     }
 
     function testStrangerCannotMint() public {

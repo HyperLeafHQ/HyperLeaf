@@ -24,6 +24,7 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
     error NotMailbox();
     error Insufficient();
     error NotGuardian();
+    error RescueFailed();
 
     event MailboxSet(address mailbox);
     event GuardianSet(address guardian);
@@ -31,6 +32,7 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Minted(address indexed to, uint256 amount);
     event Redeemed(address indexed from, address indexed srcTo, uint256 amount);
+    event NativeRescued(address indexed to, uint256 amount);
 
     constructor(address owner_, address guardian_, string memory name_, string memory symbol_, uint8 decimals_)
         Ownable(owner_)
@@ -64,6 +66,15 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
         _unpause();
     }
 
+    function rescueNative(address to) external onlyOwner {
+        if (to == address(0) || to == address(this)) revert Zero();
+        uint256 n = address(this).balance;
+        if (n == 0) revert Zero();
+        (bool ok,) = to.call{value: n}("");
+        if (!ok) revert RescueFailed();
+        emit NativeRescued(to, n);
+    }
+
     function mint(address to, uint256 amount) external whenNotPaused {
         if (msg.sender != address(mailbox)) revert NotMailbox();
         if (to == address(0) || amount == 0) revert Zero();
@@ -73,8 +84,8 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
         emit Minted(to, amount);
     }
 
-    function redeem(uint256 amount, address srcTo) external payable whenNotPaused nonReentrant {
-        if (amount == 0 || srcTo == address(0)) revert Zero();
+    function redeem(uint256 amount, address srcTo, address refundTo) external payable whenNotPaused nonReentrant {
+        if (amount == 0 || srcTo == address(0) || refundTo == address(0)) revert Zero();
         if (address(mailbox) == address(0)) revert Zero();
         uint256 b = balanceOf[msg.sender];
         if (b < amount) revert Insufficient();
@@ -84,7 +95,7 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
         }
         emit Transfer(msg.sender, address(0), amount);
         emit Redeemed(msg.sender, srcTo, amount);
-        mailbox.notifyRedeem{value: msg.value}(srcTo, amount);
+        mailbox.notifyRedeem{value: msg.value}(srcTo, amount, refundTo);
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {

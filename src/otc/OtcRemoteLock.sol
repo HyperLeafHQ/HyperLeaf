@@ -27,12 +27,14 @@ contract OtcRemoteLock is Ownable2Step, Pausable, ReentrancyGuard {
     error NotMailbox();
     error NotGuardian();
     error Cap();
+    error RescueFailed();
 
     event MailboxSet(address mailbox);
     event GuardianSet(address guardian);
     event MaxLockedSet(uint256 cap);
     event Deposited(address indexed from, address indexed destTo, uint256 amount);
     event Released(address indexed to, uint256 amount);
+    event NativeRescued(address indexed to, uint256 amount);
 
     modifier onlyGuardian() {
         if (msg.sender != guardian && msg.sender != owner()) revert NotGuardian();
@@ -72,17 +74,27 @@ contract OtcRemoteLock is Ownable2Step, Pausable, ReentrancyGuard {
         _unpause();
     }
 
-    function deposit(uint256 amount, address destTo) external payable whenNotPaused nonReentrant {
-        if (amount == 0 || destTo == address(0)) revert Zero();
+    /// @notice Last-resort sweep of native stuck from a bad refund path. Not underlying.
+    function rescueNative(address to) external onlyOwner {
+        if (to == address(0) || to == address(this)) revert Zero();
+        uint256 n = address(this).balance;
+        if (n == 0) revert Zero();
+        (bool ok,) = to.call{value: n}("");
+        if (!ok) revert RescueFailed();
+        emit NativeRescued(to, n);
+    }
+
+    function deposit(uint256 amount, address destTo, address refundTo) external payable whenNotPaused nonReentrant {
+        if (amount == 0 || destTo == address(0) || refundTo == address(0)) revert Zero();
         if (address(mailbox) == address(0)) revert Zero();
         if (maxLocked != 0 && totalLocked + amount > maxLocked) revert Cap();
         underlying.safeTransferFrom(msg.sender, address(this), amount);
         totalLocked += amount;
         emit Deposited(msg.sender, destTo, amount);
-        mailbox.notifyDeposit{value: msg.value}(destTo, amount);
+        mailbox.notifyDeposit{value: msg.value}(destTo, amount, refundTo);
     }
 
-    function release(address to, uint256 amount) external nonReentrant {
+    function release(address to, uint256 amount) external nonReentrant whenNotPaused {
         if (msg.sender != address(mailbox)) revert NotMailbox();
         if (to == address(0) || amount == 0) revert Zero();
         if (amount > totalLocked) revert Cap();

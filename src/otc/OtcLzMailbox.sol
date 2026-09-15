@@ -15,6 +15,7 @@ contract OtcLzMailbox is LeafClaimPeer, IOtcMailbox {
     uint8 public constant OP_RELEASE = 2;
 
     bool public immutable isSource;
+    uint8 public immutable expectedDecimals;
     address public lock;
     address public claim;
 
@@ -24,17 +25,20 @@ contract OtcLzMailbox is LeafClaimPeer, IOtcMailbox {
     error NotClaim();
     error BadOp();
     error Zero();
+    error DecimalMismatch();
 
-    constructor(address endpoint_, address owner_, address guardian_, bool isSource_)
+    constructor(address endpoint_, address owner_, address guardian_, bool isSource_, uint8 expectedDecimals_)
         LeafClaimPeer(endpoint_, owner_, guardian_)
     {
         isSource = isSource_;
+        expectedDecimals = expectedDecimals_;
     }
 
     function setLock(address l) external onlyOwner {
         if (!isSource) revert WrongSide();
         if (lock != address(0)) revert AlreadySet();
         if (l == address(0)) revert Zero();
+        if (OtcRemoteLock(l).decimals() != expectedDecimals) revert DecimalMismatch();
         lock = l;
     }
 
@@ -42,36 +46,39 @@ contract OtcLzMailbox is LeafClaimPeer, IOtcMailbox {
         if (isSource) revert WrongSide();
         if (claim != address(0)) revert AlreadySet();
         if (c == address(0)) revert Zero();
+        if (OtcClaim(c).decimals() != expectedDecimals) revert DecimalMismatch();
         claim = c;
     }
 
-    function notifyDeposit(address destTo, uint256 amount) external payable whenNotPaused {
+    function notifyDeposit(address destTo, uint256 amount, address refundTo) external payable whenNotPaused {
         if (!isSource) revert WrongSide();
         if (msg.sender != lock) revert NotLock();
-        if (destTo == address(0) || amount == 0) revert Zero();
-        _lzSend(remoteEid, abi.encode(OP_MINT, destTo, amount), msg.sender);
+        if (destTo == address(0) || amount == 0 || refundTo == address(0)) revert Zero();
+        _lzSend(remoteEid, abi.encode(OP_MINT, destTo, amount, expectedDecimals), refundTo);
     }
 
-    function notifyRedeem(address srcTo, uint256 amount) external payable whenNotPaused {
+    function notifyRedeem(address srcTo, uint256 amount, address refundTo) external payable whenNotPaused {
         if (isSource) revert WrongSide();
         if (msg.sender != claim) revert NotClaim();
-        if (srcTo == address(0) || amount == 0) revert Zero();
-        _lzSend(remoteEid, abi.encode(OP_RELEASE, srcTo, amount), msg.sender);
+        if (srcTo == address(0) || amount == 0 || refundTo == address(0)) revert Zero();
+        _lzSend(remoteEid, abi.encode(OP_RELEASE, srcTo, amount, expectedDecimals), refundTo);
     }
 
     function quoteMint(address destTo, uint256 amount) external view returns (uint256) {
-        return quote(remoteEid, abi.encode(OP_MINT, destTo, amount), _defaultOptions());
+        return quote(remoteEid, abi.encode(OP_MINT, destTo, amount, expectedDecimals), _defaultOptions());
     }
 
     function quoteRedeem(address srcTo, uint256 amount) external view returns (uint256) {
-        return quote(remoteEid, abi.encode(OP_RELEASE, srcTo, amount), _defaultOptions());
+        return quote(remoteEid, abi.encode(OP_RELEASE, srcTo, amount, expectedDecimals), _defaultOptions());
     }
 
     function _lzReceive(ILayerZeroEndpointV2.Origin calldata, bytes32, bytes calldata message, address, bytes calldata)
         internal
         override
+        whenNotPaused
     {
-        (uint8 op, address to, uint256 amount) = abi.decode(message, (uint8, address, uint256));
+        (uint8 op, address to, uint256 amount, uint8 dec) = abi.decode(message, (uint8, address, uint256, uint8));
+        if (dec != expectedDecimals) revert DecimalMismatch();
         if (op == OP_MINT) {
             if (isSource) revert WrongSide();
             OtcClaim(claim).mint(to, amount);

@@ -34,14 +34,16 @@ contract OtcSameChainMailbox is IOtcMailbox, Ownable2Step {
         if (lock.decimals() != claim.decimals()) revert DecimalMismatch();
     }
 
-    function notifyDeposit(address destTo, uint256 amount) external payable {
+    function notifyDeposit(address destTo, uint256 amount, address refundTo) external payable {
         if (msg.value != 0) revert UnexpectedValue();
+        if (refundTo == address(0)) revert Zero();
         if (msg.sender != address(lock)) revert NotLock();
         claim.mint(destTo, amount);
     }
 
-    function notifyRedeem(address srcTo, uint256 amount) external payable {
+    function notifyRedeem(address srcTo, uint256 amount, address refundTo) external payable {
         if (msg.value != 0) revert UnexpectedValue();
+        if (refundTo == address(0)) revert Zero();
         if (msg.sender != address(claim)) revert NotClaim();
         lock.release(srcTo, amount);
     }
