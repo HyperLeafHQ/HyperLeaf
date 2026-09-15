@@ -397,4 +397,39 @@ contract PreMarketTest is Test {
         assertLt(aliceGot, bag);
         assertApproxEqAbs(aliceGot * 2, bag, 2);
     }
+
+    /// @dev Trust model, not a bug: owner can resolve a junk token. Buyers then receive
+    ///      that token; seller still withdraws USDM escrow. Non-owners cannot resolve.
+    function testResolverJunkTokenPaysThatTokenNotEscrow() public {
+        MockVar junk = new MockVar();
+        vm.prank(alice);
+        factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
+        uint256 aliceUsdm = usdm.balanceOf(alice);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("OwnableUnauthorizedAccount(address)")), alice));
+        resolver.resolve(marketId, address(junk), 1e18);
+
+        vm.prank(owner);
+        resolver.resolve(marketId, address(junk), 1e18);
+        factory.resolve(seriesId);
+
+        junk.mint(bob, 100e18);
+        vm.startPrank(bob);
+        junk.approve(address(factory), type(uint256).max);
+        factory.deliver(seriesId, 100e18);
+        vm.stopPrank();
+        assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.SETTLED));
+
+        vm.prank(alice);
+        factory.redeemPull(seriesId);
+        assertEq(junk.balanceOf(alice), 100e18);
+        assertEq(varTok.balanceOf(alice), 0);
+        assertEq(usdm.balanceOf(alice), aliceUsdm);
+
+        uint256 bobShares = susdm.balanceOf(bob);
+        vm.prank(bob);
+        factory.withdrawSettlement(seriesId);
+        assertGt(susdm.balanceOf(bob), bobShares);
+    }
 }

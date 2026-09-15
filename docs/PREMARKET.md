@@ -1,9 +1,22 @@
-# Pre-market guarantee — `feat/premarket`
+# Pre-market guarantee
 
-Standalone. Zero imports from Nest / Gate / Leaf Market. Not a batch. Not `main`.
+On `main` since `645a0d8`. HyperEVM canary is live (claims with USDM). Settlement Leaf **hVAR** is not listed yet.
 
-Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67). First canary: **Variational points**.
+Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67). First market: **Variational points**.
 
+## Trust: resolver is the key
+
+`MultisigResolver.resolve(marketId, token, rateX18)` is `onlyOwner`, one-shot. It can name **any** ERC-20 as `officialToken`. After resolve, a seller who delivers that token settles; buyers redeem it; the seller withdraws the USDM/sUSDM escrow. There is no on-chain check that `token` is “real VAR”.
+
+That is not a theft bug in Factory/Escrow. It is the resolution trust root.
+
+- Canary: owner is the protocol EOA (`Ownable2Step`).
+- Before TVL / external size: transfer resolver ownership to a **Safe**, then `acceptOwnership`. No contract change.
+- Frontend must say: HyperLeaf posts the settlement token and rate. Do not treat this as an oracle.
+
+`voidMarket` is the same key. A voided market can never resolve.
+
+## Product
 ## Product
 
 - Ticker `hPre{Token}Pts{tier}x{price}` — `hPreVarPts2x20`, `hPreVarPts1x20`. **Display only.** Orders, fills, and settlement key by `seriesId`. Two books at $17 and $17.50 can share a ticker; they never share an id.
@@ -48,4 +61,4 @@ Exit pays booked NAV in sUSDM. Extra share-price growth is `harvest` → feeReci
 
 Sellers `createSeries`. Frontend lists by `seriesId`.
 
-Do not merge to `main` until a VAR series has been smoke-filled on HyperEVM.
+Do not merge more origin chains into this Factory. One Factory = one remote origin / one lockbox until routing is per-market.
