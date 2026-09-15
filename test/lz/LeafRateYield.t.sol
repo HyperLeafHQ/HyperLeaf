@@ -452,6 +452,73 @@ contract LeafRateYieldTest is PegReady {
         box.setRewardsSelector(bytes4(0x9343d9e1));
     }
 
+    function testGsoonRateJumpHaltsAndTakesNoFee() public {
+        MockGSOON gsoon = new MockGSOON();
+        vm.startPrank(owner);
+        LeafOFTAdapter box = new LeafOFTAdapter(address(gsoon), address(epSrc), owner, guardian, feeTo, 0);
+        LeafOFT dest = new LeafOFT("hgSOON", "hgSOON", address(epDst), owner, guardian);
+        box.setPeer(DST, address(dest));
+        dest.setPeer(SRC, address(box));
+        box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+        box.setRetainRateYield(true);
+        box.setConvertYieldToHype(true);
+        box.setConverter(converter);
+        box.setHarvester(owner);
+        box.setMaxRateJumpBps(300);
+        vm.stopPrank();
+        _openPair(box, dest, owner, 0);
+        gsoon.mint(user, 200e18);
+        vm.startPrank(user);
+        gsoon.approve(address(box), type(uint256).max);
+        box.sendTo{value: 0.01 ether}(DST, user, 100e18);
+        vm.stopPrank();
+
+        gsoon.setAssets(2e18);
+        box.pokeRate();
+        assertTrue(box.rateJumped());
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        box.pullYield(gsoon, converter);
+        assertEq(gsoon.balanceOf(converter), 0);
+
+        vm.startPrank(user);
+        vm.expectRevert(LeafOApp.NotHealthy.selector);
+        box.sendTo{value: 0.01 ether}(DST, user, 1e18);
+        vm.stopPrank();
+
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.ConfigFrozen.selector);
+        box.setMaxRateJumpBps(0);
+    }
+
+    function testGsoonSubJumpStillTakesFee() public {
+        MockGSOON gsoon = new MockGSOON();
+        vm.startPrank(owner);
+        LeafOFTAdapter box = new LeafOFTAdapter(address(gsoon), address(epSrc), owner, guardian, feeTo, 0);
+        LeafOFT dest = new LeafOFT("hgSOON", "hgSOON", address(epDst), owner, guardian);
+        box.setPeer(DST, address(dest));
+        dest.setPeer(SRC, address(box));
+        box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
+        box.setRetainRateYield(true);
+        box.setConvertYieldToHype(true);
+        box.setConverter(converter);
+        box.setHarvester(owner);
+        box.setMaxRateJumpBps(300);
+        vm.stopPrank();
+        _openPair(box, dest, owner, 0);
+        gsoon.mint(user, 100e18);
+        vm.startPrank(user);
+        gsoon.approve(address(box), 100e18);
+        box.sendTo{value: 0.01 ether}(DST, user, 100e18);
+        vm.stopPrank();
+        gsoon.setAssets(1.02e18);
+        vm.prank(owner);
+        box.pullYield(gsoon, converter);
+        uint256 surplus = _surplus(100e18, 1e18, 1.02e18);
+        assertEq(gsoon.balanceOf(converter), _fee(surplus));
+        assertFalse(box.rateJumped());
+    }
+
     function testSwberaConvertToAssetsSameMathAsCbeth() public {
         MockGSOON swbera = new MockGSOON();
         vm.startPrank(owner);

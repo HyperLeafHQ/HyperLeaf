@@ -118,6 +118,7 @@ contract AssetCatalogTest is Test {
         assertEq(uint8(AssetCatalog.get("hgsoon").kind), uint8(AssetCatalog.Kind.Liquid));
         assertEq(AssetCatalog.get("hgsoon").innerMainnet, 0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7);
         assertEq(AssetCatalog.get("hgsoon").sourceChainIdMain, 56);
+        assertEq(AssetCatalog.get("hgsoon").defaultCap, 0);
         assertEq(uint8(AssetCatalog.get("hswbera").kind), uint8(AssetCatalog.Kind.Liquid));
         assertEq(AssetCatalog.get("hswbera").innerMainnet, 0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a);
         assertEq(AssetCatalog.get("hswbera").sourceEidMain, 30362);

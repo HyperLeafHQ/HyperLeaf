@@ -1085,12 +1085,13 @@
         "toHype": [],
         "protocolFee": "1pct-rate-surplus",
         "rateKind": "convertToAssets",
-        "retainRateYield": true
+        "retainRateYield": true,
+        "maxRateJumpBps": 300
       },
-      "note": "BATCH 2 mainnet (BSC 56). Same L/retainRateYield as hcbETH; convertToAssets not exchangeRate. Wrap gSOON only, never SOON, never cooldownShares / 90d lock. Harvest pulls 1% of (inner * dRate / rate); 99% stays.",
+      "note": "BATCH 2 mainnet (BSC 56). ConvertToAssets + retainRateYield 1% skim + maxRateJumpBps 300. HyperLeaf intake cap 0 = unlimited; inner ceiling 2.3e26. Wrap gSOON only, never SOON, never cooldownShares / 90d lock. Harvest pulls 1% of (inner * dRate / rate); 99% stays.",
       "status": "mainnet-batch-2",
       "priority": 10,
-      "claim": "No side token. Rate is convertToAssets(1e18). setRateKind(ConvertToAssets)+retainRateYield. Never setRewardsSelector. Never deposit/mint SOON 0x6e553f65, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f.",
+      "claim": "No side token. Rate is convertToAssets(1e18). setRateKind(ConvertToAssets)+retainRateYield+maxRateJumpBps(300) before first wrap. Never setRewardsSelector. Never deposit/mint SOON 0x6e553f65, never cooldownShares 0x9343d9e1 / cooldownAssets 0xcdac52ed / claim 0x1e83409a, never 90d lock 0x1338736f. DEPOSIT_CAP/PEG_CAP=0; INNER_SUPPLY_CEILING=2.3e26.",
       "refs": {
         "depositTx1": "0x246a12a44e1c761d2201a3bc14f50e77310f92204c14d2fd3d053454c194bec9",
         "depositTx2": "0xc6559838645fc6c719a8bd26cce4e98d752ac4d854b47ae028d3176ce306dee2",

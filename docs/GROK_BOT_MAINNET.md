@@ -254,7 +254,9 @@ Wrap/redeem **settle the 1% skim first**. 99% stays in the receipt. No holder `c
 | `hgsoon` | bsc | `ConvertToAssets` (~1.744) | `cooldownShares` / `cooldownAssets` / SOON `deposit` / 90d `lock` | `1.141e26` | **`2.3e26`** |
 | `hswbera` | berachain | `ConvertToAssets` (~1.459) | 7d NFT `requestUnlock` / 4626 `withdraw`/`redeem` | `3.752e25` | **`8e25`** |
 
-`DEPOSIT_CAP` / `PEG_CAP` = **50e18** until we raise it. Do not copy that into the ceiling.
+`DEPOSIT_CAP` / `PEG_CAP` = **0** (unlimited HyperLeaf intake, same as live hQUID / hAVNT). Do **not** pass 50e18. Inner ceiling is the exposure bound: hgsoon **`2.3e26`**, hswbera **`8e25`**. Do not copy the cap into the ceiling.
+
+Configure sets `maxRateJumpBps = 300` (>3% `convertToAssets` jump → `rateJumped` / `NotHealthy`, no fee). Must happen **before** first wrap (`totalLocked > 0` freezes it).
 
 `pullYield(inner)` **is** the 1% skim. Dust fee (surplus < 100 atoms) is 0; watermark still moves; do not claw later.
 

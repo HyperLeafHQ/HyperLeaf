@@ -14,6 +14,7 @@ import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
 contract ConfigureMainnetListing is Script {
     bytes4 internal constant QUID_REWARDS = 0x9a99b4f0;
+    uint16 internal constant RATE_L_JUMP_BPS = 300;
 
     function run() external {
         address source = vm.envAddress("SOURCE");
@@ -47,6 +48,8 @@ contract ConfigureMainnetListing is Script {
         if (keccak256(bytes(a.id)) == keccak256("hswbera") || keccak256(bytes(a.id)) == keccak256("hgsoon")) {
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
+            box.setMaxRateJumpBps(RATE_L_JUMP_BPS);
+            require(box.maxRateJumpBps() == RATE_L_JUMP_BPS, "jump");
         }
         if (keccak256(bytes(a.id)) == keccak256("hcbeth")) {
             box.setRateKind(LeafYieldFee.RateKind.ExchangeRate);

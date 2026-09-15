@@ -267,7 +267,7 @@ library AssetCatalog {
                 0,
                 0,
                 0xcC48B55F6c16d4248EC6D78c11Ba19c1183Fe0F7,
-                1_000 ether,
+                0,
                 true
             );
         }
