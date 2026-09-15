@@ -9,6 +9,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IConversionResolver} from "./IConversionResolver.sol";
 import {ClaimSeriesToken} from "./ClaimSeriesToken.sol";
 import {EscrowVault} from "./EscrowVault.sol";
@@ -69,6 +70,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     }
 
     IConversionResolver public immutable resolver;
+    address public immutable claimImpl;
     address public lockbox;
     address public feeRecipient;
 
@@ -109,6 +111,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (owner_ == address(0) || resolver_ == address(0) || feeRecipient_ == address(0)) revert Zero();
         resolver = IConversionResolver(resolver_);
         feeRecipient = feeRecipient_;
+        claimImpl = address(new ClaimSeriesToken());
     }
 
     function setLockbox(address l) external onlyOwner {
@@ -203,7 +206,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (unit < 10 ** m.underlyingDecimals) revert Floor();
         uint256 nonce = ++sellerNonce[msg.sender];
         seriesId = keccak256(abi.encode(marketId, tierBps, refPriceUsd, msg.sender, nonce));
-        address clone = address(new ClaimSeriesToken());
+        address clone = Clones.clone(claimImpl);
         string memory sym = _ticker(m.symbolBase, refPriceUsd, tierBps);
         ClaimSeriesToken(clone).initialize(address(this), m.name, sym);
         seriesOf[seriesId] = Series({

@@ -18,6 +18,11 @@ contract ClaimSeriesToken {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
+    /// @dev Locks the implementation. EIP-1167 clones skip constructors, so they still initialize.
+    constructor() {
+        factory = address(1);
+    }
+
     function initialize(address factory_, string memory name_, string memory symbol_) external {
         if (factory != address(0)) revert AlreadyInit();
         if (factory_ == address(0)) revert ZeroAddress();

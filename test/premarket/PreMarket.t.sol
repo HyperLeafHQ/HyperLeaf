@@ -106,6 +106,16 @@ contract PreMarketTest is Test {
         assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.OPEN));
     }
 
+    function testClaimTokenIsEip1167Clone() public {
+        address impl = factory.claimImpl();
+        vm.expectRevert(ClaimSeriesToken.AlreadyInit.selector);
+        ClaimSeriesToken(impl).initialize(address(factory), "x", "y");
+        address tok = factory.seriesClaim(seriesId);
+        assertEq(ClaimSeriesToken(tok).factory(), address(factory));
+        assertLt(tok.code.length, 60);
+        assertTrue(impl.code.length > tok.code.length);
+    }
+
     function testOneXAndRejectThreeX() public {
         vm.prank(bob);
         bytes32 s1 = factory.createSeries(marketId, 10_000, 20e18);
