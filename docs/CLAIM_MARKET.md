@@ -123,6 +123,17 @@ Bob on BSC: LeafClaimFill.fill → LZ → dest releases Leaf → ACK →
 
 `setRemoteMarket(BLUAI4Y, bscBluai, 0, true, 30102)`. Do not `fillLocal` that pair. Live hNEST board stays `setMarket` / `fillLocal`. Remote pairs need a Leaf Market that has a BSC Fill peer (one EID per dest escrow).
 
+**Live (Phase 2 PASS, `32f5b46` + `receive()` v2).** Frontend not cut over until Owner `acceptOwnership`.
+
+| | Address |
+| --- | --- |
+| Escrow (HyperEVM) | `0x1AD291026DF7EE2007E48FbEf3d37B4586073207` |
+| Fill (BSC) | `0xC584DC17299ED969063a97a50a3070F36CeF3eB3` |
+| hBLUAI4Y OFT | `0xD54A90aeB220530D00343d4442ac50C0836f2F45` |
+| SOURCE BSC | `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` |
+
+Abandoned Fill v1 `0x5466…` — 0.01 BLUAI dust, do not reuse. `wantEid=30102`. `fillLocal` → `WrongChain`.
+
 Discount = 30% is **C1 secondary liquidity price**, not a depeg.
 No new Leaf. `totalLocked` does not move.
 

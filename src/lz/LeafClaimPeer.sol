@@ -23,6 +23,7 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     error NotGuardian();
     error BadEid();
     error ConfigFrozen();
+    error NativeRescueFailed();
 
     event PeerSet(uint32 indexed eid, bytes32 peer);
     event GuardianUpdated(address indexed oldG, address indexed newG);
@@ -76,6 +77,16 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    /// @dev LZ native-drop and excess-fee refunds land here. Without this,
+    ///      dest ACK `_lzSend(..., address(this))` reverts and the handshake dies.
+    receive() external payable {}
+
+    function rescueNative(address to, uint256 amount) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+        (bool ok,) = to.call{value: amount}("");
+        if (!ok) revert NativeRescueFailed();
     }
 
     function allowInitializePath(ILayerZeroEndpointV2.Origin calldata origin) public view returns (bool) {

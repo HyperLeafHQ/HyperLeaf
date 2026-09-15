@@ -96,3 +96,18 @@ Not safe: “挂单期间 HYPE 归协议” (hNEST has no Rewarder).
 Not safe: dest `Filled` on a future LZ path = 成交. This job is `fillLocal` only; `Filled` = done.
 
 1% of ask → buyer incentive, not protocol fee. Protocol never bids. No fill, no trade.
+
+---
+
+## BLUAI4Y remote (done — do not redeploy)
+
+Phase 2 PASS. Branch `feat/market-remote-want` @ `32f5b46` plus **`receive()` on `LeafClaimPeer`** (v1 died on native drop). Live v2:
+
+| | Address |
+| --- | --- |
+| Escrow HEVM | `0x1AD291026DF7EE2007E48FbEf3d37B4586073207` |
+| Fill BSC | `0xC584DC17299ED969063a97a50a3070F36CeF3eB3` |
+
+`wantEid=30102`. `fillLocal` → `WrongChain`. Smoke: cross-chain fill **Paid** 99/1; OFT supply / SOURCE locked unchanged; cancel returns Leaf. Nest Market / wraps not touched.
+
+Do **not** reuse abandoned Fill v1 `0x5466…` (0.01 BLUAI stuck). Do not cut frontend until FINAL `acceptOwnership` on both. Hot wallet needs BNB for another fill.
