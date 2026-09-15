@@ -1,0 +1,29 @@
+{
+  "id": "harcusdc",
+  "symbol": "hArcUSDC",
+  "status": "NotThisBatch",
+  "kind": "otc-remote-claim",
+  "source": {
+    "chain": "arc",
+    "chainId": 5042,
+    "token": "TBD_PUBLIC_MAINNET",
+    "testnetToken": "0x3600000000000000000000000000000000000000",
+    "decimals": 6
+  },
+  "dest": {
+    "chain": "hyperevm",
+    "chainId": 999,
+    "claim": "UNDEPLOYED",
+    "want": "0xb88339CB7199b77E23DB6E890353E22632Ba630f",
+    "wantSymbol": "USDC",
+    "decimals": 6
+  },
+  "mailbox": "lz-or-cctp-TBD",
+  "market": "LeafClaimEscrow fillLocal after claim is live",
+  "killSwitch": "If Circle CCTP Arc↔HyperEVM is 1:1, do not deploy. Premium is the product.",
+  "notes": [
+    "Seller locks Arc USDC, receives hArcUSDC, lists vs HyperEVM USDC.",
+    "Buyer pays HyperEVM USDC, redeems hArcUSDC back to Arc.",
+    "Same-chain mailbox is test-only."
+  ]
+}
