@@ -373,11 +373,11 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         vaultOf[s.marketId].harvest(seriesId);
     }
 
-    function redeemPull(bytes32 seriesId) external nonReentrant {
+    function redeemPull(bytes32 seriesId) external payable nonReentrant {
         _settle(seriesId, msg.sender);
     }
 
-    function pushSettle(bytes32 seriesId, address holder) external nonReentrant {
+    function pushSettle(bytes32 seriesId, address holder) external payable nonReentrant {
         _settle(seriesId, holder);
     }
 
@@ -396,7 +396,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (r > 0) vaultOf[s.marketId].release(seriesId, s.seller, r, false);
     }
 
-    function reclaimPartialDelivery(bytes32 seriesId) external nonReentrant {
+    function reclaimPartialDelivery(bytes32 seriesId) external payable nonReentrant {
         Series storage s = seriesOf[seriesId];
         if (msg.sender != s.seller) revert NotSeller();
         if (s.state != State.DEFAULTED && !(s.state == State.SETTLED && s.finalSoldSupply == 0)) revert BadState();
@@ -404,7 +404,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         s.delivered = 0;
         if (amt == 0) return;
         if (_local(s)) IERC20(s.officialToken).safeTransfer(s.seller, amt);
-        else IPremarketDeliveryHub(lockbox).notifyRelease(seriesId, s.seller, amt);
+        else IPremarketDeliveryHub(lockbox).notifyRelease{value: msg.value}(seriesId, s.seller, amt, s.seller);
     }
 
     function _credit(bytes32 seriesId, uint256 amount) internal {
@@ -497,7 +497,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
             if (s.officialDecimals < 18) tokens = tokens / (10 ** (18 - s.officialDecimals));
             else if (s.officialDecimals > 18) tokens = tokens * (10 ** (s.officialDecimals - 18));
             if (_local(s)) IERC20(s.officialToken).safeTransfer(holder, tokens);
-            else IPremarketDeliveryHub(lockbox).notifyRelease(seriesId, holder, tokens);
+            else IPremarketDeliveryHub(lockbox).notifyRelease{value: msg.value}(seriesId, holder, tokens, holder);
         } else if (s.state == State.DEFAULTED) {
             uint256 sold = s.finalSoldSupply;
             uint256 rPay = Math.mulDiv(amt, s.finalEscrowPool, sold);

@@ -39,8 +39,9 @@ contract PremarketSameChainHub is IPremarketDeliveryHub, Ownable2Step {
         factory.onDeliveryCredit(seriesId, amount);
     }
 
-    function notifyRelease(bytes32 seriesId, address to, uint256 amount) external payable {
+    function notifyRelease(bytes32 seriesId, address to, uint256 amount, address refundTo) external payable {
         if (msg.value != 0) revert UnexpectedValue();
+        if (refundTo == address(0)) revert Zero();
         if (msg.sender != address(factory)) revert NotFactory();
         origin.release(seriesId, to, amount);
     }

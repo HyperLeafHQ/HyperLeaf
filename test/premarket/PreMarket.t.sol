@@ -10,6 +10,8 @@ import {DeliveryLockbox} from "src/premarket/DeliveryLockbox.sol";
 import {EscrowVault} from "src/premarket/EscrowVault.sol";
 import {PremarketOriginLock} from "src/premarket/PremarketOriginLock.sol";
 import {PremarketSameChainHub} from "src/premarket/PremarketSameChainHub.sol";
+import {PremarketLzHub} from "src/premarket/PremarketLzHub.sol";
+import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockUsdm is ERC20 {
     constructor() ERC20("USDM", "USDM") {}
@@ -430,4 +432,84 @@ contract PreMarketTest is Test {
         assertEq(varTok.balanceOf(alice), 50e18);
         assertEq(origin.locked(seriesId), 0);
     }
+
+    function testLzHubCreditAndRelease() public {
+        vm.prank(alice);
+        factory.buyFromSeries(seriesId, 20e18, type(uint256).max);
+
+        MockLzEp epOrigin = new MockLzEp(30110);
+        MockLzEp epHevm = new MockLzEp(30367);
+        PremarketOriginLock origin = new PremarketOriginLock(owner, owner, varTok);
+        PremarketLzHub src = new PremarketLzHub(address(epOrigin), owner, owner, true);
+        PremarketLzHub dst = new PremarketLzHub(address(epHevm), owner, owner, false);
+        vm.startPrank(owner);
+        src.setLock(address(origin));
+        dst.setFactory(address(factory));
+        src.setPeer(30367, address(dst));
+        dst.setPeer(30110, address(src));
+        origin.setMailbox(address(src));
+        factory.setLockbox(address(dst));
+        resolver.resolve(marketId, 42161, address(varTok), 18, 1e18);
+        vm.stopPrank();
+        factory.resolve(seriesId);
+
+        vm.deal(bob, 1 ether);
+        varTok.mint(bob, 20e18);
+        vm.startPrank(bob);
+        varTok.approve(address(origin), 20e18);
+        origin.deliver{value: 0.01 ether}(seriesId, 20e18, bob);
+        vm.stopPrank();
+        assertEq(epOrigin.lastRefund(), bob);
+
+        bytes memory credit = abi.encode(uint8(1), seriesId, address(0), uint256(20e18));
+        vm.prank(address(epHevm));
+        dst.lzReceive(
+            ILayerZeroEndpointV2.Origin(30110, bytes32(uint256(uint160(address(src)))), 1),
+            bytes32(uint256(1)),
+            credit,
+            address(0),
+            ""
+        );
+        assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.SETTLED));
+
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        factory.redeemPull{value: 0.01 ether}(seriesId);
+        assertEq(ClaimSeriesToken(factory.seriesClaim(seriesId)).balanceOf(alice), 0);
+
+        bytes memory rel = abi.encode(uint8(2), seriesId, alice, uint256(20e18));
+        vm.prank(address(epOrigin));
+        src.lzReceive(
+            ILayerZeroEndpointV2.Origin(30367, bytes32(uint256(uint160(address(dst)))), 1),
+            bytes32(uint256(2)),
+            rel,
+            address(0),
+            ""
+        );
+        assertEq(varTok.balanceOf(alice), 20e18);
+        assertEq(origin.locked(seriesId), 0);
+    }
+}
+
+contract MockLzEp is ILayerZeroEndpointV2 {
+    uint32 public eid;
+    address public lastRefund;
+    constructor(uint32 eid_) {
+        eid = eid_;
+    }
+    function send(MessagingParams calldata p, address refund) external payable returns (MessagingReceipt memory r) {
+        lastRefund = refund;
+        r.guid = keccak256(abi.encode(p, block.number));
+        r.nonce = 1;
+        r.fee = MessagingFee(msg.value, 0);
+    }
+    function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
+        return MessagingFee(0.01 ether, 0);
+    }
+    function setDelegate(address) external {}
+    function setConfig(address, address, SetConfigParam[] calldata) external {}
+    function getConfig(address, address, uint32, uint32) external pure returns (bytes memory) {
+        return "";
+    }
+    function skip(address, uint32, bytes32, uint64) external {}
 }

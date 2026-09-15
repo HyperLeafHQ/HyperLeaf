@@ -18,7 +18,7 @@ Issue [#67](https://github.com/HyperLeafHQ/HyperLeaf/issues/67). First canary: *
 - `DELIVERY_WINDOW = 48h` from `resolve()`. `EXPIRY = 365d`. `RESOLVE_GRACE = 48h`.
 - Resolution key is `MultisigResolver` (Owner EOA for canary; wrap in a Safe before TVL). One-shot resolve/void.
 - Official token is **not** assumed to be on HyperEVM. Resolve takes `originChainId` + token address on **that** chain + decimals + `rateX18`. Example: Arb VAR = `42161`, token, `18`, `1e18`. There is no tx-hash field.
-- Same-chain (origin = HyperEVM 999): seller `factory.deliver`. Remote (Arb, …): seller locks on `PremarketOriginLock`; hub credits the factory; holders redeem and tokens are released on the origin chain.
+- Same-chain (origin = HyperEVM 999): seller `factory.deliver`. Remote (Arb, …): seller locks on `PremarketOriginLock`; `PremarketLzHub` (origin + HyperEVM, frozen peers) credits the factory; holders `redeemPull` paying LZ native fee and tokens are released on the origin chain. `PremarketSameChainHub` is tests only.
 - The live canary factory `0x22684F6e…` does **not** have origin-chain resolve. Do not resolve it. Next VAR market is a new deploy.
 
 ## How much USDM (1x / $20)
