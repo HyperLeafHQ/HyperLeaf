@@ -353,7 +353,7 @@ library AssetCatalog {
                 0,
                 0xeBf418Fe2512e7E6bd9b87a8F0f294aCDC67e6B4,
                 1_000 ether,
-                true
+                false
             );
         }
         if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) {

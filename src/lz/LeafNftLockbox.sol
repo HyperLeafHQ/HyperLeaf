@@ -9,13 +9,15 @@ import {LeafOApp} from "./LeafOApp.sol";
 import {LeafYieldFee} from "./LeafYieldFee.sol";
 import {IVeNft} from "./IVeNft.sol";
 import {LeafVePolicy} from "./LeafVePolicy.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ILayerZeroEndpointV2} from "./interfaces/ILayerZeroEndpointV2.sol";
 
 /// @title LeafNftLockbox
-/// @notice C1 source for permanent veNFTs (hveAERO first). Mints dest ClosedOFT
-///         shares = locked AERO amount. Time-locked / managed / decaying NFTs
-///         are rejected — those cannot share a fungible ticket.
-///         No protocol redeem. No vote / merge / split / withdraw / unlockPermanent.
+/// @notice C1 source for permanent veNFTs (hveAERO first). Dest shares use
+///         vault math: first wrap 1:1, later wraps mint assets * supply / backing
+///         so Maxi compounding is not diluted. Cap is on live AERO, not shares.
+///         No protocol redeem. No vote / merge / split / withdrawManaged.
+///         After take, Base wraps call Voter.depositManaged into veAERO Maxi.
 contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Receiver {
     using SafeERC20 for IERC20;
 
@@ -31,7 +33,9 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     uint256 private _expectedTokenId;
     bool private _expectingNft;
 
-    event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 tokenId, uint256 principal, bytes32 guid);
+    event BridgedOut(
+        address indexed from, uint32 indexed dstEid, bytes32 to, uint256 tokenId, uint256 assets, uint256 shares, bytes32 guid
+    );
     event CapUpdated(uint256 cap);
     event NftUnhealthy(uint256 indexed tokenId);
 
@@ -82,17 +86,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     /// @notice Burned / left / unlocked / short of wrap principal → false.
     function nftHealthy(uint256 id) public view returns (bool) {
         if (principalOf[id] == 0) return false;
-        address o;
-        try ve.ownerOf(id) returns (address got) {
-            o = got;
-        } catch {
-            return false;
-        }
-        if (o != address(this)) return false;
-        IVeNft.LockedBalance memory L = ve.locked(id);
-        if (!L.isPermanent || ve.escrowType(id) != IVeNft.EscrowType.NORMAL) return false;
-        if (L.amount <= 0) return false;
-        return uint256(int256(L.amount)) >= principalOf[id];
+        return LeafVePolicy.heldOk(ve, address(this), id, principalOf[id]);
     }
 
     /// @notice Anyone. Permanent lock broken, amount below wrap principal, or NFT left.
@@ -142,6 +136,27 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         _pullYield(token, IERC20(address(0)), 0, to);
     }
 
+    /// @notice Live locked AERO across held NFTs (Maxi-compounded). Not dest shares.
+    function currentAssets() public view returns (uint256 sum) {
+        uint256 n = ids.length;
+        for (uint256 i; i < n; ++i) {
+            uint256 id = ids[i];
+            if (principalOf[id] == 0) continue;
+            try ve.locked(id) returns (IVeNft.LockedBalance memory L) {
+                if (L.amount > 0) sum += uint256(int256(L.amount));
+            } catch {}
+        }
+    }
+
+    /// @notice Dest shares a new `assets` wrap would mint. Floors in favor of existing holders.
+    function previewShares(uint256 assets) public view returns (uint256) {
+        uint256 supply = totalLocked;
+        if (supply == 0) return assets;
+        uint256 backing = currentAssets();
+        if (backing == 0) return assets;
+        return Math.mulDiv(assets, supply, backing);
+    }
+
     function send(uint32 dstEid, bytes32 to, uint256 tokenId, address refund)
         public
         payable
@@ -152,18 +167,25 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         if (to == bytes32(0)) revert ZeroAddress();
         _requireMint();
 
-        uint256 principal = _takeNft(msg.sender, tokenId);
-        if (totalLocked + principal > depositCap) revert CapExceeded();
+        uint256 assets = _takeNft(msg.sender, tokenId);
+        uint256 backing = currentAssets();
+        if (depositCap != 0 && backing + assets > depositCap) revert CapExceeded();
         if (ids.length >= maxNfts) revert TooManyNfts();
-        totalLocked += principal;
-        principalOf[tokenId] = principal;
-        ids.push(tokenId);
-        _takeQuota(principal);
 
-        bytes memory payload = encodeBridge(to, principal);
+        uint256 shares = (totalLocked == 0 || backing == 0)
+            ? assets
+            : Math.mulDiv(assets, totalLocked, backing);
+        if (shares == 0) revert ZeroAmount();
+
+        totalLocked += shares;
+        principalOf[tokenId] = assets;
+        ids.push(tokenId);
+        _takeQuota(assets);
+
+        bytes memory payload = encodeBridge(to, shares);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt =
             _lzSend(dstEid, payload, _defaultOptions(dstEid), refund == address(0) ? msg.sender : refund);
-        emit BridgedOut(msg.sender, dstEid, to, tokenId, principal, receipt.guid);
+        emit BridgedOut(msg.sender, dstEid, to, tokenId, assets, shares, receipt.guid);
         return receipt.guid;
     }
 
@@ -208,5 +230,11 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         _expectedSender = address(0);
         _expectedTokenId = 0;
         if (ve.ownerOf(tokenId) != address(this)) revert BadNft();
+        if (block.chainid == 8453) {
+            (bool ok,) = LeafVePolicy.VOTER.call(
+                abi.encodeWithSelector(LeafVePolicy.DEPOSIT_MANAGED, tokenId, LeafVePolicy.MAXI_ID)
+            );
+            if (!ok || ve.escrowType(tokenId) != IVeNft.EscrowType.LOCKED) revert BadNft();
+        }
     }
 }

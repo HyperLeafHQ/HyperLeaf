@@ -76,6 +76,14 @@ contract LeafNftLockboxTest is PegReady {
         AssetCatalog.Listing memory a = AssetCatalog.get("hveaero");
         assertEq(a.innerMainnet, LeafVePolicy.VE);
         assertEq(uint8(a.kind), uint8(AssetCatalog.Kind.Closed));
+        assertFalse(a.productionEvm);
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.VOTE));
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.MERGE));
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.UNLOCK_PERMANENT));
+        assertTrue(LeafVePolicy.isForbiddenVe(LeafVePolicy.WITHDRAW_MANAGED));
+        assertFalse(LeafVePolicy.isForbiddenVe(LeafVePolicy.DEPOSIT_MANAGED));
+        assertEq(LeafVePolicy.RELAY_MAXI, 0xc9814f18a8751214F719De15C54D01b3D78EF14f);
+        assertEq(LeafVePolicy.MAXI_ID, 10298);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._requireBatch("hveaero", 4);
     }
@@ -192,7 +200,9 @@ contract LeafNftLockboxTest is PegReady {
         box.pullYield(bribe, address(0xC0));
         assertEq(box.principalOf(41), 10e18);
         assertEq(box.principalOf(42), 20e18);
-        assertEq(box.totalLocked(), 30e18);
+        uint256 bobShares = uint256(20 ether) * uint256(10 ether) / uint256(12 ether);
+        assertEq(box.totalLocked(), 10 ether + bobShares);
+        assertEq(box.currentAssets(), 32 ether);
         assertEq(ve.ownerOf(41), address(box));
         assertEq(ve.ownerOf(42), address(box));
         assertEq(bribe.balanceOf(address(0xC0)), 7e18);
@@ -200,6 +210,17 @@ contract LeafNftLockboxTest is PegReady {
         assertEq(uint256(int256(L.amount)), 12e18);
         box.reportNftHealth();
         assertEq(uint8(box.health()), uint8(LeafOApp.Health.Normal));
+    }
+
+    function testLaterWrapDoesNotDiluteCompoundedNav() public {
+        _wrap(51, 10e18);
+        ve.setLocked(51, int128(uint128(12e18)), true, 0);
+        assertEq(box.previewShares(12e18), 10e18);
+        _wrap(52, 12e18);
+        assertEq(box.principalOf(52), 12e18);
+        assertEq(box.totalLocked(), 20e18);
+        assertEq(box.currentAssets(), 24e18);
+        // Alice still owns 10/20 of 24 = 12. Bob paid 12 for 10 dest = 12 of backing.
     }
 
     function testRejectsTokenIdZero() public {
@@ -236,6 +257,15 @@ contract LeafNftLockboxTest is PegReady {
         ve.burn(32);
         box.reportNftHealth();
         assertEq(uint8(box.health()), uint8(LeafOApp.Health.Degraded));
+    }
+
+    function testLockedAfterWrapIsHealthy() public {
+        _wrap(7, 50 ether);
+        ve.setType(7, IVeNft.EscrowType.LOCKED);
+        ve.setLocked(7, int128(uint128(55 ether)), true, 0);
+        box.reportNftHealth();
+        assertEq(uint8(box.health()), uint8(LeafOApp.Health.Normal));
+        assertTrue(LeafVePolicy.heldOk(IVeNft(address(ve)), address(box), 7, 50 ether));
     }
 
     function testRebaseDoesNotDegrade() public {
