@@ -11,6 +11,7 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IConversionResolver} from "./IConversionResolver.sol";
+import {IPremarketDeliveryHub} from "./IPremarketDeliveryHub.sol";
 import {ClaimSeriesToken} from "./ClaimSeriesToken.sol";
 import {EscrowVault} from "./EscrowVault.sol";
 
@@ -67,6 +68,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         uint256 delivered;
         uint8 officialDecimals;
         bool snapshotted;
+        uint64 originChainId;
     }
 
     IConversionResolver public immutable resolver;
@@ -87,7 +89,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     event SeriesCreated(bytes32 indexed seriesId, bytes32 marketId, address seller, address claimToken);
     event Minted(bytes32 indexed seriesId, uint256 claims);
     event PrimaryFill(bytes32 indexed seriesId, address buyer, uint256 claims, uint256 paid);
-    event ResolvedSeries(bytes32 indexed seriesId, address token, uint256 rateX18);
+    event ResolvedSeries(bytes32 indexed seriesId, uint64 originChainId, address token, uint256 rateX18);
     event Delivered(bytes32 indexed seriesId, uint256 amount, uint256 cumulative);
     event Terminal(bytes32 indexed seriesId, State state, uint256 sold, uint256 escrow, uint256 collateral);
     event SettledHolder(bytes32 indexed seriesId, address holder, uint256 claims);
@@ -106,6 +108,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     error NotLockbox();
     error Slippage();
     error AlreadySet();
+    error WrongChain();
 
     constructor(address owner_, address resolver_, address feeRecipient_) Ownable(owner_) {
         if (owner_ == address(0) || resolver_ == address(0) || feeRecipient_ == address(0)) revert Zero();
@@ -228,7 +231,8 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
             seriesResolvedAt: 0,
             delivered: 0,
             officialDecimals: 18,
-            snapshotted: false
+            snapshotted: false,
+            originChainId: 0
         });
         emit SeriesCreated(seriesId, marketId, msg.sender, clone);
     }
@@ -281,23 +285,24 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         Series storage s = seriesOf[seriesId];
         if (s.state != State.OPEN) revert BadState();
         if (s.createdAt == 0) revert BadState();
-        (address tok, uint256 rate, uint64 at, bool ok) = resolver.resolution(s.marketId);
+        (uint64 origin, address tok, uint8 dec, uint256 rate, uint64 at, bool ok) = resolver.resolution(s.marketId);
         if (!ok) revert NotResolved();
         uint64 deadline = s.createdAt + EXPIRY;
         if (block.timestamp > deadline + RESOLVE_GRACE) revert Window();
         if (block.timestamp > deadline && at > deadline) revert Window();
+        s.originChainId = origin;
         s.officialToken = tok;
         s.rateX18 = rate;
         s.marketResolvedAt = at;
         s.seriesResolvedAt = uint64(block.timestamp);
-        s.officialDecimals = IERC20Metadata(tok).decimals();
+        s.officialDecimals = dec;
         s.state = State.RESOLVED;
         uint256 inv = ClaimSeriesToken(s.claimToken).balanceOf(address(this));
         if (inv > 0) ClaimSeriesToken(s.claimToken).burn(address(this), inv);
         uint256 need = Math.mulDiv(ClaimSeriesToken(s.claimToken).totalSupply(), s.unitRequirement, 1e18, Math.Rounding.Ceil);
         uint256 have = vaultOf[s.marketId].collateralOf(seriesId);
         if (have > need) vaultOf[s.marketId].release(seriesId, s.seller, have - need, true);
-        emit ResolvedSeries(seriesId, tok, rate);
+        emit ResolvedSeries(seriesId, origin, tok, rate);
     }
 
     function deliver(bytes32 seriesId, uint256 amount) external nonReentrant {
@@ -306,6 +311,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (msg.sender != s.seller) revert NotSeller();
         if (block.timestamp > s.seriesResolvedAt + DELIVERY_WINDOW) revert Window();
         if (amount == 0) revert Zero();
+        if (!_local(s)) revert WrongChain();
         IERC20(s.officialToken).safeTransferFrom(msg.sender, address(this), amount);
         _credit(seriesId, amount);
     }
@@ -333,10 +339,10 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (s.createdAt == 0) revert BadState();
         uint64 deadline = s.createdAt + EXPIRY;
         if (block.timestamp <= deadline) revert Window();
-        (,,, bool resolved) = resolver.resolution(s.marketId);
+        (,,,,, bool resolved) = resolver.resolution(s.marketId);
         uint64 at;
         if (resolved) {
-            (, , at,) = resolver.resolution(s.marketId);
+            (,,,, at,) = resolver.resolution(s.marketId);
             if (at <= deadline && block.timestamp <= deadline + RESOLVE_GRACE) revert Window();
         }
         _toRefundBoth(seriesId, State.EXPIRED);
@@ -396,7 +402,9 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (s.state != State.DEFAULTED && !(s.state == State.SETTLED && s.finalSoldSupply == 0)) revert BadState();
         uint256 amt = s.delivered;
         s.delivered = 0;
-        if (amt > 0) IERC20(s.officialToken).safeTransfer(s.seller, amt);
+        if (amt == 0) return;
+        if (_local(s)) IERC20(s.officialToken).safeTransfer(s.seller, amt);
+        else IPremarketDeliveryHub(lockbox).notifyRelease(seriesId, s.seller, amt);
     }
 
     function _credit(bytes32 seriesId, uint256 amount) internal {
@@ -488,7 +496,8 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
             uint256 tokens = Math.mulDiv(amt, s.rateX18, 1e18);
             if (s.officialDecimals < 18) tokens = tokens / (10 ** (18 - s.officialDecimals));
             else if (s.officialDecimals > 18) tokens = tokens * (10 ** (s.officialDecimals - 18));
-            IERC20(s.officialToken).safeTransfer(holder, tokens);
+            if (_local(s)) IERC20(s.officialToken).safeTransfer(holder, tokens);
+            else IPremarketDeliveryHub(lockbox).notifyRelease(seriesId, holder, tokens);
         } else if (s.state == State.DEFAULTED) {
             uint256 sold = s.finalSoldSupply;
             uint256 rPay = Math.mulDiv(amt, s.finalEscrowPool, sold);
@@ -511,6 +520,10 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (s.officialDecimals < 18) return (raw + (10 ** (18 - s.officialDecimals)) - 1) / (10 ** (18 - s.officialDecimals));
         if (s.officialDecimals > 18) return raw * (10 ** (s.officialDecimals - 18));
         return raw;
+    }
+
+    function _local(Series storage s) internal view returns (bool) {
+        return s.originChainId == uint64(block.chainid);
     }
 
     function _unitRequirement(uint256 refPriceUsd, uint16 tierBps, uint8 dec) internal pure returns (uint256) {

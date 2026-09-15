@@ -8,6 +8,8 @@ import {MultisigResolver} from "src/premarket/MultisigResolver.sol";
 import {ClaimSeriesToken} from "src/premarket/ClaimSeriesToken.sol";
 import {DeliveryLockbox} from "src/premarket/DeliveryLockbox.sol";
 import {EscrowVault} from "src/premarket/EscrowVault.sol";
+import {PremarketOriginLock} from "src/premarket/PremarketOriginLock.sol";
+import {PremarketSameChainHub} from "src/premarket/PremarketSameChainHub.sol";
 
 contract MockUsdm is ERC20 {
     constructor() ERC20("USDM", "USDM") {}
@@ -190,7 +192,7 @@ contract PreMarketTest is Test {
         assertEq(factory.vaultOf(marketId).escrowOf(seriesId), 2_000e6);
 
         vm.prank(owner);
-        resolver.resolve(marketId, address(varTok), 1e18);
+        resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
         assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.RESOLVED));
 
@@ -219,7 +221,7 @@ contract PreMarketTest is Test {
         ClaimSeriesToken(claim).transfer(bob, 40e18);
 
         vm.prank(owner);
-        resolver.resolve(marketId, address(varTok), 1e18);
+        resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
         vm.warp(block.timestamp + 49 hours);
         factory.finalize(seriesId);
@@ -288,7 +290,7 @@ contract PreMarketTest is Test {
         vm.prank(alice);
         factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         vm.prank(owner);
-        resolver.resolve(marketId, address(varTok), 1e18);
+        resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
         varTok.mint(bob, 100e18);
         vm.startPrank(bob);
@@ -327,7 +329,7 @@ contract PreMarketTest is Test {
         vm.prank(alice);
         factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
         vm.prank(owner);
-        resolver.resolve(marketId, address(varTok), 1e18);
+        resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
         varTok.mint(bob, 40e18);
         vm.startPrank(bob);
@@ -376,7 +378,7 @@ contract PreMarketTest is Test {
         ClaimSeriesToken(claim).transfer(carol, 50e18);
 
         vm.prank(owner);
-        resolver.resolve(marketId, address(varTok), 1e18);
+        resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
         vm.warp(block.timestamp + 49 hours);
         factory.finalize(seriesId);
@@ -396,5 +398,36 @@ contract PreMarketTest is Test {
         uint256 bag = aliceGot + carolGot;
         assertLt(aliceGot, bag);
         assertApproxEqAbs(aliceGot * 2, bag, 2);
+    }
+
+    function testRemoteOriginDeliverAndRedeem() public {
+        vm.prank(alice);
+        factory.buyFromSeries(seriesId, 50e18, type(uint256).max);
+
+        PremarketOriginLock origin = new PremarketOriginLock(owner, owner, varTok);
+        PremarketSameChainHub hub = new PremarketSameChainHub(owner);
+        vm.startPrank(owner);
+        hub.setEnds(address(origin), address(factory));
+        origin.setMailbox(address(hub));
+        factory.setLockbox(address(hub));
+        // Official token is "on Arb" — HyperEVM deliver must fail.
+        resolver.resolve(marketId, 42161, address(varTok), 18, 1e18);
+        vm.stopPrank();
+        factory.resolve(seriesId);
+
+        varTok.mint(bob, 50e18);
+        vm.startPrank(bob);
+        varTok.approve(address(factory), 50e18);
+        vm.expectRevert(PreMarketFactory.WrongChain.selector);
+        factory.deliver(seriesId, 50e18);
+        varTok.approve(address(origin), 50e18);
+        origin.deliver(seriesId, 50e18, bob);
+        vm.stopPrank();
+        assertEq(uint256(factory.seriesState(seriesId)), uint256(PreMarketFactory.State.SETTLED));
+
+        vm.prank(alice);
+        factory.redeemPull(seriesId);
+        assertEq(varTok.balanceOf(alice), 50e18);
+        assertEq(origin.locked(seriesId), 0);
     }
 }
