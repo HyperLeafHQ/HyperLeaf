@@ -44,6 +44,8 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     /// @dev Observed external-ledger stake for this identity. Not ERC-20
     ///      `balanceOf(this)` and not shared across CREATE2 twins on other chains.
     uint256 public ledgerPrincipal;
+    /// @dev BLUAI 4y: share-exit blocked until this timestamp. 0 = unset (tests).
+    uint64 public farmUnlockAt;
 
     event CapUpdated(uint256 cap);
     event BridgedOut(address indexed from, uint32 indexed dstEid, bytes32 to, uint256 amount, bytes32 guid);
@@ -58,6 +60,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event FarmRequestSel(bytes4 sel);
     event FarmRequest(uint256 amount, uint8 payloadType, address indexed caller);
     event LedgerPrincipalReported(uint256 observed, address indexed caller);
+    event FarmUnlockAt(uint64 at);
 
     error ZeroAmount();
     error CapExceeded();
@@ -66,6 +69,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error InsufficientLocked();
     error FarmConfigFrozen();
     error ReentrantAbortRecoveryDisabled();
+    error ShareExitTooEarly();
 
     constructor(
         address token_,
@@ -152,10 +156,20 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     }
 
     /// @notice Share-exit is a lifecycle switch (BLUAI 4y then market-or-unstake), not farm ABI.
-    ///         Freezing it with the farm would trap principal after the lock ends.
+    ///         ORDER (AmountNative) never opens protocol redeem. BLUAI blocked until farmUnlockAt.
     function setShareExit(bool on) external onlyOwner {
+        if (on) {
+            if (farmStyle == FarmStyle.AmountNative) revert BadStake();
+            if (farmUnlockAt != 0 && block.timestamp < farmUnlockAt) revert ShareExitTooEarly();
+        }
         shareExitEnabled = on;
         emit ShareExitSet(on);
+    }
+
+    function setFarmUnlockAt(uint64 at) external onlyOwner {
+        _requireFarmConfigMutable();
+        farmUnlockAt = at;
+        emit FarmUnlockAt(at);
     }
 
     function setFarmStyle(FarmStyle style, uint256 nativeFee) external onlyOwner {

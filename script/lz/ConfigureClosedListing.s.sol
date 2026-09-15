@@ -5,9 +5,8 @@ import {Script, console2} from "forge-std/Script.sol";
 import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
-import {HypeAddresses as H} from "src/lz/HypeAddresses.sol";
 import {LeafOrderPolicy} from "src/lz/LeafOrderPolicy.sol";
-import {IBluaiStake} from "src/lz/IBluaiStake.sol";
+import {LeafBluaiPolicy} from "src/lz/LeafBluaiPolicy.sol";
 
 /// @notice C1 source after DeployClosed + WirePeers. BATCH=4. Not for L adapters.
 ///         Pins farm for BLUAI4Y / hORDER. Does not `setShareExit` / `setRedeemEnabled`.
@@ -41,10 +40,12 @@ contract ConfigureClosedListing is Script {
             box.setPublicRequestType(LeafOrderPolicy.TYPE_HARVEST_USDC, true);
             box.setPublicRequestType(LeafOrderPolicy.TYPE_OCCUPANCY, true);
         } else if (keccak256(bytes(id)) == keccak256("bluai4y")) {
-            require(block.chainid == 56, "BLUAI is BSC");
-            box.setFarm(H.BLUAI_STAKE_BSC, IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector);
-            box.setFarmExit(IBluaiStake.unstake.selector);
+            LeafBluaiPolicy.requireBscBluai(address(box.innerToken()), block.chainid);
+            LeafBluaiPolicy.requireFourYears(LeafBluaiPolicy.YEARS);
+            box.setFarm(LeafBluaiPolicy.STAKE, LeafBluaiPolicy.STAKE_SEL, LeafBluaiPolicy.YEARS, LeafBluaiPolicy.CLAIM_ALL);
+            box.setFarmExit(LeafBluaiPolicy.UNSTAKE);
             box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountYears, 0);
+            box.setFarmUnlockAt(uint64(block.timestamp) + a.lockSeconds);
         }
 
         vm.stopBroadcast();

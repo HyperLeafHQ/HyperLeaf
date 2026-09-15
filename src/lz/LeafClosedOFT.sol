@@ -9,7 +9,10 @@ import {LeafOFT} from "./LeafOFT.sol";
 contract LeafClosedOFT is LeafOFT {
     /// @notice Advertised lock length. Not enforced on-chain; the source stake is.
     uint32 public immutable lockSeconds;
+    /// @notice Deploy time. Redeem cannot open before deployedAt + lockSeconds.
+    uint64 public immutable deployedAt;
     /// @notice Owner may open protocol redeem after the source lock ends (BLUAI).
+    ///         lockSeconds == 0 (hORDER) can never open protocol redeem.
     bool public redeemEnabled;
 
     error ExitViaMarketOnly();
@@ -25,9 +28,14 @@ contract LeafClosedOFT is LeafOFT {
         address guardian_
     ) LeafOFT(name_, symbol_, endpoint_, owner_, guardian_) {
         lockSeconds = lockSeconds_;
+        deployedAt = uint64(block.timestamp);
     }
 
     function setRedeemEnabled(bool on) external onlyOwner {
+        if (on) {
+            if (lockSeconds == 0) revert ExitViaMarketOnly();
+            if (block.timestamp < uint256(deployedAt) + lockSeconds) revert ExitViaMarketOnly();
+        }
         redeemEnabled = on;
         emit RedeemEnabled(on);
     }

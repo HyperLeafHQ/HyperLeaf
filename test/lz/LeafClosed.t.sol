@@ -240,4 +240,14 @@ contract LeafClosedTest is PegReady {
         vm.expectRevert(LeafRedeemQueue.DelayTooLow.selector);
         queue.setRedeemDelay(7 days);
     }
+
+    function testBluaiRedeemBlockedUntilLockEnds() public {
+        vm.prank(owner);
+        vm.expectRevert(LeafClosedOFT.ExitViaMarketOnly.selector);
+        oft.setRedeemEnabled(true);
+        vm.warp(block.timestamp + LOCK_4Y);
+        vm.prank(owner);
+        oft.setRedeemEnabled(true);
+        assertTrue(oft.redeemEnabled());
+    }
 }
