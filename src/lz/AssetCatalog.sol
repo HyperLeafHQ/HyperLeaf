@@ -356,6 +356,23 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("ptsmax") || k == keccak256("PTSMAX")) {
+            return Listing(
+                Kind.Closed,
+                "ptsmax",
+                "Hyperleaf River Pts max-date",
+                "PTSMAX",
+                "River Pts",
+                56,
+                30102,
+                40102,
+                0,
+                0,
+                0xfc6be825925B7A83d131E33b46EFeF9084f0E014,
+                50 ether,
+                false
+            );
+        }
         if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) {
             return Listing(
                 Kind.Liquid,
