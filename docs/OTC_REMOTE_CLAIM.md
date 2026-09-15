@@ -1,49 +1,48 @@
-# Remote-claim OTC (generic)
+# Spot OTC — remote claim + Leaf Market
 
-Not a Leaf wrapper and not a treasury desk. The product is:
+Not a Leaf wrapper and not a treasury desk. Spot OTC is:
 
 ```
 seller locks token on the source chain
-        ↓
+        ↓  mailbox (LZ)
 HyperEVM claim minted 1:1 (same decimals)
         ↓
-Leaf Market: claim ↔ HyperEVM USDC   (fillLocal, same as hNEST)
+Leaf Market fillLocal: claim ↔ HyperEVM USDC
         ↓
 buyer holds the claim, redeems back to the source chain
 ```
 
-Premium is the Leaf Market price. Protocol does not bid, does not hold inventory, does not promise 1:1 HyperEVM USDC.
+Premium is the Leaf Market ask. Protocol does not bid, does not hold inventory, does not promise 1 HyperEVM USDC per 1 source unit.
+
+Pre-market (VAR) is a different product: same-chain USDM escrow + future official token. Do not reuse PreMarketFactory here.
 
 ## First listing (practice): Arc USDC
 
-- Source: Arc native USDC (mainnet address TBD at public launch).
+- Source: Arc native USDC (mainnet address TBD).
 - Claim: `hArcUSDC` on HyperEVM, 6 decimals.
-- Want: Circle USDC on HyperEVM `0xb88339CB7199b77E23DB6E890353E22632Ba630f`.
-- Status: **code kernel only**. Do not deploy until:
-  1. Arc public RPC + USDC address are official.
-  2. There is still no cheap 1:1 CCTP/bridge Arc ↔ HyperEVM (that kills the premium).
-  3. The mailbox is a real LZ (or equivalent) adapter, **not** `OtcSameChainMailbox`.
+- Want: Circle USDC `0xb88339CB7199b77E23DB6E890353E22632Ba630f`.
+- **Do not deploy** until public Arc RPC exists, CCTP Arc↔HyperEVM is not 1:1, and `OtcLzMailbox` peers are frozen.
 
-Same-chain mailbox is for tests. Using it on two live chains would mint without a lock.
-
-## What this is not
-
-- Not Luna's Base USDC ↔ Arc USDC HTLC desk (Unstable / ArcExit already do that).
-- Not PreMarketFactory (VAR points, same-chain USDM escrow).
-- Not the LST wrap stack (no inner ceiling, no rate feed, no Rewarder).
+`OtcSameChainMailbox` is tests only. Two live chains + same-chain mailbox would mint without a lock.
 
 ## Contracts
 
 | Contract | Chain | Role |
 | --- | --- | --- |
-| `OtcRemoteLock` | source | Pulls underlying, `totalLocked` 1:1 |
-| `OtcClaim` | HyperEVM | Listable ERC-20; `redeem` burns and releases source |
-| `IOtcMailbox` | both | `notifyDeposit` / `notifyRedeem` |
+| `OtcRemoteLock` | source | Pulls underlying, `totalLocked` 1:1, optional `maxLocked` |
+| `OtcClaim` | HyperEVM | Listable ERC-20; `redeem` burns |
+| `OtcLzMailbox` | both | `OP_MINT` / `OP_RELEASE` over LZ |
 | `OtcSameChainMailbox` | tests | Immediate mint/release |
-| LeafClaimEscrow | HyperEVM | Existing Leaf Market. `setMarket(claim, hevmUsdc, 0, true)` |
+| LeafClaimEscrow | HyperEVM | `setMarket(claim, hevmUsdc, 0, true)` |
 
-Later corridors (any OTC where inventory is on another chain and cash is on HyperEVM) reuse lock + claim + a new mailbox. Do not fork Leaf Market.
+Guardian can pause lock / claim / LZ mailbox. Owner unpauses. Mailbox, lock, and claim ends are one-shot.
+
+Later corridors swap the lock token + LZ EIDs. Do not fork Leaf Market.
 
 ## Fee
 
-Wrap layer: 0. Revenue is Leaf Market occupancy / incentive rules already live. Do not add a second fee on deposit.
+Wrap layer: 0. Leaf Market already takes the 1% buyer incentive and occupancy rules. Do not add a deposit fee.
+
+## LZ in-flight
+
+`deposit` credits `totalLocked` before dest mint. If dest `lzReceive` never runs, inventory sits until the executor retries. Do not skip the nonce. Same on redeem: burn first, source `release` on message.

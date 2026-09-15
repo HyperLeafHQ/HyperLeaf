@@ -14,6 +14,7 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
     string public symbol;
     uint8 public immutable decimals;
     IOtcMailbox public mailbox;
+    address public guardian;
     uint256 public totalSupply;
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -22,18 +23,23 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
     error AlreadySet();
     error NotMailbox();
     error Insufficient();
+    error NotGuardian();
 
     event MailboxSet(address mailbox);
+    event GuardianSet(address guardian);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Minted(address indexed to, uint256 amount);
     event Redeemed(address indexed from, address indexed srcTo, uint256 amount);
 
-    constructor(address owner_, string memory name_, string memory symbol_, uint8 decimals_) Ownable(owner_) {
-        if (owner_ == address(0)) revert Zero();
+    constructor(address owner_, address guardian_, string memory name_, string memory symbol_, uint8 decimals_)
+        Ownable(owner_)
+    {
+        if (owner_ == address(0) || guardian_ == address(0)) revert Zero();
         name = name_;
         symbol = symbol_;
         decimals = decimals_;
+        guardian = guardian_;
     }
 
     function setMailbox(address m) external onlyOwner {
@@ -43,7 +49,14 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
         emit MailboxSet(m);
     }
 
-    function pause() external onlyOwner {
+    function setGuardian(address g) external onlyOwner {
+        if (g == address(0)) revert Zero();
+        guardian = g;
+        emit GuardianSet(g);
+    }
+
+    function pause() external {
+        if (msg.sender != guardian && msg.sender != owner()) revert NotGuardian();
         _pause();
     }
 
@@ -60,7 +73,7 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
         emit Minted(to, amount);
     }
 
-    function redeem(uint256 amount, address srcTo) external whenNotPaused nonReentrant {
+    function redeem(uint256 amount, address srcTo) external payable whenNotPaused nonReentrant {
         if (amount == 0 || srcTo == address(0)) revert Zero();
         if (address(mailbox) == address(0)) revert Zero();
         uint256 b = balanceOf[msg.sender];
@@ -71,7 +84,7 @@ contract OtcClaim is Ownable2Step, Pausable, ReentrancyGuard {
         }
         emit Transfer(msg.sender, address(0), amount);
         emit Redeemed(msg.sender, srcTo, amount);
-        mailbox.notifyRedeem(srcTo, amount);
+        mailbox.notifyRedeem{value: msg.value}(srcTo, amount);
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {

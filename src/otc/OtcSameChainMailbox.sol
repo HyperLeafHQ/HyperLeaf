@@ -19,6 +19,8 @@ contract OtcSameChainMailbox is IOtcMailbox, Ownable2Step {
     error AlreadySet();
     error NotLock();
     error NotClaim();
+    error DecimalMismatch();
+    error UnexpectedValue();
 
     constructor(address owner_) Ownable(owner_) {
         if (owner_ == address(0)) revert Zero();
@@ -29,14 +31,17 @@ contract OtcSameChainMailbox is IOtcMailbox, Ownable2Step {
         if (lock_ == address(0) || claim_ == address(0)) revert Zero();
         lock = OtcRemoteLock(lock_);
         claim = OtcClaim(claim_);
+        if (lock.decimals() != claim.decimals()) revert DecimalMismatch();
     }
 
-    function notifyDeposit(address destTo, uint256 amount) external {
+    function notifyDeposit(address destTo, uint256 amount) external payable {
+        if (msg.value != 0) revert UnexpectedValue();
         if (msg.sender != address(lock)) revert NotLock();
         claim.mint(destTo, amount);
     }
 
-    function notifyRedeem(address srcTo, uint256 amount) external {
+    function notifyRedeem(address srcTo, uint256 amount) external payable {
+        if (msg.value != 0) revert UnexpectedValue();
         if (msg.sender != address(claim)) revert NotClaim();
         lock.release(srcTo, amount);
     }
