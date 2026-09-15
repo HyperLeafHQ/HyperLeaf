@@ -75,6 +75,9 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     address public immutable claimImpl;
     address public lockbox;
     address public feeRecipient;
+    /// @dev One factory = one official origin + one token. Not a multi-origin hub.
+    uint64 public officialOriginChainId;
+    address public officialToken;
 
     mapping(bytes32 => Market) public markets;
     mapping(bytes32 => Series) public seriesOf;
@@ -93,6 +96,7 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     event Delivered(bytes32 indexed seriesId, uint256 amount, uint256 cumulative);
     event Terminal(bytes32 indexed seriesId, State state, uint256 sold, uint256 escrow, uint256 collateral);
     event SettledHolder(bytes32 indexed seriesId, address holder, uint256 claims);
+    event OfficialAssetSet(uint64 originChainId, address token);
 
     error NotOwner();
     error NotSeller();
@@ -109,6 +113,8 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
     error Slippage();
     error AlreadySet();
     error WrongChain();
+    error WrongAsset();
+    error OriginUnset();
 
     constructor(address owner_, address resolver_, address feeRecipient_) Ownable(owner_) {
         if (owner_ == address(0) || resolver_ == address(0) || feeRecipient_ == address(0)) revert Zero();
@@ -121,6 +127,15 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (lockbox != address(0)) revert AlreadySet();
         if (l == address(0)) revert Zero();
         lockbox = l;
+    }
+
+    /// @notice One-shot. Every series on this factory must resolve to this origin+token.
+    function setOfficialAsset(uint64 originChainId, address token) external onlyOwner {
+        if (officialOriginChainId != 0 || officialToken != address(0)) revert AlreadySet();
+        if (originChainId == 0 || token == address(0)) revert Zero();
+        officialOriginChainId = originChainId;
+        officialToken = token;
+        emit OfficialAssetSet(originChainId, token);
     }
 
     function setFeeRecipient(bytes32 marketId, address n) external onlyOwner {
@@ -287,6 +302,9 @@ contract PreMarketFactory is Ownable2Step, ReentrancyGuard {
         if (s.createdAt == 0) revert BadState();
         (uint64 origin, address tok, uint8 dec, uint256 rate, uint64 at, bool ok) = resolver.resolution(s.marketId);
         if (!ok) revert NotResolved();
+        if (officialOriginChainId == 0 || officialToken == address(0)) revert OriginUnset();
+        if (origin != officialOriginChainId) revert WrongChain();
+        if (tok != officialToken) revert WrongAsset();
         uint64 deadline = s.createdAt + EXPIRY;
         if (block.timestamp > deadline + RESOLVE_GRACE) revert Window();
         if (block.timestamp > deadline && at > deadline) revert Window();

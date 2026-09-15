@@ -103,6 +103,11 @@ contract PreMarketTest is Test {
         usdm.approve(address(factory), type(uint256).max);
     }
 
+    function _bindLocal() internal {
+        vm.prank(owner);
+        factory.setOfficialAsset(uint64(block.chainid), address(varTok));
+    }
+
     function testTickerAndFloor() public view {
         address tok = factory.seriesClaim(seriesId);
         assertEq(ClaimSeriesToken(tok).symbol(), "hPreVarPts2x20");
@@ -193,6 +198,7 @@ contract PreMarketTest is Test {
         assertEq(ClaimSeriesToken(tok).balanceOf(alice), 100e18);
         assertEq(factory.vaultOf(marketId).escrowOf(seriesId), 2_000e6);
 
+        _bindLocal();
         vm.prank(owner);
         resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
@@ -222,6 +228,7 @@ contract PreMarketTest is Test {
         vm.prank(alice);
         ClaimSeriesToken(claim).transfer(bob, 40e18);
 
+        _bindLocal();
         vm.prank(owner);
         resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
@@ -291,6 +298,7 @@ contract PreMarketTest is Test {
         factory.setLockbox(address(box));
         vm.prank(alice);
         factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
+        _bindLocal();
         vm.prank(owner);
         resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
@@ -330,6 +338,7 @@ contract PreMarketTest is Test {
     function testPartialDeliveryDefaultReclaim() public {
         vm.prank(alice);
         factory.buyFromSeries(seriesId, 100e18, type(uint256).max);
+        _bindLocal();
         vm.prank(owner);
         resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
@@ -379,6 +388,7 @@ contract PreMarketTest is Test {
         vm.prank(alice);
         ClaimSeriesToken(claim).transfer(carol, 50e18);
 
+        _bindLocal();
         vm.prank(owner);
         resolver.resolve(marketId, uint64(block.chainid), address(varTok), 18, 1e18);
         factory.resolve(seriesId);
@@ -412,6 +422,7 @@ contract PreMarketTest is Test {
         hub.setEnds(address(origin), address(factory));
         origin.setMailbox(address(hub));
         factory.setLockbox(address(hub));
+        factory.setOfficialAsset(42161, address(varTok));
         // Official token is "on Arb" — HyperEVM deliver must fail.
         resolver.resolve(marketId, 42161, address(varTok), 18, 1e18);
         vm.stopPrank();
@@ -449,6 +460,7 @@ contract PreMarketTest is Test {
         dst.setPeer(30110, address(src));
         origin.setMailbox(address(src));
         factory.setLockbox(address(dst));
+        factory.setOfficialAsset(42161, address(varTok));
         resolver.resolve(marketId, 42161, address(varTok), 18, 1e18);
         vm.stopPrank();
         factory.resolve(seriesId);
@@ -488,6 +500,18 @@ contract PreMarketTest is Test {
         );
         assertEq(varTok.balanceOf(alice), 20e18);
         assertEq(origin.locked(seriesId), 0);
+    }
+
+    function testOfficialAssetOneShotAndMismatch() public {
+        _bindLocal();
+        vm.prank(owner);
+        vm.expectRevert(PreMarketFactory.AlreadySet.selector);
+        factory.setOfficialAsset(42161, address(varTok));
+
+        vm.prank(owner);
+        resolver.resolve(marketId, 42161, address(varTok), 18, 1e18);
+        vm.expectRevert(PreMarketFactory.WrongChain.selector);
+        factory.resolve(seriesId);
     }
 }
 
