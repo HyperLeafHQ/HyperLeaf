@@ -4,7 +4,9 @@
 > **5 Leafs** (hNEST, hQUID, hAVNT, hgSOON, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
 > Addresses: [`listings/catalog.json`](../listings/catalog.json) `live` objects.
 > This file stays as the **deploy cookbook** for what is not live yet:
-> `horder` (BATCH 4 remainder, issue #69) and `hjitosol` (BATCH 5).
+> `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
+> BATCH 2 remainder `hslisbnb` / `hswbera` (code pins, **no deploy until GO**),
+> and `hjitosol` (BATCH 5).
 > Do not treat the narrative below as "do this next" unless the ticker is still unchecked.
 > Do **not** wire 50-cap hQUID/hAVNT or 100-cap BLUAI.
 
@@ -28,8 +30,8 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + BLUAI4Y + VAR/Predict pre-market. Next cookbook job is **`horder`** (#69) then **BATCH 5 `hjitosol`**. Do **not** merge hslisBNB as if it were the next wrap. `hsWBERA` is **not** live.
-   - hslisBNB rate: branch **`feat/hslisbnb-rate`**
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Next **code** after parking hORDER: BATCH 2 remainder **`hslisbnb`** (Lista rate) then **`hswbera`** COMING frontend. Do not broadcast hslisBNB / hsWBERA. `hsWBERA` is **not** live.
+   - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
    - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
    Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.
 
@@ -41,7 +43,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 | ---: | --- | --- | --- | --- |
 | **0** | first | `hcanary` | Toy ERC-20, L adapter, **real** ULN | Base 8453 |
 | **1** | canary dead | `hxsquid` then `havnt` | Side-token L. `0x9a99b4f0`. Never `0xeab52318` | Base 8453 |
-| **2** | batch 1 passed | `hgsoon` then `hswbera` | Rate L, 1% skim, 99% in receipt. **Not hcbETH** | BSC 56 / Bera 80094 |
+| **2** | batch 1 passed | `hgsoon` then `hslisbnb` then `hswbera` | Rate L, 1% skim, 99% in receipt. **Not hcbETH**. hslisBNB rate = StakeManager `convertSnBnbToBnb` | BSC 56 / Bera 80094 |
 | **3** | batch 2 passed | `hsavax` then `hstkwausdc` then **`hlbtc`** | Rate / Umbrella / LBTC 8-dec | Avax / ETH |
 | **4** | batch 3 passed | `bluai4y` then `horder` | C1 lockbox + closed OFT. Market exit | BSC 56 / Arb 42161 |
 | **5** | batch 4 passed **and** Store PDA exists | `hjitosol` | Solana lockbox + dest `LeafOFT`. No Rewarder | Solana 30168 → HyperEVM 999 |
@@ -67,7 +69,7 @@ Copying one number onto both ULNs is a DVN mismatch. Script already splits them.
 
 Trio on every EVM we touch: **Labs + Horizen + Canary**. Sorted ascending. **Never Nethermind.**
 
-HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon` → 30102, `hswbera` → 30362, `hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168).
+HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon`/`hslisbnb` → 30102, `hswbera` → 30362, `hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168).
 
 ---
 
@@ -93,6 +95,17 @@ See git history `95603d0` `docs/GROK_BOT_MAINNET.md` for the original canary / L
 
 ---
 
+## 2b. hslisBNB / hsWBERA — pins only (no broadcast)
+
+`BATCH=2`. hgSOON is **LIVE**. Remainder is code + COMING frontend until a human `GO`.
+
+- **hslisBNB** inner = Lista slisBNB `0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B` on BSC 56 / eid 30102. Rate = StakeManager `0x1adB950d8bB3dA4bE104211D5AB038628e477fE6` `convertSnBnbToBnb(1e18)`. **Never** `convertToAssets` on the token. Jump 300 bps. `defaultCap` 0. `rewardsSelector` stays 0. Never native BNB `deposit()`, never Lista 7d unstake. `ConfigureMainnetListing` `ASSET=hslisbnb`.
+- **hsWBERA** inner = `0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a` on Berachain 80094 / eid 30362. LZ Bera endpoint is **not** CREATE2 `0x1a44…` — use `0x6F475642a6e85809B1c36Fa62763669b1b48DD5B`. `convertToAssets` + retainRateYield. Never `completeWithdrawal` 7d NFT queue.
+
+Do not `forge script` these until a dedicated issue has a human `GO`. Do not comment `GO` on #69 for these tickers.
+
+---
+
 ## 4. C1 — BLUAI4Y then hORDER
 
 `BATCH=4`. `DeployClosed`. `redeemEnabled` stays **false**. Exit is Leaf Market, **after** wrap smoke. No `setShareExit`. No CREATE2 twin for ORDER (Arb only).
@@ -108,7 +121,7 @@ See git history `95603d0` `docs/GROK_BOT_MAINNET.md` for the original canary / L
 
 Remaining in this section: **`horder` only.** Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive. Do not enable protocol redeem. Do not `DeployOmnichainLockbox` for ORDER.
 
-**Deploy cookbook for next week's bot:** GitHub issue **[#69](https://github.com/HyperLeafHQ/HyperLeaf/issues/69)**. Do not broadcast until a human comments `GO` on that issue. Merge `feat/horder-native-fee` first (`farmNativeFee=0` on current `main` reverts live `stakeOrder`).
+**Deploy cookbook for next week's bot:** GitHub issue **[#69](https://github.com/HyperLeafHQ/HyperLeaf/issues/69)**. Do not broadcast until a human comments `GO` on that issue. Native-fee split is already on `main` (#70). Do not `GO` for hslisBNB / hsWBERA from this issue.
 
 Live **hNEST** Leaf Market is **not this section**. See [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md).
 

@@ -20,7 +20,10 @@ library MainnetBatches {
         if (k == keccak256("hcanary")) return CANARY;
         if (k == keccak256("hxsquid") || k == keccak256("hquid") || k == keccak256("havnt")) return SIDE_TOKEN;
         // Rate L. Base cbETH has no exchangeRate — do not ship hcbeth in this batch.
-        if (k == keccak256("hgsoon") || k == keccak256("hswbera")) return RATE_L;
+        if (
+            k == keccak256("hgsoon") || k == keccak256("hswbera") || k == keccak256("hslisbnb")
+                || k == keccak256("hslisBNB")
+        ) return RATE_L;
         if (
             k == keccak256("hsavax") || k == keccak256("hstkwausdc") || k == keccak256("hstkwaUSDC")
                 || k == keccak256("hlbtc") || k == keccak256("hLBTC")

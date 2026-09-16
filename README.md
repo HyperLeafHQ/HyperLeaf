@@ -70,7 +70,7 @@ The mainline roadmap is **asset-by-asset**, not a general-purpose framework-firs
 
 ### Phase 2 — Rate-bearing L assets
 
-`hgSOON` — **LIVE.** `hsWBERA` later. `hcbETH` parked. `hslisBNB` follows the same BSC corridor later (Lista slisBNB only).
+`hgSOON` — **LIVE.** `hslisBNB` / `hsWBERA` Coming (not live). `hcbETH` parked.
 
 ### Phase 3 — Additional mature L paths
 
