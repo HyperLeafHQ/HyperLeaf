@@ -56,6 +56,13 @@ library LeafSecurity {
         d[2] = A.DVN_HORIZEN_BERA;
     }
 
+    function inkOptionalDvns() internal pure returns (address[] memory d) {
+        d = new address[](3);
+        d[0] = A.DVN_LZ_LABS_INK;
+        d[1] = A.DVN_CANARY_INK;
+        d[2] = A.DVN_HORIZEN_INK;
+    }
+
     function arbOptionalDvns() internal pure returns (address[] memory d) {
         d = new address[](3);
         d[0] = A.DVN_HORIZEN_ARB;

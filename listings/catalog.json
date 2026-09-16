@@ -522,6 +522,36 @@
       "priority": 26
     },
     {
+      "id": "hink",
+      "kind": "L",
+      "symbol": "hINK",
+      "name": "Hyperleaf INK",
+      "innerSymbol": "INK",
+      "innerToken": null,
+      "source": "ink",
+      "sourceChainId": 57073,
+      "sourceEid": 30339,
+      "sourceEidTest": 40358,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "none-until-tge",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Settlement Leaf for Nado points pre-market. Official INK ERC-20 is not posted \u2014 inner stays 0. Ink LZ V2 eid 30339, EndpointV2 0xca29f3A6\u2026 (NOT CREATE2 0x1a44\u2026). Trio Labs+Horizen+Canary push v2. Never Nethermind. Confirmations OP L2 15 / HyperEVM 5. productionEvm false. NOT in MainnetBatches. Do not DeployAdapter until the official token exists. Conversion ratio is posted at resolve \u2014 do not assume 1:1. SuperchainERC20 does not reach HyperEVM.",
+      "refs": {
+        "nado": "https://www.nado.xyz/",
+        "lzEndpoint": "0xca29f3A6f966Cb2fc0dE625F8f325c0C46dbE958",
+        "premarketFactory": "0x22684F6e63525d009d7cAb9415B0680Fe4aF8f6A",
+        "createName": "Nado points",
+        "symbolBase": "Nado",
+        "predictedMarketId": "0x9486988cc36ef76e88b1607554932525fbefc3a2101c4dde123fe67fd22e3bca"
+      },
+      "status": "premarket-settlement-pending-token",
+      "priority": 29
+    },
+    {
       "id": "hdai",
       "kind": "L",
       "symbol": "hDAI",

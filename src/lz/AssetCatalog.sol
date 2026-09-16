@@ -288,6 +288,24 @@ library AssetCatalog {
                 true
             );
         }
+        if (k == keccak256("hink") || k == keccak256("hINK")) {
+            // Official INK ERC-20 is not posted. Inner stays 0. Not a MainnetBatches ticker.
+            return Listing(
+                Kind.Liquid,
+                "hink",
+                "Hyperleaf INK",
+                "hINK",
+                "INK",
+                57073,
+                30339,
+                40358,
+                0,
+                0,
+                address(0),
+                0,
+                false
+            );
+        }
         if (k == keccak256("hswbera")) {
             return Listing(
                 Kind.Liquid,
@@ -403,7 +421,7 @@ library AssetCatalog {
         return keccak256(bytes(id)) == keccak256("horder");
     }
 
-    function allIds() internal pure returns (string[16] memory ids) {
+    function allIds() internal pure returns (string[17] memory ids) {
         ids = [
             string("hkaito"),
             string("hquid"),
@@ -420,7 +438,8 @@ library AssetCatalog {
             string("hswbera"),
             string("hstkwausdc"),
             string("hsethfi"),
-            string("hslisbnb")
+            string("hslisbnb"),
+            string("hink")
         ];
     }
 }
