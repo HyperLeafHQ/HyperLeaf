@@ -22,6 +22,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 
 | Asset | Decision | Comment |
 |---|---|---|
+| **TAO / stTAO / tTAO** | **Skip.** Tensorplex Stake & Bridge sunset. No EVM LST. Do not wrap. Issue #48 closed `not_planned`. | [#48](https://github.com/HyperLeafHQ/HyperLeaf/issues/48) |
 | KITE / Kite AI | Strong Watch / Strategic Candidate; agent-payment infrastructure + PoS staking; observation only until canonical KITE → HyperEVM representation, productive accounting, liquidity and exits are verified. | [5639822315](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5639822315) |
 | STREAM / Streamflow | Strong Watch / Strategic Candidate; real Solana infrastructure, protocol revenue and staking/governance utility, but no current canonical STREAM → HyperEVM route and no direct claim on protocol revenue. Observation only. | [5653220142](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653220142) |
 | LDO | No-Go / Watchlist as standalone Leaf; prefer stETH/wstETH or productive Lido position | 5637940642 |

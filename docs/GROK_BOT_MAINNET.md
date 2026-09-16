@@ -1,11 +1,12 @@
 # Grok bot tasks — mainnet go-live
 
-> **Status 2026-09-16: archived as a live-ops checklist.** Batches 0–1 and
-> BLUAI4Y wrap + frontend cutover (`hyperleaf-web@d9b57c2`) are done.
-> Live / dead addresses live in [`listings/catalog.json`](../listings/catalog.json).
+> **Status 2026-09-16: archived as a live-ops checklist.** Live surface:
+> **5 Leafs** (hNEST, hQUID, hAVNT, hgSOON, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
+> Addresses: [`listings/catalog.json`](../listings/catalog.json) `live` objects.
 > This file stays as the **deploy cookbook** for what is not live yet:
-> `horder` (BATCH 4 remainder) and `hjitosol` (BATCH 5). Do not treat the
-> narrative below as "do this next" unless the ticker is still unchecked.
+> `horder` (BATCH 4 remainder, issue #69) and `hjitosol` (BATCH 5).
+> Do not treat the narrative below as "do this next" unless the ticker is still unchecked.
+> Do **not** wire 50-cap hQUID/hAVNT or 100-cap BLUAI.
 
 You deploy. You do **not** redesign assets, restyle the frontend, or open a
 bridge because a PR merged. Branch: **`main`**. Log every address in
@@ -27,7 +28,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: BATCH 1 + `hgsoon` / `hswbera` + `bluai4y` (frontend `d9b57c2`). Next cookbook job is **`horder`** then **BATCH 5 `hjitosol`**. Do **not** merge hslisBNB as if it were the next wrap.
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + BLUAI4Y + VAR/Predict pre-market. Next cookbook job is **`horder`** (#69) then **BATCH 5 `hjitosol`**. Do **not** merge hslisBNB as if it were the next wrap. `hsWBERA` is **not** live.
    - hslisBNB rate: branch **`feat/hslisbnb-rate`**
    - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
    Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.

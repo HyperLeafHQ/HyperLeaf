@@ -96,3 +96,18 @@ Not safe: “挂单期间 HYPE 归协议” (hNEST has no Rewarder).
 Not safe: dest `Filled` on a future LZ path = 成交. This job is `fillLocal` only; `Filled` = done.
 
 1% of ask → buyer incentive, not protocol fee. Protocol never bids. No fill, no trade.
+
+---
+
+## BLUAI4Y remote (live — do not redeploy)
+
+`LeafClaimPeer` **must** have `receive()` + `rescueNative`. v1 Fill died: dest ACK refunds to `address(this)` with no `receive`. Live v2 (uncapped) already has it on-chain; this repo must match before the next (hORDER) deploy.
+
+| | Address |
+| --- | --- |
+| Escrow HEVM | `0x367FB8667919dD94874C0a48156C94E0D254d43c` |
+| Fill BSC | `0xE3E4B14d1c3d06297eca4d9B61b3dFa4d37e3b80` |
+
+Dead 100-cap escrow/fill `0x1AD2…` / `0xC584…` — do not reuse. Abandoned Fill v1 `0x5466…` unused.
+
+`remoteEid` is singular. Adding Arb to the BLUAI escrow reverts `PeerFrozen`. hORDER gets a **new** escrow + Arb fill.

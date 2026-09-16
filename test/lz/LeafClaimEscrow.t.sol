@@ -616,6 +616,25 @@ contract LeafClaimEscrowTest is PegReady {
         assertEq(whype.balanceOf(feeTo), feeBefore + 5e18);
         assertEq(whype.balanceOf(alice), 0);
     }
+
+    function testPeerAcceptsNativeDropAndOwnerCanRescue() public {
+        vm.deal(address(this), 1 ether);
+        uint256 before = address(escrow).balance;
+        (bool ok,) = address(escrow).call{value: 0.05 ether}("");
+        assertTrue(ok, "need receive()");
+        (ok,) = address(filler).call{value: 0.05 ether}("");
+        assertTrue(ok, "fill also needs receive()");
+        assertEq(address(escrow).balance, before + 0.05 ether);
+
+        address sink = address(0x51);
+        vm.prank(alice);
+        vm.expectRevert();
+        escrow.rescueNative(sink, 0.05 ether);
+
+        vm.prank(owner);
+        escrow.rescueNative(sink, 0.05 ether);
+        assertEq(sink.balance, 0.05 ether);
+    }
 }
 
 contract MockNestResidual {

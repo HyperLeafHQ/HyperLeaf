@@ -7,18 +7,20 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | Order | Ticker | Kind | Source | Status |
 | ----- | ------ | ---- | ------ | ------ |
 | 0 | **hCANARY** | L | Base | Toy `LEAFTEST`. Real ULN. Close after redeem. Do not reuse |
-| 0 | hNEST | Native | HyperEVM | Live, capped. C1-style product: no UI redeem, secondary market exit. Keep existing vault |
-| **1** | hxSQUID | L | Base | **Live v3** SOURCE `0x13E3…0d25` / OFT `0x78B6…4DFc`. Cap 50. Owner pending FINAL |
-| **1** | **hAVNT** | L | Base | **Live** `0x571C…aa98` both chains. Cap 50. Owner pending FINAL |
+| 0 | hNEST | Native | HyperEVM | **LIVE** occupancy C1. Vault `0xaE7C…755c` / hNEST `0x6dC4…122F`. Leaf Market `0x6f29…CB34`. No UI redeem |
+| **1** | **hQUID** | L | Base | **LIVE uncapped.** SOURCE `0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25` / OFT `0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1`. Dead 50-cap `0x13E3…` / `0x78B6…` |
+| **1** | **hAVNT** | L | Base | **LIVE uncapped.** SOURCE `0xEfE86555554cfeba484871571550E4b21B2Cd141` / OFT `0x801688aDb52452658Ea165dd554FC0102E36a1b3`. Dead `0x571C…` / `0xAA70…` / `0x9a75…` |
 | parked | hcbETH | L | Base | No `exchangeRate` on Base cbETH. Not BATCH 2 |
-| **2** | **hgSOON** | L | BSC | `convertToAssets` 1% skim. Never 90d cooldown |
+| **2** | **hgSOON** | L | BSC | **LIVE.** SOURCE `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` / OFT `0x36c405698776fc28DEceDD25B3f081dB851F4c5b`. `convertToAssets` 1% skim. Jump 3%. Never 90d cooldown |
 | **2b** | **hslisBNB** | L | BSC | Lista slisBNB only. Same BSC path as hgSOON. Never native BNB. Never Lista 7d unstake |
-| **2** | **hsWBERA** | L | Berachain 80094 | Same skim. Never 7d NFT queue |
+| **2** | **hsWBERA** | L | Berachain 80094 | Same skim. Never 7d NFT queue. Not live |
 | **3** | **hsAVAX** | L | Avalanche | BENQI. `getPooledAvaxByShares`. Never `requestUnlock` |
 | **3** | **hLBTC** | L | Ethereum | LBTC only. 8-dec. Router getRate. 3% jump breaker. Not BTC.b |
 | **3** | **hstkwaUSDC** | L | Ethereum | stkwaEthUSDC.v1. Rate + RewardsController. Never cooldown / v2 migrate |
-| **4** | BLUAI4Y | C1 | BSC | No protocol redeem. Claim Board |
-| **4** | **hORDER** | C1 | **Arbitrum only** | `LeafInboundLockbox` + Orderly proxy. No CREATE2 twin |
+| **4** | **BLUAI4Y** | C1 | BSC | **LIVE.** SOURCE `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` / OFT `0x8F25a342b93f623A07e7dF8b691a729A6e39C439`. Escrow `0x367FB8…` / Fill `0xE3E4B1…`. Dead 100-cap in catalog `dead[]`. Do not `setDepositCap(0)` on live SOURCE |
+| **4** | **hORDER** | C1 | **Arbitrum only** | Queued. Cookbook #69. Wait for human `GO`. Inner Arb ORDER OFT `0x4E20…97B8`. Never ETH `0xABD4…`. Never BLUAI escrow |
+| pre | **VAR** | Pre | HyperEVM factory | **LIVE** claims in USDM. Factory `0x22684F6e…`. Settle hVAR after TGE |
+| pre | **Predict** | Pre | HyperEVM factory | **LIVE** claims in USDM. Same factory. Settle hPREDICT after TGE |
 | later | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2 NFT. NFT lockbox |
 | later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
 | later | hveAERO | ve-NFT | Base | `LeafNftLockbox` exists. Permanent NORMAL only. Not a BATCH |
@@ -49,6 +51,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | **hstDYDX** | L | Cosmos/Stride | Wrap **stDYDX**, never ethDYDX. Needs IBC lockbox like JupSOL |
 | hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
 | parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
+| skip | **TAO** | — | — | Tensorplex Stake & Bridge sunset. No EVM LST. #48 closed. Do not wrap stTAO / tTAO / raw TAO |
 | blocked | **BNBx** | | BSC | Stader sunset 2026 |
 | watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
 | blocked | hKAITO / hVIRTUALMAX | | Base | Extra-chain claims until CREATE2 holder |
@@ -57,11 +60,12 @@ Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 
 ## Phases
 
-**0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). Real `SetSecurityStack`. Tiny cap. Close after redeem. `GROK_BOT_MAINNET.md`.
-**1** — hxSQUID then hAVNT. Same Base path the canary just proved.
-**2** — rate L: **hgSOON (BSC) then hsWBERA (Bera)**. 1% skim. New LZ eids 30102 / 30362. **hcbETH out** (Base token has no `exchangeRate`). **hslisBNB only after hgSOON** (same BSC corridor, Lista rate, never native BNB / 7d unstake).
+**0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). **Done.** Close after redeem. Do not reuse.
+**1** — hQUID then hAVNT. **LIVE uncapped.** Same Base path the canary proved.
+**2** — rate L: **hgSOON LIVE.** hsWBERA still later. **hcbETH out** (Base token has no `exchangeRate`). **hslisBNB only after more BSC rate path** (Lista rate, never native BNB / 7d unstake).
 **3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). hsETHFI gated (`productionEvm=false`).
-**4** — C1: BLUAI4Y then hORDER. Leaf Market after the first C1 lists. No CREATE2 twin.
+**4** — C1: **BLUAI4Y LIVE.** hORDER queued (#69). Leaf Market already live for BLUAI. No CREATE2 twin. New escrow for hORDER — never `0x367FB8`.
+**Pre** — VAR + Predict.fun points. **LIVE** USDM claims on factory `0x22684F6e…`. Settlement Leafs (hVAR / hPREDICT) after TGE.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
 **G** — hKAITO / hVIRTUALMAX after omnichain holder.

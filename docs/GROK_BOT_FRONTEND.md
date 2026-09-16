@@ -20,18 +20,23 @@ This job is **frontend only**. No `forge`. No new contracts. No `acceptOwnership
 
 Do **not** claim weekly Nest HYPE isolation. Live vault has no `depositGate`; Gate is opt-in.
 
-### BATCH 1 wrap — depositable, cap 50
+### Live wrap — depositable, uncapped
 
-Canary is dead. Show wrap + redeem. Do **not** use v2.
+Canary is dead. Show wrap + redeem (L) or Leaf Market (C1). **Do not use 50-cap / 100-cap / v2 addresses.**
 
-| Ticker | Base SOURCE | HyperEVM OFT | Inner |
+| Ticker | SOURCE | HyperEVM OFT | Inner |
 | --- | --- | --- | --- |
-| hxSQUID | `0x13E3e8803022cb58e93d025bfEB95ab88BE60d25` | `0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc` | xSQUID `0x13af2Db622d167745518aBfD59a8C4FFEe54937a` |
-| hAVNT | `0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98` | 同址 | stkAVNT `0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9` |
+| hQUID | `0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25` | `0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1` | xSQUID `0x13af2Db622d167745518aBfD59a8C4FFEe54937a` |
+| hAVNT | `0xEfE86555554cfeba484871571550E4b21B2Cd141` | `0x801688aDb52452658Ea165dd554FC0102E36a1b3` | stkAVNT `0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9` |
+| hgSOON | `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` | `0x36c405698776fc28DEceDD25B3f081dB851F4c5b` | gSOON `0xcC48B55F6c16d4248EC6D78C11Ba19c1183Fe0F7` |
+| BLUAI4Y | `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` | `0x8F25a342b93f623A07e7dF8b691a729A6e39C439` | BLUAI `0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD` |
+| hNEST | — | hNEST `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` | NEST (vault `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c`) |
 
-Dead, never wire: hCANARY any address; hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206`; Gate `0xB4C43…519B`.
+hORDER is **COMING** (zeros). Do not mark LIVE.
 
-Do **not** show as depositable: hcbETH, hgSOON, hsWBERA, hslisBNB.
+Dead, never wire: hCANARY any address; hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206`; 50-cap hQUID `0x13E3…0d25` / `0x78B6…4DFc`; old hAVNT `0x571C…aa98` / `0xAA70…7dAA` / `0x9a75…10Eb`; BLUAI 100-cap SOURCE `0x4C86…` / OFT `0xD54A…` / escrow `0x1AD2…` / fill `0xC584…`; Gate `0xB4C43…519B`; Nest v1 vault `0x4f6615…`.
+
+Do **not** show as depositable: hcbETH, hsWBERA, hslisBNB, hORDER (until SOURCE/OFT land).
 
 `L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. Never print those strings in the app, marketing site, or board. User copy is **Sell on Leaf Market** or **Burn to unwrap**.
 

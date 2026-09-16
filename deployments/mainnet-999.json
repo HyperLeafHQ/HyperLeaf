@@ -1,7 +1,7 @@
 {
   "chainId": 999,
   "network": "HyperEVM mainnet",
-  "updatedAt": "2026-09-10T18:00:00+08:00",
+  "updatedAt": "2026-09-16T22:00:00+08:00",
   "rpc": "https://rpc.hyperliquid.xyz/evm",
   "hypeToken": "0x5555555555555555555555555555555555555555",
   "nestToken": "0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035",
@@ -18,7 +18,17 @@
     "NestVault": "0x4f6615761A772e10d7f802B1C29654ABD90fF30d",
     "EpochHNestGate": "0xE1b8B697ac1669da4A0eC6A49d320500CC96F13c",
     "LeafMarket": "0xFa77Dfb30DeCca4D9597C6764A698996B226b53A",
-    "AbandonedGate": "0xB4C43e9cE08ff5540e0E240dB7784f47231d519B"
+    "AbandonedGate": "0xB4C43e9cE08ff5540e0E240dB7784f47231d519B",
+    "note": "ABANDONED v1. Live occupancy set is liveContracts."
+  },
+  "liveContracts": {
+    "NestVault": "0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c",
+    "HNest": "0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F",
+    "HevAdapter": "0xCaCBfE2e5F67CBDE8f7Cbc3588C9Ca94Ec89A131",
+    "EpochHNestGate": "0x900b53081E91EE9aeC318de2869772BA5c46a6A7",
+    "LeafMarket": "0x6f29EA2894570b893B00C3f2305c184D7080CB34",
+    "NEST": "0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035",
+    "note": "Occupancy C1 + Gate + new Leaf Market. Frontend hyperleaf-web."
   },
   "deployTx": {
     "HevAdapter": "0x1433ba82ab90f3968044987c473501b7bad76e81d427eca531209d0cf4c3e53a",
@@ -85,28 +95,53 @@
   "depositCapHuman": "20000 NEST",
   "wrap": {
     "batch": 1,
-    "depositCap": "50000000000000000000",
-    "depositCapHuman": "50",
-    "converter": {
-      "base": "0x09161B03f1A630586a3a6297B22215d8f007dB5a",
-      "hyperevm": "0x209296E719088FBF7E7C108a3a6c738Ff3E6bC15"
-    },
-    "rewarder": "0x764CAc39aB49453E9dbA9fb1170276eC98272b89",
+    "depositCap": "0",
+    "depositCapHuman": "uncapped",
     "hxSQUID": {
-      "version": 3,
-      "source": "0x13E3e8803022cb58e93d025bfEB95ab88BE60d25",
+      "version": 4,
+      "source": "0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25",
       "sourceChain": 8453,
-      "oft": "0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc",
+      "oft": "0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1",
       "oftChain": 999,
       "inner": "0x13af2Db622d167745518aBfD59a8C4FFEe54937a",
-      "dead": ["0x6586351861c31A8Adea414e18E1cB9dd5B1dD206"]
+      "dead": [
+        "0x6586351861c31A8Adea414e18E1cB9dd5B1dD206",
+        "0x13E3e8803022cb58e93d025bfEB95ab88BE60d25",
+        "0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc"
+      ]
     },
     "hAVNT": {
-      "source": "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
+      "source": "0xEfE86555554cfeba484871571550E4b21B2Cd141",
       "sourceChain": 8453,
-      "oft": "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
+      "oft": "0x801688aDb52452658Ea165dd554FC0102E36a1b3",
       "oftChain": 999,
-      "inner": "0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9"
+      "inner": "0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9",
+      "dead": [
+        "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
+        "0xAA70946a921EDda1496954bd512C9feE17Ec7dAA",
+        "0x9a75FF2E5bF16fA6773329bD308B126A910A10Eb"
+      ]
+    },
+    "hgSOON": {
+      "source": "0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016",
+      "sourceChain": 56,
+      "oft": "0x36c405698776fc28DEceDD25B3f081dB851F4c5b",
+      "oftChain": 999,
+      "inner": "0xcC48B55F6c16d4248EC6D78C11Ba19c1183Fe0F7"
+    },
+    "BLUAI4Y": {
+      "source": "0x4360794c42BB437B156F20b33325dAC84B7e6d8a",
+      "sourceChain": 56,
+      "oft": "0x8F25a342b93f623A07e7dF8b691a729A6e39C439",
+      "oftChain": 999,
+      "escrow": "0x367FB8667919dD94874C0a48156C94E0D254d43c",
+      "fill": "0xE3E4B14d1c3d06297eca4d9B61b3dFa4d37e3b80",
+      "dead": [
+        "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
+        "0xD54A90aeB220530D00343d4442ac50C0836f2F45",
+        "0x1AD291026DF7EE2007E48FbEf3d37B4586073207",
+        "0xC584DC17299ED969063a97a50a3070F36CeF3eB3"
+      ]
     },
     "ownership": {
       "pendingOwner": "0x24458f0bC44C4607172d1151Cd938012Be33156e",

@@ -29,33 +29,22 @@ The key rule is **economic fidelity**: a Leaf or claim should preserve the actua
 
 # Current progress
 
-## Live / deployed
+## Live (5 Leafs + 2 pre-market)
 
-### hNEST
+Do not wire abandoned / 50-cap / 100-cap addresses. Catalog `dead[]` is the poison list.
 
-The current native production anchor is **hNEST on HyperEVM 999**, deployed with a deliberately small cap.
+| Ticker | Path | Live |
+| --- | --- | --- |
+| **hNEST** | HyperEVM occupancy | NestVault `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c` · hNEST `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` · Leaf Market `0x6f29EA2894570b893B00C3f2305c184D7080CB34` |
+| **hQUID** | Base xSQUID → HyperEVM | SOURCE `0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25` · OFT `0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1` · uncapped |
+| **hAVNT** | Base stkAVNT → HyperEVM | SOURCE `0xEfE86555554cfeba484871571550E4b21B2Cd141` · OFT `0x801688aDb52452658Ea165dd554FC0102E36a1b3` · uncapped |
+| **hgSOON** | BSC gSOON → HyperEVM | SOURCE `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` · OFT `0x36c405698776fc28DEceDD25B3f081dB851F4c5b` · rate 1% skim |
+| **BLUAI4Y** | BSC 4y stake → HyperEVM | SOURCE `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` · OFT `0x8F25a342b93f623A07e7dF8b691a729A6e39C439` · Leaf Market only |
+| **VAR / Predict** | Pre-TGE USDM claims | Factory `0x22684F6e63525d009d7cAb9415B0680Fe4aF8f6A` |
 
-`NEST → NestVault → HEV / veNEST → hNEST`
+Abandoned Nest v1 vault `0x4f6615…` / hNEST `0x2101…` / Gate `0xE1b8…` / Market `0xFa77…` — never show as LIVE.
 
-hNEST is a C1-style product: the underlying position is productive but does not expose a UI instant-redeem path. Exit is through the market, while the underlying staking / withdrawal constraints remain explicit.
-
-Current HyperEVM 999 addresses:
-
-| Contract | Address |
-| --- | --- |
-| NestVault | `0x4f6615761A772e10d7f802B1C29654ABD90fF30d` |
-| HNest | `0x2101621F51D7E05518D6680C62d04Ad47bC4e05D` |
-| HevAdapter | `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2` |
-| NEST | `0x07c57E32a3C29D5659bda1d3EFC2E7BF004E3035` |
-
-### Base → HyperEVM L path
-
-The first production cross-chain L paths are now established:
-
-- **hxSQUID — Live v3**
-- **hAVNT — Live**
-
-Both follow the same Base corridor proven by the mainnet canary, with conservative caps and final owner / operational checks before unrestricted rollout.
+Next wrap: **hORDER** (Arbitrum), queued in GitHub issue #69 until a human comments `GO`.
 
 ### Deployment discipline
 
@@ -77,15 +66,11 @@ The mainline roadmap is **asset-by-asset**, not a general-purpose framework-firs
 
 ### Phase 1 — Proven Base L paths
 
-`hxSQUID → hAVNT`
-
-These reuse the already-proven Base corridor and establish the first real cross-chain Leaf integrations.
+`hQUID → hAVNT` — **LIVE uncapped.**
 
 ### Phase 2 — Rate-bearing L assets
 
-`hgSOON → hsWBERA`
-
-These use share / asset conversion accounting with the source protocol's yield skim. `hcbETH` is parked because Base cbETH does not expose the required `exchangeRate` path. `hslisBNB` follows the same BSC corridor later and wraps **Lista slisBNB only**, never native BNB.
+`hgSOON` — **LIVE.** `hsWBERA` later. `hcbETH` parked. `hslisBNB` follows the same BSC corridor later (Lista slisBNB only).
 
 ### Phase 3 — Additional mature L paths
 
@@ -95,9 +80,7 @@ These add Avalanche and Ethereum integrations with asset-specific rate logic, re
 
 ### Phase 4 — C1 claim markets
 
-`BLUAI4Y → hORDER`
-
-These assets do not have an honest protocol redemption path, so the correct product is a **claim market**, not a synthetic redemption guarantee. `hORDER` is Arbitrum-only and uses the dedicated inbound lockbox path; there is no CREATE2 twin on another chain.
+`BLUAI4Y` — **LIVE.** `hORDER` queued (#69). No CREATE2 twin. New escrow for hORDER; never reuse BLUAI `0x367FB8`.
 
 ### C2 — Queued claims
 

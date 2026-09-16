@@ -110,11 +110,14 @@
       "live": {
         "sourceChain": 8453,
         "destChain": 999,
-        "source": "0x13E3e8803022cb58e93d025bfEB95ab88BE60d25",
-        "oft": "0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc",
-        "depositCap": "50000000000000000000",
+        "source": "0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25",
+        "oft": "0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1",
+        "depositCap": "0",
+        "note": "LIVE uncapped. Frontend hyperleaf-web. Do not wire the 50-cap set.",
         "dead": [
-          "0x6586351861c31A8Adea414e18E1cB9dd5B1dD206"
+          "0x6586351861c31A8Adea414e18E1cB9dd5B1dD206",
+          "0x13E3e8803022cb58e93d025bfEB95ab88BE60d25",
+          "0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc"
         ]
       }
     },
@@ -1142,6 +1145,16 @@
         "sourceChain": "bsc-testnet",
         "mockInner": true,
         "batch": "next"
+      },
+      "live": {
+        "sourceChain": 56,
+        "destChain": 999,
+        "source": "0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016",
+        "oft": "0x36c405698776fc28DEceDD25B3f081dB851F4c5b",
+        "depositCap": "0",
+        "innerSupplyCeiling": "2.3e26",
+        "maxRateJumpBps": 300,
+        "note": "LIVE. Rate L, 1% skim, jump 3%. Intake cap 0. Wrap gSOON only, never SOON / 90d lock."
       }
     },
     {
@@ -1240,9 +1253,15 @@
       "live": {
         "sourceChain": 8453,
         "destChain": 999,
-        "source": "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
-        "oft": "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
-        "depositCap": "50000000000000000000"
+        "source": "0xEfE86555554cfeba484871571550E4b21B2Cd141",
+        "oft": "0x801688aDb52452658Ea165dd554FC0102E36a1b3",
+        "depositCap": "0",
+        "note": "LIVE uncapped. Do not wire prior SOURCE/OFT sets.",
+        "dead": [
+          "0x571CC615Ae2fE7D8666fba971A49Bbb42fF1aa98",
+          "0xAA70946a921EDda1496954bd512C9feE17Ec7dAA",
+          "0x9a75FF2E5bF16fA6773329bD308B126A910A10Eb"
+        ]
       }
     },
     {
