@@ -32,7 +32,10 @@ contract WirePeers is Script {
     }
 
     function _defaultRemoteEid(uint256 chainId) internal pure returns (uint32) {
-        if (chainId == 8453 || chainId == 56 || chainId == 80094 || chainId == 1 || chainId == 42161 || chainId == 43114)
+        if (
+            chainId == 8453 || chainId == 56 || chainId == 80094 || chainId == 57073 || chainId == 1
+                || chainId == 42161 || chainId == 43114
+        )
         {
             return A.EID_HYPEREVM;
         }

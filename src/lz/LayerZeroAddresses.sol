@@ -17,9 +17,11 @@ library LayerZeroAddresses {
     uint32 internal constant EID_OP = 30111;
     uint32 internal constant EID_ORDERLY = 30213;
     uint32 internal constant EID_BERA = 30362;
+    uint32 internal constant EID_INK = 30339;
     uint32 internal constant EID_ROBINHOOD = 30416;
     uint32 internal constant EID_SOLANA = 30168;
     uint32 internal constant EID_BERA_TESTNET = 40371;
+    uint32 internal constant EID_INK_TESTNET = 40358;
     uint32 internal constant EID_BASE_SEPOLIA = 40245;
     uint32 internal constant EID_HYPEREVM_TESTNET = 40362;
     uint32 internal constant EID_BSC_TESTNET = 40102;
@@ -47,6 +49,13 @@ library LayerZeroAddresses {
     address internal constant SEND_ULN_BERA = 0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7;
     address internal constant RECEIVE_ULN_BERA = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address internal constant EXECUTOR_BERA = 0x4208D6E27538189bB48E603D6123A94b8Abe0A0b;
+
+    /// @dev Ink (Kraken OP Stack L2, chain 57073) is NOT the canonical 0x1a44… CREATE2.
+    ///      Confirmed bytecode on 57073. Ink Sepolia (eid 40358) has no Horizen/Canary — no testnet proof.
+    address internal constant ENDPOINT_INK = 0xca29f3A6f966Cb2fc0dE625F8f325c0C46dbE958;
+    address internal constant SEND_ULN_INK = 0x76111DE813F83AAAdBD62773Bf41247634e2319a;
+    address internal constant RECEIVE_ULN_INK = 0x473132bb594caEF281c68718F4541f73FE14Dc89;
+    address internal constant EXECUTOR_INK = 0xFEbCF17b11376C724AB5a5229803C6e838b6eAe5;
 
     address internal constant ENDPOINT_BASE_SEPOLIA = 0x6EDCE65403992e310A62460808c4b910D972f10f;
     address internal constant ENDPOINT_HYPEREVM_TESTNET = 0xf9e1815F151024bDE4B7C10BAC10e8Ba9F6b53E1;
@@ -81,6 +90,7 @@ library LayerZeroAddresses {
         if (chainId == 42161 || chainId == 10) return ENDPOINT_ETH;
         if (chainId == 421614) return ENDPOINT_BASE_SEPOLIA; // Arb Sepolia V2, same CREATE2 as Base Sepolia
         if (chainId == 80094) return ENDPOINT_BERA;
+        if (chainId == 57073) return ENDPOINT_INK;
         if (chainId == 4663) return ENDPOINT_BERA; // Robinhood mainnet: same CREATE2 as Bera (LZ docs)
         if (chainId == 80069) revert("lz: Bepolia EndpointV2 not deployed");
         if (chainId == 999) return ENDPOINT_HYPEREVM;
@@ -104,6 +114,12 @@ library LayerZeroAddresses {
     address internal constant DVN_CANARY_BERA = 0x06e8042729CeF3aE6D6DB5350f48F9D736C3675d;
     address internal constant DVN_LZ_LABS_BERA = 0x282b3386571f7f794450d5789911a9804FA346b4;
     address internal constant DVN_HORIZEN_BERA = 0xeCbaA45c33ce6Fa284995e5F8314f5bC7F1C2008;
+
+    /// @dev Push v2, not lzRead. Sorted Labs < Canary < Horizen for ULN.
+    ///      Never Nethermind 0xdd7b5e1d… / never Labs lzRead 0x2cabf8f2… / never Horizen lzRead 0x5fc8c440….
+    address internal constant DVN_LZ_LABS_INK = 0x174F2bA26f8ADeAfA82663bcf908288d5DbCa649;
+    address internal constant DVN_CANARY_INK = 0x1E4CE74ccf5498B19900649D9196e64BAb592451;
+    address internal constant DVN_HORIZEN_INK = 0x395B14700812cccC38b8e64F0a06ce2045FE9bA3;
 
     address internal constant DVN_HORIZEN_ARB = 0x19670Df5E16bEa2ba9b9e68b48C054C5bAEa06B8;
     address internal constant DVN_LZ_LABS_ARB = 0x2f55C492897526677C5B68fb199ea31E2c126416;
@@ -151,6 +167,7 @@ library LayerZeroAddresses {
         if (eid == EID_HYPEREVM) return CONFIRMATIONS_HYPEREVM;
         if (eid == EID_BSC) return CONFIRMATIONS_BSC;
         if (eid == EID_BERA) return CONFIRMATIONS_BERA;
+        if (eid == EID_INK) return CONFIRMATIONS_OP;
         if (eid == EID_AVALANCHE) return CONFIRMATIONS_AVAX;
         if (eid == EID_ETH) return CONFIRMATIONS_ETH;
         if (eid == EID_SOLANA) return CONFIRMATIONS_SOLANA;
@@ -162,6 +179,7 @@ library LayerZeroAddresses {
         if (chainId == 999) return EID_HYPEREVM;
         if (chainId == 56) return EID_BSC;
         if (chainId == 80094) return EID_BERA;
+        if (chainId == 57073) return EID_INK;
         if (chainId == 42161) return EID_ARB;
         if (chainId == 43114) return EID_AVALANCHE;
         if (chainId == 10) return EID_OP;

@@ -6,7 +6,9 @@
 > This file stays as the **deploy cookbook** for what is not live yet:
 > `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
 > BATCH 2 remainder `hslisbnb` / `hswbera` (code pins, **no deploy until GO**),
+> Nado points `createMarket` (n=3, **no broadcast until GO**),
 > and `hjitosol` (BATCH 5).
+> Do **not** deploy Ink adapter/OFT — official INK ERC-20 is not posted.
 > Do not treat the narrative below as "do this next" unless the ticker is still unchecked.
 > Do **not** wire 50-cap hQUID/hAVNT or 100-cap BLUAI.
 
@@ -30,7 +32,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Next **code** after parking hORDER: BATCH 2 remainder **`hslisbnb`** (Lista rate) then **`hswbera`** COMING frontend. Do not broadcast hslisBNB / hsWBERA. `hsWBERA` is **not** live.
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Next **code** after parking hORDER: BATCH 2 remainder **`hslisbnb`** then **`hswbera`**. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. `hsWBERA` is **not** live.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
    - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
    Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.
@@ -69,7 +71,7 @@ Copying one number onto both ULNs is a DVN mismatch. Script already splits them.
 
 Trio on every EVM we touch: **Labs + Horizen + Canary**. Sorted ascending. **Never Nethermind.**
 
-HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon`/`hslisbnb` → 30102, `hswbera` → 30362, `hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168).
+HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon`/`hslisbnb` → 30102, `hswbera` → 30362, `hink` → 30339, `hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168).
 
 ---
 

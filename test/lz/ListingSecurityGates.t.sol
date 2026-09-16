@@ -12,8 +12,17 @@ contract ListingSecurityGatesTest is Test {
         assertEq(a.defaultCap, 0);
     }
 
+    function testHinkIsNotProductionUntilOfficialInkExists() public pure {
+        AssetCatalog.Listing memory a = AssetCatalog.get("hink");
+        assertEq(a.id, "hink");
+        assertFalse(a.productionEvm);
+        assertEq(a.defaultCap, 0);
+        assertEq(a.innerMainnet, address(0));
+        assertEq(a.sourceChainIdMain, 57073);
+    }
+
     function testProductionListingsHaveNoIntakeCap() public pure {
-        string[16] memory ids = [
+        string[17] memory ids = [
             "bluai4y",
             "horder",
             "hswbera",
@@ -29,7 +38,8 @@ contract ListingSecurityGatesTest is Test {
             "hkaito",
             "hcbeth",
             "hwsteth",
-            "hslisbnb"
+            "hslisbnb",
+            "hink"
         ];
         for (uint256 i; i < ids.length; ++i) {
             assertEq(AssetCatalog.get(ids[i]).defaultCap, 0, ids[i]);

@@ -42,6 +42,8 @@ Do not wire abandoned / 50-cap / 100-cap addresses. Catalog `dead[]` is the pois
 | **BLUAI4Y** | BSC 4y stake → HyperEVM | SOURCE `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` · OFT `0x8F25a342b93f623A07e7dF8b691a729A6e39C439` · Leaf Market only |
 | **VAR / Predict** | Pre-TGE USDM claims | Factory `0x22684F6e63525d009d7cAb9415B0680Fe4aF8f6A` |
 
+Nado points pre-market is **Opening** (same factory, n=3, settlement **hINK**). Not live. Official INK ERC-20 is not posted — do not wrap.
+
 Abandoned Nest v1 vault `0x4f6615…` / hNEST `0x2101…` / Gate `0xE1b8…` / Market `0xFa77…` — never show as LIVE.
 
 Next wrap: **hORDER** (Arbitrum), queued in GitHub issue #69 until a human comments `GO`.

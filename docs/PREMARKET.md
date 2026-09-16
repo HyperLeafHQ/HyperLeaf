@@ -48,4 +48,14 @@ Exit pays booked NAV in sUSDM. Extra share-price growth is `harvest` → feeReci
 
 Sellers `createSeries`. Frontend lists by `seriesId`.
 
+## Nado points (next market, n=3)
+
+Same factory `0x22684F6e63525d009d7cAb9415B0680Fe4aF8f6A`. Owner `createMarket("Nado points", "Nado", sUSDM)` only when `marketsCreated() == 2`. Predicted `marketId` =
+
+`keccak256(abi.encode("Nado points", sUSDM, 3))` = `0x9486988cc36ef76e88b1607554932525fbefc3a2101c4dde123fe67fd22e3bca`
+
+Script: `script/CreatePremarketNado.s.sol`. **Do not broadcast** until a human `GO`. If another market already consumed n=3, abort — do not reuse this id.
+
+Settlement Leaf is **hINK**, not a NADO token. Official INK ERC-20 is not posted. Conversion ratio stays parameterized at `resolve()`. Ink LZ V2 is ready (eid 30339, Endpoint `0xca29f3A6…` not CREATE2). Do not `DeployAdapter` until the token exists.
+
 Do not merge to `main` until a VAR series has been smoke-filled on HyperEVM.
