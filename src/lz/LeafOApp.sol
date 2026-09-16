@@ -262,9 +262,21 @@ abstract contract LeafOApp is Ownable2Step, Pausable {
         internal
         returns (ILayerZeroEndpointV2.MessagingReceipt memory)
     {
+        return _lzSend(dstEid, message, options, refund, msg.value);
+    }
+
+    /// @dev `nativeFee` is the LZ endpoint payment. Callers that spend some of
+    ///      `msg.value` first (hORDER `stakeOrder`) must pass the remainder.
+    function _lzSend(
+        uint32 dstEid,
+        bytes memory message,
+        bytes memory options,
+        address refund,
+        uint256 nativeFee
+    ) internal returns (ILayerZeroEndpointV2.MessagingReceipt memory) {
         bytes32 peer = peers[dstEid];
         if (peer == bytes32(0)) revert NoPeer();
-        return endpoint.send{value: msg.value}(
+        return endpoint.send{value: nativeFee}(
             ILayerZeroEndpointV2.MessagingParams(dstEid, peer, message, options, false), refund
         );
     }

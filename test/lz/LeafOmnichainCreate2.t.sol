@@ -109,6 +109,44 @@ contract LeafOmnichainCreate2Test is PegReady {
 
     /// @dev CREATE2 would give the same lockbox on Base. We do not deploy that
     ///      twin. Opening a second source eid is the double-count bug.
+    function testStakeOrderZeroNativeFeeRevertsWhenProxyRequiresValue() public {
+        proxy.setMinStakeValue(0.0001 ether);
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+    }
+
+    function testStakeOrderNativeFeeSplitFromLzValue() public {
+        proxy.setMinStakeValue(0.0001 ether);
+        vm.prank(owner);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0.0001 ether);
+        uint256 lzPaid;
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        box.send{value: 0.0101 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+        lzPaid = 0.01 ether;
+        assertEq(proxy.staked(address(box)), 10e18);
+        assertEq(address(proxy).balance, 0.0001 ether);
+        assertEq(box.totalLocked(), 10e18);
+        assertTrue(box.farmPrincipalOut());
+        assertEq(inner.balanceOf(address(box)), 0);
+        // remainder went to the mock endpoint as LZ fee
+        assertEq(address(ep).balance, lzPaid);
+    }
+
+    function testStakeOrderUnderpaysFarmFeeReverts() public {
+        vm.prank(owner);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0.001 ether);
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.send{value: 0.0005 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+    }
+
     function testCreate2AddressIgnoresChainId() public view {
         bytes memory init = abi.encodePacked(
             type(LeafInboundLockbox).creationCode,

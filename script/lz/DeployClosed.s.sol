@@ -7,6 +7,7 @@ import {LeafInboundLockbox} from "src/lz/LeafInboundLockbox.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
+import {LeafOrderPolicy} from "src/lz/LeafOrderPolicy.sol";
 
 contract DeployClosed is Script {
     function run() external {
@@ -34,7 +35,12 @@ contract DeployClosed is Script {
             address inner = vm.envAddress("INNER_TOKEN");
             if (chainId == 56 || chainId == 42161) {
                 require(bytes(id).length != 0, "ASSET required on mainnet");
-                require(inner == AssetCatalog.get(id).innerMainnet, "inner != catalog");
+                AssetCatalog.Listing memory listing = AssetCatalog.get(id);
+                require(block.chainid == listing.sourceChainIdMain, "wrong source chain");
+                require(inner == listing.innerMainnet, "inner != catalog");
+                if (keccak256(bytes(listing.id)) == keccak256("horder")) {
+                    LeafOrderPolicy.requireArbOrder(inner, block.chainid);
+                }
             }
             address endpoint = A.endpoint(chainId);
             LeafInboundLockbox box =
@@ -44,21 +50,13 @@ contract DeployClosed is Script {
             console2.log("LeafInboundLockbox", address(box));
         } else if (chainId == 999 || chainId == 998) {
             string memory id = vm.envOr("ASSET", string(""));
-            string memory name;
-            string memory symbol;
-            uint32 lockSeconds;
-            if (bytes(id).length != 0) {
-                AssetCatalog.Listing memory a = AssetCatalog.get(id);
-                require(a.kind == AssetCatalog.Kind.Closed, "not C1");
-                MainnetBatches.requireBatch(id, MainnetBatches.CLOSED);
-                name = a.name;
-                symbol = a.symbol;
-                lockSeconds = a.lockSeconds;
-            } else {
-                name = vm.envOr("OFT_NAME", string("Hyperliquid BLUAI 4Year"));
-                symbol = vm.envOr("OFT_SYMBOL", string("BLUAI4Y"));
-                lockSeconds = uint32(vm.envOr("LOCK_SECONDS", uint256(A.LOCK_4Y)));
-            }
+            require(bytes(id).length != 0, "ASSET required on dest");
+            AssetCatalog.Listing memory a = AssetCatalog.get(id);
+            require(a.kind == AssetCatalog.Kind.Closed, "not C1");
+            MainnetBatches.requireBatch(id, MainnetBatches.CLOSED);
+            string memory name = a.name;
+            string memory symbol = a.symbol;
+            uint32 lockSeconds = a.lockSeconds;
             address endpoint = chainId == 999 ? A.ENDPOINT_HYPEREVM : A.ENDPOINT_HYPEREVM_TESTNET;
             LeafClosedOFT oft = new LeafClosedOFT(name, symbol, lockSeconds, endpoint, owner, guardian);
             console2.log("ASSET", id);

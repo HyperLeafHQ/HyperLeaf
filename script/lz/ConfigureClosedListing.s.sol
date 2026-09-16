@@ -33,14 +33,17 @@ contract ConfigureClosedListing is Script {
         box.setHarvester(harvester);
         box.setConverter(converter);
 
-        if (keccak256(bytes(id)) == keccak256("horder")) {
+        if (keccak256(bytes(a.id)) == keccak256("horder")) {
             LeafOrderPolicy.requireArbOrder(address(box.innerToken()), block.chainid);
+            uint256 nativeFee = vm.envOr("FARM_NATIVE_FEE", uint256(0.001 ether));
+            require(nativeFee > 0, "hORDER farmNativeFee=0 will revert stakeOrder");
             box.setFarm(LeafOrderPolicy.ORDERLY_PROXY, LeafOrderPolicy.STAKE_ORDER, 0, bytes4(0));
-            box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0);
+            box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, nativeFee);
             box.setFarmRequest(LeafOrderPolicy.SEND_REQUEST);
             box.setPublicRequestType(LeafOrderPolicy.TYPE_HARVEST_USDC, true);
             box.setPublicRequestType(LeafOrderPolicy.TYPE_OCCUPANCY, true);
-        } else if (keccak256(bytes(id)) == keccak256("bluai4y")) {
+            console2.log("farmNativeFee", nativeFee);
+        } else if (keccak256(bytes(a.id)) == keccak256("bluai4y")) {
             require(block.chainid == 56, "BLUAI is BSC");
             box.setFarm(H.BLUAI_STAKE_BSC, IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector);
             box.setFarmExit(IBluaiStake.unstake.selector);

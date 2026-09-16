@@ -107,6 +107,8 @@ See git history `95603d0` `docs/GROK_BOT_MAINNET.md` for the original canary / L
 
 Remaining in this section: **`horder` only.** Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive. Do not enable protocol redeem. Do not `DeployOmnichainLockbox` for ORDER.
 
+**Deploy cookbook for next week's bot:** GitHub issue **[#69](https://github.com/HyperLeafHQ/HyperLeaf/issues/69)**. Do not broadcast until a human comments `GO` on that issue. Merge `feat/horder-native-fee` first (`farmNativeFee=0` on current `main` reverts live `stakeOrder`).
+
 Live **hNEST** Leaf Market is **not this section**. See [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md).
 
 ---

@@ -275,14 +275,25 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         uint256 got = _pull(msg.sender, amount);
         if (depositCap != 0 && totalLocked + got > depositCap) revert CapExceeded();
         totalLocked += got;
+
+        uint256 farmFee;
+        if (farm != address(0) && farmStyle == FarmStyle.AmountNative) {
+            farmFee = farmNativeFee;
+            if (msg.value < farmFee) revert BadStake();
+        }
         _afterDeposit(got);
         _syncAccounted(innerToken, _principalReserved());
 
         _takeQuota(got);
 
         bytes memory payload = encodeBridge(to, got);
-        ILayerZeroEndpointV2.MessagingReceipt memory receipt =
-            _lzSend(dstEid, payload, _defaultOptions(dstEid), refund == address(0) ? msg.sender : refund);
+        ILayerZeroEndpointV2.MessagingReceipt memory receipt = _lzSend(
+            dstEid,
+            payload,
+            _defaultOptions(dstEid),
+            refund == address(0) ? msg.sender : refund,
+            msg.value - farmFee
+        );
         emit BridgedOut(msg.sender, dstEid, to, got, receipt.guid);
         return receipt.guid;
     }
@@ -335,6 +346,10 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         // Token left this box. Ledger credit is async (Orderly LZ). Flag only.
         farmPrincipalOut = true;
     }
+
+    /// @dev Orderly refunds leftover stake native to this box. Without this,
+    ///      an overestimate of `farmNativeFee` reverts the wrap.
+    receive() external payable {}
 
     function _principalReserved() internal view virtual returns (uint256) {
         // ORDER in this box is always principal (idle or in-transit). Never yield.
