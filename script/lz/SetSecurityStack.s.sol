@@ -36,7 +36,9 @@ contract SetSecurityStack is Script {
             if (bytes(id).length != 0) {
                 remoteEid = AssetCatalog.get(id).sourceEidMain;
             } else {
-                remoteEid = uint32(vm.envOr("REMOTE_EID", uint256(A.EID_BASE)));
+                uint256 remote = vm.envOr("REMOTE_EID", uint256(0));
+                require(remote != 0, "set ASSET or REMOTE_EID on HyperEVM");
+                remoteEid = uint32(remote);
             }
             sendLib = A.SEND_ULN_HYPEREVM;
             receiveLib = A.RECEIVE_ULN_HYPEREVM;

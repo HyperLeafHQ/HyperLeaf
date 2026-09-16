@@ -10,12 +10,18 @@ contract MockOrderlyProxy {
     uint256 public lastAmount;
     uint8 public lastType;
     address public lastCaller;
+    uint256 public minStakeValue;
 
     constructor(IERC20 t) {
         oft = t;
     }
 
+    function setMinStakeValue(uint256 v) external {
+        minStakeValue = v;
+    }
+
     function stakeOrder(uint256 amount) external payable {
+        require(msg.value >= minStakeValue, "need native");
         oft.transferFrom(msg.sender, address(this), amount);
         staked[msg.sender] += amount;
         lastCaller = msg.sender;
