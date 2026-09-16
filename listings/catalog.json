@@ -269,7 +269,7 @@
         "converterHevm": "0xa5DFa3Df9aFcde719ab6ee75C6F5Ec3E86DD7937",
         "innerSupplyCeiling": "2e28",
         "depositCap": "1e30",
-        "note": "No-cap redeploy. Constructor depositCap=1e30 because THIS bytecode treats 0 as CapExceeded. Do not setDepositCap(0) on 0x436079. Frontend still on dead 100-cap pair until cutover.",
+        "note": "LIVE. Frontend cutover hyperleaf-web@d9b57c2. Soft uncapped: this SOURCE bytecode treats depositCap 0 as CapExceeded \u2014 leave 1e30. Do not setDepositCap(0) on 0x436079. Do not wrap the 100-cap dead set; old tickets may still sell.",
         "dead": [
           "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
           "0xD54A90aeB220530D00343d4442ac50C0836f2F45",
@@ -278,7 +278,16 @@
           "0xC584DC17299ED969063a97a50a3070F36CeF3eB3",
           "0x453a4DDF03521FD25ED97289A5bE3464f1F740FF",
           "0x0446aB74935442a22050581A7Ea69a4354637f08"
-        ]
+        ],
+        "deadSet": {
+          "source": "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
+          "oft": "0xD54A90aeB220530D00343d4442ac50C0836f2F45",
+          "rewarder": "0x3E29CE06a56fCE05Ce196e799d37Adf1dFD58407",
+          "escrow": "0x1AD291026DF7EE2007E48FbEf3d37B4586073207",
+          "fill": "0xC584DC17299ED969063a97a50a3070F36CeF3eB3",
+          "converterBsc": "0x453a4DDF03521FD25ED97289A5bE3464f1F740FF",
+          "converterHevm": "0x0446aB74935442a22050581A7Ea69a4354637f08"
+        }
       }
     },
     {
