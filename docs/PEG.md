@@ -6,7 +6,7 @@ HyperLeaf is the same shape: lockbox is the reserve, Leaf ticker is the receipt,
 
 ## 1. Minted shares ≤ realizable backing
 
-Each listing has its own lockbox and its own `listingTag`. A HyperEVM OFT will not mint past `supplyCap`. A source lockbox will not lock past `depositCap`. Set them equal.
+Each listing has its own lockbox and its own `listingTag`. A HyperEVM OFT will not mint past `supplyCap`. A source lockbox will not lock past `depositCap`. **0 = no HyperLeaf intake limit** (L adapter always; C1/C2 after the zero-check patch). Set source `depositCap` and dest `supplyCap` equal when both are finite. `innerSupplyCeiling` is the blast-radius bound, not a tiny 50/100/1000 intake cap.
 
 ## 2. Redeem pays cash, not a receipt
 
@@ -22,7 +22,7 @@ Burning a Leaf does not move inner tokens by itself. The source `_lzReceive` / `
 
 ## 5. Per-tx and per-day caps
 
-`maxPerTx` and `maxPerDay` (rolling 24h) are **per OApp**, not a protocol-wide cap. A source send of 100 and the dest mint of 100 each consume 100 on **that** contract. Set source and dest equal if you want the same bound on both legs. Required before `openBridge`.
+`maxPerTx` and `maxPerDay` (rolling 24h) are **per OApp**, not a protocol-wide cap. A source send of 100 and the dest mint of 100 each consume 100 on **that** contract. Set source and dest equal if you want the same bound on both legs. `0/0` = unlimited. Required before `openBridge` (use 0/0, do not skip the call).
 
 ## 6. Isolate listings
 

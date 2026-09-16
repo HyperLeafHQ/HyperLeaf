@@ -24,15 +24,16 @@ contract DeployAdapter is Script {
         require(block.chainid == a.sourceChainIdMain, "wrong source chain");
         require(a.innerMainnet != address(0), "no inner");
         uint8 decimals = IERC20Metadata(a.innerMainnet).decimals();
-        uint256 explicitCap = vm.envOr("DEPOSIT_CAP", uint256(0));
-        if (decimals != 18) {
-            require(explicitCap != 0, "DEPOSIT_CAP required for non-18-decimal asset");
+        uint256 cap;
+        try vm.envUint("DEPOSIT_CAP") returns (uint256 explicitCap) {
+            cap = explicitCap;
+        } catch {
+            cap = a.defaultCap;
         }
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
         require(owner != guardian, "OWNER == GUARDIAN");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
-        uint256 cap = explicitCap != 0 ? explicitCap : a.defaultCap;
         vm.startBroadcast();
         LeafOFTAdapter adapter =
             new LeafOFTAdapter(a.innerMainnet, endpoint(block.chainid), owner, guardian, feeRecipient, cap);

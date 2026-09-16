@@ -276,4 +276,19 @@ contract LeafNftLockboxTest is PegReady {
             ""
         );
     }
+
+    function testDepositCapZeroIsUnlimited() public {
+        vm.startPrank(owner);
+        LeafNftLockbox uncapped = new LeafNftLockbox(address(ve), address(ep), owner, guardian, feeTo, 0);
+        uncapped.setPeer(30367, address(1));
+        vm.stopPrank();
+        _openSrc(uncapped, owner, 0);
+        ve.mint(user, 99, int128(uint128(2_000e18)), true, 0);
+        vm.startPrank(user);
+        ve.approve(address(uncapped), 99);
+        uncapped.send{value: 0.01 ether}(30367, bytes32(uint256(uint160(user))), 99, user);
+        vm.stopPrank();
+        assertEq(uncapped.totalLocked(), 2_000e18);
+        assertEq(uncapped.depositCap(), 0);
+    }
 }

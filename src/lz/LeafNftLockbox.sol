@@ -20,6 +20,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
     using SafeERC20 for IERC20;
 
     IVeNft public immutable ve;
+    /// @dev 0 = no HyperLeaf intake limit. Inner supply ceiling is the exposure bound.
     uint256 public depositCap;
     uint256 public totalLocked;
     uint256 public maxNfts;
@@ -153,7 +154,7 @@ contract LeafNftLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee, IERC721Recei
         _requireMint();
 
         uint256 principal = _takeNft(msg.sender, tokenId);
-        if (totalLocked + principal > depositCap) revert CapExceeded();
+        if (depositCap != 0 && totalLocked + principal > depositCap) revert CapExceeded();
         if (ids.length >= maxNfts) revert TooManyNfts();
         totalLocked += principal;
         principalOf[tokenId] = principal;

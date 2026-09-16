@@ -19,6 +19,7 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable innerToken;
+    /// @dev 0 = no HyperLeaf intake limit. Inner supply ceiling is the exposure bound.
     uint256 public depositCap;
     uint256 public totalLocked;
 

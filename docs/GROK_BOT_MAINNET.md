@@ -155,10 +155,10 @@ Canary does **not** need Rewarder, Converter fill, or Claim Board.
 
 ## L listing recipe (batches 1–3)
 
-Same six scripts every time. Swap `ASSET`, `BATCH`, source `--rpc-url`. Tiny `DEPOSIT_CAP`.
+Same six scripts every time. Swap `ASSET`, `BATCH`, source `--rpc-url`. **No HyperLeaf intake cap.** Omit `DEPOSIT_CAP` / `PEG_CAP` (catalog default is 0) or pass `0`. Do not pass 50 / 100 / 1000. Inner ceiling is the bound.
 
 ```
-BATCH=$BATCH ASSET=$ASSET OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT DEPOSIT_CAP=$CAP \
+BATCH=$BATCH ASSET=$ASSET OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
 forge script script/lz/DeployAdapter.s.sol:DeployAdapter \
   --rpc-url $SOURCE_RPC --broadcast --private-key $PRIVATE_KEY
 # → SOURCE
@@ -211,7 +211,7 @@ Then dust wrap + inject failures + PR answers. `OPEN_BRIDGE=true` only after the
 
 | Knob | Meaning | hxSQUID / hAVNT |
 | --- | --- | --- |
-| `DEPOSIT_CAP` / `PEG_CAP` / `maxPerTx` | HyperLeaf intake | **50e18** (50 tokens) |
+| `DEPOSIT_CAP` / `PEG_CAP` / `maxPerTx` | HyperLeaf intake | **0** (unlimited). Finite caps cannot be raised — redeploy. |
 | `INNER_SUPPLY_CEILING` | tripwire vs **live inner `totalSupply()`** | must be **strictly above** live supply + headroom |
 
 If ceiling ≤ live supply, wrap reverts `InnerSupplyBreach`. Ceiling can only go **down** after set; raise = redeploy. `peersFrozen` does not freeze the ceiling, but `CapIncrease` does.
@@ -223,7 +223,7 @@ If ceiling ≤ live supply, wrap reverts `InnerSupplyBreach`. Ceiling can only g
 | xSQUID `0x13af2Db6…4937a` | `6.846e24` (~6.85M) | `1.4e25` |
 | stkAVNT `0xd546040F…d9e9` | `2.311e25` (~23.1M) | `5e25` |
 
-v1 SOURCE/OFT that used ceiling ≤ live supply: **abandon**. Do not reuse. Cap stays 50e18.
+v1 SOURCE/OFT that used ceiling ≤ live supply: **abandon**. Do not reuse. Intake cap is 0.
 
 **hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206` is dead.** Redeem OOG: options gas 200k, xSQUID `transfer` ~168k + OApp. [tx](https://layerzeroscan.com/tx/0xb884ba97d0e9e5a8c0899d3579a55ff92f1614e5c2df9f6703d255bc9195cdba). 0.001 xSQUID stays in SOURCE; do not `abortCredit`. Do not retry that GUID. Do not bump an env var.
 
@@ -271,8 +271,8 @@ Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this ba
 | ASSET | SOURCE_RPC | Notes |
 | --- | --- | --- |
 | `hsavax` | avalanche | `GetPooledAvaxByShares`. Never `requestUnlock` |
-| `hstkwausdc` | ethereum | `ConvertToAssets` + `REWARDS_CONTROLLER` + `0xbb492bf5`. Never `cooldown`. Wrap **stkwaEthUSDC.v1** only. Umbrella will upgrade — users exit that receipt, we do not auto-migrate. `defaultCap=0` → **must pass `PEG_CAP`** (share units) |
-| `hlbtc` | ethereum | **Last in batch 3.** Router `getRate(LBTC)`. 8-dec, `shareScale=1e10`. Jump **>3% up or down** → mint halt, no fee. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap `DEPOSIT_CAP=5000000` (0.05 LBTC). Peg/share cap is **`5e16`** (`defaultCap * 1e10`). `OpenPeg` falls back to that if `PEG_CAP` is unset. Passing `PEG_CAP=5e16` is correct; **do not pass `PEG_CAP=5000000`**. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` plus headroom, **never 5e6**. Yield is Bitwise covered-call, not Babylon |
+| `hstkwausdc` | ethereum | `ConvertToAssets` + `REWARDS_CONTROLLER` + `0xbb492bf5`. Never `cooldown`. Wrap **stkwaEthUSDC.v1** only. Umbrella will upgrade — users exit that receipt, we do not auto-migrate. `defaultCap=0` = unlimited; omit `PEG_CAP` or pass `0`. |
+| `hlbtc` | ethereum | **Last in batch 3.** Router `getRate(LBTC)`. 8-dec, `shareScale=1e10`. Jump **>3% up or down** → mint halt, no fee. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. **No HyperLeaf intake cap** (`DEPOSIT_CAP`/`PEG_CAP`=0). Do not pass `5000000` / `5e16`. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` plus headroom. Yield is Bitwise covered-call, not Babylon |
 
 `hstkwausdc` needs env `REWARDS_CONTROLLER` on `ConfigureMainnetListing`.
 
@@ -283,7 +283,7 @@ Do not print a protocol APR on a dust vault. Do not deploy `hslisbnb` in this ba
 `BATCH=4`. `DeployClosed`. `redeemEnabled` stays **false**. Exit is Claim Board, **after** wrap smoke. No `setShareExit`. No CREATE2 twin for ORDER (Arb only).
 
 ```
-BATCH=4 ASSET=$ASSET INNER_TOKEN=$INNER OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT DEPOSIT_CAP=$CAP \
+BATCH=4 ASSET=$ASSET INNER_TOKEN=$INNER OWNER=$OWNER GUARDIAN=$GUARDIAN FEE_RECIPIENT=$FEE_RECIPIENT \
 forge script script/lz/DeployClosed.s.sol:DeployClosed \
   --rpc-url $SOURCE_RPC --broadcast --private-key $PRIVATE_KEY
 # → SOURCE (LeafInboundLockbox)
@@ -304,7 +304,11 @@ forge script script/lz/ConfigureClosedListing.s.sol:ConfigureClosedListing \
 
 `horder` must be `--rpc-url arb` (42161). Script sets Orderly proxy, `stakeOrder`, public types **10 and 17 only**, unstake 2/3/4 stay owner. Inner must be OFT `0x4E200fE2…`, never ETH `0xABD4…`. Solvency is `reportLedgerPrincipal`, not `ORDER.balanceOf(lockbox)`.
 
-`bluai4y` must be BSC. Script sets `stake(amount, 4)` + `claimAll`. Do not `setShareExit`. Check dest `redeemEnabled == false`.
+`bluai4y` must be BSC. Script sets `stake(amount, 4)` + `claimAll`. Do not `setShareExit`. Check dest `redeemEnabled == false`. **No `DEPOSIT_CAP` / `PEG_CAP`.** Catalog default is 0. Do not pass 100 or 1000 or 1e30. C1 `depositCap=0` is unlimited after the C1 zero-check patch.
+
+Dead 100-cap pair (do not reuse, do not frontend): SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` / OFT `0xD54A90aeB220530D00343d4442ac50C0836f2F45` / Rewarder `0x3E29CE06a56fCE05Ce196e799d37Adf1dFD58407` / Escrow `0x1AD291026DF7EE2007E48FbEf3d37B4586073207` / Fill `0xC584DC17299ED969063a97a50a3070F36CeF3eB3` / Conv BSC `0x453a4DDF03521FD25ED97289A5bE3464f1F740FF` / Conv HEVM `0x0446aB74935442a22050581A7Ea69a4354637f08`.
+
+Live no-cap (frontend cutover later, after FINAL accept ×7): SOURCE `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` / OFT `0x8F25a342b93f623A07e7dF8b691a729A6e39C439` / Rewarder `0xbe1948972b120F82D28C32D3e3cbCA8c7Ec9A8A1` / Escrow `0x367FB8667919dD94874C0a48156C94E0D254d43c` / Fill `0xE3E4B14d1c3d06297eca4d9B61b3dFa4d37e3b80` / Conv BSC `0x09161B03f1A630586a3a6297B22215d8f007dB5a` / Conv HEVM `0xa5DFa3Df9aFcde719ab6ee75C6F5Ec3E86DD7937`. On-chain `depositCap=1e30` · peg 0/0 · `supplyCap=0` · ceiling `2e28`. **Do not `setDepositCap(0)` on 0x436079** (old C1 bytecode treats 0 as `CapExceeded`).
 
 After wrap smoke: guardian reports ledger (hORDER) before a second mint. Claim Board only after that smoke. Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive, not protocol fee.
 

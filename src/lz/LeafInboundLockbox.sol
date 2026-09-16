@@ -14,6 +14,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable innerToken;
+    /// @dev 0 = no HyperLeaf intake limit. Inner supply ceiling is the exposure bound.
     uint256 public depositCap;
     uint256 public totalLocked;
 
@@ -272,7 +273,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _harvestInner(innerToken, _principalReserved());
 
         uint256 got = _pull(msg.sender, amount);
-        if (totalLocked + got > depositCap) revert CapExceeded();
+        if (depositCap != 0 && totalLocked + got > depositCap) revert CapExceeded();
         totalLocked += got;
         _afterDeposit(got);
         _syncAccounted(innerToken, _principalReserved());

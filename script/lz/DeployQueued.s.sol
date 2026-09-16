@@ -11,7 +11,7 @@ contract DeployQueued is Script {
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
-        uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(1_000e18));
+        uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(0));
         uint64 delay = uint64(vm.envOr("REDEEM_DELAY", uint256(7 days)));
         uint256 chainId = block.chainid;
 

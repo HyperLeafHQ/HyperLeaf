@@ -18,7 +18,12 @@ contract ConfigureJitoDest is Script {
         LeafOFT oft = LeafOFT(oftAddr);
         require(address(oft.hypeRewarder()) == address(0), "no rewarder on hJitoSOL");
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
-        uint256 cap = vm.envOr("PEG_CAP", a.defaultCap);
+        uint256 cap;
+        try vm.envUint("PEG_CAP") returns (uint256 explicitCap) {
+            cap = explicitCap;
+        } catch {
+            cap = a.defaultCap;
+        }
         bool open = vm.envOr("OPEN_BRIDGE", false);
 
         vm.startBroadcast();

@@ -12,8 +12,26 @@ contract ListingSecurityGatesTest is Test {
         assertEq(a.defaultCap, 0);
     }
 
-    function testHstkwaUsdcNeverFallsBackToOneThousandEtherCap() public pure {
-        AssetCatalog.Listing memory a = AssetCatalog.get("hstkwausdc");
-        assertEq(a.defaultCap, 0);
+    function testProductionListingsHaveNoIntakeCap() public pure {
+        string[15] memory ids = [
+            "bluai4y",
+            "horder",
+            "hswbera",
+            "hsavax",
+            "hquid",
+            "havnt",
+            "hgsoon",
+            "hvirtualmax",
+            "hlbtc",
+            "hveaero",
+            "hjitosol",
+            "hstkwausdc",
+            "hkaito",
+            "hcbeth",
+            "hwsteth"
+        ];
+        for (uint256 i; i < ids.length; ++i) {
+            assertEq(AssetCatalog.get(ids[i]).defaultCap, 0, ids[i]);
+        }
     }
 }

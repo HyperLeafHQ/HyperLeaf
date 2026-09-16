@@ -18,9 +18,13 @@ contract OpenPeg is Script {
         string memory id = vm.envString("ASSET");
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
         bytes32 tag = keccak256(bytes(a.id));
-        uint256 explicitCap = vm.envOr("PEG_CAP", uint256(0));
+        uint256 cap;
+        try vm.envUint("PEG_CAP") returns (uint256 explicitCap) {
+            cap = explicitCap;
+        } catch {
+            cap = a.defaultCap * LeafLbtcPolicy.shareScaleOf(id);
+        }
         uint8 decimals = a.innerMainnet == address(0) ? 18 : IERC20Metadata(a.innerMainnet).decimals();
-        uint256 cap = explicitCap != 0 ? explicitCap : a.defaultCap * LeafLbtcPolicy.shareScaleOf(id);
         uint256 ceiling = vm.envOr("INNER_SUPPLY_CEILING", uint256(0));
         bool open = vm.envOr("OPEN_BRIDGE", false);
         // cap 0 = no HyperLeaf intake limit. Inner ceiling still required on source.

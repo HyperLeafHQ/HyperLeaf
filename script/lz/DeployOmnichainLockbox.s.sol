@@ -13,7 +13,7 @@ contract DeployOmnichainLockbox is Script {
         address owner_ = vm.envAddress("OWNER");
         address guardian_ = vm.envAddress("GUARDIAN");
         address feeRecipient_ = vm.envOr("FEE_RECIPIENT", owner_);
-        uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(1_000e18));
+        uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(0));
         address inner = vm.envAddress("INNER_TOKEN");
         address endpoint_ = A.endpoint(block.chainid);
 

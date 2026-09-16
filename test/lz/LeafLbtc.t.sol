@@ -72,9 +72,9 @@ contract LeafLbtcTest is PegReady {
         assertTrue(a.innerMainnet != LeafLbtcPolicy.LBTCV);
         assertTrue(a.innerMainnet != LeafLbtcPolicy.BTCE);
         assertTrue(a.innerMainnet != LeafLbtcPolicy.BASE_LBTC);
-        assertEq(a.defaultCap, 5e6);
+        assertEq(a.defaultCap, 0);
         assertEq(LeafLbtcPolicy.shareScaleOf("hlbtc"), LeafLbtcPolicy.SHARE_SCALE);
-        assertEq(a.defaultCap * LeafLbtcPolicy.shareScaleOf("hlbtc"), 5e16);
+        assertEq(LeafLbtcPolicy.SHARE_SCALE, 1e10);
         assertEq(a.sourceChainIdMain, 1);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(LeafLbtcPolicy.INNER_DECIMALS, 8);

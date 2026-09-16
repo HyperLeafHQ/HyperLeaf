@@ -19,8 +19,9 @@ Set these to **your** wallets before any mainnet broadcast. Do not leave a grok 
 See [`PEG.md`](PEG.md). Liquid 7 Sep 2026: unbacked receipts took a real peg-out.
 
 1. `setListingTag` (frozen). Same tag on source and OFT.
-2. `setLimits(maxPerTx, maxPerDay)` and OFT `setSupplyCap` = dest **share** units. For 18-dec 1:1 this equals source `depositCap`. For **hLBTC** (8-dec) `depositCap` is inner satoshis (`5e6`) and peg/share cap is `depositCap * 1e10` = **`5e16`**. `OpenPeg` multiplies `defaultCap` by `shareScaleOf` when `PEG_CAP` is unset. Passing `PEG_CAP=5e16` is correct. Do not pass `PEG_CAP=5000000`. `hstkwausdc` has `defaultCap=0` and **must** pass `PEG_CAP`.
-2b. Source `setInnerSupplyCeiling` to a number **above** today's `inner.totalSupply()` with headroom for honest mint, not a flash print. For hLBTC that is live LBTC supply in 8-dec, never the 0.05 cap.
+2. `setLimits(maxPerTx, maxPerDay)` and OFT `setSupplyCap` = dest **share** units. **0 = no HyperLeaf intake limit.** Do not default these to 50 / 100 / 1000 / 1e30. `depositCap` 0 is unlimited on L **and** C1/C2 after the C1 zero-check patch. Finite `depositCap` / `maxPerTx` may be lowered, including to 0. OFT `supplyCap` cannot go from finite to 0 (`CapIncrease`). `OpenPeg` uses `PEG_CAP` if set (0 is valid); otherwise catalog `defaultCap` (0 for every listing except canary). Inner `setInnerSupplyCeiling` is the exposure bound.
+2b. Source `setInnerSupplyCeiling` to a number **above** today's `inner.totalSupply()` with headroom for honest mint, not a flash print. For hLBTC that is live LBTC supply in 8-dec, never a leftover 0.05 intake cap.
+2c. Live BLUAI4Y SOURCE `0x4360794c…6d8a` is **old bytecode** (`depositCap=1e30`). Do **not** `setDepositCap(0)` on it — that build treats 0 as `CapExceeded`. Next C1 (hORDER) after this patch can omit `DEPOSIT_CAP`.
 3. Wire peers. Mainnet: `SetSecurityStack` (2-of-3 + HyperLeaf required DVN).
 4. Read the live config on-chain. Then `openBridge` on **both** sides.
 5. Guardian is a different key. `closeBridge` pauses and keeps mint closed after unpause.

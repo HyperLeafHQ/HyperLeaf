@@ -113,7 +113,9 @@
         "source": "0x13E3e8803022cb58e93d025bfEB95ab88BE60d25",
         "oft": "0x78B626Cb59f044D38b5d31aadDe39855d2b84DFc",
         "depositCap": "50000000000000000000",
-        "dead": ["0x6586351861c31A8Adea414e18E1cB9dd5B1dD206"]
+        "dead": [
+          "0x6586351861c31A8Adea414e18E1cB9dd5B1dD206"
+        ]
       }
     },
     {
@@ -138,7 +140,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uETH",
-      "note": "Base Coinbase wrapped ETH. Live token has **no exchangeRate()** — cannot retainRateYield. Parked, not BATCH 2. Do not wrap as a 1:1 ETH OFT. Ethereum wstETH is a separate later listing.",
+      "note": "Base Coinbase wrapped ETH. Live token has **no exchangeRate()** \u2014 cannot retainRateYield. Parked, not BATCH 2. Do not wrap as a 1:1 ETH OFT. Ethereum wstETH is a separate later listing.",
       "status": "blocked-no-rate",
       "testnet": {
         "sourceChain": "base-sepolia",
@@ -244,7 +246,7 @@
       "lockSeconds": 126144000,
       "exit": "market-only",
       "infra": "evm",
-      "note": "C1 until the 4y farm lock ends. No auto-renew. Proxy 0x94b9865E \u2192 impl 0x9885b2cD includes unstake(uint256) 0x2e17de78. No public unstake txs found (4y not matured; do not wait on a live example). Owner after expiry: farmUnstake \u2192 restakeIdle or setShareExit.",
+      "note": "C1 until the 4y farm lock ends. No auto-renew. Proxy 0x94b9865E \u2192 impl 0x9885b2cD includes unstake(uint256) 0x2e17de78. No public unstake txs found (4y not matured; do not wait on a live example). Owner after expiry: farmUnstake \u2192 restakeIdle or setShareExit. HyperLeaf intake cap 0 = unlimited. Do not pass DEPOSIT_CAP/PEG_CAP.",
       "refs": {
         "stakeTx": "0x8983f3cc864a0052c9206ef4587684bc4c93ed42270b404fc286e981a4c21874",
         "claimTx": "0xdf677b0f708ae20cab9fbbb1d46ee7e8573e50a4b56fafe7c6576d5fb2e0c057"
@@ -254,7 +256,30 @@
         "mockInner": true
       },
       "status": "mainnet-batch-4",
-      "priority": 8
+      "priority": 8,
+      "live": {
+        "sourceChain": 56,
+        "destChain": 999,
+        "source": "0x4360794c42BB437B156F20b33325dAC84B7e6d8a",
+        "oft": "0x8F25a342b93f623A07e7dF8b691a729A6e39C439",
+        "rewarder": "0xbe1948972b120F82D28C32D3e3cbCA8c7Ec9A8A1",
+        "escrow": "0x367FB8667919dD94874C0a48156C94E0D254d43c",
+        "fill": "0xE3E4B14d1c3d06297eca4d9B61b3dFa4d37e3b80",
+        "converterBsc": "0x09161B03f1A630586a3a6297B22215d8f007dB5a",
+        "converterHevm": "0xa5DFa3Df9aFcde719ab6ee75C6F5Ec3E86DD7937",
+        "innerSupplyCeiling": "2e28",
+        "depositCap": "1e30",
+        "note": "No-cap redeploy. Constructor depositCap=1e30 because THIS bytecode treats 0 as CapExceeded. Do not setDepositCap(0) on 0x436079. Frontend still on dead 100-cap pair until cutover.",
+        "dead": [
+          "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
+          "0xD54A90aeB220530D00343d4442ac50C0836f2F45",
+          "0x3E29CE06a56fCE05Ce196e799d37Adf1dFD58407",
+          "0x1AD291026DF7EE2007E48FbEf3d37B4586073207",
+          "0xC584DC17299ED969063a97a50a3070F36CeF3eB3",
+          "0x453a4DDF03521FD25ED97289A5bE3464f1F740FF",
+          "0x0446aB74935442a22050581A7Ea69a4354637f08"
+        ]
+      }
     },
     {
       "id": "hsavax",
@@ -477,7 +502,7 @@
         "rateKind": "convertToAssets",
         "retainRateYield": true
       },
-      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate LST: retainRateYield, 1% skim, jump breaker. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves.",
+      "note": "Lista DAO slisBNB only. After hgSOON proves BSC. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate LST: retainRateYield, 1% skim, jump breaker. Pin token 0xB0b84D\u2026 not the upgradeable StakeManager 0x1adB95\u2026. Users unwrap hslisBNB \u2192 slisBNB and unstake on Lista themselves.",
       "refs": {
         "stakeManager": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6"
       },
@@ -502,7 +527,7 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Morpho Gauntlet DAI Core V1. Luna: Ethereum SELECT, Base/HL DEFER, Arb REJECT. Wrap vault shares only — never DAI, never Blue market id. DAI-in adapter is extra surface, not first. Cap 100_000 DAI (exit liq ~195k vs 2.13M TVL). Do not advertise 6.29%. convertToAssets 1% skim. Freeze vault.asset()==DAI.",
+      "note": "Morpho Gauntlet DAI Core V1. Luna: Ethereum SELECT, Base/HL DEFER, Arb REJECT. Wrap vault shares only \u2014 never DAI, never Blue market id. DAI-in adapter is extra surface, not first. Cap 100_000 DAI (exit liq ~195k vs 2.13M TVL). Do not advertise 6.29%. convertToAssets 1% skim. Freeze vault.asset()==DAI.",
       "status": "later-capped-pilot",
       "priority": 27
     },
@@ -522,7 +547,7 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Bitway Core Alpha USDT share, not commodity USDT. Vault 0xb82E32062C773c7748776C06FdB11B92EDAE3B63. Wrap BTWUSDT only — never raw USDT, never auto-route other Bitway strategies. Value-accruing. Verify ABI, chain, flash-unstake, pause, and LZ before any BATCH. Do not market as trustless lending.",
+      "note": "Bitway Core Alpha USDT share, not commodity USDT. Vault 0xb82E32062C773c7748776C06FdB11B92EDAE3B63. Wrap BTWUSDT only \u2014 never raw USDT, never auto-route other Bitway strategies. Value-accruing. Verify ABI, chain, flash-unstake, pause, and LZ before any BATCH. Do not market as trustless lending.",
       "refs": {
         "coreAlphaVault": "0xb82E32062C773c7748776C06FdB11B92EDAE3B63"
       },
@@ -545,7 +570,7 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "HertzFlow USD1 Genesis HLV 0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6 is a vault ID, not proven to be the ERC-20 receipt. Wrap HLV receipt only — never raw USD1. Perp LP: NAV can drop, withdraw can stall. Campaign WLFI/APY is not backing. BLOCK until share token, GlvReader, deposit/withdraw handlers, and fork unwind are verified.",
+      "note": "HertzFlow USD1 Genesis HLV 0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6 is a vault ID, not proven to be the ERC-20 receipt. Wrap HLV receipt only \u2014 never raw USD1. Perp LP: NAV can drop, withdraw can stall. Campaign WLFI/APY is not backing. BLOCK until share token, GlvReader, deposit/withdraw handlers, and fork unwind are verified.",
       "refs": {
         "hlvVault": "0xeeA83A77Eb978Be804Da038aEdd318dbFd3da9c6"
       },
@@ -595,7 +620,7 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "JustLend sTRX only. Never raw TRX. Instant hsTRX vs sTRX; 14d TRX unbond stays on JustLend. TVM ≠ EVM. BLOCK until LayerZero TRON mainnet eid + Labs/Horizen/Canary ULN is independently verified. Testnet IDs must not be reused.",
+      "note": "JustLend sTRX only. Never raw TRX. Instant hsTRX vs sTRX; 14d TRX unbond stays on JustLend. TVM \u2260 EVM. BLOCK until LayerZero TRON mainnet eid + Labs/Horizen/Canary ULN is independently verified. Testnet IDs must not be reused.",
       "status": "watch-tron-lz",
       "priority": 40
     },
@@ -742,7 +767,7 @@
         "rateKind": "convertToAssets",
         "retainRateYield": true
       },
-      "note": "Wrap sWBERA only. BATCH 2 mainnet (Berachain 80094) after hgSOON. ConvertToAssets + retainRateYield 1% skim. ERC-4626 withdraw/redeem on this vault is the 7d unbond — never call it. Never deposit WBERA/BERA. Users exit via HyperEVM/Bera market or official unbond themselves after unwrap.",
+      "note": "Wrap sWBERA only. BATCH 2 mainnet (Berachain 80094) after hgSOON. ConvertToAssets + retainRateYield 1% skim. ERC-4626 withdraw/redeem on this vault is the 7d unbond \u2014 never call it. Never deposit WBERA/BERA. Users exit via HyperEVM/Bera market or official unbond themselves after unwrap.",
       "status": "mainnet-batch-2",
       "priority": 3
     },
@@ -902,14 +927,19 @@
       "name": "Hyperleaf LBTC",
       "innerSymbol": "LBTC",
       "innerToken": "0x8236a87084f8B84306f72007F36F2618A5634494",
-      "never": ["0xB0F70C0bD6FD87dbEb7C10dC692a2a6106817072", "0x5401b8620E5FB570064CA9114fd1e135fd77D57c", "0x3a4baaBf4DC9910596821615e848f0e6545762F3", "0xecAc9C5F704e954931349Da37F60E39f515c11c1"],
+      "never": [
+        "0xB0F70C0bD6FD87dbEb7C10dC692a2a6106817072",
+        "0x5401b8620E5FB570064CA9114fd1e135fd77D57c",
+        "0x3a4baaBf4DC9910596821615e848f0e6545762F3",
+        "0xecAc9C5F704e954931349Da37F60E39f515c11c1"
+      ],
       "rateRouter": "0x9eCe5fB1aB62d9075c4ec814b321e24D8EA021ac",
       "source": "ethereum",
       "sourceChainId": 1,
       "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
-      "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300 up or down. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. Inner cap 0.05 LBTC (5e6). Peg cap 5e16 share units. INNER_SUPPLY_CEILING = live totalSupply + headroom. Bitwise covered-call, not Babylon.",
+      "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300 up or down. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. No HyperLeaf intake cap (DEPOSIT_CAP/PEG_CAP=0). INNER_SUPPLY_CEILING = live totalSupply + headroom. Bitwise covered-call, not Babylon.",
       "status": "mainnet-batch-3",
       "priority": 12
     },

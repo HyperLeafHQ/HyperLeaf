@@ -34,7 +34,7 @@ No protocol fee on deposit or redeem. Users pay LZ messaging + gas.
 
 See `script/lz/`. L: `DeployAdapter` + `DeployOFT`. C1: `DeployClosed`. C2: `DeployQueued`. Then `WirePeers` + `SetSecurityStack`.
 
-Env: `OWNER`, `GUARDIAN`, `FEE_RECIPIENT` (optional, defaults to owner), `INNER_TOKEN`, `DEPOSIT_CAP`, `REDEEM_DELAY` (C2).
+Env: `OWNER`, `GUARDIAN`, `FEE_RECIPIENT` (optional, defaults to owner), `INNER_TOKEN`, `DEPOSIT_CAP` (0 = unlimited; omit or pass 0 — do not pass 50/100/1000), `REDEEM_DELAY` (C2).
 
 One lockbox **address** per inner token. Never two lockboxes for the same token. Never enable reverse send on a C1 pair.
 

@@ -22,7 +22,12 @@ contract DeployNftLockbox is Script {
         address guardian = vm.envAddress("GUARDIAN");
         require(owner != guardian, "OWNER == GUARDIAN");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
-        uint256 cap = vm.envOr("DEPOSIT_CAP", a.defaultCap);
+        uint256 cap;
+        try vm.envUint("DEPOSIT_CAP") returns (uint256 explicitCap) {
+            cap = explicitCap;
+        } catch {
+            cap = a.defaultCap;
+        }
 
         vm.startBroadcast();
         if (block.chainid == 8453) {

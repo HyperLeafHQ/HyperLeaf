@@ -107,6 +107,10 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("virtual4y").id, "hvirtualmax");
         assertEq(AssetCatalog.get("hvirtualmax").symbol, "hVIRTUALMAX");
         assertTrue(AssetCatalog.get("bluai4y").innerMainnet != address(0));
+        assertEq(AssetCatalog.get("bluai4y").defaultCap, 0);
+        assertEq(AssetCatalog.get("horder").defaultCap, 0);
+        assertEq(AssetCatalog.get("hswbera").defaultCap, 0);
+        assertEq(AssetCatalog.get("hsavax").defaultCap, 0);
         assertEq(AssetCatalog.get("bonk12m").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hjitosol").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hjitosol").sourceEidMain, 30168);
@@ -166,7 +170,7 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);
-        assertEq(AssetCatalog.get("hlbtc").defaultCap, 5e6);
+        assertEq(AssetCatalog.get("hlbtc").defaultCap, 0);
         assertEq(LeafLbtcPolicy.shareScaleOf("hlbtc"), 1e10);
         assertEq(LeafLbtcPolicy.shareScaleOf("hcbeth"), 1);
         assertEq(MainnetBatches.batchOf("bluai4y"), 4);

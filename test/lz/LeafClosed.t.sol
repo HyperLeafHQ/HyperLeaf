@@ -240,4 +240,40 @@ contract LeafClosedTest is PegReady {
         vm.expectRevert(LeafRedeemQueue.DelayTooLow.selector);
         queue.setRedeemDelay(7 days);
     }
+
+    function testC1DepositCapZeroIsUnlimited() public {
+        vm.startPrank(owner);
+        LeafInboundLockbox uncapped =
+            new LeafInboundLockbox(address(token), address(epSrc), owner, guardian, feeTo, 0);
+        LeafClosedOFT dest = new LeafClosedOFT("u", "U", LOCK_4Y, address(epDst), owner, guardian);
+        uncapped.setPeer(DST_EID, address(dest));
+        dest.setPeer(SRC_EID, address(uncapped));
+        vm.stopPrank();
+        _openPair(uncapped, dest, owner, 0);
+        token.mint(user, 10_000e18);
+        vm.startPrank(user);
+        token.approve(address(uncapped), 2_000e18);
+        uncapped.sendTo{value: 0.01 ether}(DST_EID, user, 2_000e18);
+        vm.stopPrank();
+        assertEq(uncapped.totalLocked(), 2_000e18);
+        assertEq(uncapped.depositCap(), 0);
+    }
+
+    function testC2DepositCapZeroIsUnlimited() public {
+        vm.startPrank(owner);
+        LeafRedeemQueue uncapped =
+            new LeafRedeemQueue(address(token), address(epSrc), owner, guardian, feeTo, 0, 7 days);
+        LeafOFT dest = new LeafOFT("q", "Q", address(epDst), owner, guardian);
+        uncapped.setPeer(DST_EID, address(dest));
+        dest.setPeer(SRC_EID, address(uncapped));
+        vm.stopPrank();
+        _openPair(uncapped, dest, owner, 0);
+        token.mint(user, 10_000e18);
+        vm.startPrank(user);
+        token.approve(address(uncapped), 2_000e18);
+        uncapped.sendTo{value: 0.01 ether}(DST_EID, user, 2_000e18);
+        vm.stopPrank();
+        assertEq(uncapped.totalLocked(), 2_000e18);
+        assertEq(uncapped.depositCap(), 0);
+    }
 }

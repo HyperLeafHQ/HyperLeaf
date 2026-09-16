@@ -13,7 +13,14 @@ contract DeployClosed is Script {
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", owner);
-        uint256 cap = vm.envOr("DEPOSIT_CAP", uint256(1_000e18));
+        // 0 = no HyperLeaf intake cap. Do not default to 1_000e18.
+        uint256 cap;
+        try vm.envUint("DEPOSIT_CAP") returns (uint256 explicitCap) {
+            cap = explicitCap;
+        } catch {
+            string memory asset = vm.envOr("ASSET", string(""));
+            cap = bytes(asset).length == 0 ? 0 : AssetCatalog.get(asset).defaultCap;
+        }
         uint256 chainId = block.chainid;
 
         vm.startBroadcast();
@@ -33,6 +40,7 @@ contract DeployClosed is Script {
             LeafInboundLockbox box =
                 new LeafInboundLockbox(inner, endpoint, owner, guardian, feeRecipient, cap);
             console2.log("ASSET", id);
+            console2.log("depositCap", cap);
             console2.log("LeafInboundLockbox", address(box));
         } else if (chainId == 999 || chainId == 998) {
             string memory id = vm.envOr("ASSET", string(""));

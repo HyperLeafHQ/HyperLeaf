@@ -22,9 +22,9 @@ library AssetCatalog {
         uint32 lockSeconds;
         uint64 redeemDelay;
         address innerMainnet;
-        /// @dev Raw token units. 0 means OpenPeg must receive an explicit PEG_CAP
-        ///      (hstkwausdc 6-dec, gated hsETHFI). Non-18d production assets must
-        ///      not silently inherit a 1e18-looking default.
+        /// @dev Raw token units. 0 = no HyperLeaf intake limit. OpenPeg uses this
+        ///      when PEG_CAP is unset. Inner supply ceiling is the exposure bound.
+        ///      Canary is the only listing that keeps a tiny cap.
         uint256 defaultCap;
         bool productionEvm;
     }
@@ -63,7 +63,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x548D3B444da39686d1a6F1544781d154e7cD1EF7,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -114,7 +114,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22,
-                10 ether,
+                0,
                 true
             );
         }
@@ -131,7 +131,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0,
-                10 ether,
+                0,
                 true
             );
         }
@@ -148,7 +148,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE,
-                100 ether,
+                0,
                 true
             );
         }
@@ -165,7 +165,7 @@ library AssetCatalog {
                 uint32(104 weeks),
                 0,
                 0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -182,7 +182,7 @@ library AssetCatalog {
                 uint32(4 * 365 days),
                 0,
                 0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -199,7 +199,7 @@ library AssetCatalog {
                 uint32(365 days),
                 0,
                 address(0),
-                1_000 ether,
+                0,
                 false
             );
         }
@@ -216,7 +216,7 @@ library AssetCatalog {
                 0,
                 uint64(21 days),
                 address(0),
-                1_000 ether,
+                0,
                 false
             );
         }
@@ -233,7 +233,7 @@ library AssetCatalog {
                 0,
                 0,
                 address(0),
-                1_000 ether,
+                0,
                 false
             );
         }
@@ -250,7 +250,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x4E200fE2f3eFb977d5fd9c430A41531FB04d97B8,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -284,7 +284,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -335,7 +335,7 @@ library AssetCatalog {
                 0,
                 0,
                 0x8236a87084f8B84306f72007F36F2618A5634494,
-                5e6,
+                0,
                 true
             );
         }
@@ -352,7 +352,7 @@ library AssetCatalog {
                 0,
                 0,
                 0xeBf418Fe2512e7E6bd9b87a8F0f294aCDC67e6B4,
-                1_000 ether,
+                0,
                 true
             );
         }
@@ -369,7 +369,7 @@ library AssetCatalog {
                 0,
                 0,
                 address(0),
-                10 ether,
+                0,
                 false
             );
         }
