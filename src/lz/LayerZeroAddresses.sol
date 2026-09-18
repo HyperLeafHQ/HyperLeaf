@@ -19,6 +19,8 @@ library LayerZeroAddresses {
     uint32 internal constant EID_BERA = 30362;
     uint32 internal constant EID_INK = 30339;
     uint32 internal constant EID_ROBINHOOD = 30416;
+    /// @dev RH testnet 46630. Labs only — no Horizen/Canary. No testnet proof.
+    uint32 internal constant EID_ROBINHOOD_TESTNET = 40451;
     uint32 internal constant EID_SOLANA = 30168;
     uint32 internal constant EID_BERA_TESTNET = 40371;
     uint32 internal constant EID_INK_TESTNET = 40358;
@@ -49,6 +51,11 @@ library LayerZeroAddresses {
     address internal constant SEND_ULN_BERA = 0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7;
     address internal constant RECEIVE_ULN_BERA = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address internal constant EXECUTOR_BERA = 0x4208D6E27538189bB48E603D6123A94b8Abe0A0b;
+    /// @dev Robinhood 4663: Endpoint/SendUln/ReceiveUln/Executor same CREATE2 as Bera.
+    ///      DVNs are different (see DVN_*_ROBINHOOD). Never Nethermind 0x0Ffe02DF….
+    address internal constant SEND_ULN_ROBINHOOD = SEND_ULN_BERA;
+    address internal constant RECEIVE_ULN_ROBINHOOD = RECEIVE_ULN_BERA;
+    address internal constant EXECUTOR_ROBINHOOD = EXECUTOR_BERA;
 
     /// @dev Ink (Kraken OP Stack L2, chain 57073) is NOT the canonical 0x1a44… CREATE2.
     ///      Confirmed bytecode on 57073. Ink Sepolia (eid 40358) has no Horizen/Canary — no testnet proof.
@@ -133,6 +140,12 @@ library LayerZeroAddresses {
     address internal constant DVN_LZ_LABS_ETH = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;
     address internal constant DVN_CANARY_ETH = 0xa4fE5A5B9A846458a70Cd0748228aED3bF65c2cd;
 
+    /// @dev Push v2, not lzRead. Sorted Horizen < Canary < Labs for ULN.
+    ///      Never Nethermind 0x0Ffe02DF012299A370D5dd69298A5826EAcaFdF8.
+    address internal constant DVN_HORIZEN_ROBINHOOD = 0x1258A278519c7f4bd997a9c3BFd4Aa802a028D89;
+    address internal constant DVN_CANARY_ROBINHOOD = 0x8D77D35604A9f37f488E41D1d916b2A0088F82Dd;
+    address internal constant DVN_LZ_LABS_ROBINHOOD = 0xd01ae6905d48315f7bE10C7330aeCF8360Ef5b12;
+
     uint32 internal constant CONFIG_TYPE_EXECUTOR = 1;
     uint32 internal constant CONFIG_TYPE_ULN = 2;
 
@@ -170,6 +183,7 @@ library LayerZeroAddresses {
         if (eid == EID_INK) return CONFIRMATIONS_OP;
         if (eid == EID_AVALANCHE) return CONFIRMATIONS_AVAX;
         if (eid == EID_ETH) return CONFIRMATIONS_ETH;
+        if (eid == EID_ROBINHOOD) return CONFIRMATIONS_ARB;
         if (eid == EID_SOLANA) return CONFIRMATIONS_SOLANA;
         revert("lz: no confirmations");
     }
@@ -184,6 +198,7 @@ library LayerZeroAddresses {
         if (chainId == 43114) return EID_AVALANCHE;
         if (chainId == 10) return EID_OP;
         if (chainId == 1) return EID_ETH;
+        if (chainId == 4663) return EID_ROBINHOOD;
         revert("lz: no eid");
     }
 

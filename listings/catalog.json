@@ -467,8 +467,8 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Only Robinhood asset that currently fits L without a new Kind. Morpho V2 Steakhouse USDG vault (Robinhood Earn backend). Share steakUSDG, ~$454M, ~53k holders, rate ~1.006 USDG, claimed instant ERC-4626 redeem. Wrap the share only \u2014 never deposit USDG, never redeem/withdraw to USDG. Yield in convertToAssets. Credit risk = Morpho markets (USDe / syrupUSDG / spUSDG). Circuit breaker on USDG depeg before HyperEVM lending. Confirm live 4626 is not a queue. LZ eid 30416.",
-      "status": "research",
+      "note": "Morpho V2 Steakhouse USDG vault (Robinhood Earn). Wrap the 18-dec share steakUSDG only — never USDG (6-dec), never 4626 deposit/mint/withdraw/redeem, never Morpho Blue market. Instant previewRedeem confirmed (1e18 shares \u2192 ~1.007e6 USDG atoms). Yield stays in convertToAssets; pullInner false \u2014 no 1% skim (cannot redeem to USDG). Credit risk = Morpho markets (USDe / syrupUSDG / spUSDG). Circuit breaker on USDG depeg before HyperEVM lending. LZ eid 30416. RH trio Labs+Canary+Horizen; Endpoint/ULN/Executor same CREATE2 as Bera. Never Nethermind. Pins landing; not a MainnetBatch.",
+      "status": "pins-landing",
       "priority": 14
     },
     {
