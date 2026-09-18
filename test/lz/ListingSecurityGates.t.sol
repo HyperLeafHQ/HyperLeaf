@@ -12,6 +12,15 @@ contract ListingSecurityGatesTest is Test {
         assertEq(a.defaultCap, 0);
     }
 
+    function testHdaiIsCappedPilotNotUnlimited() public pure {
+        AssetCatalog.Listing memory a = AssetCatalog.get("hdai");
+        assertEq(a.id, "hdai");
+        assertTrue(a.productionEvm);
+        assertEq(a.defaultCap, 100_000e18);
+        assertEq(a.sourceChainIdMain, 1);
+        assertEq(a.innerMainnet, 0x500331c9fF24D9d11aee6B07734Aa72343EA74a5);
+    }
+
     function testHinkIsNotProductionUntilOfficialInkExists() public pure {
         AssetCatalog.Listing memory a = AssetCatalog.get("hink");
         assertEq(a.id, "hink");
