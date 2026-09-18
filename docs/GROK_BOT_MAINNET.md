@@ -67,11 +67,12 @@ Copying one number onto both ULNs is a DVN mismatch. Script already splits them.
 | ETH 1 | 15 | 5 |
 | Bera 80094 | 15 | 5 |
 | Avax 43114 | **12** | 5 |
+| Robinhood 4663 | 15 | 5 |
 | Solana (program, not this script) | **32** | 5 |
 
 Trio on every EVM we touch: **Labs + Horizen + Canary**. Sorted ascending. **Never Nethermind.**
 
-HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon`/`hslisbnb` → 30102, `hswbera` → 30362, `hink` → 30339, `hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168).
+HyperEVM `SetSecurityStack` / `WirePeers` **must** pass `ASSET=` so remote eid is not Base-by-default (`hgsoon`/`hslisbnb` → 30102, `hswbera` → 30362, `hink` → 30339, `hstkwausdc` → 30101, `hsavax` → 30106, `horder` → 30110, `hjitosol` → 30168, `hsteakusdg` → 30416). `hsteakusdg` is a later pin, **not a BATCH — no GO**.
 
 ---
 

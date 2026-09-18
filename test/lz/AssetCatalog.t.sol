@@ -49,7 +49,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[17] memory ids = AssetCatalog.allIds();
+        string[19] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
@@ -141,6 +141,14 @@ contract AssetCatalogTest is Test {
         assertFalse(AssetCatalog.get("hsethfi").productionEvm);
         assertEq(AssetCatalog.get("hsethfi").defaultCap, 0);
         assertEq(AssetCatalog.get("hstkwausdc").defaultCap, 0);
+        assertEq(AssetCatalog.get("hsteakusdg").innerMainnet, 0xBeEff033F34C046626B8D0A041844C5d1A5409dd);
+        assertEq(AssetCatalog.get("hsteakUSDG").id, "hsteakusdg");
+        assertEq(AssetCatalog.get("hsteakusdg").sourceChainIdMain, 4663);
+        assertEq(AssetCatalog.get("hsteakusdg").sourceEidMain, 30416);
+        assertEq(AssetCatalog.get("hsteakusdg").sourceEidTest, 40451);
+        assertEq(AssetCatalog.get("hsteakusdg").defaultCap, 0);
+        assertTrue(AssetCatalog.get("hsteakusdg").productionEvm);
+        assertEq(uint8(AssetCatalog.get("hsteakusdg").kind), uint8(AssetCatalog.Kind.Liquid));
     }
 
     function testBepoliaHasNoLzEndpoint() public {
@@ -152,7 +160,10 @@ contract AssetCatalogTest is Test {
         assertEq(this._endpoint(42161), A.ENDPOINT_BSC);
         assertEq(this._endpoint(1), A.ENDPOINT_ETH);
         assertEq(this._endpoint(43114), A.ENDPOINT_ETH);
+        assertEq(this._endpoint(4663), A.ENDPOINT_BERA);
         assertEq(A.ENDPOINT_ETH, A.ENDPOINT_BSC);
+        assertEq(A.eidForChainId(4663), A.EID_ROBINHOOD);
+        assertEq(A.confirmationsForEid(A.EID_ROBINHOOD), A.CONFIRMATIONS_ARB);
     }
 
     function testMainnetBatchesByFramework() public {
@@ -185,6 +196,8 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hlbtc").defaultCap, 0);
         assertEq(LeafLbtcPolicy.shareScaleOf("hlbtc"), 1e10);
         assertEq(LeafLbtcPolicy.shareScaleOf("hcbeth"), 1);
+        vm.expectRevert(MainnetBatches.NotThisBatch.selector);
+        this._batch("hsteakusdg");
         assertEq(MainnetBatches.batchOf("bluai4y"), 4);
         assertEq(MainnetBatches.batchOf("horder"), 4);
         assertEq(MainnetBatches.batchOf("hjitosol"), 5);

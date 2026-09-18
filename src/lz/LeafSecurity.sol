@@ -84,6 +84,13 @@ library LeafSecurity {
         d[2] = A.DVN_CANARY_ETH;
     }
 
+    function robinhoodOptionalDvns() internal pure returns (address[] memory d) {
+        d = new address[](3);
+        d[0] = A.DVN_HORIZEN_ROBINHOOD;
+        d[1] = A.DVN_CANARY_ROBINHOOD;
+        d[2] = A.DVN_LZ_LABS_ROBINHOOD;
+    }
+
     function ulnConfig(uint64 confirmations, address hyperleafDvn, address[] memory optionalDvns)
         internal
         pure

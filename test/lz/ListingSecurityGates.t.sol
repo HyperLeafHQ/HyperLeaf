@@ -22,7 +22,7 @@ contract ListingSecurityGatesTest is Test {
     }
 
     function testProductionListingsHaveNoIntakeCap() public pure {
-        string[17] memory ids = [
+        string[18] memory ids = [
             "bluai4y",
             "horder",
             "hswbera",
@@ -39,7 +39,8 @@ contract ListingSecurityGatesTest is Test {
             "hcbeth",
             "hwsteth",
             "hslisbnb",
-            "hink"
+            "hink",
+            "hsteakusdg"
         ];
         for (uint256 i; i < ids.length; ++i) {
             assertEq(AssetCatalog.get(ids[i]).defaultCap, 0, ids[i]);

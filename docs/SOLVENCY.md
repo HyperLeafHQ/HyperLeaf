@@ -195,7 +195,7 @@ One vault = one listing. Backing does not cross curators or loan assets.
 
 **hsteakUSDC** (Base): inner `0xBEEF010f…8183`, asset USDC. First Base Morpho candidate (same chain as hxSQUID).
 
-**hsteakUSDG** (Robinhood): inner `0xBeEff033…5409dd`, asset USDG. First Robinhood Morpho candidate. Need live `asset()` / `convertToAssets` / confirm withdraw is not a queue.
+**hsteakUSDG** (Robinhood): inner `0xBeEff033…5409dd`, asset USDG `0x5fc5360D…d168` (6-dec). Live `asset()` / `previewRedeem(1e18)≈1007328` / instant 4626 (not a queue). Wrap 18-dec share 1:1. Pins in `LeafSteakPolicy`. Not a BATCH.
 
 ### hliSLVR (watch — wrap liSLVR only if tax-free)
 
