@@ -324,7 +324,7 @@ Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decay
 
 ### PTSMAX
 
-Accounting unit is **sRIVER_V2 tokenId**, not `balanceOf(Pts)`. Do not ship on the ERC-20 adapter. Merkle weekly Pts is address-keyed, not NFT-keyed. Blocked on NFT lockbox + lockbox appearing in a weekly tree.
+**Deprioritized this cycle.** Accounting unit is **sRIVER_V2 tokenId**, not `balanceOf(Pts)`. Do not ship on the ERC-20 adapter. Do not write the NFT lockbox now. Do not ship burn-PTSMAX-at-unlock → RIVER → HYPE: Pts are already converted at wrap, so that path is a two-year locked-RIVER payout, not a Pts product. Live convert `0xe8d4b6de…` (16,781 Pts → 68.32 RIVER, NFT #23030, epoch 7, unlock 2028-10-01). Merkle weekly Pts is address-keyed. If revived: C1 sell-only after lockbox + lockbox in a weekly tree.
 
 
 
