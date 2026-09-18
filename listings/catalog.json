@@ -697,6 +697,25 @@
       "priority": 44
     },
     {
+      "id": "hstnear",
+      "kind": "L",
+      "symbol": "hstNEAR",
+      "name": "Hyperleaf stNEAR",
+      "innerSymbol": "stNEAR",
+      "innerToken": "meta-pool.near",
+      "source": "near",
+      "exit": "instant-receipt",
+      "infra": "pending-lz",
+      "yield": {
+        "inner": "stnear-rate",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "WATCH. Wrap Meta Pool stNEAR (NEP-141 meta-pool.near) only, never raw NEAR, never bridged wNEAR, never Aurora stAUR. Rate LST — stNEAR/NEAR rises each epoch. Official delayed unstake ~4 epochs stays on Meta Pool; do not call liquid-unstake from the lockbox. LiNEAR / Rhea lst.rhealab.near secondary. Native NEAR is WASM, not EVM. LZ metadata has aurora-mainnet eid 30211 only — no near key. Aurora DVN/executor wind-down (Labs Sep 2026). BLOCK until LayerZero native NEAR eid + Labs/Horizen/Canary independently verified. Same class as htsTON / hJitoSOL, not LeafOFTAdapter.",
+      "status": "watch-near-lz",
+      "priority": 45
+    },
+    {
       "id": "hlislvr",
       "kind": "L",
       "symbol": "hliSLVR",
