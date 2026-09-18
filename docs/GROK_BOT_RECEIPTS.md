@@ -14,6 +14,7 @@ That file is the task list. This table is only harvest/never per ticker.
 | `hstkwausdc` | 3 | 1% rate skim + `RewardsController` `0xbb492bf5` | `cooldown` on StakeToken |
 | `hlbtc` | 3 | 1% of AssetRouter `getRate` surplus. Jump >3% **up or down** is not yield | BTC.b / LBTCv / BTCe / Base LBTC / `burn` / `mint(bytes,bytes)` / AssetRouter `deposit` / Bascule |
 | `hsteakusdg` | later — **not a BATCH** | none. Yield stays in the share. `pullInner` false | USDG / steakUSDC / 4626 `deposit`/`mint`/`withdraw`/`redeem` / Morpho Blue market. Never `RateKind.ConvertToAssets` (6-dec asset) |
+| `hdai` | later — **not a BATCH** | none. Yield stays in the share. `pullInner` false | DAI / Maker sDAI / Trust Wallet wrapper / 4626 / Morpho Blue. Cap 100_000e18 shares. Do not advertise APY |
 | `bluai4y` / `horder` | 4 | farm claim / ledger harvest | `setShareExit`; CREATE2 twin |
 | `hjitosol` | 5 | 1% of JitoSOL/SOL rate surplus (escrow → harvest ATA). Spec `solana/leaf-jito-rate` | NCN / VRT / stake-pool CPI / Rewarder / `WirePeers` |
 

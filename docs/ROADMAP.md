@@ -27,7 +27,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | later | hveAERO | ve-NFT | Base | `LeafNftLockbox` exists. Permanent NORMAL only. Not a BATCH |
 | later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |
 | later | **hsteakUSDC** | L | Base Morpho | steakUSDC `0xBEEF010f…8183`. Same L family as hsteakUSDG |
-| later | **hDAI** | L | Ethereum Morpho | Gauntlet DAI Core V1 `0x500331c9…74a5`. Wrap **vault shares**, never DAI, never Blue market. **Cap 100k DAI** (exit liq ~195k). Pilot, not unlimited. Do not advertise 6.29% |
+| later | **hDAI** | L | Ethereum Morpho | Pins landing. Gauntlet DAI Core `gtDAIcore` `0x500331c9…74a5`. Wrap **share only**. Never DAI / sDAI / 4626 / Blue. Cap **100_000e18 shares**. No 1% skim. **Not a BATCH — no GO** |
 | later | **hUSDT** | L | Bitway | Core Alpha share **BTWUSDT** `0x73af543D…3A1` / vault `0xb82E32…B63`. Never raw USDT. Value-accruing, not a 1:1 USDT wrap. Verify ABI + chain + LZ before any BATCH |
 | later | **hsteakUSDG** | L | Robinhood Morpho | Pins landing. steakUSDG `0xBeEff033…09dd`. Wrap **share only**. Never USDG / 4626 / Blue. No 1% skim. RH LZ eid 30416. **Not a BATCH — no GO** |
 | later | **asBNB** | L | BSC | Aster extra rewards on top of LST — later, not first |

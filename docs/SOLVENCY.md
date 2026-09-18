@@ -197,6 +197,8 @@ One vault = one listing. Backing does not cross curators or loan assets.
 
 **hsteakUSDG** (Robinhood): inner `0xBeEff033…5409dd`, asset USDG `0x5fc5360D…d168` (6-dec). Live `asset()` / `previewRedeem(1e18)≈1007328` / instant 4626 (not a queue). Wrap 18-dec share 1:1. Pins in `LeafSteakPolicy`. Not a BATCH.
 
+**hDAI** (Ethereum): inner `0x500331c9…74a5` (`gtDAIcore`), asset DAI `0x6B175474…1d0F` (18-dec). Live `asset()` / `previewRedeem(1e18)≈1.178e18` / instant 4626. Wrap share 1:1. Pilot `defaultCap` 100_000e18 shares. Never DAI, never Maker sDAI `0x83F20F44…`, never Trust Wallet wrapper `0xF7D7dD99…`. Pins in `LeafDaiPolicy`. Not a BATCH.
+
 ### hliSLVR (watch — wrap liSLVR only if tax-free)
 
 SLVR `0x791229E3…C29aD9` is a 1-minute grid lottery. Token has **2% buy/sell tax**. Never wrap or transfer SLVR. **liSLVR** vault `0xb06a7A96…41b3B` is the liquid claim: deposited SLVR is **permanently locked**; exit is sell the share. If and only if liSLVR is a clean ERC-20, Kind L: wrap the share, never `deposit` SLVR, never ve lock. ETH rake may harvest to HYPE. Unaudited. No adapter until the tax-free check is on-chain.

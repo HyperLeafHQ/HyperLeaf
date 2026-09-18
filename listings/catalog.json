@@ -556,9 +556,9 @@
       "kind": "L",
       "symbol": "hDAI",
       "name": "Hyperleaf Gauntlet DAI",
-      "innerSymbol": "gtDAI",
+      "innerSymbol": "gtDAIcore",
       "innerToken": "0x500331c9fF24D9d11aee6B07734Aa72343EA74a5",
-      "underlying": "DAI",
+      "underlying": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
       "source": "ethereum",
       "sourceChainId": 1,
       "sourceEid": 30101,
@@ -569,8 +569,8 @@
         "pullInner": false,
         "toHype": []
       },
-      "note": "Morpho Gauntlet DAI Core V1. Luna: Ethereum SELECT, Base/HL DEFER, Arb REJECT. Wrap vault shares only \u2014 never DAI, never Blue market id. DAI-in adapter is extra surface, not first. Cap 100_000 DAI (exit liq ~195k vs 2.13M TVL). Do not advertise 6.29%. convertToAssets 1% skim. Freeze vault.asset()==DAI.",
-      "status": "later-capped-pilot",
+      "note": "Morpho Gauntlet DAI Core on Ethereum. Wrap the 18-dec share gtDAIcore only \u2014 never DAI, never Maker sDAI, never Trust Wallet wrapper 0xF7D7dD99\u2026, never 4626 deposit/mint/withdraw/redeem, never Morpho Blue market. Instant previewRedeem confirmed (1e18 shares \u2192 ~1.178 DAI). Yield stays in convertToAssets; pullInner false \u2014 no 1% skim (cannot redeem to DAI). Do not advertise APY. Pilot cap 100_000e18 shares (~100k DAI at ~1:1; live rate ~1.178). Exit liq ~195k vs ~2.29M TVL. Luna: Ethereum SELECT, Base/HL DEFER, Arb REJECT. DAI-in adapter is extra surface, not first. Freeze vault.asset()==DAI. ETH LZ already pinned. Pins landing; not a MainnetBatch.",
+      "status": "pins-landing",
       "priority": 27
     },
     {

@@ -59,7 +59,7 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 
 Deploy: `docs/GROK_BOT_MAINNET.md`. Ids: `src/lz/AssetCatalog.sol`. `MainnetBatches` locks `BATCH`.
 
-**Morpho vault shares (L family):** wrap the **ERC-4626 vault token**, not USDC/USDG, not a Morpho Blue market position. Blue supply is address-keyed — that is ORDER-class, skip. Each vault is its own listing (curator + markets ≠ shared backing). Never `deposit`/`mint`/`withdraw`/`redeem` on the vault. Yield in `convertToAssets`. Base and Robinhood both have LZ. Do not auto-list every Morpho vault; each needs a SOLVENCY row. **hsteakUSDG** pins landed (`LeafSteakPolicy`); not a BATCH.
+**Morpho vault shares (L family):** wrap the **ERC-4626 vault token**, not USDC/USDG/DAI, not a Morpho Blue market position. Blue supply is address-keyed — that is ORDER-class, skip. Each vault is its own listing (curator + markets ≠ shared backing). Never `deposit`/`mint`/`withdraw`/`redeem` on the vault. Yield in `convertToAssets`. Base, Ethereum, and Robinhood all have LZ. Do not auto-list every Morpho vault; each needs a SOLVENCY row. **hsteakUSDG** and **hDAI** pins landed (`LeafSteakPolicy` / `LeafDaiPolicy`); not a BATCH.
 
 Later: hAEVO (C1), hJupSOL / hANSEM (Solana), hwstETH (own ticker). Jito VRTs (fragSOL/kySOL/ezSOL) are watchlist-slash, not hJitoSOL.
 
