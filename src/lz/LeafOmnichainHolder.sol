@@ -6,6 +6,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LeafForbiddenSelectors} from "./LeafForbiddenSelectors.sol";
+import {LeafMerkleClaim} from "./LeafMerkleClaim.sol";
 
 interface ILeafOmnichainHolder {
     function release(IERC20 token, address to, uint256 amount) external;
@@ -24,6 +25,7 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     mapping(address => bool) public claimTarget;
     mapping(address => bytes4) public claimSelector;
     mapping(address => bytes32) public claimDataHash;
+    mapping(address => bool) public merkleDistributor;
     address public converter;
     address public principal;
     bytes4 public rewardsSelector;
@@ -37,11 +39,13 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
     error NotPrincipal();
     error ForbiddenRewardsSelector();
     error BadConverter();
+    error BadMerkleDistributor();
 
     event AdapterSet(address indexed adapter, bool allowed);
     event PrincipalSet(address indexed token, bool ok);
     event ClaimTargetSet(address indexed target, bool allowed);
     event ClaimCallSet(address indexed target, bytes4 selector, bytes32 dataHash);
+    event MerkleDistributorSet(address indexed distributor, bool ok);
     event ConverterSet(address indexed converter);
     event RewardsSelectorSet(bytes4 selector);
     event Released(address indexed token, address indexed to, uint256 amount);
@@ -106,6 +110,12 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
         emit ClaimCallSet(t, selector, claimDataHash[t]);
     }
 
+    function setMerkleDistributor(address d, bool ok) external onlyOwner {
+        if (d == address(0) || isPrincipal[d]) revert BadMerkleDistributor();
+        merkleDistributor[d] = ok;
+        emit MerkleDistributorSet(d, ok);
+    }
+
     function setConverter(address c) external onlyOwner {
         if (c == address(0)) revert ZeroAddress();
         converter = c;
@@ -132,6 +142,17 @@ contract LeafOmnichainHolder is Ownable2Step, ReentrancyGuard {
                 || keccak256(data) != claimDataHash[t]
         ) revert BadClaimSelector();
         (bool ok,) = t.call{value: msg.value}(data);
+        if (!ok) revert ClaimFailed();
+    }
+
+    /// @notice Extra-chain Virtuals / KAITO merkle. Account is this holder.
+    function pokeMerkleClaim(address d, uint256 index, uint256 amount, bytes32[] calldata proof)
+        external
+        payable
+        nonReentrant
+    {
+        if (!merkleDistributor[d] || isPrincipal[d]) revert BadMerkleDistributor();
+        (bool ok,) = d.call{value: msg.value}(LeafMerkleClaim.encode(index, address(this), amount, proof));
         if (!ok) revert ClaimFailed();
     }
 

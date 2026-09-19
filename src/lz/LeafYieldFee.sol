@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LeafForbiddenSelectors} from "./LeafForbiddenSelectors.sol";
+import {LeafMerkleClaim} from "./LeafMerkleClaim.sol";
 
 abstract contract LeafYieldFee {
     using SafeERC20 for IERC20;
@@ -22,8 +23,11 @@ abstract contract LeafYieldFee {
     bytes4 public rewardsSelector;
     /// @dev Umbrella: RewardsController. Zero = poke inner (Squid/Avantis).
     address public rewardsTarget;
+    /// @dev Per-campaign merkle distributor. Not frozen. Never the inner token.
+    mapping(address => bool) public merkleDistributor;
     /// @dev RewardsController.claimAllRewards(address[],address)
     bytes4 public constant CLAIM_ALL_REWARDS = 0xbb492bf5;
+    bytes4 public constant MERKLE_CLAIM = LeafMerkleClaim.SELECTOR;
 
     /// @dev Rate-bearing inner (cbETH `exchangeRate`, 4626 `convertToAssets(1e18)`,
     ///      BENQI sAVAX `getPooledAvaxByShares(1e18)`, Lista StakeManager
@@ -58,6 +62,7 @@ abstract contract LeafYieldFee {
     event ConverterSet(address indexed converter);
     event RewardsSelectorSet(bytes4 selector);
     event RewardsTargetSet(address indexed target);
+    event MerkleDistributorSet(address indexed distributor, bool ok);
     event RateFeedSet(RateKind kind, uint256 rate);
     event RateYieldAccrued(uint256 added, uint256 accrued, uint256 rate);
     event RateYieldPulled(address indexed to, uint256 surplus, uint256 rate);
@@ -75,6 +80,7 @@ abstract contract LeafYieldFee {
     error ClaimFailed();
     error ForbiddenRewardsSelector();
     error BadRewardsTarget();
+    error BadMerkleDistributor();
     error BadRateFeed();
     error FeeRecipientZero();
     error ConvertHalted();
@@ -157,6 +163,21 @@ abstract contract LeafYieldFee {
     function _setRewardsTarget(address t) internal {
         rewardsTarget = t;
         emit RewardsTargetSet(t);
+    }
+
+    function _setMerkleDistributor(address inner, address d, bool ok) internal {
+        if (d == address(0) || d == inner) revert BadMerkleDistributor();
+        merkleDistributor[d] = ok;
+        emit MerkleDistributorSet(d, ok);
+    }
+
+    /// @notice Anyone. Forces `account = this` so the lockbox is the merkle leaf.
+    function _pokeMerkleClaim(address inner, address d, uint256 index, uint256 amount, bytes32[] calldata proof)
+        internal
+    {
+        if (!merkleDistributor[d] || d == inner) revert BadMerkleDistributor();
+        (bool ok,) = d.call{value: msg.value}(LeafMerkleClaim.encode(index, address(this), amount, proof));
+        if (!ok) revert ClaimFailed();
     }
 
     /// @dev Squid/Avantis: (this, max) on inner.

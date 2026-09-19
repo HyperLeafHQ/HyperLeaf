@@ -96,6 +96,10 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRewardsTarget(t);
     }
 
+    function setMerkleDistributor(address d, bool ok) external onlyOwner {
+        _setMerkleDistributor(address(innerToken), d, ok);
+    }
+
     function setRateKind(RateKind kind) external onlyOwner {
         if (totalLocked > 0) revert ConfigFrozen();
         _setRateKind(innerToken, kind);
@@ -130,6 +134,15 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
     /// @notice Squid-style: claimRewards(this, max) on the inner staking token.
     function pokeRewards() external payable nonReentrant {
         _pokeRewards(address(innerToken));
+    }
+
+    /// @notice Extra ERC-20 merkle (KAITO eco / Virtuals-class). Account is this lockbox.
+    function pokeMerkleClaim(address d, uint256 index, uint256 amount, bytes32[] calldata proof)
+        external
+        payable
+        nonReentrant
+    {
+        _pokeMerkleClaim(address(innerToken), d, index, amount, proof);
     }
 
     /// @notice Pull harvestable surplus to the converter. Anyone. `to` must be converter.

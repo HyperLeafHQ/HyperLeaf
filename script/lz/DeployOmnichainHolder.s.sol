@@ -6,9 +6,11 @@ import {LeafCreate2} from "src/lz/LeafCreate2.sol";
 import {LeafOmnichainHolder} from "src/lz/LeafOmnichainHolder.sol";
 
 /// @notice CREATE2 the twin on any EVM with Arachnid factory.
-///         Same owner + salt → same address. Deploy on Base first (home), then
-///         BSC/ETH/Arb when an eco claim appears. Owner must be a Safe that
-///         already exists at the same address on those chains, or an EOA.
+///         Same owner + salt → same address. Used when the merkle leaf is
+///         the holder (not the LZ adapter). Extra-chain KAITO/VIRTUAL lockbox
+///         twins are DeployOmnichainAdapter / DeployOmnichainVirtuals — do
+///         NOT openBridge on those. Owner must be a Safe that already exists
+///         at the same address on those chains, or an EOA. No GO.
 contract DeployOmnichainHolder is Script {
     function run() external {
         address owner_ = vm.envAddress("OWNER");

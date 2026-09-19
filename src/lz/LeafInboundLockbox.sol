@@ -136,6 +136,11 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRewardsTarget(t);
     }
 
+    function setMerkleDistributor(address d, bool ok) public virtual onlyOwner {
+        if (d == farm) revert BadStake();
+        _setMerkleDistributor(address(innerToken), d, ok);
+    }
+
     function setFarm(address farm_, bytes4 stakeSel, uint256 arg, bytes4 claimSel) external onlyOwner {
         _requireFarmConfigMutable();
         if (farm_ == address(innerToken)) revert BadStake();
@@ -236,6 +241,16 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     function pokeRewards() external payable virtual nonReentrant {
         if (farm == address(0) || farmClaimSel == bytes4(0)) revert BadStake();
         _afterPokeRewards();
+    }
+
+    /// @notice Agent / eco merkle. Account is this lockbox. Distributor is not the farm.
+    function pokeMerkleClaim(address d, uint256 index, uint256 amount, bytes32[] calldata proof)
+        external
+        payable
+        nonReentrant
+    {
+        if (d == farm) revert BadStake();
+        _pokeMerkleClaim(address(innerToken), d, index, amount, proof);
     }
 
     function _afterPokeRewards() internal virtual {

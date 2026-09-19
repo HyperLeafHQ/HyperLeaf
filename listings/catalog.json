@@ -55,8 +55,8 @@
           "airdrop-erc20s"
         ]
       },
-      "claim": "owner setClaimCall(campaign, selector); anyone pokeClaim; then pullYield",
-      "note": "L redeem returns sKAITO, not KAITO (official unstake is 7d cooldown \u2014 protocol never calls it). sKAITO is transferable; Base spot is thin. On HyperEVM hKAITO is also the KAITO spot proxy. BLACKLISTED_ROLE exists; team describes it as investor airdrop exclusion \u2014 if the lockbox is ever listed, L redeem can fail. Eco airdrops are per-campaign Sign contracts, often linear vest.",
+      "claim": "owner setMerkleDistributor; anyone pokeMerkleClaim(index,amount,proof) 0x2e7ba6ef account=this; then pullYield. Extra-chain CREATE2 same adapter initcode; twin never openBridge",
+      "note": "L redeem returns sKAITO, not KAITO (official unstake is 7d cooldown \u2014 protocol never calls it). sKAITO is transferable; Base spot is thin. On HyperEVM hKAITO is also the KAITO spot proxy. BLACKLISTED_ROLE exists; team describes it as investor airdrop exclusion \u2014 if the lockbox is ever listed, L redeem can fail. Eco airdrops are per-campaign merkle/Sign; do not set 0x2e7ba6ef as rewardsSelector. Merkle poke pins landed. Not a BATCH \u2014 no GO.",
       "refs": {
         "depositTx": "0x69c5660ffd3812b8ec45e5f306f67ab6cf46ac5a15a46231fb4403cfae39ee86",
         "transferTx": "0x153490b1982756aa423287c491e39ee30b323aad0e7965798b71b38a7f16a398"
@@ -71,7 +71,7 @@
         "sourceChain": "base-sepolia",
         "mockInner": true
       },
-      "status": "blocked-omnichain-holder",
+      "status": "pins-landing",
       "priority": 50
     },
     {
@@ -202,7 +202,7 @@
       "exit": "market-only",
       "infra": "evm",
       "pairsWithUnit": "uVIRTUAL",
-      "note": "Auto Max-lock on Virtuals (104w, autoRenew). Never official redeem. Not 4 years. Yield is agent merkle airdrops (claim(index,account,amount,proof)), not VIRTUAL inflation. v1 harvests Base only, and only when a drop is worth gas+keeper time \u2014 6\u20137 dust launches/day are skipped, never auto-swapped (honeypot risk). ETH/Arb/Robinhood (4663) claims need the omnichain holder; RH gas makes dust negative EV. Same holder blocker as hKAITO.",
+      "note": "Auto Max-lock on Virtuals (104w, autoRenew). Never official redeem. Not 4 years. Yield is agent merkle airdrops claim(index,account,amount,proof) 0x2e7ba6ef, not VIRTUAL inflation. Owner setMerkleDistributor; anyone pokeMerkleClaim (account=lockbox); pullYield. Extra-chain: CREATE2 same LeafVirtualsLockbox initcode on canonical LZ endpoint (ETH/Base/Arb/BSC); twin never openBridge. RH endpoint differs \u2014 skip dust. v1 only when a drop is worth gas+keeper time \u2014 6\u20137 dust launches/day are skipped, never auto-swapped (honeypot risk). Merkle poke pins landed. Not a BATCH \u2014 no GO.",
       "refs": {
         "stakeTx": "0x9d8f5040ba94fa0e6091ebc27a16808dcf7e3710901648b1c1a0304886f515d5",
         "baseMerkleClaimTx": "0xee45c4899f836906366deb38d30840512aae01989531e5d1109d5ebf808db75c",
@@ -216,7 +216,7 @@
         "mockInner": true,
         "mockStake": true
       },
-      "status": "blocked-omnichain-holder",
+      "status": "pins-landing",
       "priority": 50
     },
     {
