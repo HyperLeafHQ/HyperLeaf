@@ -60,6 +60,26 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 
 Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 
+## OTC / exit-demand watch (not a batch)
+
+Wagyu proved the pattern: **delist the convenient venue, demand stays, remaining take is 3%+.** Their $700M is flow through the HL book, not TVL. HyperLeaf's version of that hole is **locked occupancy and pre-TGE points**, not a second XMR desk. Full write-up: [issue #7 comment 5743846799](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5743846799).
+
+Do not wrap MAX / XMR1 / TRX1. Quote ≠ backing. Protocol still never bids on Leaf Market. Leaf Market's 1% of ask is a buyer incentive today, not protocol revenue.
+
+| Demand | Class | Now |
+| ------ | ----- | --- |
+| Locked occupancy (C1) | **ours** | BLUAI4Y live. hORDER queued. hB3 / BONK12M / veAERO / veUP later |
+| Pre-TGE points | **ours** | VAR / Predict live. Nado next |
+| Extra-chain airdrops | blocked | KAITO / VIRTUALMAX until CREATE2 |
+| Native XMR in/out | rail, taken | Wagyu. Benchmark only |
+| Native ZEC | skip | CEX + ETF + UZEC |
+| Native TON / GRAM | watch rail | HL delisted TON perp on rebrand. tsTON Leaf still needs TON LZ |
+| Native TRX | skip rail | Wagyu TRX1 + existing HL inbound. sTRX Leaf still needs TRON LZ |
+| Native NEAR | skip rail | NEAR Intents already routes into HL. stNEAR Leaf still needs native LZ |
+| DASH / FIRO / GRIN | skip | Thin |
+
+ETH/SOL/BTC/USDC → HL already has Unit / deBridge / Across / 1inch. HIP-3 pre-IPO perps are not a Leaf.
+
 ## Phases
 
 **0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). **Done.** Close after redeem. Do not reuse.
