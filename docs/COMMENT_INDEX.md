@@ -30,6 +30,7 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | GNO | P1 Strategic Candidate; do not implement yet | 5638008710 |
 | PI | Watchlist / No-Go; no standalone Leaf | 5630140642 |
 | FLR | P1 Research Candidate; intentionally non-numbered | Historical standalone evaluation |
+| **Wagyu.xyz / PerpetualCow** | Infrastructure / OTC-demand watch. **Not a Leaf.** Do not wrap MAX / XMR1. Optional exit rail only, after solvency. Supplement: business comparison + next OTC holes (C1/Pre are our wedge; XMR taken; watch native TON). | Observation [5743723129](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5743723129) · Supplement [5743846799](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5743846799) |
 
 ## DTF evaluation
 
