@@ -112,9 +112,9 @@ Converter `minOut` is enforced on `LeafYieldConverter.execute` (balance delta) a
 
 
 
-### hKAITO (blocked on omnichain holder)
+### hKAITO (pins-landing — omnichain merkle, no GO)
 
-Same L invariant on **sKAITO**, not KAITO. Official 7d unstake is never called. Blacklist can make redeem fail while still backed. Eco ERC-20s are yield, not backing.
+Same L invariant on **sKAITO**, not KAITO. Official 7d unstake is never called. Blacklist can make redeem fail while still backed. Eco ERC-20s are yield, not backing. Harvest: owner `setMerkleDistributor`, anyone `pokeMerkleClaim` (`0x2e7ba6ef`, account = lockbox), then `pullYield`. Extra-chain: CREATE2 the same `LeafOFTAdapter` initcode on canonical-endpoint EVMs; twin never `openBridge`. Not a MainnetBatch.
 
 ### BLUAI4Y / hVIRTUALMAX (C1)
 

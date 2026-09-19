@@ -67,6 +67,6 @@ Later: hAEVO (C1), hJupSOL / hANSEM (Solana), hwstETH (own ticker). Jito VRTs (f
 
 **Hold:** **hstkAAVE** — Safety Module is legacy; Umbrella is the live backstop. Do not tokenize AAVE governance until (1) stkAAVE still exists after Umbrella is mature, (2) voting power is a protocol delegate not the hToken, (3) HyperEVM has a real AAVE spot gap. **aave-umbrella** is a different listing (risk tranche), not hAAVE.
 
-Blocked until omnichain holder: **hKAITO**, **hVIRTUALMAX**.
+Blocked until human GO: **hKAITO**, **hVIRTUALMAX** (merkle poke pins landed; extra-chain CREATE2 twin must not `openBridge`).
 
 hNEST is native HyperEVM, not this wrap.

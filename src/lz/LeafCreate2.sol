@@ -11,6 +11,8 @@ library LeafCreate2 {
     address internal constant FACTORY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     bytes32 internal constant HOLDER_SALT = keccak256("HyperLeaf.LeafOmnichainHolder.v1");
     bytes32 internal constant LOCKBOX_SALT = keccak256("HyperLeaf.LeafInboundLockbox.v1");
+    bytes32 internal constant ADAPTER_SALT = keccak256("HyperLeaf.LeafOFTAdapter.v1");
+    bytes32 internal constant VIRTUALS_SALT = keccak256("HyperLeaf.LeafVirtualsLockbox.v1");
 
     function predict(bytes32 salt, bytes memory initCode) internal pure returns (address) {
         return address(

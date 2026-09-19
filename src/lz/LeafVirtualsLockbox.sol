@@ -34,4 +34,9 @@ contract LeafVirtualsLockbox is LeafInboundLockbox {
         virtuals.stake(got, MAX_WEEKS, true);
         if (innerToken.balanceOf(address(this)) >= before) revert BadStake();
     }
+
+    function setMerkleDistributor(address d, bool ok) public override onlyOwner {
+        if (d == address(virtuals)) revert BadStake();
+        super.setMerkleDistributor(d, ok);
+    }
 }

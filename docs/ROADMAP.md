@@ -56,7 +56,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | blocked | **BNBx** | | BSC | Stader sunset 2026 |
 | watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
 | watch | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2. **Deprioritized.** Convert pins exist; do not write NFT lockbox this cycle. Maturity-to-HYPE parked (Pts already converted at wrap) |
-| blocked | hKAITO / hVIRTUALMAX | | Base | Extra-chain claims until CREATE2 holder |
+| blocked | hKAITO / hVIRTUALMAX | | Base | Merkle poke pins. Extra-chain CREATE2 lockbox on canonical LZ endpoint. Twin never `openBridge`. **No GO** |
 
 Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
 
@@ -70,7 +70,7 @@ Do not wrap MAX / XMR1 / TRX1. Quote ≠ backing. Protocol still never bids on L
 | ------ | ----- | --- |
 | Locked occupancy (C1) | **ours** | BLUAI4Y live. hORDER queued. hB3 / BONK12M / veAERO / veUP later |
 | Pre-TGE points | **ours** | VAR / Predict live. Nado next |
-| Extra-chain airdrops | blocked | KAITO / VIRTUALMAX until CREATE2 |
+| Extra-chain airdrops | pins | KAITO / VIRTUALMAX merkle `0x2e7ba6ef`. CREATE2 twin, no `openBridge`. No GO |
 | Native XMR in/out | rail, taken | Wagyu. Benchmark only |
 | Native ZEC | skip | CEX + ETF + UZEC |
 | Native TON / GRAM | watch rail | HL delisted TON perp on rebrand. tsTON Leaf still needs TON LZ |
@@ -90,7 +90,7 @@ ETH/SOL/BTC/USDC → HL already has Unit / deBridge / Across / 1inch. HIP-3 pre-
 **Pre** — VAR + Predict **LIVE** USDM claims on factory `0x22684F6e…`. **Nado** next (`createMarket` n=3, queued). Settlement Leafs after TGE: hVAR / hPREDICT / **hINK** (Ink 57073, inner 0 until official INK).
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
-**G** — hKAITO / hVIRTUALMAX after omnichain holder.
+**G** — hKAITO / hVIRTUALMAX merkle poke pins. CREATE2 extra-chain twin, never `openBridge`. **Not a BATCH — no GO**.
 **H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
 **5** — hJitoSOL. Grok bot: Docker `anchor build -v` → deploy `.so` → Store PDA → HyperEVM dest OFT. Task list: `GROK_BOT_MAINNET.md` §5. NCN out.
 **Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.
