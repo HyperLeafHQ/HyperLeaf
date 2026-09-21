@@ -59,3 +59,22 @@ Script: `script/CreatePremarketNado.s.sol`. **Do not broadcast** until a human `
 Settlement Leaf is **hINK**, not a NADO token. Official INK ERC-20 is not posted. Conversion ratio stays parameterized at `resolve()`. Ink LZ V2 is ready (eid 30339, Endpoint `0xca29f3A6…` not CREATE2). Do not `DeployAdapter` until the token exists.
 
 Do not merge to `main` until a VAR series has been smoke-filled on HyperEVM.
+
+## Quantus QTC (native OTC — not a market on the live factory)
+
+Quantus has no smart contracts. QTC cannot be `officialToken`. Do **not** `createMarket` on `0x22684F6e…`.
+
+Phase 1 is a **new** bilateral RFQ:
+
+`NativeOtcFactory` + `NativeDeliveryResolver`
+
+- Seller posts USDM collateral (wrapped to sUSDM, same vault as VAR).
+- Buyer takes the offer, names a Quantus dest, posts USDM payment.
+- Seller sends QTC on Quantus. Owner Safe attests `(offerId, txHash, destHash, atoms)`.
+- `settle` pays seller payment + collateral. Miss the 48h window → buyer takes both.
+- Protocol never holds QTC. Never `hQTC`. Never principal inventory.
+
+Script: `script/DeployNativeOtcQtc.s.sol`. **Do not broadcast** until a human `GO`. Owner `acceptOwnership` on resolver + factory after deploy.
+
+Only unlocked / mined QTC. Investor + team 23% is 1y locked — do not attest those allocations.
+

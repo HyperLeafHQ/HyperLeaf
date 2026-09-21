@@ -552,6 +552,32 @@
       "priority": 29
     },
     {
+      "id": "qtc-otc",
+      "kind": "Pre",
+      "symbol": "QTC",
+      "name": "Quantus QTC native OTC",
+      "innerSymbol": "QTC",
+      "innerToken": null,
+      "source": "quantus",
+      "sourceChainId": 0,
+      "exit": "native-attested",
+      "infra": "native-otc",
+      "yield": {
+        "inner": "none",
+        "pullInner": false,
+        "toHype": []
+      },
+      "note": "Operator GO for Pre OTC, not a Leaf. Quantus is a no-contract PoW L1 — QTC never wraps, never sits on HyperEVM, never uses the live VAR factory. Phase 1: NativeOtcFactory bilateral RFQ, seller collateral + buyer USDM on sUSDM, NativeDeliveryResolver attests dest+atoms+tx. 48h default pays buyer payment+collateral. Do not become QTC principal. Do not createMarket n=4 on 0x22684F6e. Do not hQTC. Treasury 1y lock — only mined / unlocked liquidity. No GO deploy.",
+      "refs": {
+        "report": "https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5757243169",
+        "docs": "https://docs.quantus.com/",
+        "livePremarketFactory": "0x22684F6e63525d009d7cAb9415B0680Fe4aF8f6A",
+        "script": "script/DeployNativeOtcQtc.s.sol"
+      },
+      "status": "premarket-otc-native-pins",
+      "priority": 30
+    },
+    {
       "id": "hdai",
       "kind": "L",
       "symbol": "hDAI",
