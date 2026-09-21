@@ -70,8 +70,8 @@ Phase 1 is a **new** bilateral RFQ:
 
 - Seller posts USDM collateral (wrapped to sUSDM, same vault as VAR).
 - Buyer takes the offer, names a Quantus dest, posts USDM payment.
-- Seller sends QTC on Quantus. Owner Safe attests `(offerId, txHash, destHash, atoms)`.
-- `settle` pays seller payment + collateral. Miss the 48h window → buyer takes both.
+- Seller sends QTC on Quantus. Owner Safe attests `(offerId, txHash, destHash, atoms)`. Wrong dest/amount can be overwritten or `revoke`d until settle/default — not one-shot.
+- `settle` pays seller payment + collateral **only inside** the 48h window. After the window, `settle` reverts even with a late attest; `finalize` (after `revoke` if a bad attest is still `ok`) pays the buyer both.
 - Protocol never holds QTC. Never `hQTC`. Never principal inventory.
 
 Script: `script/DeployNativeOtcQtc.s.sol`. **Do not broadcast** until a human `GO`. Owner `acceptOwnership` on resolver + factory after deploy.

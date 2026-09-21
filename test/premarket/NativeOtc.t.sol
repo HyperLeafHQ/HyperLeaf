@@ -151,12 +151,94 @@ contract NativeOtcTest is Test {
         factory.takeOffer(id, dest, type(uint256).max);
     }
 
-    function testAttestIsOneShot() public {
+    function testAttestCanOverwrite() public {
         bytes32 id = _offer();
         vm.prank(owner);
-        resolver.attest(id, keccak256("qtc-tx"), keccak256(dest), 100e12);
+        resolver.attest(id, keccak256("qtc-tx"), keccak256("other"), 50e12);
         vm.prank(owner);
-        vm.expectRevert(NativeDeliveryResolver.AlreadyAttested.selector);
         resolver.attest(id, keccak256("qtc-tx-2"), keccak256(dest), 100e12);
+        (bytes32 txHash, bytes32 destHash, uint256 atoms,, bool ok) = resolver.attestation(id);
+        assertTrue(ok);
+        assertEq(txHash, keccak256("qtc-tx-2"));
+        assertEq(destHash, keccak256(dest));
+        assertEq(atoms, 100e12);
+    }
+
+    function testWrongAttestThenCorrectThenSettle() public {
+        bytes32 id = _offer();
+        vm.prank(buyer);
+        factory.takeOffer(id, dest, type(uint256).max);
+        vm.prank(owner);
+        resolver.attest(id, keccak256("bad"), keccak256("other"), 100e12);
+        vm.expectRevert(NativeOtcFactory.Dest.selector);
+        factory.settle(id);
+        vm.prank(owner);
+        resolver.attest(id, keccak256("qtc-tx"), keccak256(dest), 100e12);
+        factory.settle(id);
+        (,,,,,,,,, NativeOtcFactory.State st,) = factory.offers(id);
+        assertEq(uint256(st), uint256(NativeOtcFactory.State.SETTLED));
+    }
+
+    function testShortfallThenCorrectThenSettle() public {
+        bytes32 id = _offer();
+        vm.prank(buyer);
+        factory.takeOffer(id, dest, type(uint256).max);
+        vm.prank(owner);
+        resolver.attest(id, keccak256("qtc-tx"), keccak256(dest), 99e12);
+        vm.expectRevert(NativeOtcFactory.Amount.selector);
+        factory.settle(id);
+        vm.prank(owner);
+        resolver.attest(id, keccak256("qtc-tx"), keccak256(dest), 100e12);
+        factory.settle(id);
+        (,,,,,,,,, NativeOtcFactory.State st,) = factory.offers(id);
+        assertEq(uint256(st), uint256(NativeOtcFactory.State.SETTLED));
+    }
+
+    function testSettleAfterWindowRevertsEvenIfAttested() public {
+        bytes32 id = _offer();
+        vm.prank(buyer);
+        factory.takeOffer(id, dest, type(uint256).max);
+        vm.prank(owner);
+        resolver.attest(id, keccak256("qtc-tx"), keccak256(dest), 100e12);
+        vm.warp(block.timestamp + factory.DELIVERY_WINDOW() + 1);
+        vm.expectRevert(NativeOtcFactory.Window.selector);
+        factory.settle(id);
+    }
+
+    function testLateAttestCannotSettle() public {
+        bytes32 id = _offer();
+        vm.prank(buyer);
+        factory.takeOffer(id, dest, type(uint256).max);
+        vm.warp(block.timestamp + factory.DELIVERY_WINDOW() + 1);
+        vm.prank(owner);
+        resolver.attest(id, keccak256("late"), keccak256(dest), 100e12);
+        vm.expectRevert(NativeOtcFactory.Window.selector);
+        factory.settle(id);
+        vm.expectRevert(NativeOtcFactory.BadState.selector);
+        factory.finalize(id);
+        vm.prank(owner);
+        resolver.revoke(id);
+        factory.finalize(id);
+        (,,,,,,,,, NativeOtcFactory.State st,) = factory.offers(id);
+        assertEq(uint256(st), uint256(NativeOtcFactory.State.DEFAULTED));
+    }
+
+    function testExactWindowSettleStillOk() public {
+        bytes32 id = _offer();
+        vm.prank(buyer);
+        factory.takeOffer(id, dest, type(uint256).max);
+        vm.prank(owner);
+        resolver.attest(id, keccak256("qtc-tx"), keccak256(dest), 100e12);
+        vm.warp(block.timestamp + factory.DELIVERY_WINDOW());
+        factory.settle(id);
+        (,,,,,,,,, NativeOtcFactory.State st,) = factory.offers(id);
+        assertEq(uint256(st), uint256(NativeOtcFactory.State.SETTLED));
+    }
+
+    function testRevokeWithoutAttestReverts() public {
+        bytes32 id = _offer();
+        vm.prank(owner);
+        vm.expectRevert(NativeDeliveryResolver.NotAttested.selector);
+        resolver.revoke(id);
     }
 }

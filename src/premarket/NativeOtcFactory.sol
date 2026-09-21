@@ -138,9 +138,12 @@ contract NativeOtcFactory is Ownable2Step, ReentrancyGuard {
     }
 
     /// @dev Anyone. Resolver must have attested dest + amount for this offer.
+    ///      Window is a hard cutoff (audit P1-02): after DELIVERY_WINDOW only
+    ///      `finalize` may run. A late attest cannot steal the buyer's default.
     function settle(bytes32 offerId) external nonReentrant {
         Offer storage o = offers[offerId];
         if (o.state != State.TAKEN) revert BadState();
+        if (block.timestamp > uint256(o.takenAt) + DELIVERY_WINDOW) revert Window();
         (bytes32 txHash, bytes32 destHash, uint256 atoms,, bool ok) = resolver.attestation(offerId);
         if (!ok) revert Amount();
         if (destHash != keccak256(o.destNative)) revert Dest();
