@@ -1,11 +1,11 @@
 # Grok bot tasks — mainnet go-live
 
-> **Status 2026-09-16: archived as a live-ops checklist.** Live surface:
-> **5 Leafs** (hNEST, hQUID, hAVNT, hgSOON, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
+> **Status 2026-09-22: archived as a live-ops checklist.** Live surface:
+> **6 Leafs** (hNEST, hQUID, hAVNT, hgSOON, hslisBNB, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
 > Addresses: [`listings/catalog.json`](../listings/catalog.json) `live` objects.
 > This file stays as the **deploy cookbook** for what is not live yet:
 > `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
-> BATCH 2 remainder `hslisbnb` / `hswbera` (code pins, **no deploy until GO**),
+> BATCH 2 remainder `hswbera` (HOLD — switching to `hsibera`, **no deploy until GO**),
 > Nado points `createMarket` (n=3, **no broadcast until GO**),
 > Quantus QTC native OTC (`DeployNativeOtcQtc.s.sol` — **new factory, never n=4 on the live VAR book, no broadcast until GO**),
 > and `hjitosol` (BATCH 5).
@@ -33,7 +33,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Next **code** after parking hORDER: BATCH 2 remainder **`hslisbnb`** then **`hswbera`**. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. `hsWBERA` is **not** live.
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + **hslisBNB** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Bera remainder is **HOLD** (`hswbera` parked; `hsibera` in #83). Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. `hsWBERA` is **not** live.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
    - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
    Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.
@@ -99,14 +99,14 @@ See git history `95603d0` `docs/GROK_BOT_MAINNET.md` for the original canary / L
 
 ---
 
-## 2b. hslisBNB / hsWBERA — pins only (no broadcast)
+## 2b. hslisBNB LIVE / hsWBERA HOLD
 
-`BATCH=2`. hgSOON is **LIVE**. Remainder is code + COMING frontend until a human `GO`.
+`BATCH=2`. hgSOON and **hslisBNB** are **LIVE**.
 
-- **hslisBNB** inner = Lista slisBNB `0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B` on BSC 56 / eid 30102. Rate = StakeManager `0x1adB950d8bB3dA4bE104211D5AB038628e477fE6` `convertSnBnbToBnb(1e18)`. **Never** `convertToAssets` on the token. Jump 300 bps. `defaultCap` 0. `rewardsSelector` stays 0. Never native BNB `deposit()`, never Lista 7d unstake. `ConfigureMainnetListing` `ASSET=hslisbnb`.
-- **hsWBERA** inner = `0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a` on Berachain 80094 / eid 30362. LZ Bera endpoint is **not** CREATE2 `0x1a44…` — use `0x6F475642a6e85809B1c36Fa62763669b1b48DD5B`. `convertToAssets` + retainRateYield. Never `completeWithdrawal` 7d NFT queue.
+- **hslisBNB LIVE** SOURCE `0xf16E73739787c7F5C92574e536c3fb007191801d` / OFT `0x62cCB35Ed6EC5833379389719a7EE70D33A8ace7` / Conv BSC `0x988cA9957F2Bea52881a91395829D9f7c525D6eB`. Owner FINAL `0x24458f0B…56e`. Do not redeploy.
+- **hsWBERA** HOLD. Do not `GO` `ASSET=hswbera`.
 
-Do not `forge script` these until a dedicated issue has a human `GO`. Do not comment `GO` on #69 for these tickers.
+Do not comment `GO` on #69 for these tickers.
 
 ---
 
