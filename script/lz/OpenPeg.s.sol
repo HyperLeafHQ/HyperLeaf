@@ -17,6 +17,7 @@ contract OpenPeg is Script {
         address oapp = vm.envAddress("OAPP");
         string memory id = vm.envString("ASSET");
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
+        require(a.productionEvm || vm.envOr("PARKED_MAINT", false), "not production evm");
         bytes32 tag = keccak256(bytes(a.id));
         uint256 cap;
         try vm.envUint("PEG_CAP") returns (uint256 explicitCap) {
