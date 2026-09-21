@@ -8,7 +8,7 @@ That file is the task list. This table is only harvest/never per ticker.
 | --- | --- | --- | --- |
 | `hxsquid` / `havnt` | 1 | `pokeRewards` `0x9a99b4f0` then `pullYield` QUID/AVNT | inner as poke target; `0xeab52318` |
 | `hcbeth` | 2 | 1% of `exchangeRate` surplus | pull more than the skim |
-| `hgsoon` / `hswbera` | 2 | 1% of `convertToAssets` surplus | cooldown / 7d NFT queue |
+| `hgsoon` / `hsibera` | 2 | 1% of `convertToAssets` surplus | cooldown / 7d NFT queue / sWBERA / iBERA |
 | `hslisbnb` | 2 | 1% of StakeManager `convertSnBnbToBnb` surplus. Jump 300 bps. `rewardsTarget` = Lista StakeManager, **not** the token | native BNB `deposit()` / Lista 7d `requestWithdraw` / `claimWithdraw` / `instantWithdraw`. Never `convertToAssets` on slisBNB |
 | `hsavax` | 3 | 1% of `getPooledAvaxByShares` | `requestUnlock` |
 | `hstkwausdc` | 3 | 1% rate skim + `RewardsController` `0xbb492bf5` | `cooldown` on StakeToken |

@@ -17,6 +17,7 @@ contract DeployOFT is Script {
         require(batch != MainnetBatches.CLOSED, "C1: DeployClosed");
         AssetCatalog.Listing memory a = AssetCatalog.get(id);
         require(a.kind == AssetCatalog.Kind.Liquid, "not L");
+        require(a.productionEvm || vm.envOr("PARKED_MAINT", false), "not production evm");
         require(block.chainid == 999, "HyperEVM 999");
         address owner = vm.envAddress("OWNER");
         address guardian = vm.envAddress("GUARDIAN");

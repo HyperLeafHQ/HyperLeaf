@@ -106,7 +106,7 @@ Not batch 0–4. `BATCH=5`. Dest `DeployOFT`. Source is not `DeployAdapter`.
 | Worst-case loss | min(depositCap, maxPerDay) on principal. Yield path loss is converter execution on the 1% skim |
 | Test | `test/lz/LeafRateYield.t.sol` — 1% skim, 99% retained, slash, NAV mint, donation invariance, floor rounding, rate fuzz, sell-all still works if retain is off |
 
-Do **not** enable `rateKind` on Morpho shares unless that listing's row says pull rate surplus. **hgSOON and hsWBERA opt in:** `ConvertToAssets` + `retainRateYield` (same 1% skim as hcbETH).
+Do **not** enable `rateKind` on Morpho shares unless that listing's row says pull rate surplus. **hgSOON and hsiBERA opt in:** `ConvertToAssets` + `retainRateYield` (same 1% skim as hcbETH). **hsWBERA is parked.**
 
 Converter `minOut` is enforced on `LeafYieldConverter.execute` (balance delta) and `notify(amount, minAmount)`. It is **not** a lockbox invariant — wrap/redeem never talk to the converter. A dead hop: `halt` + `returnToLockbox`. Next hop can be a different allowlisted bridge (deBridge / Mayan / Relay).
 
@@ -223,28 +223,30 @@ Staking rewards and buybacks paused **2026-08-21**. UNCX lockers still take fees
 
 Do not wrap ethDYDX. Yield is validator stake on **dYdX Chain** (USDC fees, ~21–30d unbond, address-keyed). Liquid receipt is **Stride stDYDX**. Same class as hJupSOL: non-EVM lockbox first. Never undelegate from the lockbox.
 
-### hsWBERA (batch 2 — Berachain mainnet, wrap sWBERA, 1% rate skim)
+### hsWBERA (parked — replaced by hsiBERA)
 
-No Bepolia. LZ EndpointV2 is live on 80094. One listing this phase.
+Do **not** wrap sWBERA `0x118D2cEe…eC9a` this cycle. PoL-only vault, no validator yield. Listing stays in catalog with `productionEvm=false`.
 
-Live 2026-09-07: 1 sWBERA ≈ 1.458 WBERA. Vault `paused() = false`. Supply ~3.72e7.
+### hsiBERA (batch 2 — Berachain mainnet, wrap siBERA, 1% rate skim)
+
+No Bepolia. LZ EndpointV2 is live on 80094. One Bera listing this phase.
+
+Live 2026-09-22: 1 siBERA ≈ 1.093 iBERA; 1 iBERA ≈ 1.055 BERA; nested ≈ 1.15 BERA. Vault `paused() = false`. Supply ~2.00e7. `WITHDRAWAL_COOLDOWN = 604800`.
 
 | | |
 | --- | --- |
-| Canonical backing | transferable **sWBERA** pulled (`0x118D2cEe…eC9a` on **Berachain 80094**). Vault **is** the ERC-20. Asset = WBERA `0x6969…6969` |
-| Accounting unit | 1 hsWBERA share. WBERA NAV lives in `convertToAssets` |
-| Core invariant | L: `supply ≤ totalLocked sWBERA` + sWBERA supply ceiling |
-| Proof source | lockbox `totalLocked` + `sWBERA.totalSupply` / `convertToAssets` |
-| Rate source | `convertToAssets(1e18)` (`RateKind.ConvertToAssets`) + `retainRateYield`. Same 1% skim as hcbETH / hgSOON. Wrap/redeem settle the 1% first |
-| Mint / redeem | wrap/unwrap **sWBERA** as ERC-20. Instant. **Never** native BERA / WBERA `deposit`/`mint`. **Never** the 7d unbond: `withdraw` 0xb460af94 / `redeem` 0xba087652 / `queueWithdraw` 0x50b3f984 / `queueRedeem` 0x9ad82aa0 / `completeWithdrawal` 0x38248a0c, 0x06866fdc / `cancelQueuedWithdrawal` 0x1b0aed2c. Cooldown **604800**. NFT `0x30e47fd0…99DA` |
-| Yield | auto-compound in the sWBERA/WBERA rate (Incentive Auction WBERA). Protocol skims **1% of surplus**. Holders have no WHYPE claim. Do not pull sWBERA as side-token harvest |
-| Failure | vault pause; someone `redeem`s lockbox shares (principal in 7d NFT); cancel remints at **current** rate |
+| Canonical backing | transferable **siBERA** `0xa3503ba6460121d5936f4576f5486fed30dba4d8` on **Berachain 80094**. Vault **is** the ERC-20. Asset = **iBERA** `0x9b6761bf…fe5`, not WBERA |
+| Accounting unit | 1 hsiBERA share. Outer NAV is `siBERA.convertToAssets` (iBERA). Inner iBERA/BERA validator yield stays in the iBERA receipt |
+| Core invariant | L: `supply ≤ totalLocked siBERA` + siBERA supply ceiling |
+| Proof source | lockbox `totalLocked` + `siBERA.totalSupply` / `convertToAssets`. Do not treat iBERA or WBERA as backing |
+| Rate source | `convertToAssets(1e18)` on **siBERA** (`RateKind.ConvertToAssets`) + `retainRateYield`. 1% skim of outer iBERA surplus only. Jump 300 bps |
+| Mint / redeem | wrap/unwrap **siBERA** as ERC-20. Instant. **Never** sWBERA `0x118D2cEe…` / iBERA / WBERA / native BERA. **Never** the 7d unbond: `withdraw` 0xb460af94 / `redeem` 0xba087652 / `queueWithdraw` / `queueRedeem` / `completeWithdrawal` 0x38248a0c, 0x06866fdc / `cancelQueuedWithdrawal` |
+| Yield | Dual: Infrared validator (inside iBERA, not skimmed) + PoL auction (siBERA rate, 1% protocol / 99% holders). No WHYPE claim |
+| Failure | vault pause; Infrared slash / validator set; someone `redeem`s lockbox shares into 7d NFT; wrapping sWBERA by ticker |
 | Auto-pause | ceiling / health / inner paused |
-| Worst-case loss | min(cap, maxPerDay) on sWBERA. Unbond APY gap is not backing |
-| Test | `testSwberaConvertToAssetsSameMathAsCbeth`, `LeafReceiptOnly`. Adapter never calls the 7d queue selectors. `ConfigureMainnetListing` `ASSET=hswbera` |
-| Deploy | **Mainnet** `DeployAdapter` on 80094. Not Bepolia |
-
-
+| Worst-case loss | inner ceiling (anti-print). Unbond APY gap is not backing |
+| Test | `test/lz/LeafSibera.t.sol`, `LeafReceiptOnly`. `ConfigureMainnetListing` `ASSET=hsibera` |
+| Deploy | **Mainnet** `DeployAdapter` on 80094. Not Bepolia. `ASSET=hsibera` |
 
 ### hB3 (research — stake path live, yield incomplete)
 

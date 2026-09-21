@@ -110,6 +110,9 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("bluai4y").defaultCap, 0);
         assertEq(AssetCatalog.get("horder").defaultCap, 0);
         assertEq(AssetCatalog.get("hswbera").defaultCap, 0);
+        assertFalse(AssetCatalog.get("hswbera").productionEvm);
+        assertEq(AssetCatalog.get("hsibera").defaultCap, 0);
+        assertTrue(AssetCatalog.get("hsibera").productionEvm);
         assertEq(AssetCatalog.get("hsavax").defaultCap, 0);
         assertEq(AssetCatalog.get("bonk12m").innerMainnet, address(0));
         assertEq(AssetCatalog.get("hjitosol").innerMainnet, address(0));
@@ -128,6 +131,14 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hswbera").sourceEidMain, 30362);
         assertEq(AssetCatalog.get("hswbera").sourceEidTest, 40371);
         assertEq(AssetCatalog.get("hswbera").lockSeconds, 0);
+        assertFalse(AssetCatalog.get("hswbera").productionEvm);
+        assertEq(uint8(AssetCatalog.get("hsibera").kind), uint8(AssetCatalog.Kind.Liquid));
+        assertEq(AssetCatalog.get("hsibera").innerMainnet, 0xA3503ba6460121d5936F4576f5486Fed30dbA4d8);
+        assertEq(AssetCatalog.get("hsibera").sourceChainIdMain, 80094);
+        assertEq(AssetCatalog.get("hsibera").sourceEidMain, 30362);
+        assertEq(AssetCatalog.get("hsibera").sourceEidTest, 40371);
+        assertEq(AssetCatalog.get("hsiBERA").id, "hsibera");
+        assertTrue(AssetCatalog.get("hsibera").productionEvm);
         assertEq(AssetCatalog.get("hstkwausdc").innerMainnet, 0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6);
         assertEq(AssetCatalog.get("hstkwaUSDC").id, "hstkwausdc");
         assertEq(AssetCatalog.get("hstkwausdc").sourceChainIdMain, 1);
@@ -182,6 +193,8 @@ contract AssetCatalogTest is Test {
         this._batch("hcbeth");
         assertEq(MainnetBatches.batchOf("hgsoon"), 2);
         assertEq(MainnetBatches.batchOf("hswbera"), 2);
+        assertEq(MainnetBatches.batchOf("hsibera"), 2);
+        assertEq(MainnetBatches.batchOf("hsiBERA"), 2);
         assertEq(MainnetBatches.batchOf("hslisbnb"), 2);
         assertEq(AssetCatalog.get("hslisbnb").innerMainnet, 0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B);
         assertEq(AssetCatalog.get("hslisbnb").sourceChainIdMain, 56);

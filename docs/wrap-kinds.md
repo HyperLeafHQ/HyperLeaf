@@ -8,7 +8,7 @@ Three listings. Never mix exits on one pair. Never turn a live C1 into a C2.
 
 **Umbrella L (hstkwaUSDC):** same 1% rate skim via `convertToAssets` **plus** `pokeRewards` → `RewardsController.claimAllRewards([inner], lockbox)` (`0xbb492bf5`). Target is the controller, never the StakeToken. Never `cooldown`.
 
-xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). **hgSOON / hsWBERA** use `ConvertToAssets` + `retainRateYield` (cbETH-class 1% skim). **hsETHFI** is yield-in-share (sETHFI NAV stays in the receipt; no `convertToAssets`; extra KING merkle is not this round's poke). Morpho shares stay yield-in-share until their row opts in.
+xSQUID stays 1:1 because QUID is a different ERC-20 — that is Rewarder, not share-price (`docs/YIELD_OWNERSHIP.md`). **hgSOON / hsiBERA** use `ConvertToAssets` + `retainRateYield` (cbETH-class 1% skim). **hsWBERA** is parked. **hsETHFI** is yield-in-share (sETHFI NAV stays in the receipt; no `convertToAssets`; extra KING merkle is not this round's poke). Morpho shares stay yield-in-share until their row opts in.
 
 ## CREATE2 vs LZ wrap
 
@@ -52,7 +52,7 @@ Default: 1% of newly accrued inner yield stays as inner (`harvest`).
 
 0. **hCANARY** (L, Base mainnet toy) — real DVN stack, then dead
 1. **hxSQUID** then **hAVNT** (L, Base) — side-token claim
-2. **hcbETH** / **hgSOON** / **hsWBERA** (L, rate skim)
+2. **hcbETH** / **hgSOON** / **hsiBERA** (L, rate skim)
 3. **hsAVAX** / **hstkwaUSDC** / **hLBTC**. **hsETHFI** is gated (`productionEvm=false`).
 4. **BLUAI4Y** / **hORDER** (C1, market exit)
 5. **hJitoSOL** (L, Solana PDA — dest OFT + `LeafJitoRate`; program next)

@@ -854,7 +854,39 @@
         "rateKind": "convertToAssets",
         "retainRateYield": true
       },
-      "note": "Wrap sWBERA only. BATCH 2 mainnet (Berachain 80094) after hgSOON. ConvertToAssets + retainRateYield 1% skim. ERC-4626 withdraw/redeem on this vault is the 7d unbond — never call it. Never deposit WBERA/BERA. Users exit via HyperEVM/Bera market or official unbond themselves after unwrap. Catalog pins already on main. Frontend COMING until deploy GO.",
+      "note": "HOLD. Replaced by hsiBERA (POL Staked iBERA, dual yield). Do not wrap sWBERA this cycle. Inner still 0x118D2cEe\u2026eC9a if we ever revive. Never 7d NFT unbond. Never deposit WBERA/BERA.",
+      "status": "hold-replaced-by-hsibera",
+      "priority": 40
+    },
+    {
+      "id": "hsiBERA",
+      "kind": "L",
+      "symbol": "hsiBERA",
+      "name": "Hyperleaf siBERA",
+      "innerSymbol": "siBERA",
+      "innerToken": "0xA3503ba6460121d5936F4576f5486Fed30dbA4d8",
+      "underlying": "0x9b6761bf2397Bb5a6624a856cC84A3A14Dcd3fe5",
+      "never": [
+        "0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a",
+        "0x9b6761bf2397Bb5a6624a856cC84A3A14Dcd3fe5",
+        "0x6969696969696969696969696969696969696969"
+      ],
+      "source": "berachain",
+      "sourceChainId": 80094,
+      "sourceEid": 30362,
+      "sourceEidTest": 40371,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "erc4626-rate-over-ibera",
+        "pullInner": "rate-surplus-1pct",
+        "toHype": [],
+        "protocolFee": "1pct-rate-surplus",
+        "rateKind": "convertToAssets",
+        "retainRateYield": true
+      },
+      "claim": "none. convertToAssets(1e18) on siBERA reads iBERA. iBERA/BERA validator yield stays in the iBERA receipt. Never poke inner. Never 7d completeWithdrawal.",
+      "note": "BATCH 2 remainder (Berachain 80094, ASSET=hsibera). Replaces hsWBERA. Wrap ONLY siBERA 0xa3503ba6\u2026a4d8 (POL Staked iBERA). Asset = iBERA, not WBERA. Dual yield: Infrared validator (inside iBERA) + PoL auction (siBERA convertToAssets). 1% skim is of the outer iBERA surplus only. Never wrap sWBERA / iBERA / WBERA / native BERA. Never 7d NFT unbond. LZ endpoint 0x6F4756\u2026 not CREATE2 0x1a44. HEVM ASSET=hsibera \u2192 eid 30362.",
       "status": "mainnet-batch-2",
       "priority": 3
     },

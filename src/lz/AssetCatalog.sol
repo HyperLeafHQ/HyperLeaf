@@ -320,6 +320,23 @@ library AssetCatalog {
                 0,
                 0x118D2cEeE9785eaf70C15Cd74CD84c9f8c3EeC9a,
                 0,
+                false
+            );
+        }
+        if (k == keccak256("hsibera") || k == keccak256("hsiBERA") || k == keccak256("hsIBERA")) {
+            return Listing(
+                Kind.Liquid,
+                "hsibera",
+                "Hyperleaf siBERA",
+                "hsiBERA",
+                "siBERA",
+                80094,
+                30362,
+                40371,
+                0,
+                0,
+                0xA3503ba6460121d5936F4576f5486Fed30dbA4d8,
+                0,
                 true
             );
         }
@@ -469,7 +486,7 @@ library AssetCatalog {
             string("hwsteth"),
             string("horder"),
             string("hgsoon"),
-            string("hswbera"),
+            string("hsibera"),
             string("hstkwausdc"),
             string("hsethfi"),
             string("hslisbnb"),
