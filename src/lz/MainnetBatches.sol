@@ -22,7 +22,8 @@ library MainnetBatches {
         // Rate L. Base cbETH has no exchangeRate — do not ship hcbeth in this batch.
         if (
             k == keccak256("hgsoon") || k == keccak256("hswbera") || k == keccak256("hslisbnb")
-                || k == keccak256("hslisBNB")
+                || k == keccak256("hslisBNB") || k == keccak256("hsibera") || k == keccak256("hsiBERA")
+                || k == keccak256("hsIBERA")
         ) return RATE_L;
         if (
             k == keccak256("hsavax") || k == keccak256("hstkwausdc") || k == keccak256("hstkwaUSDC")

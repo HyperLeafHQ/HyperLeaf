@@ -12,7 +12,7 @@ import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 ///         Send ULN confirmations = this chain. Receive ULN confirmations =
 ///         the remote chain (source depth of inbound messages). Copying the
 ///         local number onto both libs is a DVN mismatch.
-///         HyperEVM: ASSET sets remote eid (hgsoon/hslisbnb→BSC, hswbera→Bera, hink→Ink, hsteakusdg→Robinhood, default Base).
+///         HyperEVM: ASSET sets remote eid (hgsoon/hslisbnb→BSC, hsibera/hswbera→Bera, hink→Ink, hsteakusdg→Robinhood, default Base).
 contract SetSecurityStack is Script {
     function run() external {
         address oapp = vm.envAddress("OAPP");

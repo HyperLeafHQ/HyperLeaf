@@ -8,7 +8,7 @@ HyperLeaf does **not** rebase Leaf. We pick the accounting per yield type.
 
 | Yield type | Model | Where 99% lives | Protocol 1% | LP / lend |
 | --- | --- | --- | --- | --- |
-| Rate / ERC-4626 / LST (`hcbETH`, `hsWBERA`, `hgSOON`, Morpho, later `hwstETH`) | **Share-price** (`retainRateYield`) | Stays in inner. Redeem more valuable receipt. | Skim 1% of surplus to converter → HYPE | Captures the 99%. No claim button. |
+| Rate / ERC-4626 / LST (`hcbETH`, `hsiBERA`, `hgSOON`, Morpho, later `hwstETH`) | **Share-price** (`retainRateYield`) | Stays in inner. Redeem more valuable receipt. | Skim 1% of surplus to converter → HYPE | Captures the 99%. No claim button. |
 | Side token (`hxSQUID` QUID, hKAITO eco ERC-20s) | **Rewarder** | WHYPE `notify` by address | 1% at notify | Does **not** capture. See `HYPE_COMPOSABILITY.md`. |
 | Foreign ledger (`hORDER`) | Ledger principal + harvest | Harvest token via Rewarder | 1% at notify | Same as side token until a wrapper. |
 | Locked NFT | Position NAV | Not this adapter | — | — |
