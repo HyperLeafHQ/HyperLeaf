@@ -7,6 +7,7 @@
 > `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
 > BATCH 2 remainder `hslisbnb` / `hswbera` (code pins, **no deploy until GO**),
 > Nado points `createMarket` (n=3, **no broadcast until GO**),
+> Quantus QTC native OTC (`DeployNativeOtcQtc.s.sol` — **new factory, never n=4 on the live VAR book, no broadcast until GO**),
 > and `hjitosol` (BATCH 5).
 > Do **not** deploy Ink adapter/OFT — official INK ERC-20 is not posted.
 > Do not treat the narrative below as "do this next" unless the ticker is still unchecked.

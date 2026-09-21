@@ -74,6 +74,7 @@ Do not wrap MAX / XMR1 / TRX1. Quote ≠ backing. Protocol still never bids on L
 | Native XMR in/out | rail, taken | Wagyu. Benchmark only |
 | Native ZEC | skip | CEX + ETF + UZEC |
 | Native TON / GRAM | watch rail | HL delisted TON perp on rebrand. tsTON Leaf still needs TON LZ |
+| **Native QTC (Quantus)** | **Pre OTC** | **Pins.** No-contract PoW L1. Bilateral RFQ + USDM escrow + resolver attest. Do not wrap. Do not use VAR factory. Report [5757243169](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5757243169) |
 | Native TRX | skip rail | Wagyu TRX1 + existing HL inbound. sTRX Leaf still needs TRON LZ |
 | Native NEAR | skip rail | NEAR Intents already routes into HL. stNEAR Leaf still needs native LZ |
 | DASH / FIRO / GRIN | skip | Thin |
@@ -87,7 +88,7 @@ ETH/SOL/BTC/USDC → HL already has Unit / deBridge / Across / 1inch. HIP-3 pre-
 **2** — rate L: **hgSOON LIVE.** **hslisBNB** Lista pins (`convertSnBnbToBnb`, jump 300, cap 0) — not live. **hsWBERA** catalog already on main — COMING frontend, not live. **hcbETH out** (Base token has no `exchangeRate`).
 **3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). hsETHFI gated (`productionEvm=false`).
 **4** — C1: **BLUAI4Y LIVE.** hORDER queued (#69). Leaf Market already live for BLUAI. No CREATE2 twin. New escrow for hORDER — never `0x367FB8`.
-**Pre** — VAR + Predict **LIVE** USDM claims on factory `0x22684F6e…`. **Nado** next (`createMarket` n=3, queued). Settlement Leafs after TGE: hVAR / hPREDICT / **hINK** (Ink 57073, inner 0 until official INK).
+**Pre** — VAR + Predict **LIVE** USDM claims on factory `0x22684F6e…`. **Nado** next (`createMarket` n=3, queued). Settlement Leafs after TGE: hVAR / hPREDICT / **hINK**. **QTC native OTC** is a **new** factory (`NativeOtcFactory`), not n=4 on the live book. No wrap. No GO deploy.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
 **G** — hKAITO / hVIRTUALMAX merkle poke pins. CREATE2 extra-chain twin, never `openBridge`. **Not a BATCH — no GO**.
