@@ -59,6 +59,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     event FarmRequestSel(bytes4 sel);
     event FarmRequest(uint256 amount, uint8 payloadType, address indexed caller);
     event LedgerPrincipalReported(uint256 observed, address indexed caller);
+    event NativeRescued(address indexed to, uint256 amount);
 
     error ZeroAmount();
     error CapExceeded();
@@ -67,6 +68,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     error InsufficientLocked();
     error FarmConfigFrozen();
     error ReentrantAbortRecoveryDisabled();
+    error NativeRescueFailed();
 
     constructor(
         address token_,
@@ -180,7 +182,9 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     /// @dev Harvest types (Orderly 10/17) may be public. Unstake 2/3/4 stays owner.
     function setPublicRequestType(uint8 payloadType, bool ok) external onlyOwner {
         _requireFarmConfigMutable();
-        if (ok && farmStyle == FarmStyle.AmountNative && payloadType >= 2 && payloadType <= 4) revert BadStake();
+        if (ok && farmStyle == FarmStyle.AmountNative && payloadType != 10 && payloadType != 17) {
+            revert BadStake();
+        }
         publicRequestType[payloadType] = ok;
     }
 
@@ -287,6 +291,7 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
         _harvestInner(innerToken, _principalReserved());
 
+        uint256 nativeBefore = address(this).balance - msg.value;
         uint256 got = _pull(msg.sender, amount);
         if (depositCap != 0 && totalLocked + got > depositCap) revert CapExceeded();
         totalLocked += got;
@@ -301,12 +306,22 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
 
         _takeQuota(got);
 
+        address refundTo = refund == address(0) ? msg.sender : refund;
+        if (farmStyle == FarmStyle.AmountNative) {
+            uint256 lzBudget = msg.value - farmFee;
+            uint256 leftover = address(this).balance - nativeBefore - lzBudget;
+            if (leftover > 0) {
+                (bool ok,) = payable(refundTo).call{value: leftover}("");
+                if (!ok) revert NativeRescueFailed();
+            }
+        }
+
         bytes memory payload = encodeBridge(to, got);
         ILayerZeroEndpointV2.MessagingReceipt memory receipt = _lzSend(
             dstEid,
             payload,
             _defaultOptions(dstEid),
-            refund == address(0) ? msg.sender : refund,
+            refundTo,
             msg.value - farmFee
         );
         emit BridgedOut(msg.sender, dstEid, to, got, receipt.guid);
@@ -362,9 +377,24 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         farmPrincipalOut = true;
     }
 
-    /// @dev Orderly refunds leftover stake native to this box. Without this,
-    ///      an overestimate of `farmNativeFee` reverts the wrap.
+    /// @dev Orderly refunds leftover stake native here (same-tx or later compose).
+    ///      Same-tx leftover is pushed to `refund` in `send`. Later refunds:
+    ///      `rescueNative`.
     receive() external payable {}
+
+    /// @notice Sweep stranded native (async Orderly leftover). Not farm, not this.
+    function rescueNative(address to, uint256 amount) external onlyOwner {
+        if (to == address(0) || to == farm || to == address(this)) revert ZeroAddress();
+        (bool ok,) = to.call{value: amount}("");
+        if (!ok) revert NativeRescueFailed();
+        emit NativeRescued(to, amount);
+    }
+
+    /// @notice LZ quote plus Orderly `farmNativeFee` when AmountNative.
+    function quoteSendWithFarm(uint32 dstEid, bytes32 to, uint256 amount) external view returns (uint256 nativeFee) {
+        nativeFee = quoteSend(dstEid, to, amount);
+        if (farmStyle == FarmStyle.AmountNative) nativeFee += farmNativeFee;
+    }
 
     function _principalReserved() internal view virtual returns (uint256) {
         // ORDER in this box is always principal (idle or in-transit). Never yield.

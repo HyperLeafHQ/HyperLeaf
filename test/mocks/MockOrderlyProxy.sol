@@ -26,6 +26,10 @@ contract MockOrderlyProxy {
         staked[msg.sender] += amount;
         lastCaller = msg.sender;
         lastAmount = amount;
+        if (msg.value > minStakeValue) {
+            (bool ok,) = payable(msg.sender).call{value: msg.value - minStakeValue}("");
+            require(ok, "refund");
+        }
     }
 
     function sendUserRequest(uint256 amount, uint8 payloadType) external payable {

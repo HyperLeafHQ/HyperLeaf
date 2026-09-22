@@ -42,7 +42,11 @@ contract ConfigureClosedListing is Script {
             box.setFarmRequest(LeafOrderPolicy.SEND_REQUEST);
             box.setPublicRequestType(LeafOrderPolicy.TYPE_HARVEST_USDC, true);
             box.setPublicRequestType(LeafOrderPolicy.TYPE_OCCUPANCY, true);
+            require(box.publicRequestType(LeafOrderPolicy.TYPE_HARVEST_USDC), "harvest public");
+            require(box.publicRequestType(LeafOrderPolicy.TYPE_OCCUPANCY), "occ public");
+            require(!box.publicRequestType(LeafOrderPolicy.TYPE_UNSTAKE_2), "unstake public");
             console2.log("farmNativeFee", nativeFee);
+            console2.log("same-tx leftover native -> refund; async -> rescueNative");
         } else if (keccak256(bytes(a.id)) == keccak256("bluai4y")) {
             require(block.chainid == 56, "BLUAI is BSC");
             box.setFarm(H.BLUAI_STAKE_BSC, IBluaiStake.stake.selector, 4, IBluaiStake.claimAll.selector);

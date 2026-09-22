@@ -274,6 +274,49 @@ contract LeafOmnichainCreate2Test is PegReady {
         vm.prank(owner);
         vm.expectRevert(LeafInboundLockbox.BadStake.selector);
         box.setPublicRequestType(2, true);
+        vm.prank(owner);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.setPublicRequestType(11, true);
+    }
+
+    function testOrderlyNativeRefundGoesToUserNotBox() public {
+        proxy.setMinStakeValue(0.0001 ether);
+        vm.prank(owner);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0.001 ether);
+        uint256 boxBefore = address(box).balance;
+        uint256 userBefore = user.balance;
+        vm.startPrank(user);
+        inner.approve(address(box), 10e18);
+        box.send{value: 0.011 ether}(30367, bytes32(uint256(uint160(user))), 10e18, user);
+        vm.stopPrank();
+        assertEq(address(proxy).balance, 0.0001 ether);
+        assertEq(address(box).balance, boxBefore);
+        assertEq(user.balance, userBefore - 0.011 ether + 0.0009 ether);
+        assertEq(address(ep).balance, 0.01 ether);
+    }
+
+    function testRescueNativeSweepsAsyncLeftover() public {
+        uint256 boxBefore = address(box).balance;
+        vm.deal(address(box), boxBefore + 0.0004 ether);
+        address sink = address(0x51);
+        vm.prank(owner);
+        box.rescueNative(sink, 0.0004 ether);
+        assertEq(sink.balance, 0.0004 ether);
+        assertEq(address(box).balance, boxBefore);
+        vm.prank(owner);
+        vm.expectRevert(LeafOApp.ZeroAddress.selector);
+        box.rescueNative(address(proxy), 1);
+        vm.prank(user);
+        vm.expectRevert();
+        box.rescueNative(sink, 1);
+    }
+
+    function testQuoteSendWithFarmAddsNativeBudget() public {
+        uint256 lzOnly = box.quoteSend(30367, bytes32(uint256(uint160(user))), 1e18);
+        assertEq(box.quoteSendWithFarm(30367, bytes32(uint256(uint160(user))), 1e18), lzOnly);
+        vm.prank(owner);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0.001 ether);
+        assertEq(box.quoteSendWithFarm(30367, bytes32(uint256(uint160(user))), 1e18), lzOnly + 0.001 ether);
     }
 
     function testFarmUnstakeDisabledForOrder() public {
