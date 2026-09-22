@@ -279,6 +279,43 @@ contract LeafOmnichainCreate2Test is PegReady {
         box.setPublicRequestType(11, true);
     }
 
+    function testAmountYearsCannotOpenUnstakeThenFlipNative() public {
+        vm.startPrank(owner);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountYears, 0);
+        box.setPublicRequestType(2, true);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0.001 ether);
+        vm.stopPrank();
+        assertFalse(box.publicRequestType(2));
+        assertTrue(box.publicRequestType(10));
+        assertTrue(box.publicRequestType(17));
+        vm.prank(user);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.pokeFarmRequest(1, 2);
+        vm.prank(owner);
+        box.pokeFarmRequest(1, 2);
+        assertEq(proxy.lastType(), 2);
+        vm.prank(user);
+        box.pokeFarmRequest(1, 10);
+        assertEq(proxy.lastType(), 10);
+        vm.prank(user);
+        box.pokeFarmRequest(1, 17);
+        assertEq(proxy.lastType(), 17);
+    }
+
+    function testStaleNonAllowlistedTypeBlockedAfterFlipNative() public {
+        vm.startPrank(owner);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountYears, 0);
+        box.setPublicRequestType(11, true);
+        box.setFarmStyle(LeafInboundLockbox.FarmStyle.AmountNative, 0.001 ether);
+        vm.stopPrank();
+        vm.prank(user);
+        vm.expectRevert(LeafInboundLockbox.BadStake.selector);
+        box.pokeFarmRequest(1, 11);
+        vm.prank(owner);
+        box.pokeFarmRequest(1, 11);
+        assertEq(proxy.lastType(), 11);
+    }
+
     function testOrderlyNativeRefundGoesToUserNotBox() public {
         proxy.setMinStakeValue(0.0001 ether);
         vm.prank(owner);

@@ -170,6 +170,12 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _requireFarmConfigMutable();
         farmStyle = style;
         farmNativeFee = nativeFee;
+        if (style == FarmStyle.AmountNative) {
+            // Drop stale allowlist entries written under AmountYears.
+            publicRequestType[2] = false;
+            publicRequestType[3] = false;
+            publicRequestType[4] = false;
+        }
         emit FarmStyleSet(style, nativeFee);
     }
 
@@ -191,7 +197,12 @@ contract LeafInboundLockbox is LeafOApp, ReentrancyGuard, LeafYieldFee {
     /// @notice Ledger request as this lockbox. Calldata is (amount, type) only.
     function pokeFarmRequest(uint256 amount, uint8 payloadType) external payable nonReentrant {
         if (farm == address(0) || farmRequestSel == bytes4(0) || amount == 0) revert BadStake();
-        if (!publicRequestType[payloadType] && msg.sender != owner()) revert BadStake();
+        if (msg.sender != owner()) {
+            if (farmStyle == FarmStyle.AmountNative && payloadType != 10 && payloadType != 17) {
+                revert BadStake();
+            }
+            if (!publicRequestType[payloadType]) revert BadStake();
+        }
         (bool ok,) = farm.call{value: msg.value}(abi.encodeWithSelector(farmRequestSel, amount, payloadType));
         if (!ok) revert BadStake();
         emit FarmRequest(amount, payloadType, msg.sender);
