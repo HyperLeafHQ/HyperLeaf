@@ -33,7 +33,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + hslisBNB + hsiBERA + **hsAVAX** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** is **not** automatic: `hstkwausdc` still needs jump 300 + RewardsController pin. Do **not** `GO` `hlbtc` / `horder` from the hsAVAX cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked**. SOURCE `0x4C862bC0…` is **chain-keyed**: 80094 hsiBERA / 43114 hsAVAX / 56 dead BLUAI.
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + hslisBNB + hsiBERA + **hsAVAX** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** is **not** automatic: `hstkwausdc` jump 300 + RewardsController are pinned in `LeafUmbrellaPolicy` / `ConfigureMainnetListing`. **No GO until human audit + GO.** Do **not** `GO` `hlbtc` / `horder` from that cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked**. SOURCE `0x4C862bC0…` is **chain-keyed**: 80094 hsiBERA / 43114 hsAVAX / 56 dead BLUAI.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
    - hsAVAX jump 300 is on `ConfigureMainnetListing` `ASSET=hsavax`. Umbrella / hLBTC still BATCH 3 remainder — do not `GO` those from this hsAVAX cookbook.
 
@@ -115,7 +115,7 @@ Do not comment `GO` on #69 for these tickers.
 `BATCH=3` first ticker is **LIVE**. Do not redeploy.
 
 - **hsAVAX LIVE** SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` (**Avalanche 43114**) / OFT `0x304abA885393aC13e34655daf48C2Ab8D0B6078f` / Conv `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2`. Inner sAVAX. `maxRateJumpBps=300`. Same SOURCE/Conv hex on 80094 is hsiBERA.
-- Remainder: `hstkwausdc` / `hlbtc` — **no GO** until jump/controller pins.
+- Remainder: `hstkwausdc` jump 300 + controller pinned in `LeafUmbrellaPolicy`. **No GO until audit.** `hlbtc` still remainder.
 
 Do not comment `GO` on #69 for these tickers.
 

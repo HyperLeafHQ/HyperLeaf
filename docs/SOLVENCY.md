@@ -350,22 +350,23 @@ Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche 43114). N
 
 Same math as hcbETH. Different 4-byte rate read.
 
-### hstkwaUSDC (next testnet — Umbrella StakeToken, not stkAAVE)
+### hstkwaUSDC (BATCH 3 — Umbrella StakeToken, not stkAAVE)
 
-Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6` (Ethereum). `.v1` is a factory suffix. A later `.v2` is a different ERC-20 → new listing. Pin the address.
+Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6` (Ethereum 1). `.v1` is a factory suffix. A later `.v2` is a different ERC-20 → new listing. Pin the address.
 
 | | |
 | --- | --- |
 | Canonical backing | lockbox balance of that StakeToken. Underlying is waEthUSDC `0xD4fa2D31…`. Never aUSDC / USDC / other Umbrella stks |
-| Accounting unit | 1 hstkwaUSDC = 1 stk share. Economic USDC is `convertToAssets` (can fall on slash) |
+| Accounting unit | 1 hstkwaUSDC = 1 stk share (6-dec). Economic USDC is `convertToAssets` (can fall on slash) |
 | Core invariant | L: `supply ≤ totalLocked stk`. Rate harvest must not drop backing below outstanding principal watermark |
 | Proof source | lockbox `totalLocked` + `balanceOf(stk)` + `convertToAssets`. Side rewards are **not** backing |
 | Mint / redeem | wrap/unwrap the v1 receipt, instant. **Never** `cooldown` / `redeem` / `withdraw` on StakeToken (20d, one cooldown per address). **Never** auto-migrate to v2. User who wants Aave v2: unwrap, migrate themselves |
-| Yield | **Two books.** (1) aToken interest in `convertToAssets` → hcbETH `retainRateYield`, pull **1% of surplus** as protocol fee, 99% stays in backing. Slash / rate down → keep high-water mark, pull 0. Recovery to that mark is not fee. Guardian `acknowledgeRate` is the explicit loss-recognition path. (2) Umbrella emissions via `RewardsController` `0x4655Ce3D…` `claimAllRewards([stk], lockbox)` → converter → WHYPE 99/1. Pin selector from controller ABI, not a tx hash |
+| Yield | **Two books.** (1) aToken interest in `convertToAssets` → `retainRateYield`, pull **1% of surplus**, 99% stays. Jump 300 bps. Slash / rate down → keep high-water mark, pull 0. (2) Umbrella emissions via `RewardsController` `0x4655Ce3D625a63d30bA704087E52B4C31E38188B` `claimAllRewards` `0xbb492bf5` — **pinned in LeafUmbrellaPolicy**, not env |
 | Failure | Aave USDC deficit slash; governance upgrades implementation at same proxy; `.v2` migration (pause mint, keep redeem of v1); RewardsController mis-set to cooldown/redeem |
-| Auto-pause | health on slash / inner supply ceiling; guardian pause mint if Aave announces v2 |
+| Auto-pause | health on slash / inner supply ceiling; 3% rate jump; guardian pause mint if Aave announces v2 |
 | Worst-case loss | slash of locked stk (Umbrella max is `totalAssets - MIN_ASSETS_REMAINING`) + converter slippage on side rewards |
-| Test | cooldown/redeem selectors forbidden; `test/lz/LeafUmbrella.t.sol` claimAllRewards does not move stk; donation not yield; slash keeps high-water mark |
+| Test | `LeafUmbrella.t.sol` + `testUmbrellaJumpBreakerPinnedAt300` / `testUmbrellaPins`. `BATCH=3` `ASSET=hstkwausdc` |
+| Deploy | **Not live.** Pins on main. No GO until audit. `--rpc-url eth`. Never Sepolia |
 
 Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner.
 
