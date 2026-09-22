@@ -29,14 +29,18 @@ Canary is dead. Show wrap + redeem (L) or Leaf Market (C1). **Do not use 50-cap 
 | hQUID | `0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25` | `0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1` | xSQUID `0x13af2Db622d167745518aBfD59a8C4FFEe54937a` |
 | hAVNT | `0xEfE86555554cfeba484871571550E4b21B2Cd141` | `0x801688aDb52452658Ea165dd554FC0102E36a1b3` | stkAVNT `0xd546040F08E6b3A4F1D21683b9bd9935d73bd9e9` |
 | hgSOON | `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` | `0x36c405698776fc28DEceDD25B3f081dB851F4c5b` | gSOON `0xcC48B55F6c16d4248EC6D78C11Ba19c1183Fe0F7` |
+| hslisBNB | `0xf16E73739787c7F5C92574e536c3fb007191801d` | `0x62cCB35Ed6EC5833379389719a7EE70D33A8ace7` | slisBNB `0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B` |
+| hsiBERA | `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` | `0xE22b448DF578EA079Ea6f1EF5316B95cabA590f2` | siBERA `0xA3503ba6460121d5936F4576f5486Fed30dbA4d8` |
 | BLUAI4Y | `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` | `0x8F25a342b93f623A07e7dF8b691a729A6e39C439` | BLUAI `0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD` |
 | hNEST | — | hNEST `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` | NEST (vault `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c`) |
 
-hORDER is **COMING** (zeros). hslisBNB and hsiBERA are **COMING** (zeros, wrap off). hsWBERA is parked — do not show. hINK is **COMING** (zeros; official INK not posted). Nado pre-market is **Opening** (awaiting owner `createMarket`). Do not mark LIVE.
+hORDER is **COMING** (zeros). hsWBERA is **HOLD** (do not show). hINK is **COMING** (zeros; official INK not posted). Nado pre-market is **Opening** (awaiting owner `createMarket`). Do not mark LIVE.
+
+**hsiBERA SOURCE is Berachain 80094.** The same hex `0x4C862bC0…559c` on BSC 56 is the **dead BLUAI 100-cap SOURCE**. UI must key wrap by `sourceChainId`. Never wire 56/`0x4C86` as hsiBERA. Never wire 80094/`0x4C86` as BLUAI.
 
 Dead, never wire: hCANARY any address; hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206`; 50-cap hQUID `0x13E3…0d25` / `0x78B6…4DFc`; old hAVNT `0x571C…aa98` / `0xAA70…7dAA` / `0x9a75…10Eb`; BLUAI 100-cap SOURCE `0x4C86…` / OFT `0xD54A…` / escrow `0x1AD2…` / fill `0xC584…`; Gate `0xB4C43…519B`; Nest v1 vault `0x4f6615…`.
 
-Do **not** show as depositable: hcbETH, hsWBERA, hslisBNB, hsiBERA, hORDER, hINK (until SOURCE/OFT land).
+Do **not** show as depositable: hcbETH, hsWBERA, hORDER, hINK (until SOURCE/OFT land).
 
 `L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. Never print those strings in the app, marketing site, or board. User copy is **Sell on Leaf Market** or **Burn to unwrap**.
 
@@ -286,9 +290,10 @@ Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty *
 | hxSQUID | 领取 WHYPE. Does not burn the Leaf. Extra QUID, not the xSQUID. |
 | hcbETH | **No 领取 HYPE for holders.** PoS stays in cbETH. Protocol skims 1% of the rate surplus (sold to HYPE). Copy: 质押收益留在这份收据里，做市和借贷也能拿到。协议从增值里抽 1%。存入或赎回会先结算这一刀，新用户不替旧涨幅付钱。赎回拿回的是金库按份额能付的 cbETH。 |
 | hgSOON | **Same as hcbETH.** No 领取 HYPE. gSOON/SOON rate stays in the receipt. Protocol skims 1% of surplus. Copy: 赎回拿回的是剩下的 gSOON，不是当初那一枚。永远不要帮用户冷却或 90 天锁。 |
+| hslisBNB | **Same as hgSOON.** No 领取 HYPE. Copy: 赎回拿回 slisBNB，不是 BNB，也不是 slisBNBx。协议不会帮你 Lista 7 天赎回。 |
+| hsiBERA | **Same as hgSOON.** No 领取 HYPE. Copy: 赎回拿回 siBERA，不是 BERA / iBERA。协议不会帮你 7d unbond。SOURCE 只在 Berachain，不要和 BSC 上同地址的废 BLUAI 搞混。 |
 | hsAVAX | **Same as hcbETH.** No 领取 HYPE. Copy: 赎回拿回 sAVAX，不是 AVAX。不要帮用户 requestUnlock。 |
 | hstkwaUSDC | Rate 1% like hcbETH **plus** 领取 WHYPE for Umbrella GHO/AAVE after converter notify. Copy: 赎回拿回的是 stk v1 收据，不是 USDC。协议不会帮你 cooldown。 |
-| hsiBERA | **No claim button.** Rate skim like hgSOON. Copy: 赎回拿回 siBERA，不是 BERA / iBERA。协议不会帮你 7d unbond。hsWBERA 不下架展示。 |
 
 Do not invent “偶发空投” for cbETH. After the 1% skim, 1 hcbETH unwraps slightly less cbETH; that remaining cbETH is worth more ETH. Do not say holders claim HYPE for cbETH PoS.
 
@@ -316,7 +321,7 @@ HYPE is **not** inside the Leaf. Leaf does **not** rebase. Pending WHYPE is **pe
 
 hNEST does **not** use this rewarder. Do not put 领取 HYPE on hNEST.
 
-Tickers with `retainRateYield` (`hcbETH`, `hgSOON`, `hsiBERA`, later `hsAVAX`) have **no** holder HYPE claim. Copy must say remaining receipt, not 1:1.
+Tickers with `retainRateYield` (`hcbETH`, `hgSOON`, `hslisBNB`, `hsiBERA`, later `hsAVAX`) have **no** holder HYPE claim. Copy must say remaining receipt, not 1:1.
 
 ### Copy that must appear
 

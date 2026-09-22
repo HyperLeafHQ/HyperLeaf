@@ -12,8 +12,8 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **1** | **hAVNT** | L | Base | **LIVE uncapped.** SOURCE `0xEfE86555554cfeba484871571550E4b21B2Cd141` / OFT `0x801688aDb52452658Ea165dd554FC0102E36a1b3`. Dead `0x571C…` / `0xAA70…` / `0x9a75…` |
 | parked | hcbETH | L | Base | No `exchangeRate` on Base cbETH. Not BATCH 2 |
 | **2** | **hgSOON** | L | BSC | **LIVE.** SOURCE `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` / OFT `0x36c405698776fc28DEceDD25B3f081dB851F4c5b`. `convertToAssets` 1% skim. Jump 3%. Never 90d cooldown |
-| **2b** | **hslisBNB** | L | BSC | Pins landing. Lista `convertSnBnbToBnb` on StakeManager. Same BSC path as live hgSOON. Never native BNB / 7d unstake. Not live |
-| **2** | **hsiBERA** | L | Berachain 80094 | siBERA (iBERA LST + PoL). Same skim. Never 7d NFT / sWBERA / iBERA. Not live |
+| **2b** | **hslisBNB** | L | BSC | **LIVE.** SOURCE `0xf16E7373…801d` / OFT `0x62cCB35E…ace7` / Conv `0x988cA995…D6eB`. StakeManager `convertSnBnbToBnb`. Never native BNB / 7d unstake / slisBNBx |
+| **2** | **hsiBERA** | L | Berachain 80094 | **LIVE.** SOURCE `0x4C862bC0…559c` / OFT `0xE22b448D…90f2` / Conv `0xc89273AC…6fD2`. Wrap siBERA only. Same SOURCE hex on BSC is dead BLUAI — pin 80094 |
 | hold | **hsWBERA** | L | Berachain 80094 | Parked. Replaced by hsiBERA |
 | **3** | **hsAVAX** | L | Avalanche | BENQI. `getPooledAvaxByShares`. Never `requestUnlock` |
 | **3** | **hLBTC** | L | Ethereum | LBTC only. 8-dec. Router getRate. 3% jump breaker. Not BTC.b |
@@ -86,7 +86,7 @@ ETH/SOL/BTC/USDC → HL already has Unit / deBridge / Across / 1inch. HIP-3 pre-
 
 **0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). **Done.** Close after redeem. Do not reuse.
 **1** — hQUID then hAVNT. **LIVE uncapped.** Same Base path the canary proved.
-**2** — rate L: **hgSOON LIVE.** **hslisBNB** Lista pins (`convertSnBnbToBnb`, jump 300, cap 0) — not live. **hsiBERA** (siBERA, not sWBERA) — not live. **hsWBERA parked.** **hcbETH out** (Base token has no `exchangeRate`).
+**2** — rate L: **hgSOON LIVE.** **hslisBNB LIVE.** **hsiBERA LIVE** (Berachain 80094). **hsWBERA parked.** **hcbETH out** (Base token has no `exchangeRate`).
 **3** — hsAVAX (Avax) + hstkwaUSDC + hLBTC (Ethereum). hsETHFI gated (`productionEvm=false`).
 **4** — C1: **BLUAI4Y LIVE.** hORDER queued (#69). Leaf Market already live for BLUAI. No CREATE2 twin. New escrow for hORDER — never `0x367FB8`.
 **Pre** — VAR + Predict **LIVE** USDM claims on factory `0x22684F6e…`. **Nado** next (`createMarket` n=3, queued). Settlement Leafs after TGE: hVAR / hPREDICT / **hINK**. **QTC native OTC** is a **new** factory (`NativeOtcFactory`), not n=4 on the live book. No wrap. No GO deploy.

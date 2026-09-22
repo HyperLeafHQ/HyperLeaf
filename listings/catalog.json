@@ -514,12 +514,28 @@
         "rateKind": "convertSnBnbToBnb",
         "retainRateYield": true
       },
-      "note": "Lista DAO slisBNB only. Same BSC corridor as live hgSOON. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate is StakeManager convertSnBnbToBnb — slisBNB token is not ERC-4626. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves. Pins on main; not live until deploy GO.",
+      "note": "Lista DAO slisBNB only. Same BSC corridor as live hgSOON. Never native BNB, never ListaStakeManager mint/stake, never 7d unstake/withdraw. Rate is StakeManager convertSnBnbToBnb — slisBNB token is not ERC-4626. Pin token 0xB0b84D… not the upgradeable StakeManager 0x1adB95…. Users unwrap hslisBNB → slisBNB and unstake on Lista themselves. LIVE after smoke + FINAL acceptOwnership.",
       "refs": {
-        "stakeManager": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6"
+        "stakeManager": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6",
+        "wrapTx": "0x1ebaed2f5f4337fd2b5dc6eb4f26dc38926e498e903b3071b3bf41912a4c9ac0",
+        "unwrapTx": "0xb65d7c9cfb633cbc64304329f4604fbbf8d3d29a2f172d94eeb0b879cd24abdb"
       },
-      "status": "ready-for-batch-2",
-      "priority": 26
+      "status": "live",
+      "priority": 26,
+      "live": {
+        "sourceChain": 56,
+        "destChain": 999,
+        "source": "0xf16E73739787c7F5C92574e536c3fb007191801d",
+        "oft": "0x62cCB35Ed6EC5833379389719a7EE70D33A8ace7",
+        "converterBsc": "0x988cA9957F2Bea52881a91395829D9f7c525D6eB",
+        "depositCap": "0",
+        "innerSupplyCeiling": "2e25",
+        "rateKind": 5,
+        "maxRateJumpBps": 300,
+        "rewardsTarget": "0x1adB950d8bB3dA4bE104211D5AB038628e477fE6",
+        "owner": "0x24458f0Bc44c4607172d1151CD938012be33156e",
+        "note": "LIVE. Rate L, StakeManager convertSnBnbToBnb, 1% skim, jump 3%. Intake cap 0. Wrap slisBNB only, never slisBNBx / native BNB / 7d unstake."
+      }
     },
     {
       "id": "hink",
@@ -886,9 +902,26 @@
         "retainRateYield": true
       },
       "claim": "none. convertToAssets(1e18) on siBERA reads iBERA. iBERA/BERA validator yield stays in the iBERA receipt. Never poke inner. Never 7d completeWithdrawal.",
-      "note": "BATCH 2 remainder (Berachain 80094, ASSET=hsibera). Replaces hsWBERA. Wrap ONLY siBERA 0xa3503ba6\u2026a4d8 (POL Staked iBERA). Asset = iBERA, not WBERA. Dual yield: Infrared validator (inside iBERA) + PoL auction (siBERA convertToAssets). 1% skim is of the outer iBERA surplus only. Never wrap sWBERA / iBERA / WBERA / native BERA. Never 7d NFT unbond. LZ endpoint 0x6F4756\u2026 not CREATE2 0x1a44. HEVM ASSET=hsibera \u2192 eid 30362.",
-      "status": "mainnet-batch-2",
-      "priority": 3
+      "note": "LIVE. Wrap ONLY siBERA 0xA3503ba6…A4d8 on Berachain 80094. Asset = iBERA, not WBERA. Dual yield: Infrared validator (inside iBERA) + PoL (siBERA convertToAssets). 1% skim of outer iBERA surplus only. Never sWBERA / iBERA / WBERA / native BERA / 7d NFT unbond. SOURCE hex collides with dead BLUAI 100-cap on BSC 56 — pin chainId 80094.",
+      "refs": {
+        "wrapTx": "0x0d20ecb2c12e7891eff8a6730242ec19b02551929529a357bb3f72c794e1d86b",
+        "unwrapTx": "0xa0702db8cc55808cc83ff779f48879536ca51f57da4ee2a38513bae44db3f332"
+      },
+      "status": "live",
+      "priority": 3,
+      "live": {
+        "sourceChain": 80094,
+        "destChain": 999,
+        "source": "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
+        "oft": "0xE22b448DF578EA079Ea6f1EF5316B95cabA590f2",
+        "converterBera": "0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2",
+        "depositCap": "0",
+        "innerSupplyCeiling": "1e27",
+        "rateKind": 2,
+        "maxRateJumpBps": 300,
+        "owner": "0x24458f0Bc44c4607172d1151CD938012be33156e",
+        "note": "LIVE on Berachain 80094. Same SOURCE hex on BSC 56 is dead BLUAI 100-cap — never mix. Wrap siBERA only. No 领取 HYPE."
+      }
     },
     {
       "id": "haevo",
