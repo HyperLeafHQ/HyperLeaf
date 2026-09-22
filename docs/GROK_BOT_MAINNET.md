@@ -33,10 +33,9 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + **hslisBNB** + **hsiBERA** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked** (`productionEvm=false`). hsiBERA SOURCE `0x4C862bC0…` is **80094 only** — same hex on BSC is dead BLUAI.
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + **hslisBNB** + **hsiBERA** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** after the jump pin is **`hsavax`** (`BATCH=3`). Do **not** `GO` `hstkwausdc` / `hlbtc` / `horder` from that cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked** (`productionEvm=false`). hsiBERA SOURCE `0x4C862bC0…` is **80094 only** — same hex on BSC is dead BLUAI.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
-   - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
-   Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.
+   - hsAVAX jump 300 is on `ConfigureMainnetListing` `ASSET=hsavax`. Umbrella / hLBTC still BATCH 3 remainder — do not `GO` those from this hsAVAX cookbook.
 
 ---
 

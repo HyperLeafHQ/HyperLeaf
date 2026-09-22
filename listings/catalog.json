@@ -307,7 +307,7 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uAVAX",
-      "note": "BATCH 3 mainnet (Avalanche 43114). Same L/retainRateYield as hcbETH; getPooledAvaxByShares. Wrap sAVAX only, never AVAX, never requestUnlock.",
+      "note": "BATCH 3 first (Avalanche 43114). Same L/retainRateYield as hgSOON; getPooledAvaxByShares + maxRateJumpBps 300. Wrap sAVAX only, never AVAX, never requestUnlock.",
       "testnet": {
         "sourceChain": "fuji",
         "mockInner": true,
@@ -321,9 +321,10 @@
         "toHype": [],
         "protocolFee": "1pct-rate-surplus",
         "rateKind": "getPooledAvaxByShares",
-        "retainRateYield": true
+        "retainRateYield": true,
+        "maxRateJumpBps": 300
       },
-      "claim": "No side token. Rate is getPooledAvaxByShares(1e18). Never requestUnlock 0xc9d2ff9d, never withdraw 0x2e1a7d4d (15d + 2d AVAX claim). accrueRewards is permissionless on BENQI; HyperLeaf does not need it as pokeRewards."
+      "claim": "No side token. Rate is getPooledAvaxByShares(1e18). setRateKind + retainRateYield + maxRateJumpBps(300) before first wrap. Never requestUnlock 0xc9d2ff9d, never withdraw 0x2e1a7d4d (15d + 2d AVAX claim). accrueRewards is permissionless on BENQI; HyperLeaf does not need it as pokeRewards."
     },
     {
       "id": "bonk12m",

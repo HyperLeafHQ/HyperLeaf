@@ -420,6 +420,38 @@ contract LeafRateYieldTest is PegReady {
         assertEq(box.totalLocked(), 100e18);
     }
 
+    function testSavaxJumpBreakerPinnedAt300() public {
+        MockSAVAX savax = new MockSAVAX();
+        vm.startPrank(owner);
+        LeafOFTAdapter box = new LeafOFTAdapter(address(savax), address(epSrc), owner, guardian, feeTo, 1_000e18);
+        LeafOFT dest = new LeafOFT("hsAVAX", "hsAVAX", address(epDst), owner, guardian);
+        box.setPeer(DST, address(dest));
+        dest.setPeer(SRC, address(box));
+        box.setRateKind(LeafYieldFee.RateKind.GetPooledAvaxByShares);
+        box.setRetainRateYield(true);
+        box.setMaxRateJumpBps(300);
+        box.setConvertYieldToHype(true);
+        box.setConverter(converter);
+        box.setHarvester(owner);
+        vm.stopPrank();
+        _openPair(box, dest, owner, 1_000e18);
+        assertEq(box.maxRateJumpBps(), 300);
+        savax.mint(user, 100e18);
+        vm.startPrank(user);
+        savax.approve(address(box), 100e18);
+        box.sendTo{value: 0.01 ether}(DST, user, 100e18);
+        vm.stopPrank();
+        savax.setPooled(1.02e18);
+        vm.prank(owner);
+        box.pullYield(savax, converter);
+        uint256 surplus = _surplus(100e18, 1e18, 1.02e18);
+        assertEq(savax.balanceOf(converter), _fee(surplus));
+        savax.setPooled(1.10e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        box.pullYield(savax, converter);
+    }
+
     function testGsoonConvertToAssetsSameMathAsCbeth() public {
         MockGSOON gsoon = new MockGSOON();
         vm.startPrank(owner);
