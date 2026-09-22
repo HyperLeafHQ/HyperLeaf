@@ -246,7 +246,7 @@ Live 2026-09-22: 1 siBERA ≈ 1.093 iBERA; 1 iBERA ≈ 1.055 BERA; nested ≈ 1.
 | Auto-pause | ceiling / health / inner paused |
 | Worst-case loss | inner ceiling (anti-print). Unbond APY gap is not backing |
 | Test | `test/lz/LeafSibera.t.sol`, `LeafReceiptOnly`. `ConfigureMainnetListing` `ASSET=hsibera` |
-| Deploy | **Mainnet** `DeployAdapter` on 80094. Not Bepolia. `ASSET=hsibera` |
+| Deploy | **LIVE.** SOURCE `0x4C862bC0…559c` on 80094 / OFT `0xE22b448D…90f2`. Same SOURCE hex on BSC is dead BLUAI — pin chainId. |
 
 ### hB3 (research — stake path live, yield incomplete)
 

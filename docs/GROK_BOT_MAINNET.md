@@ -1,11 +1,11 @@
 # Grok bot tasks — mainnet go-live
 
-> **Status 2026-09-16: archived as a live-ops checklist.** Live surface:
-> **5 Leafs** (hNEST, hQUID, hAVNT, hgSOON, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
+> **Status 2026-09-22: archived as a live-ops checklist.** Live surface:
+> **7 Leafs** (hNEST, hQUID, hAVNT, hgSOON, hslisBNB, hsiBERA, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
 > Addresses: [`listings/catalog.json`](../listings/catalog.json) `live` objects.
 > This file stays as the **deploy cookbook** for what is not live yet:
 > `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
-> BATCH 2 remainder `hslisbnb` / `hsibera` (code pins, **no deploy until GO**; `hswbera` parked),
+> BATCH 2 remainder is **done** (`hswbera` parked),
 > Nado points `createMarket` (n=3, **no broadcast until GO**),
 > Quantus QTC native OTC (`DeployNativeOtcQtc.s.sol` — **new factory, never n=4 on the live VAR book, no broadcast until GO**),
 > and `hjitosol` (BATCH 5).
@@ -33,7 +33,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Next **code** after parking hORDER: BATCH 2 remainder **`hslisbnb`** then **`hsibera`**. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. `hsiBERA` is **not** live. **`hsWBERA` is parked** (`productionEvm=false`).
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + **hslisBNB** + **hsiBERA** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** cookbook is still **`horder`** (#69) — do **not** comment `GO` without a human. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked** (`productionEvm=false`). hsiBERA SOURCE `0x4C862bC0…` is **80094 only** — same hex on BSC is dead BLUAI.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
    - hsAVAX / Umbrella pins: branch **`feat/batch3-harden`**
    Do not `BATCH=3` from `main`. After smoke, merge that branch, then pin addresses.
@@ -46,7 +46,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 | ---: | --- | --- | --- | --- |
 | **0** | first | `hcanary` | Toy ERC-20, L adapter, **real** ULN | Base 8453 |
 | **1** | canary dead | `hxsquid` then `havnt` | Side-token L. `0x9a99b4f0`. Never `0xeab52318` | Base 8453 |
-| **2** | batch 1 passed | `hgsoon` then `hslisbnb` then `hsibera` | Rate L, 1% skim, 99% in receipt. **Not hcbETH**. hslisBNB rate = StakeManager `convertSnBnbToBnb`. hsiBERA inner = siBERA not sWBERA | BSC 56 / Bera 80094 |
+| **2** | **LIVE** | `hgsoon` `hslisbnb` `hsibera` | Rate L, 1% skim, 99% in receipt. **Not hcbETH**. hslisBNB = StakeManager `convertSnBnbToBnb`. hsiBERA inner = siBERA not sWBERA. SOURCE `0x4C86` is 80094 only | BSC 56 / Bera 80094 |
 | **3** | batch 2 passed | `hsavax` then `hstkwausdc` then **`hlbtc`** | Rate / Umbrella / LBTC 8-dec | Avax / ETH |
 | **4** | batch 3 passed | `bluai4y` then `horder` | C1 lockbox + closed OFT. Market exit | BSC 56 / Arb 42161 |
 | **5** | batch 4 passed **and** Store PDA exists | `hjitosol` | Solana lockbox + dest `LeafOFT`. No Rewarder | Solana 30168 → HyperEVM 999 |
@@ -99,15 +99,15 @@ See git history `95603d0` `docs/GROK_BOT_MAINNET.md` for the original canary / L
 
 ---
 
-## 2b. hslisBNB / hsiBERA — pins only (no broadcast)
+## 2b. hslisBNB / hsiBERA LIVE
 
-`BATCH=2`. hgSOON is **LIVE**. Remainder is code + COMING frontend until a human `GO`.
+`BATCH=2` remainder is **LIVE**. Do not redeploy.
 
-- **hslisBNB** inner = Lista slisBNB `0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B` on BSC 56 / eid 30102. Rate = StakeManager `0x1adB950d8bB3dA4bE104211D5AB038628e477fE6` `convertSnBnbToBnb(1e18)`. **Never** `convertToAssets` on the token. Jump 300 bps. `defaultCap` 0. `rewardsSelector` stays 0. Never native BNB `deposit()`, never Lista 7d unstake. `ConfigureMainnetListing` `ASSET=hslisbnb`.
-- **hsiBERA** inner = siBERA `0xa3503ba6460121d5936f4576f5486fed30dba4d8` on Berachain 80094 / eid 30362. Asset = iBERA `0x9b6761bf…fe5`. LZ Bera endpoint is **not** CREATE2 `0x1a44…` — use `0x6F475642a6e85809B1c36Fa62763669b1b48DD5B`. `convertToAssets` + retainRateYield. **Never** wrap sWBERA / iBERA / WBERA. Never `completeWithdrawal` 7d NFT queue. `ASSET=hsibera`.
-- **hsWBERA** is **parked** (`productionEvm=false`). Do not `GO` `ASSET=hswbera`.
+- **hslisBNB LIVE** SOURCE `0xf16E73739787c7F5C92574e536c3fb007191801d` / OFT `0x62cCB35Ed6EC5833379389719a7EE70D33A8ace7` / Conv BSC `0x988cA9957F2Bea52881a91395829D9f7c525D6eB`. Owner FINAL. Wrap slisBNB only.
+- **hsiBERA LIVE** SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` (**Berachain 80094**) / OFT `0xE22b448DF578EA079Ea6f1EF5316B95cabA590f2` / Conv `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2`. Inner siBERA. Same SOURCE hex on BSC 56 is dead BLUAI 100-cap — never mix.
+- **hsWBERA** parked. Do not `GO` `ASSET=hswbera`.
 
-Do not `forge script` these until a dedicated issue has a human `GO`. Do not comment `GO` on #69 for these tickers.
+Do not comment `GO` on #69 for these tickers.
 
 ---
 
