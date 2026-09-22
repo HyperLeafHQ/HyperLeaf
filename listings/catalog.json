@@ -307,13 +307,12 @@
       "exit": "instant-receipt",
       "infra": "evm",
       "pairsWithUnit": "uAVAX",
-      "note": "BATCH 3 first (Avalanche 43114). Same L/retainRateYield as hgSOON; getPooledAvaxByShares + maxRateJumpBps 300. Wrap sAVAX only, never AVAX, never requestUnlock.",
-      "testnet": {
-        "sourceChain": "fuji",
-        "mockInner": true,
-        "batch": "next"
+      "note": "LIVE. Wrap ONLY sAVAX 0x2b2C81e0…A4bE on Avalanche 43114. SOURCE/Converter hex collides with hsiBERA on 80094 and dead BLUAI on 56 — pin chainId 43114. Never AVAX / requestUnlock / Fuji.",
+      "refs": {
+        "wrapTx": "0x5eae0c742c5e045aeb9cb35076ce51da0054f20efffaab2c0b2464af628353fd",
+        "unwrapTx": "0x3c5cbd2e8749024cd9aca0590efa8e75a3538c857c98f6d5a128bd3261698a5a"
       },
-      "status": "mainnet-batch-3",
+      "status": "live",
       "priority": 11,
       "yield": {
         "inner": "benqi-pooled-avax",
@@ -324,7 +323,20 @@
         "retainRateYield": true,
         "maxRateJumpBps": 300
       },
-      "claim": "No side token. Rate is getPooledAvaxByShares(1e18). setRateKind + retainRateYield + maxRateJumpBps(300) before first wrap. Never requestUnlock 0xc9d2ff9d, never withdraw 0x2e1a7d4d (15d + 2d AVAX claim). accrueRewards is permissionless on BENQI; HyperLeaf does not need it as pokeRewards."
+      "claim": "No side token. Rate is getPooledAvaxByShares(1e18). setRateKind + retainRateYield + maxRateJumpBps(300) before first wrap. Never requestUnlock 0xc9d2ff9d, never withdraw 0x2e1a7d4d (15d + 2d AVAX claim). accrueRewards is permissionless on BENQI; HyperLeaf does not need it as pokeRewards.",
+      "live": {
+        "sourceChain": 43114,
+        "destChain": 999,
+        "source": "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
+        "oft": "0x304abA885393aC13e34655daf48C2Ab8D0B6078f",
+        "converterAvax": "0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2",
+        "depositCap": "0",
+        "innerSupplyCeiling": "1e27",
+        "rateKind": 3,
+        "maxRateJumpBps": 300,
+        "owner": "0x24458f0Bc44c4607172d1151CD938012be33156e",
+        "note": "LIVE on Avalanche 43114. Same SOURCE hex on 80094 is hsiBERA; on BSC 56 is dead BLUAI 100-cap. Same converter hex on 80094 is hsiBERA conv. Pin chainId. Wrap sAVAX only. No 领取 HYPE."
+      }
     },
     {
       "id": "bonk12m",
