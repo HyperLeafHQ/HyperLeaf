@@ -1203,10 +1203,12 @@
         "rateKind": "convertToAssets",
         "retainRateYield": true,
         "maxRateJumpBps": 300,
+        "shareScale": "1e12",
+        "innerDecimals": 6,
         "sideClaim": "RewardsController.claimAllRewards"
       },
       "claim": "poke RewardsController.claimAllRewards([stkwaEthUSDC.v1], lockbox) \u2014 pin 4-byte from the live controller ABI before deploy, never from a tx hash. Then pullYield side tokens. Rate surplus (aToken interest in convertToAssets) uses hcbETH retainRateYield 1% skim. Never poke inner. Never cooldown/redeem/withdraw on the StakeToken.",
-      "note": "BATCH 3 (Ethereum 1, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 0x6bf18324…8Aa6. Controller pinned in LeafUmbrellaPolicy 0x4655Ce3D…188B, selector 0xbb492bf5, jump 300. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks. Never start cooldown (20d). Never auto-migrate to v2. Dual harvest: rate 1% skim + claimAllRewards. Not live until GO.",
+      "note": "BATCH 3 (Ethereum 1, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 0x6bf18324…8Aa6 (6-dec). shareScale 1e12 → 18-dec hstkwaUSDC. Controller pinned 0x4655Ce3D…188B, selector 0xbb492bf5, jump 300. Never wrap aUSDC, waUSDC, USDC, stkAAVE. Never cooldown / v2. Dual harvest: rate 1% skim + claimAllRewards. Not live until GO.",
       "testnet": {
         "sourceChain": "sepolia",
         "mockInner": true,
