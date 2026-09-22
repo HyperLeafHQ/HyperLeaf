@@ -295,13 +295,14 @@ Wrap **LBTC** `0x8236a870…` only. Never BTC.b, LBTCv, BTCe, Base LBTC, or nati
 | Core invariant | dest shares / 1e10 ≤ lockbox LBTC − protocol 1% skim |
 | Rate source | AssetRouter `getRate(LBTC)` `0x9eCe5fB1…`. **Admin/Bitwise**, not Babylon |
 | Circuit | `maxRateJumpBps = 300` **up or down**. `pokeRate` latches `rateJumped` (mint tx would roll it back). Guardian `acknowledgeRate` sets watermark **without** taking the spike as 1%. Small down (≤3%) pins the watermark, no fee |
-| Caps | `depositCap` = 0.05 LBTC inner (`5e6`). `setLimits` / OFT `supplyCap` = `5e6 * 1e10` share units. `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` + headroom — **never** `5e6` |
+| Caps | `defaultCap = 0` (no HyperLeaf intake cap). `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` + headroom — **never** use ceiling as dest share cap. Dest `setLimits(0,0)` |
 | Mint / redeem | wrap/unwrap LBTC. Never `burn` / `mint(bytes,bytes)` / AssetRouter `deposit` / Bascule / 10d `redeem` |
 | Yield | Covered-call premiums in the rate. 1% skim, 99% stays. Rally can lag BTC |
 | Failure | Router lie / 10% overnight print; wrapping BTC.b / Base LBTC; using inner cap as dest share cap |
 | Auto-pause | `rateJumped` → mint stops, redeem stays |
-| Worst-case loss | 0.05 LBTC default cap |
-| Test | `test/lz/LeafLbtc.t.sol`. `BATCH=3 ASSET=hlbtc` |
+| Worst-case loss | locked LBTC in the lockbox (uncapped intake). Rate-jump pauses mint |
+| Test | `test/lz/LeafLbtc.t.sol` `testEightDecRoundTrip`. `BATCH=3 ASSET=hlbtc` |
+| Deploy | **Not live.** `--rpc-url eth`. Never Sepolia. No GO until human GO |
 
 ### hveAERO (later — NFT lockbox, not a grok-bot batch)
 

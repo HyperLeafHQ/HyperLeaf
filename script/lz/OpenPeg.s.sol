@@ -24,6 +24,8 @@ contract OpenPeg is Script {
         try vm.envUint("PEG_CAP") returns (uint256 explicitCap) {
             cap = explicitCap;
         } catch {
+            // Each shareScaleOf returns 1 for unknown ids. Product is safe while
+            // no listing id is claimed by both LeafLbtcPolicy and LeafUmbrellaPolicy.
             cap = a.defaultCap * LeafLbtcPolicy.shareScaleOf(id) * LeafUmbrellaPolicy.shareScaleOf(id);
         }
         uint8 decimals = a.innerMainnet == address(0) ? 18 : IERC20Metadata(a.innerMainnet).decimals();
