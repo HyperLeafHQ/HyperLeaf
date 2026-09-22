@@ -357,7 +357,7 @@ Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8
 | | |
 | --- | --- |
 | Canonical backing | lockbox balance of that StakeToken. Underlying is waEthUSDC `0xD4fa2D31…`. Never aUSDC / USDC / other Umbrella stks |
-| Accounting unit | 1 hstkwaUSDC = 1 stk share (6-dec). Economic USDC is `convertToAssets` (can fall on slash) |
+| Accounting unit | 1 hstkwaUSDC (18 dec) = 1 stkwaEthUSDC.v1 (6 dec) via `shareScale = 1e12` |
 | Core invariant | L: `supply ≤ totalLocked stk`. Rate harvest must not drop backing below outstanding principal watermark |
 | Proof source | lockbox `totalLocked` + `balanceOf(stk)` + `convertToAssets`. Side rewards are **not** backing |
 | Mint / redeem | wrap/unwrap the v1 receipt, instant. **Never** `cooldown` / `redeem` / `withdraw` on StakeToken (20d, one cooldown per address). **Never** auto-migrate to v2. User who wants Aave v2: unwrap, migrate themselves |
@@ -365,7 +365,7 @@ Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8
 | Failure | Aave USDC deficit slash; governance upgrades implementation at same proxy; `.v2` migration (pause mint, keep redeem of v1); RewardsController mis-set to cooldown/redeem |
 | Auto-pause | health on slash / inner supply ceiling; 3% rate jump; guardian pause mint if Aave announces v2 |
 | Worst-case loss | slash of locked stk (Umbrella max is `totalAssets - MIN_ASSETS_REMAINING`) + converter slippage on side rewards |
-| Test | `LeafUmbrella.t.sol` + `testUmbrellaJumpBreakerPinnedAt300` / `testUmbrellaPins`. `BATCH=3` `ASSET=hstkwausdc` |
+| Test | `LeafUmbrella.t.sol` `testSixDecRoundTripAndScaleFreeze` / `testSixDecRateSkimAndJumpOnRawInner`. `BATCH=3` `ASSET=hstkwausdc` |
 | Deploy | **Not live.** Pins on main. No GO until audit. `--rpc-url eth`. Never Sepolia |
 
 Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner.

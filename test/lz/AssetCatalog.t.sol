@@ -11,6 +11,7 @@ import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
+import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
 
@@ -216,6 +217,8 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hlbtc").defaultCap, 0);
         assertEq(LeafLbtcPolicy.shareScaleOf("hlbtc"), 1e10);
         assertEq(LeafLbtcPolicy.shareScaleOf("hcbeth"), 1);
+        assertEq(LeafUmbrellaPolicy.shareScaleOf("hstkwausdc"), 1e12);
+        assertEq(LeafUmbrellaPolicy.INNER_DECIMALS, 6);
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);
         this._batch("hsteakusdg");
         vm.expectRevert(MainnetBatches.NotThisBatch.selector);

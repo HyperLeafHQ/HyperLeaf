@@ -100,11 +100,16 @@ contract ConfigureMainnetListing is Script {
         }
         if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
             LeafUmbrellaPolicy.requireStkwaUsdc(address(box.innerToken()));
+            require(
+                IERC20Metadata(address(box.innerToken())).decimals() == LeafUmbrellaPolicy.INNER_DECIMALS, "not 6-dec"
+            );
+            box.setShareScale(LeafUmbrellaPolicy.SHARE_SCALE);
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
             box.setMaxRateJumpBps(RATE_L_JUMP_BPS);
             box.setRewardsTarget(LeafUmbrellaPolicy.REWARDS_CONTROLLER);
             box.setRewardsSelector(LeafUmbrellaPolicy.CLAIM_ALL_REWARDS);
+            require(box.shareScale() == LeafUmbrellaPolicy.SHARE_SCALE, "scale");
             require(box.maxRateJumpBps() == LeafUmbrellaPolicy.MAX_RATE_JUMP_BPS, "jump");
             require(box.rewardsTarget() == LeafUmbrellaPolicy.REWARDS_CONTROLLER, "controller");
             require(box.rewardsSelector() == LeafUmbrellaPolicy.CLAIM_ALL_REWARDS, "poke");
