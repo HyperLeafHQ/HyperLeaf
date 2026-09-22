@@ -4,7 +4,7 @@
 > **9 Leafs** (hNEST, hQUID, hAVNT, hgSOON, hslisBNB, hsiBERA, hsAVAX, hstkwaUSDC, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
 > Addresses: [`listings/catalog.json`](../listings/catalog.json) `live` objects.
 > This file stays as the **deploy cookbook** for what is not live yet:
-> BATCH 3 remainder `hlbtc` (**no deploy until GO**),
+> BATCH 3 remainder `hlbtcv` (**no deploy until GO**; `hlbtc` parked),
 > `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
 > Nado points `createMarket` (n=3, **no broadcast until GO**),
 > Quantus QTC native OTC (`DeployNativeOtcQtc.s.sol` — **new factory, never n=4 on the live VAR book, no broadcast until GO**),
@@ -33,9 +33,9 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + hslisBNB + hsiBERA + hsAVAX + **hstkwaUSDC** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** is **not** automatic: `hlbtc` still needs human audit + GO. Do **not** `GO` `horder` from that cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked**. SOURCE `0x4C862bC0…` is **chain-keyed**: 1 hstkwaUSDC / 43114 hsAVAX / 80094 hsiBERA / 56 dead BLUAI.
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + hslisBNB + hsiBERA + hsAVAX + **hstkwaUSDC** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** is **not** automatic: `hlbtcv` still needs human audit + GO. **`hlbtc` is parked.** Do **not** `GO` `horder` from that cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked**. SOURCE `0x4C862bC0…` is **chain-keyed**: 1 hstkwaUSDC / 43114 hsAVAX / 80094 hsiBERA / 56 dead BLUAI.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
-   - hsAVAX jump 300 is on `ConfigureMainnetListing` `ASSET=hsavax`. `hlbtc` still BATCH 3 remainder — do not `GO` from this cookbook.
+   - hsAVAX jump 300 is on `ConfigureMainnetListing` `ASSET=hsavax`. `hlbtcv` still BATCH 3 remainder — do not `GO` from this cookbook. `hlbtc` parked.
 
 ---
 
@@ -46,7 +46,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 | **0** | first | `hcanary` | Toy ERC-20, L adapter, **real** ULN | Base 8453 |
 | **1** | canary dead | `hxsquid` then `havnt` | Side-token L. `0x9a99b4f0`. Never `0xeab52318` | Base 8453 |
 | **2** | **LIVE** | `hgsoon` `hslisbnb` `hsibera` | Rate L, 1% skim. SOURCE `0x4C86` on 80094 is hsiBERA | BSC 56 / Bera 80094 |
-| **3** | hsAVAX + hstkwaUSDC **LIVE**; `hlbtc` no GO | `hsavax` `hstkwausdc` **LIVE**. `hlbtc` remainder | Rate / Umbrella / LBTC 8-dec. SOURCE `0x4C86` on 1 is hstkwaUSDC | Avax / ETH |
+| **3** | hsAVAX + hstkwaUSDC **LIVE**; `hlbtcv` no GO; `hlbtc` parked | `hlbtcv` remainder | LBTCv Veda getRateInQuote(LBTC) | ETH |
 | **4** | batch 3 passed | `bluai4y` then `horder` | C1 lockbox + closed OFT. Market exit | BSC 56 / Arb 42161 |
 | **5** | batch 4 passed **and** Store PDA exists | `hjitosol` | Solana lockbox + dest `LeafOFT`. No Rewarder | Solana 30168 → HyperEVM 999 |
 
@@ -116,7 +116,7 @@ Do not comment `GO` on #69 for these tickers.
 
 - **hsAVAX LIVE** SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` (**Avalanche 43114**) / OFT `0x304abA885393aC13e34655daf48C2Ab8D0B6078f` / Conv `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2`. Inner sAVAX. `maxRateJumpBps=300`. Same SOURCE/Conv hex on 1 / 80094.
 - **hstkwaUSDC LIVE** SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` (**Ethereum 1**) / OFT `0x2D694ef80ce88c47568fD0d128Ed6C920193DAA8` / Conv `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2`. Inner stkwaEthUSDC.v1. `shareScale=1e12`. Wrap stk v1 only.
-- Remainder: `hlbtc` — **no GO** until audit.
+- Remainder: `hlbtcv` — **no GO** until audit. `hlbtc` parked.
 
 Do not comment `GO` on #69 for these tickers.
 

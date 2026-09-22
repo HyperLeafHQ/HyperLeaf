@@ -1104,7 +1104,42 @@
       "sourceEid": 30101,
       "exit": "instant-receipt",
       "infra": "evm",
-      "note": "BATCH=3 ASSET=hlbtc last. 8 decimals, shareScale 1e10. getRate on AssetRouter. maxRateJumpBps 300 up or down. Never BTC.b / LBTCv / BTCe / Base LBTC / 10d BTC redeem. No HyperLeaf intake cap (DEPOSIT_CAP/PEG_CAP=0). INNER_SUPPLY_CEILING = live totalSupply + headroom. Bitwise covered-call, not Babylon.",
+      "note": "PARKED. Human switched BATCH 3 BTC to hLBTCv. Do not GO ASSET=hlbtc. productionEvm=false.",
+      "status": "parked",
+      "priority": 40
+    },
+    {
+      "id": "hlbtcv",
+      "kind": "L",
+      "symbol": "hLBTCv",
+      "name": "Hyperleaf LBTCv",
+      "innerSymbol": "LBTCv",
+      "innerToken": "0x5401b8620E5FB570064CA9114fd1e135fd77D57c",
+      "accountant": "0x28634D0c5edC67CF2450E74deA49B90a4FF93dCE",
+      "rateQuote": "0x8236a87084f8B84306f72007F36F2618A5634494",
+      "never": [
+        "0x8236a87084f8B84306f72007F36F2618A5634494",
+        "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+        "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+        "0xB0F70C0bD6FD87dbEb7C10dC692a2a6106817072",
+        "0x3a4baaBf4DC9910596821615e848f0e6545762F3",
+        "0xecAc9C5F704e954931349Da37F60E39f515c11c1"
+      ],
+      "source": "ethereum",
+      "sourceChainId": 1,
+      "sourceEid": 30101,
+      "exit": "instant-receipt",
+      "infra": "evm",
+      "yield": {
+        "inner": "veda-accountant-getRateInQuote-LBTC",
+        "pullInner": "rate-surplus-1pct",
+        "rateKind": "getRateInQuote",
+        "retainRateYield": true,
+        "maxRateJumpBps": 300,
+        "shareScale": "1e10",
+        "innerDecimals": 8
+      },
+      "note": "BATCH=3 ASSET=hlbtcv. Wrap LBTCv only (8-dec, shareScale 1e10). Rate = Veda accountant getRateInQuote(LBTC) ~1.021e8, NEVER accountant.getRate() (WBTC) and NEVER AssetRouter.getRate(LBTC). 3d teller withdraw denylisted. Never LBTC/WBTC/cbBTC/BTC.b. No GO until audit.",
       "status": "mainnet-batch-3",
       "priority": 12
     },

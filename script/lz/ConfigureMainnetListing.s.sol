@@ -12,6 +12,7 @@ import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 import {LeafListaPolicy} from "src/lz/LeafListaPolicy.sol";
 import {LeafSiberaPolicy} from "src/lz/LeafSiberaPolicy.sol";
 import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
+import {LeafLbtcvPolicy} from "src/lz/LeafLbtcvPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -97,6 +98,26 @@ contract ConfigureMainnetListing is Script {
             require(box.shareScale() == LeafLbtcPolicy.SHARE_SCALE, "scale");
             require(box.maxRateJumpBps() == LeafLbtcPolicy.MAX_RATE_JUMP_BPS, "jump");
             require(box.rewardsSelector() == bytes4(0), "lbtc poke after");
+        }
+        if (keccak256(bytes(a.id)) == keccak256("hlbtcv")) {
+            LeafLbtcvPolicy.requireLbtcv(address(box.innerToken()));
+            require(
+                IERC20Metadata(address(box.innerToken())).decimals() == LeafLbtcvPolicy.INNER_DECIMALS, "not 8-dec"
+            );
+            require(box.rewardsSelector() == bytes4(0), "lbtcv poke");
+            box.setRewardsTarget(LeafLbtcvPolicy.ACCOUNTANT);
+            box.setRateQuote(LeafLbtcvPolicy.LBTC);
+            box.setShareScale(LeafLbtcvPolicy.SHARE_SCALE);
+            box.setMaxRateJumpBps(LeafLbtcvPolicy.MAX_RATE_JUMP_BPS);
+            box.setRateKind(LeafYieldFee.RateKind.GetRateInQuote);
+            box.setRetainRateYield(true);
+            require(box.shareScale() == LeafLbtcvPolicy.SHARE_SCALE, "scale");
+            require(box.maxRateJumpBps() == LeafLbtcvPolicy.MAX_RATE_JUMP_BPS, "jump");
+            require(box.rewardsTarget() == LeafLbtcvPolicy.ACCOUNTANT, "accountant");
+            require(box.rateQuote() == LeafLbtcvPolicy.LBTC, "quote");
+            require(box.rewardsSelector() == bytes4(0), "lbtcv poke after");
+            LeafLbtcvPolicy.requireAccountant(box.rewardsTarget());
+            LeafLbtcvPolicy.requireQuote(box.rateQuote());
         }
         if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
             LeafUmbrellaPolicy.requireStkwaUsdc(address(box.innerToken()));

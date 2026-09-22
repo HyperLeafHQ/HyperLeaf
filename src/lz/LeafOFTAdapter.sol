@@ -96,6 +96,11 @@ contract LeafOFTAdapter is LeafOApp, ReentrancyGuard, LeafYieldFee {
         _setRewardsTarget(t);
     }
 
+    function setRateQuote(address q) external onlyOwner {
+        if (totalLocked > 0) revert ConfigFrozen();
+        _setRateQuote(q);
+    }
+
     function setMerkleDistributor(address d, bool ok) external onlyOwner {
         _setMerkleDistributor(address(innerToken), d, ok);
     }
