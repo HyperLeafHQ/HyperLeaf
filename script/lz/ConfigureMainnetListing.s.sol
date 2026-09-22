@@ -77,8 +77,12 @@ contract ConfigureMainnetListing is Script {
             box.setRetainRateYield(true);
         }
         if (keccak256(bytes(a.id)) == keccak256("hsavax")) {
+            require(box.rewardsSelector() == bytes4(0), "avax poke");
             box.setRateKind(LeafYieldFee.RateKind.GetPooledAvaxByShares);
             box.setRetainRateYield(true);
+            box.setMaxRateJumpBps(RATE_L_JUMP_BPS);
+            require(box.maxRateJumpBps() == RATE_L_JUMP_BPS, "jump");
+            require(box.rewardsSelector() == bytes4(0), "avax poke after");
         }
         if (keccak256(bytes(a.id)) == keccak256("hlbtc")) {
             LeafLbtcPolicy.requireLbtc(address(box.innerToken()));

@@ -330,22 +330,23 @@ Fungible dest ticket **only** for **permanent NORMAL** veNFTs. Time-locked decay
 
 
 
-### hsAVAX (next testnet — BENQI, same skim as hcbETH)
+### hsAVAX (BATCH 3 — BENQI, 1% skim, jump 300)
 
-Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche). Never AVAX. Never `requestUnlock` / `withdraw`.
+Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche 43114). Never AVAX. Never `requestUnlock` / `withdraw`.
 
 | | |
 | --- | --- |
 | Canonical backing | lockbox sAVAX |
 | Accounting unit | 1 hsAVAX share. Economic AVAX is `getPooledAvaxByShares` |
 | Core invariant | L: `supply ≤ totalLocked sAVAX`. Rate harvest 1% skim only |
-| Rate source | `getPooledAvaxByShares(1e18)` (`RateKind.GetPooledAvaxByShares`). Not `exchangeRate()` |
+| Rate source | `getPooledAvaxByShares(1e18)` (`RateKind.GetPooledAvaxByShares`). Not `exchangeRate()`. Jump 300 bps before first wrap |
 | Mint / redeem | wrap/unwrap sAVAX, instant. Official 15d unlock + 2d redeem is the user's problem after unwrap |
 | Yield | Avalanche PoS already in the rate. BENQI takes 10% of validator rewards before that rate. HyperLeaf skims **1% of remaining surplus** (`retainRateYield`). Wrap/redeem settle the 1% before mint/payout. Holders have no WHYPE claim |
 | Failure | BENQI rate lie; `requestUnlock` on the lockbox (forbidden). One cooldown per address — do not start it |
-| Auto-pause | inner supply ceiling; guardian |
-| Worst-case loss | min(depositCap, maxPerDay) on principal; 1% skim on converter |
+| Auto-pause | inner supply ceiling; guardian; 3% rate jump |
+| Worst-case loss | inner ceiling (anti-print). 1% skim on converter |
 | Test | `testSavaxPooledAvaxRateSameMathAsCbeth`, `testRewardsSelectorRejectsBenqiUnlock`. `BATCH=3` `ASSET=hsavax` |
+| Deploy | **Mainnet** `DeployAdapter` on 43114. `--rpc-url avax`. Never Fuji. `ASSET=hsavax` |
 
 Same math as hcbETH. Different 4-byte rate read.
 
