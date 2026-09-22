@@ -11,6 +11,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 import {LeafListaPolicy} from "src/lz/LeafListaPolicy.sol";
 import {LeafSiberaPolicy} from "src/lz/LeafSiberaPolicy.sol";
+import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
 
 /// @notice Mainnet L owner ops after DeployAdapter + WirePeers.
 ///         BATCH must match the listing. HARVESTER and CONVERTER must not be OWNER.
@@ -98,12 +99,16 @@ contract ConfigureMainnetListing is Script {
             require(box.rewardsSelector() == bytes4(0), "lbtc poke after");
         }
         if (keccak256(bytes(a.id)) == keccak256("hstkwausdc")) {
+            LeafUmbrellaPolicy.requireStkwaUsdc(address(box.innerToken()));
             box.setRateKind(LeafYieldFee.RateKind.ConvertToAssets);
             box.setRetainRateYield(true);
-            address controller = vm.envAddress("REWARDS_CONTROLLER");
-            require(controller != address(0) && controller != source, "umbrella controller");
-            box.setRewardsTarget(controller);
-            box.setRewardsSelector(bytes4(0xbb492bf5));
+            box.setMaxRateJumpBps(RATE_L_JUMP_BPS);
+            box.setRewardsTarget(LeafUmbrellaPolicy.REWARDS_CONTROLLER);
+            box.setRewardsSelector(LeafUmbrellaPolicy.CLAIM_ALL_REWARDS);
+            require(box.maxRateJumpBps() == LeafUmbrellaPolicy.MAX_RATE_JUMP_BPS, "jump");
+            require(box.rewardsTarget() == LeafUmbrellaPolicy.REWARDS_CONTROLLER, "controller");
+            require(box.rewardsSelector() == LeafUmbrellaPolicy.CLAIM_ALL_REWARDS, "poke");
+            LeafUmbrellaPolicy.requireController(box.rewardsTarget(), address(box.innerToken()));
         }
         vm.stopBroadcast();
 

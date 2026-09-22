@@ -10,6 +10,10 @@ import {MockConvertERC20} from "test/mocks/MockConvertERC20.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockRewardsController} from "test/mocks/MockRewardsController.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
+import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
+import {LeafForbiddenSelectors} from "src/lz/LeafForbiddenSelectors.sol";
+import {AssetCatalog} from "src/lz/AssetCatalog.sol";
+import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 
 contract MockEndpointU is ILayerZeroEndpointV2 {
     function eid() external pure returns (uint32) {
@@ -131,5 +135,61 @@ contract LeafUmbrellaTest is PegReady {
         adapter.setRewardsSelector(bytes4(0x9a99b4f0));
         vm.expectRevert(LeafYieldFee.BadRewardsTarget.selector);
         adapter.pokeRewards();
+    }
+
+    function testUmbrellaPins() public view {
+        AssetCatalog.Listing memory a = AssetCatalog.get("hstkwausdc");
+        assertEq(a.innerMainnet, LeafUmbrellaPolicy.STKWA_USDC);
+        assertEq(a.sourceChainIdMain, 1);
+        assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
+        assertEq(LeafUmbrellaPolicy.REWARDS_CONTROLLER, 0x4655Ce3D625a63d30bA704087E52B4C31E38188B);
+        assertEq(LeafUmbrellaPolicy.CLAIM_ALL_REWARDS, bytes4(0xbb492bf5));
+        assertEq(adapter.CLAIM_ALL_REWARDS(), bytes4(0xbb492bf5));
+        assertEq(LeafUmbrellaPolicy.MAX_RATE_JUMP_BPS, 300);
+    }
+
+    function testUmbrellaRejectsWrongInnerOrController() public {
+        LeafUmbrellaPolicy.requireStkwaUsdc(LeafUmbrellaPolicy.STKWA_USDC);
+        LeafUmbrellaPolicy.requireController(LeafUmbrellaPolicy.REWARDS_CONTROLLER, LeafUmbrellaPolicy.STKWA_USDC);
+        vm.expectRevert(LeafUmbrellaPolicy.NotStkwaUsdc.selector);
+        this._requireInner(LeafUmbrellaPolicy.WA_ETH_USDC);
+        vm.expectRevert(LeafUmbrellaPolicy.NotStkwaUsdc.selector);
+        this._requireInner(address(inner));
+        vm.expectRevert(LeafUmbrellaPolicy.BadUmbrellaController.selector);
+        this._requireCtrl(address(0), LeafUmbrellaPolicy.STKWA_USDC);
+        vm.expectRevert(LeafUmbrellaPolicy.BadUmbrellaController.selector);
+        this._requireCtrl(LeafUmbrellaPolicy.STKWA_USDC, LeafUmbrellaPolicy.STKWA_USDC);
+    }
+
+    function testUmbrellaExitSelectorsForbidden() public pure {
+        assertTrue(LeafForbiddenSelectors.forbidden(bytes4(0x787a08a6)));
+        assertTrue(LeafForbiddenSelectors.forbidden(bytes4(0x250201db)));
+        assertTrue(LeafForbiddenSelectors.forbidden(bytes4(0xba087652)));
+        assertTrue(LeafForbiddenSelectors.forbidden(bytes4(0xb460af94)));
+        assertFalse(LeafForbiddenSelectors.forbidden(bytes4(0xbb492bf5)));
+    }
+
+    function testUmbrellaJumpBreakerPinnedAt300() public {
+        vm.prank(owner);
+        adapter.setMaxRateJumpBps(300);
+        assertEq(adapter.maxRateJumpBps(), 300);
+        _mintLeaf(100e18);
+        inner.setRate(1.02e18);
+        vm.prank(owner);
+        adapter.pullYield(inner, converter);
+        uint256 add = (100e18 * (uint256(1.02e18) - 1e18)) / uint256(1.02e18);
+        assertEq(inner.balanceOf(converter), add / 100);
+        inner.setRate(1.10e18);
+        vm.prank(owner);
+        vm.expectRevert(LeafYieldFee.NoYield.selector);
+        adapter.pullYield(inner, converter);
+    }
+
+    function _requireInner(address inner_) external pure {
+        LeafUmbrellaPolicy.requireStkwaUsdc(inner_);
+    }
+
+    function _requireCtrl(address c, address inner_) external pure {
+        LeafUmbrellaPolicy.requireController(c, inner_);
     }
 }

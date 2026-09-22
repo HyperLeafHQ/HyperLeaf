@@ -1202,10 +1202,11 @@
         ],
         "rateKind": "convertToAssets",
         "retainRateYield": true,
+        "maxRateJumpBps": 300,
         "sideClaim": "RewardsController.claimAllRewards"
       },
       "claim": "poke RewardsController.claimAllRewards([stkwaEthUSDC.v1], lockbox) \u2014 pin 4-byte from the live controller ABI before deploy, never from a tx hash. Then pullYield side tokens. Rate surplus (aToken interest in convertToAssets) uses hcbETH retainRateYield 1% skim. Never poke inner. Never cooldown/redeem/withdraw on the StakeToken.",
-      "note": "BATCH 3 mainnet (Ethereum 1, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 at this address \u2014 pin address, not ticker. .v1 is a factory suffix; a .v2 is a new ERC-20 and a new listing. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks this round. Never start cooldown (20d, one record per address \u2014 lockbox would freeze everyone). Never auto-migrate to v2. Users exit by unwrapping the v1 receipt and migrating on Aave themselves. Slash lowers convertToAssets (watermark must drop). Dual harvest: rate (cbETH path) + RewardsController.claimAllRewards 0xbb492bf5 on 0x4655\u2026, never inner. Canary then batch 1\u20132 before this ticker.",
+      "note": "BATCH 3 (Ethereum 1, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 0x6bf18324…8Aa6. Controller pinned in LeafUmbrellaPolicy 0x4655Ce3D…188B, selector 0xbb492bf5, jump 300. Never wrap aUSDC, waUSDC, USDC, stkAAVE, or other Umbrella stks. Never start cooldown (20d). Never auto-migrate to v2. Dual harvest: rate 1% skim + claimAllRewards. Not live until GO.",
       "testnet": {
         "sourceChain": "sepolia",
         "mockInner": true,
