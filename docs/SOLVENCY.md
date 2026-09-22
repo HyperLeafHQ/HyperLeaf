@@ -308,7 +308,7 @@ Wrap **LBTCv** `0x5401b862…D57c` only. Never LBTC, WBTC, cbBTC, BTC.b, BTCe, B
 | Auto-pause | `rateJumped` → mint stops, redeem stays |
 | Worst-case loss | locked LBTCv (uncapped intake) + vault DeFi |
 | Test | `test/lz/LeafLbtcv.t.sol`. `BATCH=3 ASSET=hlbtcv` |
-| Deploy | **Not live.** No GO until audit. `--rpc-url eth` |
+| Deploy | **LIVE.** SOURCE `0x615487eD…` ETH 1 / OFT `0x0dEeB4BC…` / conv `0xc89273AC…`. `--rpc-url eth`. Pin chainId 1. |
 
 ### hveAERO (later — NFT lockbox, not a grok-bot batch)
 

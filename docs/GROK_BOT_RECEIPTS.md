@@ -12,7 +12,8 @@ That file is the task list. This table is only harvest/never per ticker.
 | `hslisbnb` | 2 | 1% of StakeManager `convertSnBnbToBnb` surplus. Jump 300 bps. `rewardsTarget` = Lista StakeManager, **not** the token | native BNB `deposit()` / Lista 7d `requestWithdraw` / `claimWithdraw` / `instantWithdraw`. Never `convertToAssets` on slisBNB |
 | `hsavax` | 3 | 1% of `getPooledAvaxByShares` | `requestUnlock` |
 | `hstkwausdc` | 3 | 1% rate skim + `RewardsController` `0xbb492bf5` | `cooldown` on StakeToken |
-| `hlbtc` | 3 | 1% of AssetRouter `getRate` surplus. Jump >3% **up or down** is not yield | BTC.b / LBTCv / BTCe / Base LBTC / `burn` / `mint(bytes,bytes)` / AssetRouter `deposit` / Bascule |
+| `hlbtc` | parked | — | Do not harvest. `productionEvm=false` |
+| `hlbtcv` | 3 LIVE | 1% of Veda `getRateInQuote(LBTC)` surplus. Jump >3% **up or down** is not yield. Never `getRate()` (WBTC) | LBTC / WBTC / cbBTC / BTC.b / Veda teller `0xb5c5f672` / `bulkWithdraw` |
 | `hsteakusdg` | later — **not a BATCH** | none. Yield stays in the share. `pullInner` false | USDG / steakUSDC / 4626 `deposit`/`mint`/`withdraw`/`redeem` / Morpho Blue market. Never `RateKind.ConvertToAssets` (6-dec asset) |
 | `hdai` | later — **not a BATCH** | none. Yield stays in the share. `pullInner` false | DAI / Maker sDAI / Trust Wallet wrapper / 4626 / Morpho Blue. Cap 100_000e18 shares. Do not advertise APY |
 | `hkaito` / `hvirtualmax` | later — **not a BATCH** | `pokeMerkleClaim` `0x2e7ba6ef` then `pullYield` / holder `sweep`. Twin never `openBridge` | raw KAITO / official 7d unstake / VIRTUAL redeem / `rewardsSelector=0x2e7ba6ef` |

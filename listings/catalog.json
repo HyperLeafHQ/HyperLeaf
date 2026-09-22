@@ -1139,9 +1139,31 @@
         "shareScale": "1e10",
         "innerDecimals": 8
       },
-      "note": "BATCH=3 ASSET=hlbtcv. Wrap LBTCv only (8-dec, shareScale 1e10). Rate = Veda accountant getRateInQuote(LBTC) ~1.021e8, NEVER accountant.getRate() (WBTC) and NEVER AssetRouter.getRate(LBTC). 3d teller withdraw denylisted. Never LBTC/WBTC/cbBTC/BTC.b. No GO until audit.",
-      "status": "mainnet-batch-3",
-      "priority": 12
+      "claim": "No side token. Rate is Veda accountant getRateInQuote(LBTC). Never accountant.getRate() (WBTC). Never teller 3d withdraw.",
+      "note": "LIVE on Ethereum 1. SOURCE 0x615487eD… is unique (not 0x4C86). Converter hex is the shared ETH LeafYieldConverter (also hstkwaUSDC). Wrap ONLY LBTCv 0x5401b862… (8-dec). shareScale 1e10. Never LBTC/WBTC/cbBTC/BTC.b / Veda teller / Sepolia.",
+      "refs": {
+        "wrapTx": "0xa276fa66f235b445b5b5ed436343896e5c140639f551f0d3aec237bc99f8da58",
+        "unwrapTx": "0x23c1f28565df11b2630b26667719d4e333a9699ef5a97b946228703add1dac72"
+      },
+      "status": "live",
+      "priority": 10,
+      "live": {
+        "sourceChain": 1,
+        "destChain": 999,
+        "source": "0x615487eD17D275390565E3880E3406093Ce81346",
+        "oft": "0x0dEeB4BC1E70f3ab4f5262590b327D25D1EC88Bf",
+        "converterEth": "0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2",
+        "depositCap": "0",
+        "innerSupplyCeiling": "1e27",
+        "shareScale": "1e10",
+        "rateKind": 6,
+        "maxRateJumpBps": 300,
+        "rewardsTarget": "0x28634D0c5edC67CF2450E74deA49B90a4FF93dCE",
+        "rateQuote": "0x8236a87084f8B84306f72007F36F2618A5634494",
+        "rewardsSelector": "0x00000000",
+        "owner": "0x24458f0Bc44c4607172d1151CD938012be33156e",
+        "note": "LIVE on Ethereum 1. Unique SOURCE. Shared converter with hstkwaUSDC. Wrap LBTCv only."
+      }
     },
     {
       "id": "hsnx",
