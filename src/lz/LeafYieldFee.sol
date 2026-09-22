@@ -23,6 +23,8 @@ abstract contract LeafYieldFee {
     bytes4 public rewardsSelector;
     /// @dev Umbrella: RewardsController. Zero = poke inner (Squid/Avantis).
     address public rewardsTarget;
+    /// @dev Quote asset for RateKind.GetRateInQuote (hLBTCv: LBTC, not WBTC).
+    address public rateQuote;
     /// @dev Per-campaign merkle distributor. Not frozen. Never the inner token.
     mapping(address => bool) public merkleDistributor;
     /// @dev RewardsController.claimAllRewards(address[],address)
@@ -40,7 +42,8 @@ abstract contract LeafYieldFee {
         ConvertToAssets,
         GetPooledAvaxByShares,
         RouterGetRate,
-        ConvertSnBnbToBnb
+        ConvertSnBnbToBnb,
+        GetRateInQuote
     }
 
     RateKind public rateKind;
@@ -62,6 +65,7 @@ abstract contract LeafYieldFee {
     event ConverterSet(address indexed converter);
     event RewardsSelectorSet(bytes4 selector);
     event RewardsTargetSet(address indexed target);
+    event RateQuoteSet(address indexed quote);
     event MerkleDistributorSet(address indexed distributor, bool ok);
     event RateFeedSet(RateKind kind, uint256 rate);
     event RateYieldAccrued(uint256 added, uint256 accrued, uint256 rate);
@@ -163,6 +167,11 @@ abstract contract LeafYieldFee {
     function _setRewardsTarget(address t) internal {
         rewardsTarget = t;
         emit RewardsTargetSet(t);
+    }
+
+    function _setRateQuote(address q) internal {
+        rateQuote = q;
+        emit RateQuoteSet(q);
     }
 
     function _setMerkleDistributor(address inner, address d, bool ok) internal {
@@ -339,6 +348,13 @@ abstract contract LeafYieldFee {
             if (t == address(0) || t == address(token)) revert BadRateFeed();
             (bool ok, bytes memory ret) =
                 t.staticcall(abi.encodeWithSignature("convertSnBnbToBnb(uint256)", uint256(1e18)));
+            if (!ok || ret.length < 32) revert BadRateFeed();
+            rate = abi.decode(ret, (uint256));
+        } else if (rateKind == RateKind.GetRateInQuote) {
+            address t = rewardsTarget;
+            address q = rateQuote;
+            if (t == address(0) || q == address(0) || t == address(token) || q == address(token)) revert BadRateFeed();
+            (bool ok, bytes memory ret) = t.staticcall(abi.encodeWithSignature("getRateInQuote(address)", q));
             if (!ok || ret.length < 32) revert BadRateFeed();
             rate = abi.decode(ret, (uint256));
         }

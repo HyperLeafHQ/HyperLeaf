@@ -76,7 +76,7 @@ The mainline roadmap is **asset-by-asset**, not a general-purpose framework-firs
 
 ### Phase 3 — Additional mature L paths
 
-`hsAVAX` — **LIVE** (Avalanche 43114). `hstkwaUSDC` — **LIVE** (Ethereum 1). `hLBTC` Coming.
+`hsAVAX` — **LIVE** (Avalanche 43114). `hstkwaUSDC` — **LIVE** (Ethereum 1). `hLBTCv` Coming. `hLBTC` parked.
 
 These add Avalanche and Ethereum integrations with asset-specific rate logic, reward accounting, decimals, and jump protection rather than forcing them through a generic adapter assumption.
 

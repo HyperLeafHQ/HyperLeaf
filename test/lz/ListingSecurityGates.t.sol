@@ -31,7 +31,7 @@ contract ListingSecurityGatesTest is Test {
     }
 
     function testProductionListingsHaveNoIntakeCap() public pure {
-        string[19] memory ids = [
+        string[20] memory ids = [
             "bluai4y",
             "horder",
             "hswbera",
@@ -42,6 +42,7 @@ contract ListingSecurityGatesTest is Test {
             "hgsoon",
             "hvirtualmax",
             "hlbtc",
+            "hlbtcv",
             "hveaero",
             "hjitosol",
             "hstkwausdc",

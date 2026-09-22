@@ -284,25 +284,31 @@ Canonical economic owner is **the Orderly ledger account = the Arb lockbox addre
 
 
 
-### hLBTC (batch 3 — Ethereum, wrap LBTC, Bitwise covered-call rate)
+### hLBTC (parked)
 
-Wrap **LBTC** `0x8236a870…` only. Never BTC.b, LBTCv, BTCe, Base LBTC, or native BTC. 10-day Lombard redeem is **not** called.
+Was BATCH 3 wrap of Lombard **LBTC**. Human switched to **hLBTCv**. `productionEvm=false`. Do not `GO ASSET=hlbtc`.
+
+### hLBTCv (batch 3 — Ethereum, wrap LBTCv, Veda NAV in LBTC)
+
+Wrap **LBTCv** `0x5401b862…D57c` only. Never LBTC, WBTC, cbBTC, BTC.b, BTCe, Base LBTC. Do not call the Veda teller (3-day vault exit). Token itself is transferable — wrap/unwrap the share.
+
+4.5% is **DeFi-on-top-of-Bitwise**, not a higher Bitwise APY. LBTC's covered-call book is already inside the vault; extra yield is money-market / credit / LP.
 
 | | |
 | --- | --- |
-| Canonical backing | lockbox LBTC on Ethereum |
-| Accounting unit | 1 hLBTC (18 dec) = 1 LBTC (8 dec) via `shareScale = 1e10` |
-| Core invariant | dest shares / 1e10 ≤ lockbox LBTC − protocol 1% skim |
-| Rate source | AssetRouter `getRate(LBTC)` `0x9eCe5fB1…`. **Admin/Bitwise**, not Babylon |
-| Circuit | `maxRateJumpBps = 300` **up or down**. `pokeRate` latches `rateJumped` (mint tx would roll it back). Guardian `acknowledgeRate` sets watermark **without** taking the spike as 1%. Small down (≤3%) pins the watermark, no fee |
-| Caps | `defaultCap = 0` (no HyperLeaf intake cap). `INNER_SUPPLY_CEILING` = live `LBTC.totalSupply()` + headroom — **never** use ceiling as dest share cap. Dest `setLimits(0,0)` |
-| Mint / redeem | wrap/unwrap LBTC. Never `burn` / `mint(bytes,bytes)` / AssetRouter `deposit` / Bascule / 10d `redeem` |
-| Yield | Covered-call premiums in the rate. 1% skim, 99% stays. Rally can lag BTC |
-| Failure | Router lie / 10% overnight print; wrapping BTC.b / Base LBTC; using inner cap as dest share cap |
+| Canonical backing | lockbox LBTCv on Ethereum |
+| Accounting unit | 1 hLBTCv (18 dec) = 1 LBTCv (8 dec) via `shareScale = 1e10` |
+| Core invariant | dest shares / 1e10 ≤ lockbox LBTCv − protocol 1% skim |
+| Rate source | Veda accountant `0x28634D0c…93dCE` `getRateInQuote(LBTC)`. **Not** `getRate()` (WBTC base) and **not** AssetRouter `getRate(LBTC)`. Live ~1.021e8 LBTC per share |
+| Circuit | `maxRateJumpBps = 300` up or down. HWM: slash/recovery is not fee |
+| Caps | `defaultCap = 0`. `INNER_SUPPLY_CEILING` = live `LBTCv.totalSupply()` + headroom |
+| Mint / redeem | wrap/unwrap LBTCv. Never teller `deposit` / `withdraw` / `bulkWithdraw` / 10d LBTC `redeem` |
+| Yield | Vault NAV in LBTC terms. 1% skim, 99% stays. 3d vault exit is the user's problem after unwrap |
+| Failure | Accountant admin lie; using WBTC `getRate()` as the feed (BTC.b noise looks like yield); wrapping LBTC by mistake |
 | Auto-pause | `rateJumped` → mint stops, redeem stays |
-| Worst-case loss | locked LBTC in the lockbox (uncapped intake). Rate-jump pauses mint |
-| Test | `test/lz/LeafLbtc.t.sol` `testEightDecRoundTrip`. `BATCH=3 ASSET=hlbtc` |
-| Deploy | **Not live.** `--rpc-url eth`. Never Sepolia. No GO until human GO |
+| Worst-case loss | locked LBTCv (uncapped intake) + vault DeFi |
+| Test | `test/lz/LeafLbtcv.t.sol`. `BATCH=3 ASSET=hlbtcv` |
+| Deploy | **Not live.** No GO until audit. `--rpc-url eth` |
 
 ### hveAERO (later — NFT lockbox, not a grok-bot batch)
 

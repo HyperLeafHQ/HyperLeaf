@@ -11,6 +11,7 @@ import {LeafRedeemQueue} from "src/lz/LeafRedeemQueue.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {MainnetBatches} from "src/lz/MainnetBatches.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
+import {LeafLbtcvPolicy} from "src/lz/LeafLbtcvPolicy.sol";
 import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {ILayerZeroEndpointV2, SetConfigParam} from "src/lz/interfaces/ILayerZeroEndpointV2.sol";
@@ -50,7 +51,7 @@ contract AssetCatalogTest is Test {
     }
 
     function testEveryListingConstructs() public {
-        string[20] memory ids = AssetCatalog.allIds();
+        string[21] memory ids = AssetCatalog.allIds();
         for (uint256 i; i < ids.length; ++i) {
             AssetCatalog.Listing memory a = AssetCatalog.get(ids[i]);
             MockERC20 inner = new MockERC20(a.innerSymbol, a.innerSymbol);
@@ -214,8 +215,13 @@ contract AssetCatalogTest is Test {
         assertEq(MainnetBatches.batchOf("hstkwausdc"), 3);
         assertEq(MainnetBatches.batchOf("hlbtc"), 3);
         assertEq(AssetCatalog.get("hlbtc").innerMainnet, 0x8236a87084f8B84306f72007F36F2618A5634494);
-        assertEq(AssetCatalog.get("hlbtc").defaultCap, 0);
+        assertFalse(AssetCatalog.get("hlbtc").productionEvm);
         assertEq(LeafLbtcPolicy.shareScaleOf("hlbtc"), 1e10);
+        assertEq(MainnetBatches.batchOf("hlbtcv"), 3);
+        assertEq(AssetCatalog.get("hlbtcv").innerMainnet, 0x5401b8620E5FB570064CA9114fd1e135fd77D57c);
+        assertTrue(AssetCatalog.get("hlbtcv").productionEvm);
+        assertEq(LeafLbtcvPolicy.shareScaleOf("hlbtcv"), 1e10);
+        assertEq(LeafLbtcPolicy.shareScaleOf("hlbtcv"), 1);
         assertEq(LeafLbtcPolicy.shareScaleOf("hcbeth"), 1);
         assertEq(LeafUmbrellaPolicy.shareScaleOf("hstkwausdc"), 1e12);
         assertEq(LeafUmbrellaPolicy.INNER_DECIMALS, 6);

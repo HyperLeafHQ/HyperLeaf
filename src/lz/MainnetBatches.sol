@@ -27,7 +27,8 @@ library MainnetBatches {
         ) return RATE_L;
         if (
             k == keccak256("hsavax") || k == keccak256("hstkwausdc") || k == keccak256("hstkwaUSDC")
-                || k == keccak256("hlbtc") || k == keccak256("hLBTC")
+                || k == keccak256("hlbtc") || k == keccak256("hLBTC") || k == keccak256("hlbtcv")
+                || k == keccak256("hLBTCv")
         ) return ETH_L;
         if (k == keccak256("bluai4y") || k == keccak256("horder") || k == keccak256("hORDER")) return CLOSED;
         if (k == keccak256("hjitosol") || k == keccak256("hJitoSOL")) return SOLANA_L;

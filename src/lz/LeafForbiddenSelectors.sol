@@ -38,7 +38,10 @@ library LeafForbiddenSelectors {
             || s == bytes4(0xb13acedd) // claimWithdraw(uint256) — Lista / ether.fi
             || s == bytes4(0x9a53d5af) // claimWithdrawFor(address,uint256)
             || s == bytes4(0xfd92bff2) // instantWithdraw(uint256) — Lista
-            || s == bytes4(0xd0e30db0); // deposit() — Lista native BNB
+            || s == bytes4(0xd0e30db0) // deposit() — Lista native BNB
+            || s == bytes4(0xb5c5f672) // withdraw(address,uint256,uint256) — Veda / LBTCv teller 3d
+            || s == bytes4(0xd0d0e108) // bulkWithdraw(address[],uint256[],uint256[])
+            || s == bytes4(0x09bae891); // bulkDeposit(address[],uint256[],uint256[])
     }
 
     function lbtc(bytes4 s) internal pure returns (bool) {

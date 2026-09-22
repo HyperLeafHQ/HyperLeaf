@@ -9,6 +9,7 @@ import {LeafOFT} from "src/lz/LeafOFT.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LeafLbtcPolicy} from "src/lz/LeafLbtcPolicy.sol";
 import {LeafUmbrellaPolicy} from "src/lz/LeafUmbrellaPolicy.sol";
+import {LeafLbtcvPolicy} from "src/lz/LeafLbtcvPolicy.sol";
 
 /// @notice Set listingTag + per-tx/day caps. OFT also gets supplyCap.
 ///         cap 0 = no HyperLeaf intake limit (hxSQUID / hAVNT). Inner ceiling
@@ -26,7 +27,8 @@ contract OpenPeg is Script {
         } catch {
             // Each shareScaleOf returns 1 for unknown ids. Product is safe while
             // no listing id is claimed by both LeafLbtcPolicy and LeafUmbrellaPolicy.
-            cap = a.defaultCap * LeafLbtcPolicy.shareScaleOf(id) * LeafUmbrellaPolicy.shareScaleOf(id);
+            cap = a.defaultCap * LeafLbtcPolicy.shareScaleOf(id) * LeafUmbrellaPolicy.shareScaleOf(id)
+                * LeafLbtcvPolicy.shareScaleOf(id);
         }
         uint8 decimals = a.innerMainnet == address(0) ? 18 : IERC20Metadata(a.innerMainnet).decimals();
         uint256 ceiling = vm.envOr("INNER_SUPPLY_CEILING", uint256(0));
