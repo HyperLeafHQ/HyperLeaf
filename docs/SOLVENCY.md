@@ -346,7 +346,7 @@ Wrap **sAVAX** `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` (Avalanche 43114). N
 | Auto-pause | inner supply ceiling; guardian; 3% rate jump |
 | Worst-case loss | inner ceiling (anti-print). 1% skim on converter |
 | Test | `testSavaxPooledAvaxRateSameMathAsCbeth`, `testRewardsSelectorRejectsBenqiUnlock`. `BATCH=3` `ASSET=hsavax` |
-| Deploy | **Mainnet** `DeployAdapter` on 43114. `--rpc-url avax`. Never Fuji. `ASSET=hsavax` |
+| Deploy | **LIVE.** SOURCE `0x4C862bC0…559c` on **43114** / OFT `0x304abA88…078f`. Same SOURCE hex on 80094 is hsiBERA. |
 
 Same math as hcbETH. Different 4-byte rate read.
 

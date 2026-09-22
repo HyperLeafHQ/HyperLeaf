@@ -1,11 +1,11 @@
 # Grok bot tasks — mainnet go-live
 
 > **Status 2026-09-22: archived as a live-ops checklist.** Live surface:
-> **7 Leafs** (hNEST, hQUID, hAVNT, hgSOON, hslisBNB, hsiBERA, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
+> **8 Leafs** (hNEST, hQUID, hAVNT, hgSOON, hslisBNB, hsiBERA, hsAVAX, BLUAI4Y) **+ 2 pre-market** (VAR, Predict).
 > Addresses: [`listings/catalog.json`](../listings/catalog.json) `live` objects.
 > This file stays as the **deploy cookbook** for what is not live yet:
+> BATCH 3 remainder `hstkwausdc` / `hlbtc` (jump/controller pins, **no deploy until GO**),
 > `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
-> BATCH 2 remainder is **done** (`hswbera` parked),
 > Nado points `createMarket` (n=3, **no broadcast until GO**),
 > Quantus QTC native OTC (`DeployNativeOtcQtc.s.sol` — **new factory, never n=4 on the live VAR book, no broadcast until GO**),
 > and `hjitosol` (BATCH 5).
@@ -33,7 +33,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + **hslisBNB** + **hsiBERA** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** after the jump pin is **`hsavax`** (`BATCH=3`). Do **not** `GO` `hstkwausdc` / `hlbtc` / `horder` from that cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked** (`productionEvm=false`). hsiBERA SOURCE `0x4C862bC0…` is **80094 only** — same hex on BSC is dead BLUAI.
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + hslisBNB + hsiBERA + **hsAVAX** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** is **not** automatic: `hstkwausdc` still needs jump 300 + RewardsController pin. Do **not** `GO` `hlbtc` / `horder` from the hsAVAX cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked**. SOURCE `0x4C862bC0…` is **chain-keyed**: 80094 hsiBERA / 43114 hsAVAX / 56 dead BLUAI.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
    - hsAVAX jump 300 is on `ConfigureMainnetListing` `ASSET=hsavax`. Umbrella / hLBTC still BATCH 3 remainder — do not `GO` those from this hsAVAX cookbook.
 
@@ -45,8 +45,8 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 | ---: | --- | --- | --- | --- |
 | **0** | first | `hcanary` | Toy ERC-20, L adapter, **real** ULN | Base 8453 |
 | **1** | canary dead | `hxsquid` then `havnt` | Side-token L. `0x9a99b4f0`. Never `0xeab52318` | Base 8453 |
-| **2** | **LIVE** | `hgsoon` `hslisbnb` `hsibera` | Rate L, 1% skim, 99% in receipt. **Not hcbETH**. hslisBNB = StakeManager `convertSnBnbToBnb`. hsiBERA inner = siBERA not sWBERA. SOURCE `0x4C86` is 80094 only | BSC 56 / Bera 80094 |
-| **3** | batch 2 passed | `hsavax` then `hstkwausdc` then **`hlbtc`** | Rate / Umbrella / LBTC 8-dec | Avax / ETH |
+| **2** | **LIVE** | `hgsoon` `hslisbnb` `hsibera` | Rate L, 1% skim. SOURCE `0x4C86` on 80094 is hsiBERA | BSC 56 / Bera 80094 |
+| **3** | hsAVAX **LIVE**; remainder no GO | `hsavax` **LIVE**. `hstkwausdc` then `hlbtc` | Rate / Umbrella / LBTC 8-dec. SOURCE `0x4C86` on 43114 is hsAVAX | Avax / ETH |
 | **4** | batch 3 passed | `bluai4y` then `horder` | C1 lockbox + closed OFT. Market exit | BSC 56 / Arb 42161 |
 | **5** | batch 4 passed **and** Store PDA exists | `hjitosol` | Solana lockbox + dest `LeafOFT`. No Rewarder | Solana 30168 → HyperEVM 999 |
 
@@ -103,8 +103,19 @@ See git history `95603d0` `docs/GROK_BOT_MAINNET.md` for the original canary / L
 `BATCH=2` remainder is **LIVE**. Do not redeploy.
 
 - **hslisBNB LIVE** SOURCE `0xf16E73739787c7F5C92574e536c3fb007191801d` / OFT `0x62cCB35Ed6EC5833379389719a7EE70D33A8ace7` / Conv BSC `0x988cA9957F2Bea52881a91395829D9f7c525D6eB`. Owner FINAL. Wrap slisBNB only.
-- **hsiBERA LIVE** SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` (**Berachain 80094**) / OFT `0xE22b448DF578EA079Ea6f1EF5316B95cabA590f2` / Conv `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2`. Inner siBERA. Same SOURCE hex on BSC 56 is dead BLUAI 100-cap — never mix.
+- **hsiBERA LIVE** SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` (**Berachain 80094**) / OFT `0xE22b448DF578EA079Ea6f1EF5316B95cabA590f2` / Conv `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2`. Inner siBERA. Same SOURCE hex on 43114 is hsAVAX; on BSC 56 is dead BLUAI — never mix.
 - **hsWBERA** parked. Do not `GO` `ASSET=hswbera`.
+
+Do not comment `GO` on #69 for these tickers.
+
+---
+
+## 3a. hsAVAX LIVE
+
+`BATCH=3` first ticker is **LIVE**. Do not redeploy.
+
+- **hsAVAX LIVE** SOURCE `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` (**Avalanche 43114**) / OFT `0x304abA885393aC13e34655daf48C2Ab8D0B6078f` / Conv `0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2`. Inner sAVAX. `maxRateJumpBps=300`. Same SOURCE/Conv hex on 80094 is hsiBERA.
+- Remainder: `hstkwausdc` / `hlbtc` — **no GO** until jump/controller pins.
 
 Do not comment `GO` on #69 for these tickers.
 
