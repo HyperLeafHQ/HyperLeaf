@@ -1207,15 +1207,30 @@
         "innerDecimals": 6,
         "sideClaim": "RewardsController.claimAllRewards"
       },
-      "claim": "poke RewardsController.claimAllRewards([stkwaEthUSDC.v1], lockbox) \u2014 pin 4-byte from the live controller ABI before deploy, never from a tx hash. Then pullYield side tokens. Rate surplus (aToken interest in convertToAssets) uses hcbETH retainRateYield 1% skim. Never poke inner. Never cooldown/redeem/withdraw on the StakeToken.",
-      "note": "BATCH 3 (Ethereum 1, ASSET=hstkwausdc). Wrap ONLY stkwaEthUSDC.v1 0x6bf18324…8Aa6 (6-dec). shareScale 1e12 → 18-dec hstkwaUSDC. Controller pinned 0x4655Ce3D…188B, selector 0xbb492bf5, jump 300. Never wrap aUSDC, waUSDC, USDC, stkAAVE. Never cooldown / v2. Dual harvest: rate 1% skim + claimAllRewards. Not live until GO.",
-      "testnet": {
-        "sourceChain": "sepolia",
-        "mockInner": true,
-        "batch": "next"
+      "claim": "poke RewardsController.claimAllRewards([stkwaEthUSDC.v1], lockbox) — 0xbb492bf5 on 0x4655Ce3D…188B. Then pullYield side tokens (GHO/AAVE). Rate surplus uses retainRateYield 1% skim. Never poke inner. Never cooldown/redeem/withdraw on the StakeToken.",
+      "note": "LIVE on Ethereum 1. SOURCE/Converter hex collides with hsAVAX 43114, hsiBERA 80094, dead BLUAI 56 — pin chainId 1. Wrap ONLY stkwaEthUSDC.v1 0x6bf18324…8Aa6 (6-dec). shareScale 1e12. Never aUSDC / waUSDC / USDC / stkAAVE / cooldown / v2 / Sepolia.",
+      "refs": {
+        "wrapTx": "0x3e0ddb2cbc170d3f36b369862f5f414b389cfcf93dcacaf50a93434f6d3ecbc8",
+        "unwrapTx": "0xaffffd469090f099453900dd65fce0cfce1043a054fd128999311bb3256a4ed3"
       },
-      "status": "mainnet-batch-3",
-      "priority": 10
+      "status": "live",
+      "priority": 10,
+      "live": {
+        "sourceChain": 1,
+        "destChain": 999,
+        "source": "0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C",
+        "oft": "0x2D694ef80ce88c47568fD0d128Ed6C920193DAA8",
+        "converterEth": "0xc89273ACB22a4e1df81A396FE0Bf6eD6E2CA6fD2",
+        "depositCap": "0",
+        "innerSupplyCeiling": "1e27",
+        "shareScale": "1e12",
+        "rateKind": 2,
+        "maxRateJumpBps": 300,
+        "rewardsTarget": "0x4655Ce3D625a63d30bA704087E52B4C31E38188B",
+        "rewardsSelector": "0xbb492bf5",
+        "owner": "0x24458f0Bc44c4607172d1151CD938012be33156e",
+        "note": "LIVE on Ethereum 1. Same SOURCE hex on 43114 hsAVAX / 80094 hsiBERA / 56 dead BLUAI. OFT 0x2D694ef8 is unique. Wrap stk v1 only. Rate 1% + 领取 WHYPE for GHO/AAVE."
+      }
     },
     {
       "id": "hlit",

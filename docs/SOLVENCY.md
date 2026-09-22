@@ -366,7 +366,7 @@ Wrap **one address**: `stkwaEthUSDC.v1` `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8
 | Auto-pause | health on slash / inner supply ceiling; 3% rate jump; guardian pause mint if Aave announces v2 |
 | Worst-case loss | slash of locked stk (Umbrella max is `totalAssets - MIN_ASSETS_REMAINING`) + converter slippage on side rewards |
 | Test | `LeafUmbrella.t.sol` `testSixDecRoundTripAndScaleFreeze` / `testSixDecRateSkimAndJumpOnRawInner`. `BATCH=3` `ASSET=hstkwausdc` |
-| Deploy | **Not live.** Pins on main. No GO until audit. `--rpc-url eth`. Never Sepolia |
+| Deploy | **LIVE.** SOURCE `0x4C862bC0…559c` on **Ethereum 1** / OFT `0x2D694ef8…DAA8`. Same SOURCE hex on 43114/80094/56. Pin chainId 1. |
 
 Do **not** treat this as hxSQUID. Poke target is the RewardsController, not inner.
 

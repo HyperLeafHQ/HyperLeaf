@@ -32,12 +32,13 @@ Canary is dead. Show wrap + redeem (L) or Leaf Market (C1). **Do not use 50-cap 
 | hslisBNB | `0xf16E73739787c7F5C92574e536c3fb007191801d` | `0x62cCB35Ed6EC5833379389719a7EE70D33A8ace7` | slisBNB `0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B` |
 | hsiBERA | Bera 80094 `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` | `0xE22b448DF578EA079Ea6f1EF5316B95cabA590f2` | siBERA `0xA3503ba6460121d5936F4576f5486Fed30dbA4d8` |
 | hsAVAX | Avax 43114 `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` | `0x304abA885393aC13e34655daf48C2Ab8D0B6078f` | sAVAX `0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE` |
+| hstkwaUSDC | ETH 1 `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` | `0x2D694ef80ce88c47568fD0d128Ed6C920193DAA8` | stkwaEthUSDC.v1 `0x6bf183243FdD1e306ad2C4450BC7dcf6f0bf8Aa6` |
 | BLUAI4Y | `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` | `0x8F25a342b93f623A07e7dF8b691a729A6e39C439` | BLUAI `0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD` |
 | hNEST | — | hNEST `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` | NEST (vault `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c`) |
 
 hORDER is **COMING** (zeros). hsWBERA is **HOLD** (do not show). hINK is **COMING** (zeros; official INK not posted). Nado pre-market is **Opening** (awaiting owner `createMarket`). Do not mark LIVE.
 
-**Same hex, three chains:** `0x4C862bC0…559c` is hsiBERA SOURCE on **80094**, hsAVAX SOURCE on **43114**, and dead BLUAI 100-cap SOURCE on **BSC 56**. Converter `0xc89273AC…6fD2` is hsiBERA on 80094 and hsAVAX on 43114. UI must key wrap by `sourceChainId`. OFTs differ: hsiBERA `0xE22b448D…` vs hsAVAX `0x304abA88…`. Never mix.
+**Same hex, four chains:** `0x4C862bC0…559c` is hstkwaUSDC SOURCE on **Ethereum 1**, hsAVAX on **43114**, hsiBERA on **80094**, dead BLUAI 100-cap on **BSC 56**. Converter `0xc89273AC…6fD2` is the same hex on 1 / 43114 / 80094. UI must key wrap by `sourceChainId`. OFTs differ: hstkwaUSDC `0x2D694ef8…` / hsAVAX `0x304abA88…` / hsiBERA `0xE22b448D…`. Never mix.
 
 Dead, never wire: hCANARY any address; hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206`; 50-cap hQUID `0x13E3…0d25` / `0x78B6…4DFc`; old hAVNT `0x571C…aa98` / `0xAA70…7dAA` / `0x9a75…10Eb`; BLUAI 100-cap SOURCE `0x4C86…` **on BSC 56 only** / OFT `0xD54A…` / escrow `0x1AD2…` / fill `0xC584…`; Gate `0xB4C43…519B`; Nest v1 vault `0x4f6615…`.
 
@@ -294,7 +295,7 @@ Only show 领取 HYPE when `listings/catalog.json` `yield.toHype` is non-empty *
 | hslisBNB | **Same as hgSOON.** No 领取 HYPE. Copy: 赎回拿回 slisBNB，不是 BNB，也不是 slisBNBx。协议不会帮你 Lista 7 天赎回。 |
 | hsiBERA | **Same as hgSOON.** No 领取 HYPE. Copy: 赎回拿回 siBERA，不是 BERA / iBERA。协议不会帮你 7d unbond。SOURCE 只在 Berachain，不要和 BSC 上同地址的废 BLUAI 搞混。 |
 | hsAVAX | **Same as hgSOON.** No 领取 HYPE. Copy: 赎回拿回 sAVAX，不是 AVAX。不要帮用户 requestUnlock。SOURCE 只在 Avalanche 43114，不要和 Bera/BSC 同地址搞混。 |
-| hstkwaUSDC | Rate 1% like hcbETH **plus** 领取 WHYPE for Umbrella GHO/AAVE after converter notify. Copy: 赎回拿回的是 stk v1 收据，不是 USDC。协议不会帮你 cooldown。 |
+| hstkwaUSDC | Rate 1% like hcbETH **plus** 领取 WHYPE for Umbrella GHO/AAVE after converter notify. Copy: 赎回拿回的是 stk v1 收据，不是 USDC。协议不会帮你 cooldown。SOURCE 只在 Ethereum 1，不要和 Avax/Bera/BSC 同地址搞混。 |
 
 Do not invent “偶发空投” for cbETH. After the 1% skim, 1 hcbETH unwraps slightly less cbETH; that remaining cbETH is worth more ETH. Do not say holders claim HYPE for cbETH PoS.
 
@@ -322,7 +323,7 @@ HYPE is **not** inside the Leaf. Leaf does **not** rebase. Pending WHYPE is **pe
 
 hNEST does **not** use this rewarder. Do not put 领取 HYPE on hNEST.
 
-Tickers with `retainRateYield` (`hcbETH`, `hgSOON`, `hslisBNB`, `hsiBERA`, `hsAVAX`, later `hstkwaUSDC`) have **no** holder HYPE claim. Copy must say remaining receipt, not 1:1.
+Tickers with `retainRateYield` (`hcbETH`, `hgSOON`, `hslisBNB`, `hsiBERA`, `hsAVAX`) have **no** holder HYPE claim from the rate book. `hstkwaUSDC` still has 领取 WHYPE for Umbrella GHO/AAVE (side book). Copy must say remaining receipt, not 1:1.
 
 ### Copy that must appear
 
