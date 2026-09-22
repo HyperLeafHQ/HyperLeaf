@@ -274,7 +274,7 @@ Canonical economic owner is **the Orderly ledger account = the Arb lockbox addre
 | Proof source | Guardian `reportLedgerPrincipal(observed)` after Orderly compose (eid 30213). After `stakeOrder`, `inner.balanceOf` is **0** and is not the proof |
 | Mint / redeem | C1, market-only. Further mints halt until `ledgerPrincipal >= totalLocked`. Unstake types 2/3/4 owner-only. Harvest 10/17 public. **One source eid** (`30110` main / `40231` Arb Sepolia). Do not `openBridge` a Base/OP lockbox into this OFT |
 | Inner | Arb ORDER OFT `0x4E200fE2…`. Never the Ethereum ERC-20 `0xABD4…` |
-| Farm | Orderly proxy `0xC8A8Ce0A…`, `stakeOrder` `0x413aaa60`, `FarmStyle.AmountNative`. Request `sendUserRequest` `0xcec09c0d` |
+| Farm | Orderly proxy `0xC8A8Ce0A…`, `stakeOrder` `0x413aaa60`, `FarmStyle.AmountNative`. Request `sendUserRequest` `0xcec09c0d`. Same-tx leftover native returns to `refund`. Async leftover: owner `rescueNative` |
 | Yield | USDC (legacy 9→10) → HYPE. Occupancy: VALOR / esORDER (type 17). Do not vest |
 | Failure | LZ to Orderly not credited; wrong-chain withdrawal; user inflating ledger report |
 | Auto-pause | `reportLedgerPrincipal < totalLocked` → Degraded, mint stops |
