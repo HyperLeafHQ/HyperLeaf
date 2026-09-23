@@ -1,0 +1,27 @@
+[package]
+name = "leaf_jito"
+version = "0.1.0"
+description = "HyperLeaf hJitoSOL Solana OApp lockbox (LayerZero)"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "leaf_jito"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "oapp/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "=0.31.1", features = ["init-if-needed"] }
+anchor-spl = { version = "=0.31.1", default-features = false, features = ["token"] }
+solana-helper = "0.1.0"
+oapp = { package = "oapp-latest", git = "https://github.com/LayerZero-Labs/LayerZero-v2.git", rev = "c09287a" }
+leaf-jito-rate = { path = "../../leaf-jito-rate" }
+zeroize = { version = "=1.8.1", default-features = false }
+serde_json = "=1.0.135"
+indexmap = "=2.7.1"

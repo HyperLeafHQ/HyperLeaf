@@ -1,0 +1,5 @@
+target/
+**/*.so
+**/target/deploy/*-keypair.json
+.anchor/
+

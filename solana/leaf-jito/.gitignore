@@ -1,0 +1,12 @@
+.anchor
+target
+**/*.so
+.DS_Store
+node_modules
+test-ledger
+.envs
+.env
+*.log
+# Never commit program keypair secret
+target/deploy/*-keypair.json
+keys/
