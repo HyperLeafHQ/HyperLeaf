@@ -30,6 +30,14 @@ library AssetCatalog {
     }
 
     error UnknownAsset();
+    error WrongSourceChain();
+
+    /// @dev HyperEVM (999) or the listing's source chain. Stops ASSET=horder
+    ///      from being wired on Base / BSC / Ethereum.
+    function requireHere(string memory id) internal view returns (Listing memory a) {
+        a = get(id);
+        if (block.chainid != 999 && block.chainid != a.sourceChainIdMain) revert WrongSourceChain();
+    }
 
     function get(string memory id) internal pure returns (Listing memory a) {
         bytes32 k = keccak256(bytes(id));

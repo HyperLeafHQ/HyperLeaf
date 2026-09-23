@@ -242,6 +242,25 @@ contract AssetCatalogTest is Test {
         assertEq(AssetCatalog.get("hcanary").defaultCap, 5e16);
     }
 
+    function testHorderOnlyOnArbOrHyperEvm() public {
+        vm.chainId(42161);
+        AssetCatalog.Listing memory a = AssetCatalog.requireHere("horder");
+        assertEq(a.sourceChainIdMain, 42161);
+        assertEq(a.sourceEidMain, 30110);
+        vm.chainId(999);
+        AssetCatalog.requireHere("horder");
+        vm.chainId(8453);
+        vm.expectRevert(AssetCatalog.WrongSourceChain.selector);
+        this._requireHere("horder");
+        vm.chainId(1);
+        vm.expectRevert(AssetCatalog.WrongSourceChain.selector);
+        this._requireHere("horder");
+    }
+
+    function _requireHere(string calldata id) external view {
+        AssetCatalog.requireHere(id);
+    }
+
     function _batch(string calldata id) external pure returns (uint8) {
         return MainnetBatches.batchOf(id);
     }

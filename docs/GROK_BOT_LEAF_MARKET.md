@@ -111,3 +111,13 @@ Not safe: dest `Filled` on a future LZ path = 成交. This job is `fillLocal` on
 Dead 100-cap escrow/fill `0x1AD2…` / `0xC584…` — do not reuse. Abandoned Fill v1 `0x5466…` unused.
 
 `remoteEid` is singular. Adding Arb to the BLUAI escrow reverts `PeerFrozen`. hORDER gets a **new** escrow + Arb fill.
+
+## hORDER (not deployed — audit the pin first)
+
+Do not reuse `0x367FB8…` / `0xE3E4B1…`.
+
+Sequence: `DeployClaimDest` / `DeployClaimSource` → `WirePeers` → `SetSecurityStack` → readback → **`FreezeClaimConfig` both sides** → then owner handoff. `ASSET=horder` is required. Source chain must be **42161**. HyperEVM peer eid must be **30110**. `WANT` is Arb ORDER OFT `0x4E20…`, never `0xABD4…`.
+
+`RETURN_NATIVE` (default 0.01 ETH) is the destination native drop so ACK can be sent. It is **not** the user's fee. UI calls `quoteFill` and pays that quote. Do not hardcode `fill{value: 0.01 ether}`.
+
+`Paid` on Arb is the fill. Dest `LeafReleased` is not. 1% of ask is the buyer incentive, not protocol revenue. `ledgerPrincipal` risk is unchanged.
