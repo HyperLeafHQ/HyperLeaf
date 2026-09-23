@@ -2,7 +2,7 @@
 
 LayerZero OApp (Anchor 0.31.1) that wraps **JitoSOL** and bridges shares to
 HyperEVM as **hJitoSOL**. Lockbox math is owned by `leaf-jito-rate`
-(`cargo test` is the spec — currently **25/25**). This crate is the on-chain runtime.
+(`cargo test` is the spec — currently **28/28**). This crate is the on-chain runtime.
 
 ## Pins
 
@@ -57,8 +57,8 @@ sighashes. Runtime entrypoints:
 | 4 | Halt | `halt` |
 | 5 | LzReceive | `lz_receive` (executor only; `clear` via Endpoint) |
 
-Also: `set_peer_config`, `quote_lock`, `lz_receive_types_v2`,
-`lz_receive_types_info` (LZ OApp surface from `examples/oapp-solana`).
+Also: `set_peer_config`, `set_harvest_other_dest`, `quote_lock`,
+`lz_receive_types_v2`, `lz_receive_types_info` (LZ OApp surface from `examples/oapp-solana`).
 
 ## Store layout
 
@@ -69,8 +69,19 @@ codec in `leaf-jito-rate::store` (`lockbox_encode()`).
 ## Security (#20) notes
 
 - **LZ receive:** Endpoint `clear` CPI + peer PDA sender check + GUID/nonce
-  (OApp primitives). No user `Unlock`.
-- **Admin:** `halt` / `init_store` / `set_peer_config` gated to `store.admin`.
+  (OApp primitives). No user `Unlock`. Recipient JitoSOL ATA is created via SPL Associated Token
+  `CreateIdempotent` (same effect as LayerZero OFT `init_if_needed`) so
+  first-time recipients need no pre-created ATA; wallet key must match
+  payload `to` (Solana pubkey). Account list includes recipient wallet,
+  mint, ATA program, and system program.
+- **Admin:** `halt` / `init_store` / `set_peer_config` /
+  `set_harvest_other_dest` gated to `store.admin`.
+- **harvest_other destinations (P1):** Trigger stays permissionless, but fee
+  (1%) and rest (99%) ATAs must be canonical ATAs of owners registered in a
+  per-mint `SideDest` PDA (`[b"SideDest", mint]`). Unregistered mint rejects.
+  Still rejects JitoSOL mint via rate check.
+- **deposit_cap_atoms:** `0` means **unlimited** (HyperLeaf EVM convention);
+  nonzero enforces `last_accounted + atoms > cap` → Cap.
 - **Rate source:** pool address + owner program + account type byte + mint.
 - **HWM:** matches `leaf-jito-rate` (does **not** lower watermark on slash;
   recovery is net of loss). Flag for audit vs any older EVM wording in #20.
@@ -78,13 +89,15 @@ codec in `leaf-jito-rate::store` (`lockbox_encode()`).
   trailing bytes in the spec crate.
 - **Checked math:** lockbox uses checked paths via rate crate; token amounts
   use `try_into` with `MathOverflow`.
+- **Pre-deploy gates (INFO-01 / INFO-03):** E2E + Docker verifiable hash verify
+  remain required before any deploy / LIVE. This PR is audit-only.
 
 ## Verifiable artifact (this PR)
 
 ```
 program id:  E7UKM5BCAV5dbjuduDDnZXeQJ7muZ4xLCFd4XCBhzDax
 Store PDA:   4gxkqrLhRF9q2n8hoPoSVekShiSNMoFR2ZXMx7XikxtW  (seed b"Store", bump 255)
-.so sha256:  255bf44c211b1550cc05852bc633d6b7a5922330122ef70cdd0e7600735a72c5
+.so sha256:  5bf4cd33c1ff05a1b7e020eac79fa66fbd0d909e78eaea9149628f94cbdb3f8d
 ```
 
 Built with `anchor build -v` (Docker `solanafoundation/anchor:v0.31.1`).

@@ -1,5 +1,5 @@
 use crate::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use oapp::{
     endpoint::{
         cpi::accounts::Clear, instructions::ClearParams, ConstructCPIContext, ID as ENDPOINT_ID,
@@ -32,11 +32,20 @@ pub struct LzReceive<'info> {
         constraint = harvest_ata.key() == store.harvest_ata @ LeafJitoError::BadTokenAccount
     )]
     pub harvest_ata: Account<'info, TokenAccount>,
-    /// Recipient of unlocked JitoSOL (Solana pubkey from payload).
+    /// Recipient wallet from payload `to` (Solana pubkey). May have no JitoSOL ATA yet.
     /// CHECK: matched to payload `to` after decode.
+    pub recipient: UncheckedAccount<'info>,
+    /// Canonical JitoSOL ATA for `recipient`; created via CreateIdempotent if missing (OFT pattern).
+    /// CHECK: address + mint/owner validated after ensure; may be uninitialized on entry.
     #[account(mut)]
-    pub recipient_ata: Account<'info, TokenAccount>,
+    pub recipient_ata: UncheckedAccount<'info>,
+    #[account(address = crate::pool::jito_mint_pubkey() @ LeafJitoError::BadMint)]
+    pub jito_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
+    /// CHECK: must be Associated Token Program
+    #[account(address = crate::pool::associated_token_program_id())]
+    pub associated_token_program: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 impl LzReceive<'_> {
@@ -62,16 +71,38 @@ impl LzReceive<'_> {
         let (tag, to, shares) = crate::msg_codec::decode(&params.message)?;
         // `to` must be a Solana pubkey (non-EVM-padded).
         leaf_jito_rate::ix::require_solana_peer(&to).map_err(crate::errors::map_rate)?;
+        let recipient_key = Pubkey::new_from_array(to);
         require_keys_eq!(
-            ctx.accounts.recipient_ata.owner,
-            Pubkey::new_from_array(to),
+            ctx.accounts.recipient.key(),
+            recipient_key,
             LeafJitoError::BadTokenAccount
         );
+
+        let mint = crate::pool::jito_mint_pubkey();
+        let expected_ata = crate::pool::get_associated_token_address(&recipient_key, &mint);
         require_keys_eq!(
-            ctx.accounts.recipient_ata.mint,
-            crate::pool::jito_mint_pubkey(),
-            LeafJitoError::BadMint
+            ctx.accounts.recipient_ata.key(),
+            expected_ata,
+            LeafJitoError::BadTokenAccount
         );
+
+        // Mirror LayerZero OFT: create recipient ATA if first-time unlock.
+        crate::pool::create_ata_idempotent(
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.recipient_ata.to_account_info(),
+            ctx.accounts.recipient.to_account_info(),
+            ctx.accounts.jito_mint.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.associated_token_program.to_account_info(),
+        )?;
+
+        // Validate ATA mint/owner after ensure.
+        let _ = crate::pool::require_token_account(
+            &ctx.accounts.recipient_ata.to_account_info(),
+            &mint,
+            &recipient_key,
+        )?;
 
         let (lamports, supply) =
             crate::pool::read_jito_rate(&ctx.accounts.jito_pool.to_account_info())?;
@@ -120,6 +151,7 @@ impl LzReceive<'_> {
             ),
             atoms_u64,
         )?;
+        // silence unused import if any
         Ok(())
     }
 }

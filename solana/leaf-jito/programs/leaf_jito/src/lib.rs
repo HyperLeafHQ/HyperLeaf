@@ -28,6 +28,7 @@ declare_id!(anchor_lang::solana_program::pubkey::Pubkey::new_from_array(
 pub const LZ_RECEIVE_TYPES_SEED: &[u8] = b"LzReceiveTypes";
 pub const STORE_SEED: &[u8] = b"Store";
 pub const PEER_SEED: &[u8] = b"Peer";
+pub const SIDE_DEST_SEED: &[u8] = b"SideDest";
 
 #[program]
 pub mod leaf_jito {
@@ -57,6 +58,13 @@ pub mod leaf_jito {
         params: HarvestOtherParams,
     ) -> Result<()> {
         HarvestOther::apply(&mut ctx, &params)
+    }
+
+    pub fn set_harvest_other_dest(
+        mut ctx: Context<SetHarvestOtherDest>,
+        params: SetHarvestOtherDestParams,
+    ) -> Result<()> {
+        SetHarvestOtherDest::apply(&mut ctx, &params)
     }
 
     pub fn quote_lock(ctx: Context<QuoteLock>, params: QuoteLockParams) -> Result<MessagingFee> {

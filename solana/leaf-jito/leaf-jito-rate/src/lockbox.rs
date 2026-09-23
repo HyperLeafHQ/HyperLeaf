@@ -101,7 +101,8 @@ impl Lockbox {
         if self.total_shares != 0 && self.last_accounted == 0 {
             return Err(Error::Insufficient);
         }
-        if self.last_accounted + atoms > self.deposit_cap_atoms {
+        // 0 = unlimited (HyperLeaf EVM convention).
+        if self.deposit_cap_atoms != 0 && self.last_accounted + atoms > self.deposit_cap_atoms {
             return Err(Error::Cap);
         }
         let shares = if self.total_shares == 0 {
@@ -168,6 +169,17 @@ impl Lockbox {
         }
         let fee = atoms * 100 / 10_000;
         Ok((fee, atoms - fee))
+    }
+
+    /// Pure destination-policy check for harvest_other (fee/rest ATA owners).
+    /// On-chain SideDest PDA is the registry; this helper is the unit-testable rule.
+    pub fn side_dest_policy_ok(
+        fee_ata_owner: &[u8; 32],
+        rest_ata_owner: &[u8; 32],
+        registered_fee_owner: &[u8; 32],
+        registered_rest_owner: &[u8; 32],
+    ) -> bool {
+        fee_ata_owner == registered_fee_owner && rest_ata_owner == registered_rest_owner
     }
 
     /// Only path that may reduce `total_shares` on-chain. Executor after dest burn.
@@ -313,5 +325,32 @@ mod tests {
         assert_eq!(out, 100_000_000_000);
         assert_eq!(b.escrow_atoms, 7);
         assert_eq!(b.last_accounted, 0);
+    }
+
+    #[test]
+    fn deposit_cap_zero_is_unlimited() {
+        let mut b = Lockbox::new(0);
+        let (l, s) = pool(RATE_SCALE);
+        let (shares, _) = b.lock(1_000_000_000_000, l, s).unwrap();
+        assert_eq!(shares, 1_000_000_000_000_000_000_000);
+        assert!(b.lock(1_000_000_000_000, l, s).is_ok());
+    }
+
+    #[test]
+    fn deposit_cap_enforced_when_nonzero() {
+        let mut b = Lockbox::new(1_000_000_000);
+        let (l, s) = pool(RATE_SCALE);
+        b.lock(1_000_000_000, l, s).unwrap();
+        assert_eq!(b.lock(1, l, s), Err(Error::Cap));
+    }
+
+    #[test]
+    fn side_dest_policy_rejects_attacker_owners() {
+        let fee = [1u8; 32];
+        let rest = [2u8; 32];
+        let attacker = [9u8; 32];
+        assert!(Lockbox::side_dest_policy_ok(&fee, &rest, &fee, &rest));
+        assert!(!Lockbox::side_dest_policy_ok(&attacker, &rest, &fee, &rest));
+        assert!(!Lockbox::side_dest_policy_ok(&fee, &attacker, &fee, &rest));
     }
 }

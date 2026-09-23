@@ -23,12 +23,17 @@ impl LzReceiveTypesV2<'_> {
             ctx.program_id,
         );
 
-        // Decode recipient from message for ATA listing.
+        // Decode recipient from message for wallet + ATA listing (must match LzReceive order).
         let (_tag, to, _shares) = crate::msg_codec::decode(&params.message)?;
         let recipient = Pubkey::new_from_array(to);
         let mint = crate::pool::jito_mint_pubkey();
         let recipient_ata = crate::pool::get_associated_token_address(&recipient, &mint);
+        let ata_program =
+            anchor_lang::solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 
+        // Order mirrors LzReceive accounts (before clear remaining accounts):
+        // payer, store, peer, jito_pool, escrow, harvest, recipient, recipient_ata,
+        // jito_mint, token_program, associated_token_program, system_program
         let mut accounts = vec![
             AccountMetaRef {
                 pubkey: AddressLocator::Payer,
@@ -55,11 +60,27 @@ impl LzReceiveTypesV2<'_> {
                 is_writable: true,
             },
             AccountMetaRef {
+                pubkey: recipient.into(),
+                is_writable: false,
+            },
+            AccountMetaRef {
                 pubkey: recipient_ata.into(),
                 is_writable: true,
             },
             AccountMetaRef {
+                pubkey: mint.into(),
+                is_writable: false,
+            },
+            AccountMetaRef {
                 pubkey: anchor_spl::token::ID.into(),
+                is_writable: false,
+            },
+            AccountMetaRef {
+                pubkey: ata_program.into(),
+                is_writable: false,
+            },
+            AccountMetaRef {
+                pubkey: anchor_lang::system_program::ID.into(),
                 is_writable: false,
             },
         ];

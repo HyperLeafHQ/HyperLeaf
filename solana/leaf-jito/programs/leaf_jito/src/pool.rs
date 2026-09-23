@@ -66,3 +66,52 @@ pub fn get_associated_token_address(wallet: &Pubkey, mint: &Pubkey) -> Pubkey {
     )
     .0
 }
+
+/// Associated Token Program id.
+pub fn associated_token_program_id() -> Pubkey {
+    anchor_lang::solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+}
+
+/// Create the canonical ATA if missing (SPL CreateIdempotent, ix index 1).
+/// Avoids `anchor-spl` `associated_token` feature (Cargo.lock / solana-program conflicts).
+pub fn create_ata_idempotent<'info>(
+    payer: AccountInfo<'info>,
+    ata: AccountInfo<'info>,
+    authority: AccountInfo<'info>,
+    mint: AccountInfo<'info>,
+    system_program: AccountInfo<'info>,
+    token_program: AccountInfo<'info>,
+    associated_token_program: AccountInfo<'info>,
+) -> Result<()> {
+    require_keys_eq!(
+        *associated_token_program.key,
+        associated_token_program_id(),
+        LeafJitoError::BadTokenAccount
+    );
+    // Always idempotent — safe if ATA already exists.
+    let ix = anchor_lang::solana_program::instruction::Instruction {
+        program_id: associated_token_program_id(),
+        accounts: vec![
+            anchor_lang::solana_program::instruction::AccountMeta::new(*payer.key, true),
+            anchor_lang::solana_program::instruction::AccountMeta::new(*ata.key, false),
+            anchor_lang::solana_program::instruction::AccountMeta::new_readonly(*authority.key, false),
+            anchor_lang::solana_program::instruction::AccountMeta::new_readonly(*mint.key, false),
+            anchor_lang::solana_program::instruction::AccountMeta::new_readonly(*system_program.key, false),
+            anchor_lang::solana_program::instruction::AccountMeta::new_readonly(*token_program.key, false),
+        ],
+        data: vec![1], // CreateIdempotent
+    };
+    anchor_lang::solana_program::program::invoke(
+        &ix,
+        &[
+            payer,
+            ata,
+            authority,
+            mint,
+            system_program,
+            token_program,
+            associated_token_program,
+        ],
+    )?;
+    Ok(())
+}
