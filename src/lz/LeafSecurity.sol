@@ -151,6 +151,7 @@ library LeafSecurity {
 
     error StackMismatch();
     error UnsupportedChain();
+    error BadEndpoint();
 
     function pathway(uint256 chainId) internal pure returns (Pathway memory p) {
         if (chainId == 8453) {
@@ -176,11 +177,13 @@ library LeafSecurity {
         }
     }
 
-    /// @dev Freeze gate. Send ULN + executor on `sendLib`, receive ULN on `receiveLib`.
+    /// @dev Freeze gate. Endpoint must be the canonical V2 for `chainId`.
+    ///      Send ULN + executor on `sendLib`, receive ULN on `receiveLib`.
     function requireStack(address endpoint, address oapp, uint256 chainId, uint32 remoteEid, address hyperleafDvn)
         internal
         view
     {
+        if (endpoint != A.endpoint(chainId)) revert BadEndpoint();
         Pathway memory p = pathway(chainId);
         uint64 sendConf = A.confirmationsForEid(A.eidForChainId(chainId));
         uint64 recvConf = A.confirmationsForEid(remoteEid);
