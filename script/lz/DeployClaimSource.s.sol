@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 import {Script, console2} from "forge-std/Script.sol";
 import {LeafClaimFill} from "src/lz/LeafClaimFill.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
-import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LeafOrderPolicy} from "src/lz/LeafOrderPolicy.sol";
 
 /// @notice Source-chain fill box (batch 4). WANT = inner.
@@ -15,15 +14,7 @@ contract DeployClaimSource is Script {
         require(owner != guardian, "OWNER == GUARDIAN");
         require(_isSource(block.chainid), "not a claim source chain");
         address want = vm.envAddress("WANT");
-        string memory id = vm.envOr("ASSET", string(""));
-        if (bytes(id).length != 0) {
-            AssetCatalog.Listing memory a = AssetCatalog.requireHere(id);
-            require(want == a.innerMainnet, "WANT != catalog inner");
-        }
-        if (want == LeafOrderPolicy.ORDER_OFT || want == LeafOrderPolicy.ORDER_ETH) {
-            require(keccak256(bytes(id)) == keccak256("horder"), "ASSET=horder");
-            LeafOrderPolicy.requireArbOrder(want, block.chainid);
-        }
+        LeafOrderPolicy.requireFillSource(vm.envOr("ASSET", string("")), want);
         uint256 returnNative_ = vm.envOr("RETURN_NATIVE", uint256(0.01 ether));
         require(returnNative_ <= type(uint128).max, "RETURN_NATIVE");
         uint128 returnNative = uint128(returnNative_);

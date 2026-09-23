@@ -26,9 +26,7 @@ contract WirePeers is Script {
         if (bytes(id).length != 0) {
             AssetCatalog.Listing memory a = AssetCatalog.requireHere(id);
             require(a.productionEvm || vm.envOr("PARKED_MAINT", false), "not production evm");
-            // ASSET pins the pathway. Do not let REMOTE_EID point hORDER at Base.
-            if (block.chainid == 999) return a.sourceEidMain;
-            return A.EID_HYPEREVM;
+            return AssetCatalog.pinnedRemote(id);
         }
         uint256 explicitEid = vm.envOr("REMOTE_EID", uint256(0));
         if (explicitEid != 0) return uint32(explicitEid);
