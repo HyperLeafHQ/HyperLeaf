@@ -1,0 +1,11 @@
+[package]
+name = "leaf-jito-rate"
+version = "0.1.0"
+edition = "2021"
+description = "Rate math for HyperLeaf hJitoSOL. Must match src/lz/LeafJitoRate.sol."
+
+[lib]
+path = "src/lib.rs"
+
+[dev-dependencies]
+# none — this crate is pure so `cargo test` works without solana/anchor.

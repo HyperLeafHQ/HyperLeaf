@@ -1,0 +1,23 @@
+[toolchain]
+anchor_version = "0.31.1"
+solana_version = "2.2.20"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+leaf_jito = "E7UKM5BCAV5dbjuduDDnZXeQJ7muZ4xLCFd4XCBhzDax"
+
+[programs.mainnet]
+leaf_jito = "E7UKM5BCAV5dbjuduDDnZXeQJ7muZ4xLCFd4XCBhzDax"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test --manifest-path leaf-jito-rate/Cargo.toml"

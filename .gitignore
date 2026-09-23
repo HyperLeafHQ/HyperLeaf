@@ -1,6 +1,7 @@
 # Solana crates
 solana/**/target/
 solana/**/Cargo.lock
+!solana/leaf-jito/Cargo.lock
 
 
 # Logs
@@ -28,3 +29,8 @@ secrets/
 .DS_Store
 .idea/
 .vscode/
+
+# Solana program keypairs / build
+solana/**/target/
+solana/**/*.so
+solana/**/target/deploy/*-keypair.json

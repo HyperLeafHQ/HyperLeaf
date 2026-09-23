@@ -1,0 +1,164 @@
+//! Same numbers as `src/lz/LeafJitoRate.sol`. The Solana lockbox CPI must not
+//! touch the Jito stake pool — wrap JitoSOL mint only.
+
+pub const YIELD_FEE_BPS: u128 = 100;
+pub const BPS: u128 = 10_000;
+pub const RATE_SCALE: u128 = 1_000_000_000_000_000_000;
+pub const SHARE_SCALE: u128 = 1_000_000_000;
+
+/// Jito stake pool (mainnet).
+pub const JITO_POOL: &str = "Jito4APyf642JPZPx3hGc6WWJ8zPKtRbRs4P815Awbb";
+/// JitoSOL mint. Wrap this. Never SOL.
+pub const JITO_MINT: &str = "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn";
+/// SPL stake pool program. Forbidden as a CPI target.
+pub const STAKE_POOL_PROGRAM: &str = "SPoo1Ku8WFXoNDMHPsrGSTSG1Y47rzgn41SLUNakuHy";
+
+/// keccak256("hjitosol") — same as LeafJitoPolicy.LISTING_TAG.
+pub const LISTING_TAG: [u8; 32] = [
+    0xb1, 0x07, 0xd7, 0xc3, 0xae, 0x6a, 0x8d, 0x34, 0x48, 0x2b, 0x78, 0xc6, 0xbc, 0x32, 0xc7, 0x54,
+    0x49, 0xc2, 0x29, 0x61, 0xc6, 0x4b, 0xab, 0xa3, 0x67, 0x58, 0xd5, 0xab, 0x97, 0x89, 0xa4, 0x0e,
+];
+
+/// J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+pub fn jito_mint_bytes() -> [u8; 32] {
+    [
+        0xfc, 0xd1, 0x41, 0xe9, 0x83, 0x2c, 0xaf, 0x10, 0xad, 0x91, 0x74, 0x95, 0xca, 0x0f, 0x27,
+        0x1b, 0x5b, 0x29, 0x3c, 0xd4, 0x70, 0x27, 0xea, 0x73, 0x70, 0x07, 0xed, 0x40, 0xeb, 0x39,
+        0xa0, 0xbd,
+    ]
+}
+
+pub fn rate(total_lamports: u64, pool_token_supply: u64) -> Option<u128> {
+    if pool_token_supply == 0 {
+        return None;
+    }
+    Some((total_lamports as u128) * RATE_SCALE / (pool_token_supply as u128))
+}
+
+pub fn shares_from_atoms(atoms: u128) -> Option<u128> {
+    atoms.checked_mul(SHARE_SCALE)
+}
+
+pub fn atoms_from_shares(shares: u128, last_accounted: u128, total_shares: u128) -> u128 {
+    if shares == 0 || total_shares == 0 || last_accounted == 0 {
+        return 0;
+    }
+    shares.saturating_mul(last_accounted) / total_shares
+}
+
+/// Book rate-bearing yield against a permanent high-water mark.
+/// A rate decrease records no fee and does not lower `last_rate`, so a later
+/// recovery first offsets the observed loss before becoming fee-bearing.
+pub fn book_retain_fee(last_accounted: u128, last_rate: u128, new_rate: u128) -> (u128, u128, u128) {
+    if new_rate == 0 {
+        return (0, last_accounted, last_rate);
+    }
+    if last_rate == 0 || last_accounted == 0 {
+        return (0, last_accounted, new_rate);
+    }
+    if new_rate < last_rate {
+        return (0, last_accounted, last_rate);
+    }
+    if new_rate == last_rate {
+        return (0, last_accounted, last_rate);
+    }
+    let add = last_accounted * (new_rate - last_rate) / new_rate;
+    let mut fee = add * YIELD_FEE_BPS / BPS;
+    if fee > last_accounted {
+        fee = last_accounted;
+    }
+    (fee, last_accounted - fee, new_rate)
+}
+
+pub fn encode_bridge(tag: [u8; 32], to: [u8; 32], amount: u128) -> [u8; 96] {
+    let mut out = [0u8; 96];
+    out[..32].copy_from_slice(&tag);
+    out[32..64].copy_from_slice(&to);
+    let mut amt = [0u8; 32];
+    let be = amount.to_be_bytes();
+    amt[32 - be.len()..].copy_from_slice(&be);
+    out[64..].copy_from_slice(&amt);
+    out
+}
+
+pub fn decode_bridge(buf: &[u8]) -> Option<([u8; 32], [u8; 32], u128)> {
+    if buf.len() != 96 {
+        return None;
+    }
+    let mut tag = [0u8; 32];
+    let mut to = [0u8; 32];
+    tag.copy_from_slice(&buf[..32]);
+    to.copy_from_slice(&buf[32..64]);
+    if buf[64..80] != [0u8; 16] {
+        return None;
+    }
+    let mut amt = [0u8; 16];
+    amt.copy_from_slice(&buf[80..96]);
+    Some((tag, to, u128::from_be_bytes(amt)))
+}
+
+pub mod lockbox;
+pub mod stake_pool;
+pub mod ix;
+pub mod token;
+pub mod store;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn retain_one_percent() {
+        let (fee, next, r) = book_retain_fee(100_000_000_000, RATE_SCALE, RATE_SCALE * 11 / 10);
+        assert_eq!(fee, 90_909_090);
+        assert_eq!(next, 100_000_000_000 - 90_909_090);
+        assert_eq!(r, RATE_SCALE * 11 / 10);
+    }
+
+    #[test]
+    fn slash_preserves_high_water_mark_and_recovery_is_net_of_loss() {
+        let principal = 100_000_000_000_000_000_000u128;
+        let (fee_down, next_down, r_down) = book_retain_fee(principal, RATE_SCALE, RATE_SCALE * 9 / 10);
+        assert_eq!(fee_down, 0);
+        assert_eq!(next_down, principal);
+        assert_eq!(r_down, RATE_SCALE);
+
+        let (fee_recovery, next_recovery, r_recovery) =
+            book_retain_fee(next_down, r_down, RATE_SCALE * 105 / 100);
+        let expected_add = principal * (RATE_SCALE * 5 / 100) / (RATE_SCALE * 105 / 100);
+        let expected_fee = expected_add / 100;
+        assert_eq!(fee_recovery, expected_fee);
+        assert_eq!(next_recovery, principal - expected_fee);
+        assert_eq!(r_recovery, RATE_SCALE * 105 / 100);
+    }
+
+    #[test]
+    fn slash_no_fee() {
+        let (fee, next, r) = book_retain_fee(100, RATE_SCALE * 11 / 10, RATE_SCALE * 105 / 100);
+        assert_eq!(fee, 0);
+        assert_eq!(next, 100);
+        assert_eq!(r, RATE_SCALE * 11 / 10);
+    }
+
+    #[test]
+    fn payload_96_bytes() {
+        let tag = [0x11u8; 32];
+        let mut to = [0u8; 32];
+        to[31] = 0xef;
+        let buf = encode_bridge(tag, to, 1_000_000_000_000_000_000);
+        assert_eq!(&buf[..32], &tag);
+        assert_eq!(buf[63], 0xef);
+        let (t, u, n) = decode_bridge(&buf).unwrap();
+        assert_eq!(t, tag);
+        assert_eq!(u, to);
+        assert_eq!(n, 1_000_000_000_000_000_000);
+    }
+
+    #[test]
+    fn decode_rejects_over_u128() {
+        let mut buf = encode_bridge([0u8; 32], [0u8; 32], 1);
+        buf[64] = 1;
+        assert!(decode_bridge(&buf).is_none());
+    }
+}
+
