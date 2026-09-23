@@ -57,3 +57,17 @@ struct SetConfigParam {
     uint32 configType;
     bytes config;
 }
+
+/// @dev OApp library selection. Not on the messaging interface, so test endpoints
+///      that only implement `ILayerZeroEndpointV2` do not have to stub these.
+interface ILayerZeroLibraries {
+    function setSendLibrary(address oapp, uint32 eid, address newLib) external;
+
+    function getSendLibrary(address sender, uint32 eid) external view returns (address lib);
+
+    function isDefaultSendLibrary(address sender, uint32 eid) external view returns (bool);
+
+    function setReceiveLibrary(address oapp, uint32 eid, address newLib, uint256 gracePeriod) external;
+
+    function getReceiveLibrary(address receiver, uint32 eid) external view returns (address lib, bool isDefault);
+}
