@@ -38,6 +38,30 @@ contract MockEndpoint is ILayerZeroEndpointV2 {
         return "";
     }
     function skip(address, uint32, bytes32, uint64) external {}
+
+    mapping(bytes32 => address) public sendLibOf;
+    mapping(bytes32 => address) public recvLibOf;
+
+    function setSendLibrary(address oapp, uint32 dstEid, address lib) external {
+        sendLibOf[keccak256(abi.encode(oapp, dstEid))] = lib;
+    }
+
+    function getSendLibrary(address oapp, uint32 dstEid) external view returns (address) {
+        return sendLibOf[keccak256(abi.encode(oapp, dstEid))];
+    }
+
+    function isDefaultSendLibrary(address oapp, uint32 dstEid) external view returns (bool) {
+        return sendLibOf[keccak256(abi.encode(oapp, dstEid))] == address(0);
+    }
+
+    function setReceiveLibrary(address oapp, uint32 dstEid, address lib, uint256) external {
+        recvLibOf[keccak256(abi.encode(oapp, dstEid))] = lib;
+    }
+
+    function getReceiveLibrary(address oapp, uint32 dstEid) external view returns (address, bool) {
+        address lib = recvLibOf[keccak256(abi.encode(oapp, dstEid))];
+        return (lib, lib == address(0));
+    }
 }
 
 contract LeafClaimEscrowTest is PegReady {
@@ -585,13 +609,26 @@ contract LeafClaimEscrowTest is PegReady {
         vm.prank(owner);
         escrow.setEndpointConfig(address(1), params);
 
+        uint32 eid = escrow.remoteEid();
         vm.prank(owner);
-        escrow.freezeConfig();
+        vm.expectRevert(LeafClaimPeer.BadLibrary.selector);
+        escrow.freezeConfig(address(0x5E11), address(0xBEC));
+
+        vm.prank(owner);
+        escrow.pinLibraries(eid, address(0x5E11), address(0xBEC));
+        vm.prank(owner);
+        vm.expectRevert(LeafClaimPeer.BadLibrary.selector);
+        escrow.freezeConfig(address(0x1111), address(0xBEC));
+        vm.prank(owner);
+        escrow.freezeConfig(address(0x5E11), address(0xBEC));
         assertTrue(escrow.configFrozen());
 
         vm.prank(owner);
         vm.expectRevert(LeafClaimPeer.ConfigFrozen.selector);
         escrow.setEndpointConfig(address(1), params);
+        vm.prank(owner);
+        vm.expectRevert(LeafClaimPeer.ConfigFrozen.selector);
+        escrow.pinLibraries(eid, address(0x5E11), address(0xBEC));
     }
 
     function testNestOccupancySkimOnCancelNoLock() public {

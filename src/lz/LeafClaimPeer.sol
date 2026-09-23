@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ILayerZeroEndpointV2, SetConfigParam} from "./interfaces/ILayerZeroEndpointV2.sol";
+import {ILayerZeroEndpointV2, ILayerZeroLibraries, SetConfigParam} from "./interfaces/ILayerZeroEndpointV2.sol";
 import {OptionsBuilder} from "./OptionsBuilder.sol";
 
 /// @dev Thin LZ peer for the claim board. Not a wrap OApp: no mint, no caps, no listingTag.
@@ -24,9 +24,11 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
     error BadEid();
     error ConfigFrozen();
     error NativeRescueFailed();
+    error BadLibrary();
 
     event PeerSet(uint32 indexed eid, bytes32 peer);
     event GuardianUpdated(address indexed oldG, address indexed newG);
+    event LibrariesPinned(uint32 indexed eid, address sendLib, address receiveLib);
     event ConfigFrozenSet();
 
     modifier onlyGuardian() {
@@ -65,8 +67,27 @@ abstract contract LeafClaimPeer is Ownable2Step, Pausable {
         endpoint.setConfig(address(this), lib, params);
     }
 
-    function freezeConfig() external onlyOwner {
+    /// @dev Pin this OApp off the endpoint default. No delegate, so only this call can do it.
+    ///      Grace 0: nothing is in flight before the first freeze.
+    function pinLibraries(uint32 eid, address sendLib, address receiveLib) external onlyOwner {
+        if (configFrozen) revert ConfigFrozen();
+        if (eid == 0 || eid != remoteEid) revert BadEid();
+        if (sendLib == address(0) || receiveLib == address(0)) revert ZeroAddress();
+        ILayerZeroLibraries libs = ILayerZeroLibraries(address(endpoint));
+        libs.setSendLibrary(address(this), eid, sendLib);
+        libs.setReceiveLibrary(address(this), eid, receiveLib, 0);
+        emit LibrariesPinned(eid, sendLib, receiveLib);
+    }
+
+    function freezeConfig(address sendLib, address receiveLib) external onlyOwner {
         if (remoteEid == 0) revert NoPeer();
+        if (sendLib == address(0) || receiveLib == address(0)) revert ZeroAddress();
+        ILayerZeroLibraries libs = ILayerZeroLibraries(address(endpoint));
+        (address recvLib, bool recvDefault) = libs.getReceiveLibrary(address(this), remoteEid);
+        if (
+            recvDefault || libs.isDefaultSendLibrary(address(this), remoteEid) || recvLib != receiveLib
+                || libs.getSendLibrary(address(this), remoteEid) != sendLib
+        ) revert BadLibrary();
         configFrozen = true;
         emit ConfigFrozenSet();
     }

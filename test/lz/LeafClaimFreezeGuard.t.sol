@@ -11,13 +11,36 @@ import {LeafClaimEscrow} from "src/lz/LeafClaimEscrow.sol";
 
 contract MockCfgEndpoint {
     mapping(bytes32 => bytes) public stored;
+    address public sendLib;
+    address public recvLib;
+    bool public sendDefault;
+    bool public recvDefault;
 
     function set(address lib, uint32 eid, uint32 typ, bytes memory cfg) external {
         stored[keccak256(abi.encode(lib, eid, typ))] = cfg;
     }
 
+    function setLibs(address send, address recv, bool sendIsDefault, bool recvIsDefault) external {
+        sendLib = send;
+        recvLib = recv;
+        sendDefault = sendIsDefault;
+        recvDefault = recvIsDefault;
+    }
+
     function getConfig(address, address lib, uint32 eid, uint32 typ) external view returns (bytes memory) {
         return stored[keccak256(abi.encode(lib, eid, typ))];
+    }
+
+    function getSendLibrary(address, uint32) external view returns (address) {
+        return sendLib;
+    }
+
+    function isDefaultSendLibrary(address, uint32) external view returns (bool) {
+        return sendDefault;
+    }
+
+    function getReceiveLibrary(address, uint32) external view returns (address, bool) {
+        return (recvLib, recvDefault);
     }
 }
 
@@ -55,6 +78,10 @@ contract LeafClaimFreezeGuardTest is Test {
         this._escrow("horder", ETH_ORDER, address(0x1), keccak256("horder"), address(0));
         vm.expectRevert(LeafOrderPolicy.BadMarket.selector);
         this._escrow("horder", OFT, BLUAI, keccak256("horder"), address(0));
+        vm.expectRevert(LeafOrderPolicy.WrongInner.selector);
+        this._escrow("horder", address(0xBEEF), address(0x1), keccak256("horder"), address(0));
+        vm.chainId(8453);
+        LeafOrderPolicy.requireEscrowDest("hkaito", address(0xBEEF), address(0x1), bytes32(0), address(0));
     }
 
     function testClaimPeerEidAndAddress() public {
@@ -83,6 +110,7 @@ contract LeafClaimFreezeGuardTest is Test {
         ep.set(p.sendLib, remote, A.CONFIG_TYPE_ULN, LeafSecurity.ulnConfig(sendConf, address(0), p.optionalDvns));
         ep.set(p.receiveLib, remote, A.CONFIG_TYPE_ULN, LeafSecurity.ulnConfig(recvConf, address(0), p.optionalDvns));
         ep.set(p.sendLib, remote, A.CONFIG_TYPE_EXECUTOR, LeafSecurity.executorConfig(p.executor));
+        ep.setLibs(p.sendLib, p.receiveLib, false, false);
         LeafSecurity.requireStack(canonical, address(this), 42161, remote, address(0));
         ep.set(p.sendLib, remote, A.CONFIG_TYPE_ULN, hex"00");
         vm.expectRevert(LeafSecurity.StackMismatch.selector);
@@ -95,6 +123,30 @@ contract LeafClaimFreezeGuardTest is Test {
         this._stack(A.endpoint(999), 42161, A.EID_HYPEREVM);
         vm.expectRevert(LeafSecurity.BadEndpoint.selector);
         this._stack(address(0xBEEF), 999, 30110);
+    }
+
+    function testRejectsDefaultOrWrongLibrary() public {
+        address canonical = A.endpoint(42161);
+        vm.etch(canonical, type(MockCfgEndpoint).runtimeCode);
+        MockCfgEndpoint ep = MockCfgEndpoint(canonical);
+        LeafSecurity.Pathway memory p = LeafSecurity.pathway(42161);
+        ep.setLibs(p.sendLib, p.receiveLib, true, false);
+        vm.expectRevert(LeafSecurity.BadLibrary.selector);
+        this._stack(canonical, 42161, A.EID_HYPEREVM);
+        ep.setLibs(address(0xBEEF), p.receiveLib, false, false);
+        vm.expectRevert(LeafSecurity.BadLibrary.selector);
+        this._stack(canonical, 42161, A.EID_HYPEREVM);
+    }
+
+    function testPeerRpcChainId() public {
+        assertEq(LeafOrderPolicy.chainIdFromRpc(hex"03e7"), 999);
+        assertEq(LeafOrderPolicy.chainIdFromRpc(hex"a4b1"), 42161);
+        assertEq(LeafOrderPolicy.chainIdFromRpc(hex"01"), 1);
+        LeafOrderPolicy.requirePeerChain(42161, 42161);
+        vm.expectRevert(LeafOrderPolicy.BadMarket.selector);
+        this._rpcChain(hex"");
+        vm.expectRevert(LeafOrderPolicy.BadMarket.selector);
+        this._peerChain(999, 42161);
     }
 
     function testClaimCodeMatchesSideNotOwner() public {
@@ -136,5 +188,13 @@ contract LeafClaimFreezeGuardTest is Test {
 
     function _code(bytes calldata actual, bytes calldata expected) external pure {
         LeafOrderPolicy.requireClaimCode(actual, expected);
+    }
+
+    function _rpcChain(bytes calldata raw) external pure returns (uint256) {
+        return LeafOrderPolicy.chainIdFromRpc(raw);
+    }
+
+    function _peerChain(uint256 actual, uint256 expected) external pure {
+        LeafOrderPolicy.requirePeerChain(actual, expected);
     }
 }

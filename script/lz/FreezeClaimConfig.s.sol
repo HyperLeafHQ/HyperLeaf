@@ -24,11 +24,17 @@ contract FreezeClaimConfig is Script {
         uint32 remote = box.remoteEid();
         address ep = address(box.endpoint());
         LeafOrderPolicy.requireClaimPeer(remote, box.peers(remote), id, expectedPeer);
-        LeafSecurity.requireStack(ep, oapp, block.chainid, remote, veto);
         _requireInstances(listed.sourceChainIdMain, oapp, expectedPeer);
 
+        LeafSecurity.Pathway memory path = LeafSecurity.pathway(block.chainid);
         vm.startBroadcast();
-        box.freezeConfig();
+        box.pinLibraries(remote, path.sendLib, path.receiveLib);
+        vm.stopBroadcast();
+        // After the pin, so getSendLibrary is the OApp selection and not the endpoint default.
+        LeafSecurity.requireStack(ep, oapp, block.chainid, remote, veto);
+
+        vm.startBroadcast();
+        box.freezeConfig(path.sendLib, path.receiveLib);
         vm.stopBroadcast();
         console2.log("config frozen", oapp);
         console2.log("remoteEid", remote);
@@ -37,12 +43,15 @@ contract FreezeClaimConfig is Script {
     }
 
     /// @dev Local runtime is Fill on a source chain and Escrow on HyperEVM.
-    ///      Remote runtime is read from PEER_RPC. Local extcodesize(PEER) is not a check.
+    ///      PEER_RPC must be the other chain. eth_chainId is checked before eth_getCode.
     function _requireInstances(uint256 sourceChain, address oapp, address peer) internal {
         bool localEscrow = block.chainid == 999;
         uint256 remoteChain = localEscrow ? sourceChain : 999;
+        string memory peerRpc = vm.envString("PEER_RPC");
+        uint256 got = LeafOrderPolicy.chainIdFromRpc(vm.rpc(peerRpc, "eth_chainId", "[]"));
+        LeafOrderPolicy.requirePeerChain(got, remoteChain);
         LeafOrderPolicy.requireClaimCode(oapp.code, _runtime(!localEscrow, block.chainid));
-        bytes memory remoteCode = vm.rpc(vm.envString("PEER_RPC"), "eth_getCode", _codeParams(peer));
+        bytes memory remoteCode = vm.rpc(peerRpc, "eth_getCode", _codeParams(peer));
         LeafOrderPolicy.requireClaimCode(remoteCode, _runtime(localEscrow, remoteChain));
     }
 

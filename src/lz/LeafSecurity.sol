@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {ILayerZeroEndpointV2, SetConfigParam} from "./interfaces/ILayerZeroEndpointV2.sol";
+import {ILayerZeroEndpointV2, ILayerZeroLibraries, SetConfigParam} from "./interfaces/ILayerZeroEndpointV2.sol";
 import {LayerZeroAddresses as A} from "./LayerZeroAddresses.sol";
 
 /// @notice Encodes LayerZero ULN + Executor configs.
@@ -152,6 +152,7 @@ library LeafSecurity {
     error StackMismatch();
     error UnsupportedChain();
     error BadEndpoint();
+    error BadLibrary();
 
     function pathway(uint256 chainId) internal pure returns (Pathway memory p) {
         if (chainId == 8453) {
@@ -185,6 +186,11 @@ library LeafSecurity {
     {
         if (endpoint != A.endpoint(chainId)) revert BadEndpoint();
         Pathway memory p = pathway(chainId);
+        ILayerZeroLibraries libs = ILayerZeroLibraries(endpoint);
+        address sendLib = libs.getSendLibrary(oapp, remoteEid);
+        (address recvLib, bool recvDefault) = libs.getReceiveLibrary(oapp, remoteEid);
+        if (sendLib != p.sendLib || recvLib != p.receiveLib) revert BadLibrary();
+        if (recvDefault || libs.isDefaultSendLibrary(oapp, remoteEid)) revert BadLibrary();
         uint64 sendConf = A.confirmationsForEid(A.eidForChainId(chainId));
         uint64 recvConf = A.confirmationsForEid(remoteEid);
         bytes memory sendUln = ILayerZeroEndpointV2(endpoint).getConfig(oapp, p.sendLib, remoteEid, A.CONFIG_TYPE_ULN);

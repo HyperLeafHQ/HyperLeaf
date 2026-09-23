@@ -47,7 +47,7 @@ library LeafOrderPolicy {
         internal
         view
     {
-        if (want != ORDER_OFT && want != ORDER_ETH) return;
+        if (want != ORDER_OFT && want != ORDER_ETH && keccak256(bytes(id)) != keccak256("horder")) return;
         if (want != ORDER_OFT) revert WrongInner();
         if (keccak256(bytes(id)) != keccak256("horder")) revert BadMarket();
         if (rewardId != keccak256("horder")) revert BadMarket();
@@ -71,6 +71,18 @@ library LeafOrderPolicy {
     ///      caller must pass `eth_getCode` from that chain, not local extcodesize.
     function requireClaimCode(bytes memory actual, bytes memory expected) internal pure {
         if (expected.length == 0 || keccak256(actual) != keccak256(expected)) revert BadMarket();
+    }
+
+    /// @dev `eth_chainId` via vm.rpc: hex quantity, leading zero nibbles kept so the length stays even.
+    function chainIdFromRpc(bytes memory raw) internal pure returns (uint256 id) {
+        if (raw.length == 0 || raw.length > 32) revert BadMarket();
+        for (uint256 i; i < raw.length; ++i) {
+            id = (id << 8) | uint8(raw[i]);
+        }
+    }
+
+    function requirePeerChain(uint256 actual, uint256 expected) internal pure {
+        if (expected == 0 || actual != expected) revert BadMarket();
     }
 
     function isPublicRequestType(uint8 payloadType) internal pure returns (bool) {
