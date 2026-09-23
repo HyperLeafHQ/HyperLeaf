@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {LayerZeroAddresses as LZ} from "./LayerZeroAddresses.sol";
+
 /// @notice Compile-time wrap listings. Scripts take ASSET=<id>.
 /// @dev Solana/Monad listings have no EVM inner. Do not mock them on Base.
 library AssetCatalog {
@@ -37,6 +39,13 @@ library AssetCatalog {
     function requireHere(string memory id) internal view returns (Listing memory a) {
         a = get(id);
         if (block.chainid != 999 && block.chainid != a.sourceChainIdMain) revert WrongSourceChain();
+    }
+
+    /// @dev ASSET set ⇒ ignore REMOTE_EID. HyperEVM uses the source eid. Source uses HyperEVM.
+    function pinnedRemote(string memory id) internal view returns (uint32) {
+        Listing memory a = requireHere(id);
+        if (block.chainid == 999) return a.sourceEidMain;
+        return LZ.EID_HYPEREVM;
     }
 
     function get(string memory id) internal pure returns (Listing memory a) {

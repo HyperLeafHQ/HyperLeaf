@@ -26,18 +26,7 @@ contract SetSecurityStack is Script {
         }
 
         uint32 remoteEid;
-        address sendLib;
-        address receiveLib;
-        address executor;
-        address[] memory optionalDvns;
-
-        if (chainId == 8453) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_BASE;
-            receiveLib = A.RECEIVE_ULN_BASE;
-            executor = A.EXECUTOR_BASE;
-            optionalDvns = LeafSecurity.baseOptionalDvns();
-        } else if (chainId == 999) {
+        if (chainId == 999) {
             if (bytes(id).length != 0) {
                 remoteEid = AssetCatalog.get(id).sourceEidMain;
             } else {
@@ -45,67 +34,22 @@ contract SetSecurityStack is Script {
                 require(remote != 0, "set ASSET or REMOTE_EID on HyperEVM");
                 remoteEid = uint32(remote);
             }
-            sendLib = A.SEND_ULN_HYPEREVM;
-            receiveLib = A.RECEIVE_ULN_HYPEREVM;
-            executor = A.EXECUTOR_HYPEREVM;
-            optionalDvns = LeafSecurity.hyperevmOptionalDvns();
-        } else if (chainId == 56) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_BSC;
-            receiveLib = A.RECEIVE_ULN_BSC;
-            executor = A.EXECUTOR_BSC;
-            optionalDvns = LeafSecurity.bscOptionalDvns();
-        } else if (chainId == 80094) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_BERA;
-            receiveLib = A.RECEIVE_ULN_BERA;
-            executor = A.EXECUTOR_BERA;
-            optionalDvns = LeafSecurity.beraOptionalDvns();
-        } else if (chainId == 57073) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_INK;
-            receiveLib = A.RECEIVE_ULN_INK;
-            executor = A.EXECUTOR_INK;
-            optionalDvns = LeafSecurity.inkOptionalDvns();
-        } else if (chainId == 1) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_ETH;
-            receiveLib = A.RECEIVE_ULN_ETH;
-            executor = A.EXECUTOR_ETH;
-            optionalDvns = LeafSecurity.ethOptionalDvns();
-        } else if (chainId == 42161) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_ARB;
-            receiveLib = A.RECEIVE_ULN_ARB;
-            executor = A.EXECUTOR_ARB;
-            optionalDvns = LeafSecurity.arbOptionalDvns();
-        } else if (chainId == 43114) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_AVAX;
-            receiveLib = A.RECEIVE_ULN_AVAX;
-            executor = A.EXECUTOR_AVAX;
-            optionalDvns = LeafSecurity.avaxOptionalDvns();
-        } else if (chainId == 4663) {
-            remoteEid = A.EID_HYPEREVM;
-            sendLib = A.SEND_ULN_ROBINHOOD;
-            receiveLib = A.RECEIVE_ULN_ROBINHOOD;
-            executor = A.EXECUTOR_ROBINHOOD;
-            optionalDvns = LeafSecurity.robinhoodOptionalDvns();
         } else {
-            revert("unsupported chain");
+            remoteEid = A.EID_HYPEREVM;
         }
 
+        LeafSecurity.Pathway memory path = LeafSecurity.pathway(chainId);
         uint64 sendConfirms = A.confirmationsForEid(A.eidForChainId(chainId));
         uint64 recvConfirms = A.confirmationsForEid(remoteEid);
 
         SetConfigParam[] memory sendParams =
-            LeafSecurity.paramsForPathway(remoteEid, sendConfirms, hyperleafDvn, optionalDvns, executor);
+            LeafSecurity.paramsForPathway(remoteEid, sendConfirms, hyperleafDvn, path.optionalDvns, path.executor);
         SetConfigParam[] memory recvParams =
-            LeafSecurity.receiveParamsForPathway(remoteEid, recvConfirms, hyperleafDvn, optionalDvns);
+            LeafSecurity.receiveParamsForPathway(remoteEid, recvConfirms, hyperleafDvn, path.optionalDvns);
 
         vm.startBroadcast();
-        LeafOApp(oapp).setEndpointConfig(sendLib, sendParams);
-        LeafOApp(oapp).setEndpointConfig(receiveLib, recvParams);
+        LeafOApp(oapp).setEndpointConfig(path.sendLib, sendParams);
+        LeafOApp(oapp).setEndpointConfig(path.receiveLib, recvParams);
         vm.stopBroadcast();
         console2.log("security set on", oapp);
         console2.log("remoteEid", remoteEid);

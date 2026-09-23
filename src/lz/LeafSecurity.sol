@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {SetConfigParam} from "./interfaces/ILayerZeroEndpointV2.sol";
+import {ILayerZeroEndpointV2, SetConfigParam} from "./interfaces/ILayerZeroEndpointV2.sol";
 import {LayerZeroAddresses as A} from "./LayerZeroAddresses.sol";
 
 /// @notice Encodes LayerZero ULN + Executor configs.
@@ -140,5 +140,57 @@ library LeafSecurity {
     ) internal pure returns (SetConfigParam[] memory params) {
         params = new SetConfigParam[](1);
         params[0] = SetConfigParam(remoteEid, A.CONFIG_TYPE_ULN, ulnConfig(confirmations, hyperleafDvn, optionalDvns));
+    }
+
+    struct Pathway {
+        address sendLib;
+        address receiveLib;
+        address executor;
+        address[] optionalDvns;
+    }
+
+    error StackMismatch();
+    error UnsupportedChain();
+
+    function pathway(uint256 chainId) internal pure returns (Pathway memory p) {
+        if (chainId == 8453) {
+            p = Pathway(A.SEND_ULN_BASE, A.RECEIVE_ULN_BASE, A.EXECUTOR_BASE, baseOptionalDvns());
+        } else if (chainId == 999) {
+            p = Pathway(A.SEND_ULN_HYPEREVM, A.RECEIVE_ULN_HYPEREVM, A.EXECUTOR_HYPEREVM, hyperevmOptionalDvns());
+        } else if (chainId == 56) {
+            p = Pathway(A.SEND_ULN_BSC, A.RECEIVE_ULN_BSC, A.EXECUTOR_BSC, bscOptionalDvns());
+        } else if (chainId == 80094) {
+            p = Pathway(A.SEND_ULN_BERA, A.RECEIVE_ULN_BERA, A.EXECUTOR_BERA, beraOptionalDvns());
+        } else if (chainId == 57073) {
+            p = Pathway(A.SEND_ULN_INK, A.RECEIVE_ULN_INK, A.EXECUTOR_INK, inkOptionalDvns());
+        } else if (chainId == 1) {
+            p = Pathway(A.SEND_ULN_ETH, A.RECEIVE_ULN_ETH, A.EXECUTOR_ETH, ethOptionalDvns());
+        } else if (chainId == 42161) {
+            p = Pathway(A.SEND_ULN_ARB, A.RECEIVE_ULN_ARB, A.EXECUTOR_ARB, arbOptionalDvns());
+        } else if (chainId == 43114) {
+            p = Pathway(A.SEND_ULN_AVAX, A.RECEIVE_ULN_AVAX, A.EXECUTOR_AVAX, avaxOptionalDvns());
+        } else if (chainId == 4663) {
+            p = Pathway(A.SEND_ULN_ROBINHOOD, A.RECEIVE_ULN_ROBINHOOD, A.EXECUTOR_ROBINHOOD, robinhoodOptionalDvns());
+        } else {
+            revert UnsupportedChain();
+        }
+    }
+
+    /// @dev Freeze gate. Send ULN + executor on `sendLib`, receive ULN on `receiveLib`.
+    function requireStack(address endpoint, address oapp, uint256 chainId, uint32 remoteEid, address hyperleafDvn)
+        internal
+        view
+    {
+        Pathway memory p = pathway(chainId);
+        uint64 sendConf = A.confirmationsForEid(A.eidForChainId(chainId));
+        uint64 recvConf = A.confirmationsForEid(remoteEid);
+        bytes memory sendUln = ILayerZeroEndpointV2(endpoint).getConfig(oapp, p.sendLib, remoteEid, A.CONFIG_TYPE_ULN);
+        bytes memory recvUln =
+            ILayerZeroEndpointV2(endpoint).getConfig(oapp, p.receiveLib, remoteEid, A.CONFIG_TYPE_ULN);
+        bytes memory exec =
+            ILayerZeroEndpointV2(endpoint).getConfig(oapp, p.sendLib, remoteEid, A.CONFIG_TYPE_EXECUTOR);
+        if (keccak256(sendUln) != keccak256(ulnConfig(sendConf, hyperleafDvn, p.optionalDvns))) revert StackMismatch();
+        if (keccak256(recvUln) != keccak256(ulnConfig(recvConf, hyperleafDvn, p.optionalDvns))) revert StackMismatch();
+        if (keccak256(exec) != keccak256(executorConfig(p.executor))) revert StackMismatch();
     }
 }

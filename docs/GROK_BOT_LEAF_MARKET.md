@@ -116,7 +116,7 @@ Dead 100-cap escrow/fill `0x1AD2…` / `0xC584…` — do not reuse. Abandoned F
 
 Do not reuse `0x367FB8…` / `0xE3E4B1…`.
 
-Sequence: `DeployClaimDest` / `DeployClaimSource` → `WirePeers` → `SetSecurityStack` → readback → **`FreezeClaimConfig` both sides** → then owner handoff. `ASSET=horder` is required. Source chain must be **42161**. HyperEVM peer eid must be **30110**. `WANT` is Arb ORDER OFT `0x4E20…`, never `0xABD4…`.
+Sequence: `DeployClaimDest` / `DeployClaimSource` → `WirePeers` → `SetSecurityStack` → **`FreezeClaimConfig` both sides** (`PEER=` the other OApp, `HYPERLEAF_DVN` matching the stack). It reverts unless remote eid, `peers[eid]`, send/receive ULN, DVN threshold, confirmations, and executor match. Then owner handoff. `ASSET=horder` is required. Source chain must be **42161**. HyperEVM peer eid must be **30110**. `WANT` is Arb ORDER OFT `0x4E20…`, never `0xABD4…`.
 
 `RETURN_NATIVE` (default 0.01 ETH) is the destination native drop so ACK can be sent. It is **not** the user's fee. UI calls `quoteFill` and pays that quote. Do not hardcode `fill{value: 0.01 ether}`.
 
