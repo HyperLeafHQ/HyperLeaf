@@ -36,13 +36,13 @@ Canary is dead. Show wrap + redeem (L) or Leaf Market (C1). **Do not use 50-cap 
 | BLUAI4Y | `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` | `0x8F25a342b93f623A07e7dF8b691a729A6e39C439` | BLUAI `0xed9Ae3DEF8d6F052971Bb8b6d1975FF267Cf9aaD` |
 | hNEST | — | hNEST `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` | NEST (vault `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c`) |
 
-hORDER is **COMING** (zeros). hsWBERA is **HOLD** (do not show). hINK is **COMING** (zeros; official INK not posted). Nado pre-market is **Opening** (awaiting owner `createMarket`). Do not mark LIVE.
+hORDER wrap is **deployed, not LIVE** (Arb SOURCE `0x4C862bC0…` / OFT `0x06C345fC…6A53`). Do not show as depositable until Leaf Market exists and a human says LIVE. hsWBERA is **HOLD** (do not show). hINK is **COMING** (zeros; official INK not posted). Nado pre-market is **Opening** (awaiting owner `createMarket`). Do not mark hORDER LIVE.
 
-**Same hex, four chains:** `0x4C862bC0…559c` is hstkwaUSDC SOURCE on **Ethereum 1**, hsAVAX on **43114**, hsiBERA on **80094**, dead BLUAI 100-cap on **BSC 56**. Converter `0xc89273AC…6fD2` is the same hex on 1 / 43114 / 80094. UI must key wrap by `sourceChainId`. OFTs differ: hstkwaUSDC `0x2D694ef8…` / hsAVAX `0x304abA88…` / hsiBERA `0xE22b448D…`. Never mix.
+**Same hex, five chains:** `0x4C862bC0…559c` is hstkwaUSDC SOURCE on **Ethereum 1**, hsAVAX on **43114**, hsiBERA on **80094**, hORDER on **Arbitrum 42161**, dead BLUAI 100-cap on **BSC 56**. Converter `0xc89273AC…6fD2` is the same hex on 1 / 43114 / 80094. hORDER converters are different: Arb `0xe86961EA…` / HEVM `0x4263B096…`. UI must key wrap by `sourceChainId`. OFTs differ. Never mix.
 
 Dead, never wire: hCANARY any address; hxSQUID v2 `0x6586351861c31A8Adea414e18E1cB9dd5B1dD206`; 50-cap hQUID `0x13E3…0d25` / `0x78B6…4DFc`; old hAVNT `0x571C…aa98` / `0xAA70…7dAA` / `0x9a75…10Eb`; BLUAI 100-cap SOURCE `0x4C86…` **on BSC 56 only** / OFT `0xD54A…` / escrow `0x1AD2…` / fill `0xC584…`; Gate `0xB4C43…519B`; Nest v1 vault `0x4f6615…`.
 
-Do **not** show as depositable: hcbETH, hsWBERA, hORDER, hINK (until SOURCE/OFT land).
+Do **not** show as depositable: hcbETH, hsWBERA, hORDER (wrap exists, no Market), hINK (until SOURCE/OFT land).
 
 `L` / `C1` / `C2` / `Kind` / `Native` / `ve-NFT` are **GitHub and contracts only**. Never print those strings in the app, marketing site, or board. User copy is **Sell on Leaf Market** or **Burn to unwrap**.
 

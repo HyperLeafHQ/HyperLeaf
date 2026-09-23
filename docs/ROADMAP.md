@@ -20,7 +20,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **3** | **hLBTCv** | L | Ethereum 1 | **LIVE.** Wrap LBTCv. Veda `getRateInQuote(LBTC)`. SOURCE `0x615487eD…`. Never WBTC `getRate()` / teller 3d |
 | **3** | **hstkwaUSDC** | L | Ethereum 1 | **LIVE.** SOURCE `0x4C862bC0…559c` / OFT `0x2D694ef8…DAA8` / Conv `0xc89273AC…6fD2`. Wrap stkwaEthUSDC.v1 only. shareScale 1e12. Same SOURCE hex on 43114/80094/56 — pin chainId 1 |
 | **4** | **BLUAI4Y** | C1 | BSC | **LIVE.** SOURCE `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` / OFT `0x8F25a342b93f623A07e7dF8b691a729A6e39C439`. Escrow `0x367FB8…` / Fill `0xE3E4B1…`. Dead 100-cap in catalog `dead[]`. Do not `setDepositCap(0)` on live SOURCE |
-| **4** | **hORDER** | C1 | **Arbitrum only** | Queued. Cookbook #69. Wait for human `GO`. Inner Arb ORDER OFT `0x4E20…97B8`. Never ETH `0xABD4…`. Never BLUAI escrow |
+| **4** | **hORDER** | C1 | **Arbitrum only** | **Smoke PASS, not LIVE.** SOURCE `0x4C862bC0…559c` on **42161** / OFT `0x06C345fC…6A53`. No Market. Never ETH `0xABD4…`. Never BLUAI escrow. Same SOURCE hex on 1/43114/80094/56 |
 | pre | **VAR** | Pre | HyperEVM factory | **LIVE** claims in USDM. Factory `0x22684F6e…`. Settle hVAR after TGE |
 | pre | **Predict** | Pre | HyperEVM factory | **LIVE** claims in USDM. Same factory. Settle hPREDICT after TGE |
 | pre | **Nado** | Pre | HyperEVM factory | Opening. Same factory n=3. `createMarket("Nado points","Nado",sUSDM)`. Settle **hINK** after official INK. Not live |
