@@ -66,6 +66,13 @@ library LeafOrderPolicy {
         if (expected == address(0) || peer != bytes32(uint256(uint160(expected)))) revert BadMarket();
     }
 
+    /// @dev Runtime bytecode identity. Empty, wrong side, or a different endpoint immutable fails.
+    ///      Owners and storage do not affect this. The peer lives on the other chain, so the
+    ///      caller must pass `eth_getCode` from that chain, not local extcodesize.
+    function requireClaimCode(bytes memory actual, bytes memory expected) internal pure {
+        if (expected.length == 0 || keccak256(actual) != keccak256(expected)) revert BadMarket();
+    }
+
     function isPublicRequestType(uint8 payloadType) internal pure returns (bool) {
         return payloadType == TYPE_HARVEST_USDC || payloadType == TYPE_OCCUPANCY;
     }

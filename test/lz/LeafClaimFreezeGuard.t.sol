@@ -6,6 +6,8 @@ import {LeafOrderPolicy} from "src/lz/LeafOrderPolicy.sol";
 import {LeafSecurity} from "src/lz/LeafSecurity.sol";
 import {AssetCatalog} from "src/lz/AssetCatalog.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
+import {LeafClaimFill} from "src/lz/LeafClaimFill.sol";
+import {LeafClaimEscrow} from "src/lz/LeafClaimEscrow.sol";
 
 contract MockCfgEndpoint {
     mapping(bytes32 => bytes) public stored;
@@ -71,7 +73,9 @@ contract LeafClaimFreezeGuardTest is Test {
     }
 
     function testStackReadback() public {
-        MockCfgEndpoint ep = new MockCfgEndpoint();
+        address canonical = A.endpoint(42161);
+        vm.etch(canonical, type(MockCfgEndpoint).runtimeCode);
+        MockCfgEndpoint ep = MockCfgEndpoint(canonical);
         uint32 remote = A.EID_HYPEREVM;
         LeafSecurity.Pathway memory p = LeafSecurity.pathway(42161);
         uint64 sendConf = A.confirmationsForEid(A.eidForChainId(42161));
@@ -79,10 +83,35 @@ contract LeafClaimFreezeGuardTest is Test {
         ep.set(p.sendLib, remote, A.CONFIG_TYPE_ULN, LeafSecurity.ulnConfig(sendConf, address(0), p.optionalDvns));
         ep.set(p.receiveLib, remote, A.CONFIG_TYPE_ULN, LeafSecurity.ulnConfig(recvConf, address(0), p.optionalDvns));
         ep.set(p.sendLib, remote, A.CONFIG_TYPE_EXECUTOR, LeafSecurity.executorConfig(p.executor));
-        LeafSecurity.requireStack(address(ep), address(this), 42161, remote, address(0));
+        LeafSecurity.requireStack(canonical, address(this), 42161, remote, address(0));
         ep.set(p.sendLib, remote, A.CONFIG_TYPE_ULN, hex"00");
         vm.expectRevert(LeafSecurity.StackMismatch.selector);
-        this._stack(address(ep), 42161, remote);
+        this._stack(canonical, 42161, remote);
+    }
+
+    function testRejectsNonCanonicalEndpoint() public {
+        assertTrue(A.endpoint(999) != A.endpoint(42161));
+        vm.expectRevert(LeafSecurity.BadEndpoint.selector);
+        this._stack(A.endpoint(999), 42161, A.EID_HYPEREVM);
+        vm.expectRevert(LeafSecurity.BadEndpoint.selector);
+        this._stack(address(0xBEEF), 999, 30110);
+    }
+
+    function testClaimCodeMatchesSideNotOwner() public {
+        address hevm = A.endpoint(999);
+        LeafClaimEscrow a = new LeafClaimEscrow(hevm, address(1), address(2), address(3));
+        LeafClaimEscrow b = new LeafClaimEscrow(hevm, address(4), address(5), address(6));
+        LeafOrderPolicy.requireClaimCode(address(a).code, address(b).code);
+        LeafClaimFill fill = new LeafClaimFill(A.endpoint(42161), address(1), address(2));
+        LeafClaimFill fillOtherOwner = new LeafClaimFill(A.endpoint(42161), address(9), address(8));
+        LeafOrderPolicy.requireClaimCode(address(fill).code, address(fillOtherOwner).code);
+        vm.expectRevert(LeafOrderPolicy.BadMarket.selector);
+        this._code(address(a).code, address(fill).code);
+        vm.expectRevert(LeafOrderPolicy.BadMarket.selector);
+        this._code(hex"", address(b).code);
+        LeafClaimEscrow wrongEp = new LeafClaimEscrow(A.endpoint(42161), address(1), address(2), address(3));
+        vm.expectRevert(LeafOrderPolicy.BadMarket.selector);
+        this._code(address(a).code, address(wrongEp).code);
     }
 
     function _pinned(string calldata id) external view returns (uint32) {
@@ -103,5 +132,9 @@ contract LeafClaimFreezeGuardTest is Test {
 
     function _stack(address ep, uint256 chainId, uint32 remote) external view {
         LeafSecurity.requireStack(ep, address(this), chainId, remote, address(0));
+    }
+
+    function _code(bytes calldata actual, bytes calldata expected) external pure {
+        LeafOrderPolicy.requireClaimCode(actual, expected);
     }
 }
