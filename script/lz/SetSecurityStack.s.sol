@@ -21,7 +21,7 @@ contract SetSecurityStack is Script {
         address hyperleafDvn = vm.envOr("HYPERLEAF_DVN", address(0));
         string memory id = vm.envOr("ASSET", string(""));
         if (bytes(id).length != 0) {
-            AssetCatalog.Listing memory listed = AssetCatalog.get(id);
+            AssetCatalog.Listing memory listed = AssetCatalog.requireHere(id);
             require(listed.productionEvm || vm.envOr("PARKED_MAINT", false), "not production evm");
         }
 

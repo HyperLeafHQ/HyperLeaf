@@ -27,7 +27,7 @@ contract ConfigureClosedListing is Script {
         require(a.kind == AssetCatalog.Kind.Closed, "not C1");
 
         vm.startBroadcast();
-        LeafInboundLockbox box = LeafInboundLockbox(source);
+        LeafInboundLockbox box = LeafInboundLockbox(payable(source));
         require(address(box.innerToken()) == a.innerMainnet, "inner != catalog");
         box.setConvertYieldToHype(true);
         box.setHarvester(harvester);

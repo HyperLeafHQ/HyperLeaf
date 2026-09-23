@@ -1,7 +1,12 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
 import {Script, console2} from "forge-std/Script.sol";
 import {LeafClaimEscrow} from "src/lz/LeafClaimEscrow.sol";
 import {LayerZeroAddresses as A} from "src/lz/LayerZeroAddresses.sol";
 import {HyperEVMAddresses as H} from "src/config/HyperEVMAddresses.sol";
+import {AssetCatalog} from "src/lz/AssetCatalog.sol";
+import {LeafOrderPolicy} from "src/lz/LeafOrderPolicy.sol";
 
 /// @notice HyperEVM mainnet Leaf Market escrow. After the Leaf exists.
 ///         hNEST: LEAF=hNEST WANT=NEST NEST_VAULT=NestVaultC1 REWARDER unset. Do not deploy Fill.
@@ -18,6 +23,15 @@ contract DeployClaimDest is Script {
         address rewarder = vm.envOr("REWARDER", address(0));
         bytes32 rewardId = vm.envOr("REWARD_ID", bytes32(0));
         address nestVault = vm.envOr("NEST_VAULT", address(0));
+        string memory id = vm.envOr("ASSET", string(""));
+        if (want == LeafOrderPolicy.ORDER_OFT || want == LeafOrderPolicy.ORDER_ETH) {
+            require(want == LeafOrderPolicy.ORDER_OFT, "eth ORDER");
+            require(keccak256(bytes(id)) == keccak256("horder"), "ASSET=horder");
+            require(rewardId == keccak256("horder"), "REWARD_ID");
+            require(nestVault == address(0), "no NEST_VAULT");
+            require(leaf != 0x367FB8667919dD94874C0a48156C94E0D254d43c, "bluai escrow");
+            AssetCatalog.requireHere(id);
+        }
         if (want == H.NEST) {
             require(nestVault != address(0), "NEST market requires NEST_VAULT");
         } else {
