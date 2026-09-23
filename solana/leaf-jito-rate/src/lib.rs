@@ -39,35 +39,52 @@ pub fn shares_from_atoms(atoms: u128) -> Option<u128> {
     atoms.checked_mul(SHARE_SCALE)
 }
 
-pub fn atoms_from_shares(shares: u128, last_accounted: u128, total_shares: u128) -> u128 {
+pub fn atoms_from_shares(
+    shares: u128,
+    last_accounted: u128,
+    total_shares: u128,
+) -> Result<u128, lockbox::Error> {
     if shares == 0 || total_shares == 0 || last_accounted == 0 {
-        return 0;
+        return Ok(0);
     }
-    shares.saturating_mul(last_accounted) / total_shares
+    Ok(shares
+        .checked_mul(last_accounted)
+        .ok_or(lockbox::Error::MathOverflow)?
+        / total_shares)
 }
 
 /// Book rate-bearing yield against a permanent high-water mark.
 /// A rate decrease records no fee and does not lower `last_rate`, so a later
 /// recovery first offsets the observed loss before becoming fee-bearing.
-pub fn book_retain_fee(last_accounted: u128, last_rate: u128, new_rate: u128) -> (u128, u128, u128) {
+pub fn book_retain_fee(
+    last_accounted: u128,
+    last_rate: u128,
+    new_rate: u128,
+) -> Result<(u128, u128, u128), lockbox::Error> {
     if new_rate == 0 {
-        return (0, last_accounted, last_rate);
+        return Ok((0, last_accounted, last_rate));
     }
     if last_rate == 0 || last_accounted == 0 {
-        return (0, last_accounted, new_rate);
+        return Ok((0, last_accounted, new_rate));
     }
     if new_rate < last_rate {
-        return (0, last_accounted, last_rate);
+        return Ok((0, last_accounted, last_rate));
     }
     if new_rate == last_rate {
-        return (0, last_accounted, last_rate);
+        return Ok((0, last_accounted, last_rate));
     }
-    let add = last_accounted * (new_rate - last_rate) / new_rate;
-    let mut fee = add * YIELD_FEE_BPS / BPS;
+    let add = last_accounted
+        .checked_mul(new_rate - last_rate)
+        .ok_or(lockbox::Error::MathOverflow)?
+        / new_rate;
+    let mut fee = add
+        .checked_mul(YIELD_FEE_BPS)
+        .ok_or(lockbox::Error::MathOverflow)?
+        / BPS;
     if fee > last_accounted {
         fee = last_accounted;
     }
-    (fee, last_accounted - fee, new_rate)
+    Ok((fee, last_accounted - fee, new_rate))
 }
 
 pub fn encode_bridge(tag: [u8; 32], to: [u8; 32], amount: u128) -> [u8; 96] {
@@ -109,7 +126,7 @@ mod tests {
 
     #[test]
     fn retain_one_percent() {
-        let (fee, next, r) = book_retain_fee(100_000_000_000, RATE_SCALE, RATE_SCALE * 11 / 10);
+        let (fee, next, r) = book_retain_fee(100_000_000_000, RATE_SCALE, RATE_SCALE * 11 / 10).unwrap();
         assert_eq!(fee, 90_909_090);
         assert_eq!(next, 100_000_000_000 - 90_909_090);
         assert_eq!(r, RATE_SCALE * 11 / 10);
@@ -118,13 +135,13 @@ mod tests {
     #[test]
     fn slash_preserves_high_water_mark_and_recovery_is_net_of_loss() {
         let principal = 100_000_000_000_000_000_000u128;
-        let (fee_down, next_down, r_down) = book_retain_fee(principal, RATE_SCALE, RATE_SCALE * 9 / 10);
+        let (fee_down, next_down, r_down) = book_retain_fee(principal, RATE_SCALE, RATE_SCALE * 9 / 10).unwrap();
         assert_eq!(fee_down, 0);
         assert_eq!(next_down, principal);
         assert_eq!(r_down, RATE_SCALE);
 
         let (fee_recovery, next_recovery, r_recovery) =
-            book_retain_fee(next_down, r_down, RATE_SCALE * 105 / 100);
+            book_retain_fee(next_down, r_down, RATE_SCALE * 105 / 100).unwrap();
         let expected_add = principal * (RATE_SCALE * 5 / 100) / (RATE_SCALE * 105 / 100);
         let expected_fee = expected_add / 100;
         assert_eq!(fee_recovery, expected_fee);
@@ -134,7 +151,7 @@ mod tests {
 
     #[test]
     fn slash_no_fee() {
-        let (fee, next, r) = book_retain_fee(100, RATE_SCALE * 11 / 10, RATE_SCALE * 105 / 100);
+        let (fee, next, r) = book_retain_fee(100, RATE_SCALE * 11 / 10, RATE_SCALE * 105 / 100).unwrap();
         assert_eq!(fee, 0);
         assert_eq!(next, 100);
         assert_eq!(r, RATE_SCALE * 11 / 10);

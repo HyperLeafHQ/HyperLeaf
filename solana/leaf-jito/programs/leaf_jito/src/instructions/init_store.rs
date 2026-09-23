@@ -52,10 +52,16 @@ impl InitStore<'_> {
             &mint,
             &store_key,
         )?;
+        // Fee recipient ATA: mint=JitoSOL and owner=admin (external treasury, not Store).
+        // Wrong owner at init is a permanent fee drain (no update path).
         let harvest_data = ctx.accounts.harvest_ata.try_borrow_data()?;
-        let (h_mint, _, _) = leaf_jito_rate::token::parse(&harvest_data)
+        let (h_mint, h_owner, _) = leaf_jito_rate::token::parse(&harvest_data)
             .map_err(|_| error!(LeafJitoError::BadTokenAccount))?;
         require!(h_mint == mint.to_bytes(), LeafJitoError::BadMint);
+        require!(
+            h_owner == ctx.accounts.admin.key().to_bytes(),
+            LeafJitoError::BadTokenAccount
+        );
         drop(harvest_data);
 
         let store = &mut ctx.accounts.store;

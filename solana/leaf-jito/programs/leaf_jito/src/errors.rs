@@ -38,6 +38,8 @@ pub enum LeafJitoError {
     BadTokenAccount,
     #[msg("Peer frozen")]
     PeerFrozen,
+    #[msg("Bad endpoint ID")]
+    BadEid,
 }
 
 impl From<leaf_jito_rate::lockbox::Error> for LeafJitoError {
@@ -56,6 +58,8 @@ impl From<leaf_jito_rate::lockbox::Error> for LeafJitoError {
             BadPeer => Self::BadPeer,
             WrongListing => Self::WrongListing,
             Underbacked => Self::Underbacked,
+            MathOverflow => Self::MathOverflow,
+            BadEid => Self::BadEid,
         }
     }
 }
@@ -75,5 +79,7 @@ pub fn map_rate(e: leaf_jito_rate::lockbox::Error) -> anchor_lang::error::Error 
         BadPeer => error!(LeafJitoError::BadPeer),
         WrongListing => error!(LeafJitoError::WrongListing),
         Underbacked => error!(LeafJitoError::Underbacked),
+        MathOverflow => error!(LeafJitoError::MathOverflow),
+        BadEid => error!(LeafJitoError::BadEid),
     }
 }

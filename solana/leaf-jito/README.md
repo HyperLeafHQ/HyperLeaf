@@ -2,7 +2,7 @@
 
 LayerZero OApp (Anchor 0.31.1) that wraps **JitoSOL** and bridges shares to
 HyperEVM as **hJitoSOL**. Lockbox math is owned by `leaf-jito-rate`
-(`cargo test` is the spec — currently **28/28**). This crate is the on-chain runtime.
+(`cargo test` is the spec — currently **29/29**). This crate is the on-chain runtime.
 
 ## Pins
 
@@ -88,7 +88,18 @@ codec in `leaf-jito-rate::store` (`lockbox_encode()`).
 - **Trailing bytes:** bridge payload exact 96 bytes; native ix codec rejects
   trailing bytes in the spec crate.
 - **Checked math:** lockbox uses checked paths via rate crate; token amounts
-  use `try_into` with `MathOverflow`.
+  use `try_into` with `MathOverflow`. Subsequent-lock share mint
+  (`atoms * total_shares`) uses `checked_mul` → `MathOverflow` (no wrap).
+  `book_retain_fee` / `atoms_from_shares` likewise checked.
+- **EID pin:** inbound `lz_receive` requires `src_eid == DEST_EID` (30367);
+  `set_peer_config` rejects any other `remote_eid`; `lock` / `quote_lock`
+  already require `dst_eid == DEST_EID`.
+- **Harvest ATA at init:** mint must be JitoSOL and owner must be `admin`
+  (fee treasury). Escrow remains Store-owned. No post-init harvest update path.
+- **Admin transferOwnership / unhalt:** not implemented in this PR (document
+  only — halt is one-way; admin is fixed at `init_store`).
+- **quote_lock receiver:** fee quote uses caller-supplied `receiver`; on-chain
+  `lock` sends to the peer PDA address for DEST_EID (quote is size-only).
 - **Pre-deploy gates (INFO-01 / INFO-03):** E2E + Docker verifiable hash verify
   remain required before any deploy / LIVE. This PR is audit-only.
 
@@ -97,7 +108,7 @@ codec in `leaf-jito-rate::store` (`lockbox_encode()`).
 ```
 program id:  E7UKM5BCAV5dbjuduDDnZXeQJ7muZ4xLCFd4XCBhzDax
 Store PDA:   4gxkqrLhRF9q2n8hoPoSVekShiSNMoFR2ZXMx7XikxtW  (seed b"Store", bump 255)
-.so sha256:  5bf4cd33c1ff05a1b7e020eac79fa66fbd0d909e78eaea9149628f94cbdb3f8d
+.so sha256:  71e4181ba6eaa0dae8ed587063d417b1ed4f038e815e230d8b6caf5bb28f82f4
 ```
 
 Built with `anchor build -v` (Docker `solanafoundation/anchor:v0.31.1`).

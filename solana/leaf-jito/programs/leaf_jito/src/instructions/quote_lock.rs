@@ -27,6 +27,10 @@ pub struct QuoteLockParams {
 
 impl QuoteLock<'_> {
     pub fn apply(ctx: &Context<QuoteLock>, params: &QuoteLockParams) -> Result<oapp::endpoint::MessagingFee> {
+        require!(
+            params.dst_eid == leaf_jito_rate::ix::DEST_EID,
+            LeafJitoError::BadEid
+        );
         // Quote uses a provisional payload with shares==atoms*SHARE_SCALE for empty box,
         // or a placeholder; actual shares computed at lock time. For fee quoting message
         // size is what matters (96 bytes fixed).

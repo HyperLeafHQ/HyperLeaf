@@ -50,6 +50,11 @@ pub struct LzReceive<'info> {
 
 impl LzReceive<'_> {
     pub fn apply(ctx: &mut Context<LzReceive>, params: &LzReceiveParams) -> Result<()> {
+        // Inbound only from HyperEVM (DEST_EID). Reject any other src EID.
+        require!(
+            params.src_eid == leaf_jito_rate::ix::DEST_EID,
+            LeafJitoError::BadEid
+        );
         // clear() — endpoint auth + GUID replay protection (LZ OApp primitive).
         let seeds: &[&[u8]] = &[STORE_SEED, &[ctx.accounts.store.bump]];
         let accounts_for_clear = &ctx.remaining_accounts[0..Clear::MIN_ACCOUNTS_LEN];

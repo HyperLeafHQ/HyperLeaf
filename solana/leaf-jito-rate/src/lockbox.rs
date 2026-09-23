@@ -39,6 +39,8 @@ pub enum Error {
     BadPeer,
     WrongListing,
     Underbacked,
+    MathOverflow,
+    BadEid,
 }
 
 impl Lockbox {
@@ -69,7 +71,7 @@ impl Lockbox {
             self.last_rate = rate;
             return Ok(0);
         }
-        let (fee, next, nr) = book_retain_fee(self.last_accounted, self.last_rate, rate);
+        let (fee, next, nr) = book_retain_fee(self.last_accounted, self.last_rate, rate)?;
         self.last_accounted = next;
         self.last_rate = nr;
         if fee > 0 {
@@ -108,7 +110,10 @@ impl Lockbox {
         let shares = if self.total_shares == 0 {
             shares_from_atoms(atoms).ok_or(Error::Zero)?
         } else {
-            atoms * self.total_shares / self.last_accounted
+            atoms
+                .checked_mul(self.total_shares)
+                .ok_or(Error::MathOverflow)?
+                / self.last_accounted
         };
         if shares == 0 {
             return Err(Error::Zero);
@@ -135,7 +140,7 @@ impl Lockbox {
         if self.total_shares != 0 && self.last_accounted == 0 {
             return Err(Error::Insufficient);
         }
-        let atoms = atoms_from_shares(shares, self.last_accounted, self.total_shares);
+        let atoms = atoms_from_shares(shares, self.last_accounted, self.total_shares)?;
         if atoms == 0 {
             return Err(Error::Zero);
         }
@@ -352,5 +357,23 @@ mod tests {
         assert!(Lockbox::side_dest_policy_ok(&fee, &rest, &fee, &rest));
         assert!(!Lockbox::side_dest_policy_ok(&attacker, &rest, &fee, &rest));
         assert!(!Lockbox::side_dest_policy_ok(&fee, &attacker, &fee, &rest));
+    }
+
+    /// ~1e6 JitoSOL first-lock scale: atoms*total_shares overflows u128 on subsequent lock.
+    #[test]
+    fn lock_share_mint_overflow_returns_math_overflow() {
+        use crate::SHARE_SCALE;
+        let mut b = Lockbox::new(0); // unlimited cap
+        let (l, s) = pool(RATE_SCALE);
+        // ~1e6 JitoSOL = 1e15 atoms (9 dp). First lock would mint atoms*SHARE_SCALE shares.
+        let first_atoms = 1_000_000_000_000_000u128; // 1e15
+        b.last_accounted = first_atoms;
+        b.total_shares = first_atoms
+            .checked_mul(SHARE_SCALE)
+            .expect("setup shares");
+        b.escrow_atoms = first_atoms;
+        b.last_rate = RATE_SCALE;
+        // Second lock of same magnitude: 1e15 * 1e24 = 1e39 > u128::MAX.
+        assert_eq!(b.lock(first_atoms, l, s), Err(Error::MathOverflow));
     }
 }

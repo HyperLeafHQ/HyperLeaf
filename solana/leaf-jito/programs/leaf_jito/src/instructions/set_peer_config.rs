@@ -35,17 +35,20 @@ pub enum PeerConfigParam {
 
 impl SetPeerConfig<'_> {
     pub fn apply(ctx: &mut Context<SetPeerConfig>, params: &SetPeerConfigParams) -> Result<()> {
+        // Only HyperEVM peer (DEST_EID=30367) may be configured.
+        require!(
+            params.remote_eid == leaf_jito_rate::ix::DEST_EID,
+            LeafJitoError::BadEid
+        );
         match params.config.clone() {
             PeerConfigParam::PeerAddress(peer_address) => {
-                if params.remote_eid == leaf_jito_rate::ix::DEST_EID {
-                    leaf_jito_rate::ix::require_evm_peer(&peer_address)
-                        .map_err(crate::errors::map_rate)?;
-                    let store = &mut ctx.accounts.store;
-                    if store.dest_peer != [0u8; 32] && store.dest_peer != peer_address {
-                        return err!(LeafJitoError::PeerFrozen);
-                    }
-                    store.dest_peer = peer_address;
+                leaf_jito_rate::ix::require_evm_peer(&peer_address)
+                    .map_err(crate::errors::map_rate)?;
+                let store = &mut ctx.accounts.store;
+                if store.dest_peer != [0u8; 32] && store.dest_peer != peer_address {
+                    return err!(LeafJitoError::PeerFrozen);
                 }
+                store.dest_peer = peer_address;
                 ctx.accounts.peer.peer_address = peer_address;
             }
             PeerConfigParam::EnforcedOptions {
