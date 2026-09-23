@@ -5,7 +5,7 @@
 > Addresses: [`listings/catalog.json`](../listings/catalog.json) `live` objects.
 > This file stays as the **deploy cookbook** for what is not live yet:
 > BATCH 3 **done** (`hlbtcv` LIVE; `hlbtc` parked),
-> `horder` (BATCH 4 remainder, issue #69 — queued until human `GO`),
+> `horder` (wrap smoke PASS, **not LIVE**, no Market — do not redeploy, do not GO Phase 3),
 > Nado points `createMarket` (n=3, **no broadcast until GO**),
 > Quantus QTC native OTC (`DeployNativeOtcQtc.s.sol` — **new factory, never n=4 on the live VAR book, no broadcast until GO**),
 > and `hjitosol` (BATCH 5).
@@ -33,7 +33,7 @@ Solana `.so` detail: [`GROK_BOT_SOLANA.md`](GROK_BOT_SOLANA.md) (also inlined in
 5. **Do not `openBridge` on autopilot.** Read `listingTag`, peers, caps, ULN `getConfig` first. Then `OPEN_BRIDGE=true`.
 6. **LZ fees are LayerZero’s.** UI and PR must say we do not take that fee.
 7. **Do not deploy:** NestVault, HNest, HevAdapter, LeafVirtualsLockbox, LeafOmnichainHolder, LeafCreate2. Do not `setShareExit`. Do not wrap NCN VRTs (fragSOL / kySOL / ezSOL). **Leaf Market for live hNEST is a different job:** [`GROK_BOT_LEAF_MARKET.md`](GROK_BOT_LEAF_MARKET.md). Do not wait for this BATCH table. Do not deploy `LeafClaimFill` for hNEST.
-8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + hslisBNB + hsiBERA + hsAVAX + hstkwaUSDC + **hLBTCv** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** is **not** automatic. **`hlbtc` is parked.** Do **not** `GO` `horder` from that cookbook. Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked**. SOURCE `0x4C862bC0…` is **chain-keyed**: 1 hstkwaUSDC / 43114 hsAVAX / 80094 hsiBERA / 56 dead BLUAI. hLBTCv SOURCE on 1 is **`0x615487eD…`** (unique).
+8. **`main` is live + the next deploy only.** Live: hNEST + hQUID + hAVNT + hgSOON + hslisBNB + hsiBERA + hsAVAX + hstkwaUSDC + **hLBTCv** + BLUAI4Y + VAR/Predict pre-market. Next **broadcast** is **not** automatic. **`hlbtc` is parked.** **`horder` wrap is deployed — do not redeploy, do not mark LIVE, do not deploy Market until a separate GO.** Nado points `createMarket` is a separate queued cookbook — do not broadcast. Do not deploy hINK wrap. **`hsWBERA` is parked**. SOURCE `0x4C862bC0…` is **chain-keyed**: 1 hstkwaUSDC / 43114 hsAVAX / 80094 hsiBERA / **42161 hORDER** / 56 dead BLUAI. hLBTCv SOURCE on 1 is **`0x615487eD…`** (unique). hORDER converters are **not** `0xc89273AC…`.
    - hslisBNB rate: `LeafListaPolicy` + `RateKind.ConvertSnBnbToBnb` on `main` after this pin PR. Never `convertToAssets` on the slisBNB token.
    - hsAVAX jump 300 is on `ConfigureMainnetListing` `ASSET=hsavax`. `hlbtcv` **LIVE**. `hlbtc` parked.
 
@@ -135,7 +135,11 @@ Do not comment `GO` on #69 for these tickers.
 - On-chain `depositCap=1e30` · peg 0/0 · `supplyCap=0` · ceiling `2e28`. **Do not `setDepositCap(0)` on 0x436079**.
 - Conv BSC allowlist (2026-09-16): `setLockbox(SOURCE)`, `setToken(BLUAI)`, `setOutput(USDC)` done. Escrow `setMarket` rewardId = `keccak256("bluai4y")` done. `setRoute` / `setMinPrice` still open.
 
-Remaining in this section: **`horder` only.** Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive. Do not enable protocol redeem. Do not `DeployOmnichainLockbox` for ORDER.
+Remaining in this section: **hORDER Market only, and only after a new human GO.** Wrap is done — do not redeploy.
+
+- SOURCE Arb `0x4C862bC0922556e1bF02561bcf6Ff25e43826D5C` / OFT `0x06C345fC16F5943021dDabefFBF14D5378c86A53` / Conv Arb `0xe86961EAF3CD4ED87497641fF32E55875aB7189f` / Conv HEVM `0x4263B0967A0eE9F88329EF3334c513e0203C87FF` / Rewarder `0x4f8c69950a7dE39612eDbc01ce5426C79e791ce0`.
+- Owner FINAL accepted. `redeemEnabled=false`. `bridgeOpen=true`. `farmNativeFee=0.001 ether`. Public 10/17. **Not frontend LIVE.**
+- New escrow + Arb fill when GO'd. Never BLUAI escrow `0x367FB8…`. Dest `Filled` is **not** paid — wait source `Paid`. Protocol does not bid. 90d TTL. 1% of ask is buyer incentive. Do not enable protocol redeem. Do not `DeployOmnichainLockbox` for ORDER.
 
 **Deploy cookbook for next week's bot:** GitHub issue **[#69](https://github.com/HyperLeafHQ/HyperLeaf/issues/69)**. Do not broadcast until a human comments `GO` on that issue. Native-fee split is already on `main` (#70). Do not `GO` for hslisBNB / hsiBERA from this issue.
 

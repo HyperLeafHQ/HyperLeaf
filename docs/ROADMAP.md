@@ -20,7 +20,7 @@ Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or th
 | **3** | **hLBTCv** | L | Ethereum 1 | **LIVE.** Wrap LBTCv. Veda `getRateInQuote(LBTC)`. SOURCE `0x615487eD…`. Never WBTC `getRate()` / teller 3d |
 | **3** | **hstkwaUSDC** | L | Ethereum 1 | **LIVE.** SOURCE `0x4C862bC0…559c` / OFT `0x2D694ef8…DAA8` / Conv `0xc89273AC…6fD2`. Wrap stkwaEthUSDC.v1 only. shareScale 1e12. Same SOURCE hex on 43114/80094/56 — pin chainId 1 |
 | **4** | **BLUAI4Y** | C1 | BSC | **LIVE.** SOURCE `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` / OFT `0x8F25a342b93f623A07e7dF8b691a729A6e39C439`. Escrow `0x367FB8…` / Fill `0xE3E4B1…`. Dead 100-cap in catalog `dead[]`. Do not `setDepositCap(0)` on live SOURCE |
-| **4** | **hORDER** | C1 | **Arbitrum only** | Queued. Cookbook #69. Wait for human `GO`. Inner Arb ORDER OFT `0x4E20…97B8`. Never ETH `0xABD4…`. Never BLUAI escrow |
+| **4** | **hORDER** | C1 | **Arbitrum only** | **Smoke PASS, not LIVE.** SOURCE `0x4C862bC0…559c` on **42161** / OFT `0x06C345fC…6A53`. No Market. Never ETH `0xABD4…`. Never BLUAI escrow. Same SOURCE hex on 1/43114/80094/56 |
 | pre | **VAR** | Pre | HyperEVM factory | **LIVE** claims in USDM. Factory `0x22684F6e…`. Settle hVAR after TGE |
 | pre | **Predict** | Pre | HyperEVM factory | **LIVE** claims in USDM. Same factory. Settle hPREDICT after TGE |
 | pre | **Nado** | Pre | HyperEVM factory | Opening. Same factory n=3. `createMarket("Nado points","Nado",sUSDM)`. Settle **hINK** after official INK. Not live |
@@ -70,7 +70,7 @@ Do not wrap MAX / XMR1 / TRX1. Quote ≠ backing. Protocol still never bids on L
 
 | Demand | Class | Now |
 | ------ | ----- | --- |
-| Locked occupancy (C1) | **ours** | BLUAI4Y live. hORDER queued. hB3 / BONK12M / veAERO / veUP later |
+| Locked occupancy (C1) | **ours** | BLUAI4Y live. hORDER wrap smoke PASS, not LIVE (no Market). hB3 / BONK12M / veAERO / veUP later |
 | Pre-TGE points | **ours** | VAR / Predict live. Nado next |
 | Extra-chain airdrops | pins | KAITO / VIRTUALMAX merkle `0x2e7ba6ef`. CREATE2 twin, no `openBridge`. No GO |
 | Native XMR in/out | rail, taken | Wagyu. Benchmark only |
@@ -89,7 +89,7 @@ ETH/SOL/BTC/USDC → HL already has Unit / deBridge / Across / 1inch. HIP-3 pre-
 **1** — hQUID then hAVNT. **LIVE uncapped.** Same Base path the canary proved.
 **2** — rate L: **hgSOON LIVE.** **hslisBNB LIVE.** **hsiBERA LIVE** (Berachain 80094). **hsWBERA parked.** **hcbETH out** (Base token has no `exchangeRate`).
 **3** — **hsAVAX LIVE.** **hstkwaUSDC LIVE.** **hLBTCv LIVE** (`hlbtc` parked). hsETHFI gated (`productionEvm=false`).
-**4** — C1: **BLUAI4Y LIVE.** hORDER queued (#69). Leaf Market already live for BLUAI. No CREATE2 twin. New escrow for hORDER — never `0x367FB8`.
+**4** — C1: **BLUAI4Y LIVE.** hORDER wrap smoke PASS, not LIVE (#69). No Market yet. No CREATE2 twin. New escrow for hORDER — never `0x367FB8`.
 **Pre** — VAR + Predict **LIVE** USDM claims on factory `0x22684F6e…`. **Nado** next (`createMarket` n=3, queued). Settlement Leafs after TGE: hVAR / hPREDICT / **hINK**. **QTC native OTC** is a **new** factory (`NativeOtcFactory`), not n=4 on the live book. No wrap. No GO deploy.
 **A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
 **E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
