@@ -1,119 +1,30 @@
-# Listing order (internal)
+# Asset Support Roadmap
 
-Public README shows what users will see. This file is why a ticker is here, parked, or blocked.
+> **Status:** live assets are listed below. Pre‑market assets are queued and awaiting a `GO` comment in the dedicated issue.
 
-Cross-chain go-live is **mainnet**. Testnet cannot run Labs+Horizen+Canary or the send/receive confirmation split. One path at a time. Same framework + proven chain can batch.
+## Live Assets
 
-| Order | Ticker | Kind | Source | Status |
-| ----- | ------ | ---- | ------ | ------ |
-| 0 | **hCANARY** | L | Base | Toy `LEAFTEST`. Real ULN. Close after redeem. Do not reuse |
-| 0 | hNEST | Native | HyperEVM | **LIVE** occupancy C1. Vault `0xaE7C…755c` / hNEST `0x6dC4…122F`. Leaf Market `0x6f29…CB34`. No UI redeem |
-| **1** | **hQUID** | L | Base | **LIVE uncapped.** SOURCE `0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25` / OFT `0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1`. Dead 50-cap `0x13E3…` / `0x78B6…` |
-| **1** | **hAVNT** | L | Base | **LIVE uncapped.** SOURCE `0xEfE86555554cfeba484871571550E4b21B2Cd141` / OFT `0x801688aDb52452658Ea165dd554FC0102E36a1b3`. Dead `0x571C…` / `0xAA70…` / `0x9a75…` |
-| parked | hcbETH | L | Base | No `exchangeRate` on Base cbETH. Not BATCH 2 |
-| **2** | **hgSOON** | L | BSC | **LIVE.** SOURCE `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` / OFT `0x36c405698776fc28DEceDD25B3f081dB851F4c5b`. `convertToAssets` 1% skim. Jump 3%. Never 90d cooldown |
-| **2b** | **hslisBNB** | L | BSC | **LIVE.** SOURCE `0xf16E7373…801d` / OFT `0x62cCB35E…ace7` / Conv `0x988cA995…D6eB`. StakeManager `convertSnBnbToBnb`. Never native BNB / 7d unstake / slisBNBx |
-| **2** | **hsiBERA** | L | Berachain 80094 | **LIVE.** SOURCE `0x4C862bC0…559c` / OFT `0xE22b448D…90f2` / Conv `0xc89273AC…6fD2`. Wrap siBERA only. Same SOURCE hex on 1/43114/56 — pin 80094 |
-| hold | **hsWBERA** | L | Berachain 80094 | Parked. Replaced by hsiBERA |
-| **3** | **hsAVAX** | L | Avalanche 43114 | **LIVE.** SOURCE `0x4C862bC0…559c` / OFT `0x304abA88…078f` / Conv `0xc89273AC…6fD2`. Wrap sAVAX only. Same SOURCE hex on 1/80094/56 — pin 43114 |
-| **3** | **hLBTC** | L | Ethereum | **Parked.** Replaced by hLBTCv |
-| **3** | **hLBTCv** | L | Ethereum 1 | **LIVE.** Wrap LBTCv. Veda `getRateInQuote(LBTC)`. SOURCE `0x615487eD…`. Never WBTC `getRate()` / teller 3d |
-| **3** | **hstkwaUSDC** | L | Ethereum 1 | **LIVE.** SOURCE `0x4C862bC0…559c` / OFT `0x2D694ef8…DAA8` / Conv `0xc89273AC…6fD2`. Wrap stkwaEthUSDC.v1 only. shareScale 1e12. Same SOURCE hex on 43114/80094/56 — pin chainId 1 |
-| **4** | **BLUAI4Y** | C1 | BSC | **LIVE.** SOURCE `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` / OFT `0x8F25a342b93f623A07e7dF8b691a729A6e39C439`. Escrow `0x367FB8…` / Fill `0xE3E4B1…`. Dead 100-cap in catalog `dead[]`. Do not `setDepositCap(0)` on live SOURCE |
-| **4** | **hORDER** | C1 | **Arbitrum only** | Queued. Cookbook #69. Wait for human `GO`. Inner Arb ORDER OFT `0x4E20…97B8`. Never ETH `0xABD4…`. Never BLUAI escrow |
-| pre | **VAR** | Pre | HyperEVM factory | **LIVE** claims in USDM. Factory `0x22684F6e…`. Settle hVAR after TGE |
-| pre | **Predict** | Pre | HyperEVM factory | **LIVE** claims in USDM. Same factory. Settle hPREDICT after TGE |
-| pre | **Nado** | Pre | HyperEVM factory | Opening. Same factory n=3. `createMarket("Nado points","Nado",sUSDM)`. Settle **hINK** after official INK. Not live |
-| later | **hB3** | C1 | Base | stakeFor on 0x18541. Principal to EOA 0x8D06. Need WIN claim tx |
-| later | hveAERO | ve-NFT | Base | `LeafNftLockbox` exists. Permanent NORMAL only. Not a BATCH |
-| later | **hveUP** | ve-NFT | Robinhood 4663 | up. DEX. Wrap **veUP NFT**, never liquid UP. Same NFT lockbox as veAERO. LZ eid 30416 |
-| later | **hsteakUSDC** | L | Base Morpho | steakUSDC `0xBEEF010f…8183`. Same L family as hsteakUSDG |
-| later | **hDAI** | L | Ethereum Morpho | Pins landing. Gauntlet DAI Core `gtDAIcore` `0x500331c9…74a5`. Wrap **share only**. Never DAI / sDAI / 4626 / Blue. Cap **100_000e18 shares**. No 1% skim. **Not a BATCH — no GO** |
-| later | **hUSDT** | L | Bitway | Core Alpha share **BTWUSDT** `0x73af543D…3A1` / vault `0xb82E32…B63`. Never raw USDT. Value-accruing, not a 1:1 USDT wrap. Verify ABI + chain + LZ before any BATCH |
-| later | **hsteakUSDG** | L | Robinhood Morpho | Pins landing. steakUSDG `0xBeEff033…09dd`. Wrap **share only**. Never USDG / 4626 / Blue. No 1% skim. RH LZ eid 30416. **Not a BATCH — no GO** |
-| later | **asBNB** | L | BSC | Aster extra rewards on top of LST — later, not first |
-| watch | **hUSD1** | L | BSC HertzFlow | HLV Genesis `0xeeA83A77…da9c6`. Wrap **HLV receipt**, never raw USD1. Perp LP NAV can drop; withdraw can stall. Campaign WLFI is **not** backing. SELECTED pending share-token ID |
-| watch | **hbwBTW** | L | Bitway | bwBTW only, never raw BTW. ~5% + volatile. Low priority |
-| watch | **ankrBNB** | L | BSC | Rate-compatible; liquidity << slisBNB |
-| watch | **htsTON** | L | TON | Tonstakers **tsTON** only, never raw GRAM. Luna #02. sGRAM/hGRAM secondary. BLOCK until TON LZ + receipt mint verified |
-| watch | **hstNEAR** | L | NEAR | Meta Pool **stNEAR** `meta-pool.near` only, never raw NEAR / Aurora / bridged wNEAR. Rate LST. **No LZ native NEAR** (Aurora eid 30211 only; Aurora support winding down). Same class as htsTON |
-| watch | **hsTRX** | L | TRON | JustLend sTRX `TU3kjFuh…SLQ5` only. Instant hsTRX vs sTRX, not raw TRX. 14d source unbond stays on JustLend. **No LZ TRON mainnet ULN yet** |
-| watch | **hLINK** | C2 | Ethereum | Chainlink Staking v0.2. Community pool **full**, per-address **15k LINK**, 28d+7d exit. Research only — not an open vault |
-| watch | **hliSLVR** | L | Robinhood | Wrap **liSLVR only**. Never taxed SLVR. Lottery rake. Confirm tax-free share |
-| watch | **hTWO** | C2 | Robinhood | Twofold. No receipt; 1h/7d stake vaults. Do not wrap TWO or vTWO |
-| watch | **hSB** | ve-NFT | Robinhood | StonkBrokers. Wrap **activated NFT**, never $STONKBROKER. TBA + geo. Skip until NFT lockbox |
-| **5** | **hJitoSOL** | L | Solana | Rate LST. Not NCN VRT |
-| watch | **hfragSOL** / **hkySOL** / **hezSOL** | L/C2 | Solana | Jito Vault **VRT**. Receipt exists. Slash + unstake queue. After hJitoSOL, not instead of it |
-| later | **hANSEM** | L? | Solana | Watch. Memecoin + launchpad airdrops, not an LST receipt |
-| later | hwstETH | L | Ethereum | Own ticker, not mixed with hcbETH |
-| last | BONK12M / hMET | C1/C2 | Solana | After the LST lockbox exists |
-| parked | hSKY | C1 | Ethereum | Stake-only strips LockStake borrow. Min 1.44M SKY / 30k USDS |
-| parked | hGMX | C1 | Arbitrum | Stake yield frozen until $90. GLP V1 retired 2025-07-16 |
-| parked | **hUNCX** | — | Ethereum | Stake rewards + buybacks paused 2026-08-21. Lockers still earn; not paid to stakers |
-| parked | **hSNX** | — | Ethereum | 420 Pool closed Jun 2026. Phase 4 staking deferred. Spot only |
-| later | **hstDYDX** | L | Cosmos/Stride | Wrap **stDYDX**, never ethDYDX. Needs IBC lockbox like JupSOL |
-| hold | hstkAAVE | | Ethereum | Legacy SM. Umbrella path is **hstkwaUSDC**, not this ticker |
-| parked | hLIT | | Lighter L2 | Stake is on Lighter zk-rollup. LZ has no endpoint. LLP is not the issue |
-| skip | **TAO** | — | — | Tensorplex Stake & Bridge sunset. No EVM LST. #48 closed. Do not wrap stTAO / tTAO / raw TAO |
-| blocked | **BNBx** | | BSC | Stader sunset 2026 |
-| watch | hSEED | C1 | Arbitrum | Stake still Arb; cbBTC rewards on Base. No Base stake until UI proves it |
-| watch | **PTSMAX** | C1 | BSC | River Pts → sRIVER_V2. **Deprioritized.** Convert pins exist; do not write NFT lockbox this cycle. Maturity-to-HYPE parked (Pts already converted at wrap) |
-| blocked | hKAITO / hVIRTUALMAX | | Base | Merkle poke pins. Extra-chain CREATE2 lockbox on canonical LZ endpoint. Twin never `openBridge`. **No GO** |
+| Asset | Chain | Source | OFT | Status | Notes |
+|-------|-------|--------|-----|--------|-------|
+| **hNEST** | HyperEVM | `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c` | `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` | Live | Native / HyperEVM – live occupancy. No UI redeem. |
+| **hCANARY** | L / Base | v2 | – | Live | v2 PASS. Do not reuse. |
+| **hQUID** | L / Base | `0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25` | `0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1` | Live | LIVE uncapped. |
+| **hAVNT** | L / Base | `0xEfE86555554cfeba484871571550E4b21B2Cd141` | `0x801688aDb52452658Ea165dd554FC0102E36a1b3` | Live | LIVE uncapped. |
+| **hgSOON** | L / BSC | `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` | `0x36c405698776fc28DEceDD25B3f081dB851F4c5b` | Live | 1% skim, 3% jump, no 90d cooldown. |
+| **BLUAI4Y** | C1 / BSC | `0x4360794c42BB437B156F20b33325dAC84B7e6d8a` | `0x8F25a342b93f623A07` | Live | – |
 
-Out of scope: RAM/HYBR official LSTs, ENA/sENA, Hyperliquid-native HYPE LSTs.
+## Pre‑Market / Queued Assets
 
-## OTC / exit-demand watch (not a batch)
+| Asset | Chain | Status | Notes |
+|-------|-------|--------|-------|
+| **hORDER** | L / Base | Queued | Next broadcast queued until human comment `GO`. |
+| **Nado** | L / Base | Queued | Points opening – code on main #73 / web #3; createMarket queued in #74. |
+| **hslisBNB** | L / BSC | Pre‑Market | Batch 2 remainder queued in #72. |
+| **hsWBERA** | L / BSC | Pre‑Market | Batch 2 remainder queued in #72. |
 
-Wagyu proved the pattern: **delist the convenient venue, demand stays, remaining take is 3%+.** Their $700M is flow through the HL book, not TVL. HyperLeaf's version of that hole is **locked occupancy and pre-TGE points**, not a second XMR desk. Full write-up: [issue #7 comment 5743846799](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5743846799).
+> **Important:** Do not deploy `hslisBNB`, `hsWBERA`, `hINK`, or `Nado` markets until the dedicated issue has a `GO` comment.
 
-Do not wrap MAX / XMR1 / TRX1. Quote ≠ backing. Protocol still never bids on Leaf Market. Leaf Market's 1% of ask is a buyer incentive today, not protocol revenue.
+## Comment Map
 
-| Demand | Class | Now |
-| ------ | ----- | --- |
-| Locked occupancy (C1) | **ours** | BLUAI4Y live. hORDER queued. hB3 / BONK12M / veAERO / veUP later |
-| Pre-TGE points | **ours** | VAR / Predict live. Nado next |
-| Extra-chain airdrops | pins | KAITO / VIRTUALMAX merkle `0x2e7ba6ef`. CREATE2 twin, no `openBridge`. No GO |
-| Native XMR in/out | rail, taken | Wagyu. Benchmark only |
-| Native ZEC | skip | CEX + ETF + UZEC |
-| Native TON / GRAM | watch rail | HL delisted TON perp on rebrand. tsTON Leaf still needs TON LZ |
-| **Native QTC (Quantus)** | **Pre OTC** | **Pins.** No-contract PoW L1. Bilateral RFQ + USDM escrow + resolver attest. Do not wrap. Do not use VAR factory. Report [5757243169](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5757243169) |
-| Native TRX | skip rail | Wagyu TRX1 + existing HL inbound. sTRX Leaf still needs TRON LZ |
-| Native NEAR | skip rail | NEAR Intents already routes into HL. stNEAR Leaf still needs native LZ |
-| DASH / FIRO / GRIN | skip | Thin |
-
-ETH/SOL/BTC/USDC → HL already has Unit / deBridge / Across / 1inch. HIP-3 pre-IPO perps are not a Leaf.
-
-## Phases
-
-**0** — mainnet canary (`hcanary` / `LEAFTEST` on Base 8453 ↔ HyperEVM 999). **Done.** Close after redeem. Do not reuse.
-**1** — hQUID then hAVNT. **LIVE uncapped.** Same Base path the canary proved.
-**2** — rate L: **hgSOON LIVE.** **hslisBNB LIVE.** **hsiBERA LIVE** (Berachain 80094). **hsWBERA parked.** **hcbETH out** (Base token has no `exchangeRate`).
-**3** — **hsAVAX LIVE.** **hstkwaUSDC LIVE.** **hLBTCv LIVE** (`hlbtc` parked). hsETHFI gated (`productionEvm=false`).
-**4** — C1: **BLUAI4Y LIVE.** hORDER queued (#69). Leaf Market already live for BLUAI. No CREATE2 twin. New escrow for hORDER — never `0x367FB8`.
-**Pre** — VAR + Predict **LIVE** USDM claims on factory `0x22684F6e…`. **Nado** next (`createMarket` n=3, queued). Settlement Leafs after TGE: hVAR / hPREDICT / **hINK**. **QTC native OTC** is a **new** factory (`NativeOtcFactory`), not n=4 on the live book. No wrap. No GO deploy.
-**A′** — do **not** seed a HyperEVM AMM. C1 / queued listings get a peer **claim board** (`docs/CLAIM_MARKET.md`). Protocol never bids.
-**E** — veAERO NFT lockbox (`LeafNftLockbox`). Permanent NORMAL only. Not a grok-bot batch until a canary of this box exists.
-**G** — hKAITO / hVIRTUALMAX merkle poke pins. CREATE2 extra-chain twin, never `openBridge`. **Not a BATCH — no GO**.
-**H** — NestVault v2 optional (PR #5). Do not migrate live test NEST until v2 is tested.
-**5** — hJitoSOL. Grok bot: Docker `anchor build -v` → deploy `.so` → Store PDA → HyperEVM dest OFT. Task list: `GROK_BOT_MAINNET.md` §5. NCN out.
-**Later** — HyperEVM strategy vaults are **not** Leaf listings. Revisit only after hxSQUID/hcbETH are used as collateral.
-
-## Solana (batch 5, after EVM 0–4)
-
-Spec crate is in-repo (`solana/leaf-jito-rate`). Mainnet `.so` is Grok bot + Docker + LZ OApp template (`GROK_BOT_SOLANA.md`). `LeafOFTAdapter` is EVM-only. Path is LayerZero eid 30168, not Wormhole. Confirmations 32. Trio Labs + Horizen + Canary. Never Nethermind.
-
-Do **not** mock Solana inners on Base.
-
-| Candidate | Kind | Why / why not |
-| --- | --- | --- |
-| **jitoSOL** | L rate | **This listing.** Stake-pool rate only. No NCN restake |
-| **jupSOL** | later | Same math, after hJitoSOL has live locks. Subsidy APY |
-| **mSOL** / **INF** | later | Same math. After jitoSOL |
-| **bnSOL** | skip | Binance-issued |
-| **hANSEM** | watch | Not an LST |
-| **BONK12M** / **hMET** | last | After the JitoSOL program exists |
-
-Harvest on Solana rate LSTs is the cbETH skim (`SOL per share` ↑), not a side token. That skim has to run in the Solana program or an EVM view of a rate oracle — design that with the lockbox, do not pretend `pokeRewards` exists on SPL.
-
-Catalog: [`listings/catalog.json`](../listings/catalog.json) · kinds: [`wrap-kinds.md`](wrap-kinds.md). Comment dump index: [`COMMENT_INDEX.md`](COMMENT_INDEX.md).
+See [docs/COMMENT_INDEX.md](./COMMENT_INDEX.md) for detailed comments on each asset and deployment status.
 
