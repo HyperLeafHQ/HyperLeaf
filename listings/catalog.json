@@ -1432,8 +1432,8 @@
       "sourceEid": 30110,
       "exit": "market-only",
       "infra": "evm",
-      "note": "Smoke PASS. Wrap infra only — not frontend LIVE, no Leaf Market. Arbitrum 42161 only. ORDER OFT 0x4E20… (not ETH ERC-20). Orderly proxy 0xC8A8… stakeOrder. farmNativeFee 0.001. Public 10/17. Unstake 2/3/4 owner. Same SOURCE hex on 1/43114/80094/56 — pin chainId 42161. Owner FINAL accepted.",
-      "status": "smoke-pass-not-live",
+      "note": "LIVE. Arbitrum 42161 only. ORDER OFT 0x4E20… (not ETH ERC-20). Orderly proxy 0xC8A8… stakeOrder. farmNativeFee 0.001. Public 10/17. Unstake 2/3/4 owner. Same SOURCE hex on 1/43114/80094/56 — pin chainId 42161. Owner FINAL. Market escrow 0x4f422254… / fill 0x615487eD… on 42161 only (same hex on ETH 1 is hLBTCv). ledgerPrincipal unchanged. Do not redeploy.",
+      "status": "live",
       "priority": 4,
       "deployed": {
         "sourceChain": 42161,
@@ -1443,12 +1443,15 @@
         "converterArb": "0xe86961EAF3CD4ED87497641fF32E55875aB7189f",
         "converterHevm": "0x4263B0967A0eE9F88329EF3334c513e0203C87FF",
         "rewarder": "0x4f8c69950a7dE39612eDbc01ce5426C79e791ce0",
+        "escrow": "0x4f4222546D1B4431A99A197a991E568Ee6C27A2F",
+        "fill": "0x615487eD17D275390565E3880E3406093Ce81346",
+        "fillChainId": 42161,
         "innerSupplyCeiling": "22681190128582161470524586",
         "farmNativeFee": "1000000000000000",
         "owner": "0x24458f0Bc44c4607172d1151CD938012be33156e",
         "redeemEnabled": false,
         "bridgeOpen": true,
-        "note": "NOT LIVE. No escrow/fill. Do not show as depositable. Do not redeploy. Do not reuse BLUAI escrow 0x367FB8."
+        "note": "LIVE. Do not redeploy. Do not reuse BLUAI escrow 0x367FB8. Fill hex is hLBTCv SOURCE on Ethereum 1 — pin 42161."
       }
     },
     {

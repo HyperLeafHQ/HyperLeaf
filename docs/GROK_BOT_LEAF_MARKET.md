@@ -112,11 +112,9 @@ Dead 100-cap escrow/fill `0x1AD2…` / `0xC584…` — do not reuse. Abandoned F
 
 `remoteEid` is singular. Adding Arb to the BLUAI escrow reverts `PeerFrozen`. hORDER gets a **new** escrow + Arb fill.
 
-## hORDER (not deployed — audit the pin first)
+## hORDER (LIVE — do not redeploy)
 
-Do not reuse `0x367FB8…` / `0xE3E4B1…`.
-
-Sequence: `DeployClaimDest` / `DeployClaimSource` → `WirePeers` → `SetSecurityStack` → **`FreezeClaimConfig` both sides** (`PEER=` the other OApp, `PEER_RPC=` that chain's RPC, `HYPERLEAF_DVN` matching the stack). It reverts unless `PEER_RPC` `eth_chainId` is 42161 when freezing on HyperEVM and 999 when freezing on Arbitrum, the OApp `endpoint()` is the canonical LayerZero endpoint, local runtime is `LeafClaimFill` (source) or `LeafClaimEscrow` (HyperEVM), `eth_getCode` matches the other side, remote eid and `peers[eid]` match, and `pinLibraries` has set send/receive libraries to `pathway()` (not the endpoint default) with send/receive ULN, DVN threshold, confirmations, and executor matching. Then owner handoff. `ASSET=horder` is required. Source chain must be **42161**. HyperEVM peer eid must be **30110**. `WANT` is Arb ORDER OFT `0x4E20…`, never `0xABD4…`, including on the escrow.
+Escrow `0x4f4222546D1B4431A99A197a991E568Ee6C27A2F` (999). Fill `0x615487eD17D275390565E3880E3406093Ce81346` (42161 only; the same hex on Ethereum 1 is hLBTCv SOURCE). Owner FINAL. Do not reuse `0x367FB8…` / `0xE3E4B1…`.
 
 `RETURN_NATIVE` (default 0.01 ETH) is the destination native drop so ACK can be sent. It is **not** the user's fee. UI calls `quoteFill` and pays that quote. Do not hardcode `fill{value: 0.01 ether}`.
 
