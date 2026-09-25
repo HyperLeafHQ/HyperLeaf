@@ -101,6 +101,8 @@ contract EpochHNestGateV2 is Ownable2Step, ReentrancyGuard, Pausable {
     event HypeFinalized(uint256 indexed epochId, uint256 net);
     event ClosingResidualAllocated(uint256 indexed epochId, uint256 amount);
     event GrowthHypeSynced(uint256 amount, uint256 index, uint256 remainder);
+    event GrowthRoutedToAllocate(uint256 indexed epochId, uint256 amount);
+    event GrowthUnassigned(uint256 amount, address indexed to);
     event Claimed(uint256 indexed epochId, address indexed user, uint256 hNestAmount, uint256 newDepositHype, uint256 growthHype);
 
     error ZeroAmount();
@@ -116,6 +118,7 @@ contract EpochHNestGateV2 is Ownable2Step, ReentrancyGuard, Pausable {
     error HypeNotFinal();
     error FeeTooHigh();
     error FinalizeTooEarly(uint256 earliest);
+    error EpochNotClosed();
     error TooManyTranches();
     error UnknownTranche();
 
@@ -234,6 +237,7 @@ contract EpochHNestGateV2 is Ownable2Step, ReentrancyGuard, Pausable {
     function finalizeHype(uint256 epochId) external {
         Epoch storage ep = epochs[epochId];
         if (ep.start == 0) revert EpochNotOpen();
+        if (!ep.closed) revert EpochNotClosed();
         if (ep.hypeFinal) revert HypeAlreadyFinal();
         uint256 earliest = ep.end + HYPE_FINALIZE_DELAY;
         if (block.timestamp < earliest) revert FinalizeTooEarly(earliest);
@@ -375,24 +379,46 @@ contract EpochHNestGateV2 is Ownable2Step, ReentrancyGuard, Pausable {
     function _allocateClosingResidual(uint256 epochId) internal {
         uint256 pulled = _pullVaultResidual();
         if (pulled == 0) return;
-        epochs[epochId].hypeAllocated += pulled;
+        Epoch storage ep = epochs[epochId];
+        if (ep.hypeFinal) {
+            _creditGrowth(pulled);
+            return;
+        }
+        ep.hypeAllocated += pulled;
         emit ClosingResidualAllocated(epochId, pulled);
     }
 
     function _syncGrowthHype() internal returns (uint256 synced) {
         synced = _pullVaultResidual();
-        uint256 distributable = synced + growthRemainder;
-        if (distributable == 0) return synced;
+        _creditGrowth(synced);
+    }
+
+    /// @dev Carry-only growth. If no carry exists, do not park the pot for a
+    ///      later carry cohort that was excluded at this timestamp.
+    function _creditGrowth(uint256 amount) internal {
+        uint256 distributable = amount + growthRemainder;
+        if (distributable == 0) return;
+
         if (carryHNest == 0) {
-            growthRemainder = distributable;
-            emit GrowthHypeSynced(synced, growthIndex, growthRemainder);
-            return synced;
+            Epoch storage cur = epochs[currentEpochId];
+            growthRemainder = 0;
+            if (!cur.hypeFinal && cur.totalNest > 0) {
+                cur.hypeAllocated += distributable;
+                emit GrowthRoutedToAllocate(currentEpochId, distributable);
+            } else {
+                address to = cur.feeRecipientSnapshot == address(0) ? feeRecipient : cur.feeRecipientSnapshot;
+                hypeToken.safeTransfer(to, distributable);
+                emit GrowthUnassigned(distributable, to);
+            }
+            emit GrowthHypeSynced(amount, growthIndex, 0);
+            return;
         }
+
         uint256 increment = distributable * GROWTH_INDEX_SCALE / carryHNest;
         uint256 accounted = increment * carryHNest / GROWTH_INDEX_SCALE;
         growthIndex += increment;
         growthRemainder = distributable - accounted;
-        emit GrowthHypeSynced(synced, growthIndex, growthRemainder);
+        emit GrowthHypeSynced(amount, growthIndex, growthRemainder);
     }
 
     function _checkpointGrowth(uint256 epochId, address user) internal {

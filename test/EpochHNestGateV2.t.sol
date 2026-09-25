@@ -168,4 +168,41 @@ contract EpochHNestGateV2Test is Test {
         _claimReady(0, alice);
         assertApproxEqAbs(hype.balanceOf(alice), 2.253 ether + 2.029 ether, 100);
     }
+
+    function test_FinalizeRequiresRollFirst() public {
+        vm.prank(alice);
+        gate.deposit(100 ether);
+        uint256 end0 = _end(0);
+        vm.warp(end0 + gate.HYPE_FINALIZE_DELAY());
+        vm.expectRevert(EpochHNestGateV2.EpochNotClosed.selector);
+        gate.finalizeHype(0);
+
+        gate.rollEpoch();
+        gate.finalizeHype(0);
+
+        vault.creditResidual(address(gate), 5 ether);
+        gate.syncGrowthHype();
+        (,,,,,,,, uint256 allocated0,,,) = gate.epochs(0);
+        assertEq(allocated0, 0);
+        assertEq(gate.pendingGrowth(0, alice), 5 ether);
+    }
+
+    function test_NoCarryResidualGoesToCurrentAllocateNotFutureCarry() public {
+        vm.prank(alice);
+        gate.deposit(100 ether);
+        vault.creditResidual(address(gate), 3 ether);
+        gate.syncGrowthHype();
+
+        (,,,,,,,, uint256 allocated0,,,) = gate.epochs(0);
+        assertEq(allocated0, 3 ether);
+        assertEq(gate.growthRemainder(), 0);
+
+        uint256 end0 = _end(0);
+        vm.warp(end0);
+        gate.rollEpoch();
+        vm.prank(bob);
+        gate.deposit(100 ether);
+        assertEq(gate.pendingGrowth(1, bob), 0);
+        assertEq(gate.pendingGrowth(0, alice), 0);
+    }
 }
