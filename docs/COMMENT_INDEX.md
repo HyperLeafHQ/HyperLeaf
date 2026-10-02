@@ -17,6 +17,8 @@ Only formal asset evaluations receive a numbered `#NN`. Watchlist / No-Go / Alre
 | #49 | KAIA / Kaia | Native / public-delegation staking position; productive staking accounting; canonical HyperEVM route required | Selected / P1 Research / Production Gated | [5653691020](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5653691020) |
 | #50 | DTF / Down To Finance | Verified DTF staking-position / future rebasing claim representation; no raw DTF wrapper | Selected / P1 Research / Production Gated | [5659805040](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5659805040) |
 | #51 | FALCON / Falcon Staking Vaults — XAUt / FF / VELVET / AIO / ESPORTS / SPYx | Verified Falcon vault position; prioritize XAUt and non-KYC onchain vaults; no raw spot wrapper | Selected / P1 Research / Production Gated | [5659805040](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5659805040) |
+| #52 | ALT / AltLayer | Verified reALT / staking-position representation; no raw ALT wrapper | Selected / P2 Research / Production Gated / Low Priority | [5703100844](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5703100844) |
+| #53 | OpenEden / TBILL | TBILL fund-interest / NAV position; BSC-first, Ethereum fallback; no raw EDEN wrapper | Selected / P1 Research / BSC-first / Production Gated | [5957846898](https://github.com/HyperLeafHQ/HyperLeaf/issues/7#issuecomment-5957846898) |
 
 ## Non-series completed / consolidated evaluations
 
