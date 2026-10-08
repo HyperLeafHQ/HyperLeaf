@@ -138,7 +138,6 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     error AlreadyBooked();
     error AmountExceedsUnassigned(uint256 amount, uint256 unassigned);
     error NothingToAttribute();
-    error GrowthTooSmall();
     error WeekNotBooked();
     error EpochsBehind();
     error EnforcedPause();
@@ -279,6 +278,8 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
 
     /// @notice Credit `amount` of unassigned WHYPE to one ended epoch, once.
     ///         Split by hNEST-seconds: this epoch's deposits vs older carry.
+    ///         Growth that cannot form a non-zero index stays unassigned dust.
+    ///         That does not block `weekBooked` or `finalizeHype`.
     function bookEpoch(uint256 epochId, uint256 amount) external onlyKeeper nonReentrant {
         if (amount == 0) revert ZeroAmount();
         Epoch storage ep = epochs[epochId];
@@ -301,10 +302,11 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         uint256 accounted;
         if (growthShare > 0) {
             per = Math.mulDiv(growthShare, GROWTH_INDEX_SCALE, carryPts);
-            if (per == 0) revert GrowthTooSmall();
-            accounted = Math.mulDiv(per, carryPts, GROWTH_INDEX_SCALE);
-            growthPerPoint[epochId] = per;
-            growthAccounted[epochId] = accounted;
+            if (per > 0) {
+                accounted = Math.mulDiv(per, carryPts, GROWTH_INDEX_SCALE);
+                growthPerPoint[epochId] = per;
+                growthAccounted[epochId] = accounted;
+            }
         }
         uint256 dust = growthShare - accounted;
         unassignedHype = unassignedHype - amount + dust;

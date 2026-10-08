@@ -246,6 +246,55 @@ contract EpochHNestGateV3Test is Test {
         assertEq(pot, 2 ether);
         assertEq(gate.nestIn(0, alice), 10 ether);
     }
+
+    function test_p2_tinyGrowthDoesNotBlockFinalize() public {
+        vm.prank(alice);
+        gate.deposit(10 ether);
+        _rollTo(1);
+        vm.prank(bob);
+        gate.deposit(10 ether);
+
+        vm.warp(_end(1));
+        vm.prank(keeper);
+        gate.fundUnassigned(2);
+        vm.prank(keeper);
+        gate.bookEpoch(1, 2);
+
+        assertTrue(gate.weekBooked(1));
+        assertEq(gate.growthPerPoint(1), 0);
+        assertEq(gate.growthAccounted(1), 0);
+        (,,,,,, uint256 pot,,) = gate.epochs(1);
+        assertGt(pot, 0);
+        assertEq(gate.unassignedHype(), 2 - pot);
+
+        gate.rollEpoch();
+        _finalize(1);
+        (,,,,,,, bool closed, bool hypeFinal) = gate.epochs(1);
+        assertTrue(closed);
+        assertTrue(hypeFinal);
+    }
+
+    function test_p2_oneWeiCarryResidualStillBooks() public {
+        vm.prank(alice);
+        gate.deposit(10 ether);
+        _rollTo(1);
+        vm.warp(_end(1));
+
+        vm.prank(keeper);
+        gate.fundUnassigned(1);
+        vm.prank(keeper);
+        gate.bookEpoch(1, 1);
+
+        assertTrue(gate.weekBooked(1));
+        assertEq(gate.growthPerPoint(1), 0);
+        assertEq(gate.unassignedHype(), 1);
+        assertGt(gate.carryPointSupply(1), 1e18);
+
+        gate.rollEpoch();
+        _finalize(1);
+        (,,,,,,,, bool hypeFinal) = gate.epochs(1);
+        assertTrue(hypeFinal);
+    }
 }
 
 contract GateV3Step2 is EpochHNestGateV3 {
