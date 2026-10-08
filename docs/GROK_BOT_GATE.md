@@ -34,8 +34,10 @@ Do **not** touch NestVault `0x4f6615…`. Do **not** deploy `LeafClaimFill`.
 | WHYPE | `0x5555555555555555555555555555555555555555` |
 | Owner | `0x24458f0bC44C4607172d1151Cd938012Be33156e` |
 | Guardian | `0x12dF4528E7Cc3db07A509c966c6405b69A25Ef2e` |
-| Keeper | `0xc321DD8826a30D8a6D973821a3dB7b8090955887` |
+| Keeper | `0x7f78E9D21886e18C83832E549467d08cDb93BF18` |
 | feeRecipient | `0x76c8c4586F0a3d335CF7192eBbB4FE6Ed5Af3804` |
+
+0xc321… 已作废（2026-10-06 钥泄露），禁止使用；注意仿冒地址 0x7f787d60…f18
 
 `OWNER` ≠ `GUARDIAN` ≠ `KEEPER`. `PRIVATE_KEY` is the hot wallet. Transfer
 ownership out. Do not leave this bot as owner.
@@ -47,7 +49,7 @@ ownership out. Do not leave this bot as owner.
 ```
 OWNER=0x24458f0bC44C4607172d1151Cd938012Be33156e \
 GUARDIAN=0x12dF4528E7Cc3db07A509c966c6405b69A25Ef2e \
-KEEPER=0xc321DD8826a30D8a6D973821a3dB7b8090955887 \
+KEEPER=0x7f78E9D21886e18C83832E549467d08cDb93BF18 \
 FEE_RECIPIENT=0x76c8c4586F0a3d335CF7192eBbB4FE6Ed5Af3804 \
 forge script script/DeployEpochHNestGate.s.sol:DeployEpochHNestGate \
   --rpc-url hyperevm --broadcast --private-key $PRIVATE_KEY
