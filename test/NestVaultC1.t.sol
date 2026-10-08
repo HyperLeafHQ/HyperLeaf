@@ -822,9 +822,109 @@ contract NestVaultC1Test is Test {
         hype.mint(address(vault), 1 ether);
         vault.settleInboundHype();
         assertEq(vault.hypeEpochId(), 1);
+        vault.checkpointHype(gate);
         vm.prank(gate);
         hNest.transfer(alice, 50 ether);
         assertEq(hNest.balanceOf(alice), 50 ether);
+    }
+
+    /// F-02: dust at the week boundary must not hand the later pot to a new buyer.
+    function testF02DustFreezeDoesNotPayLaterBuyer() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+        skip(7 days);
+
+        hype.mint(address(vault), 100);
+        vault.settleInboundHype();
+        assertEq(vault.hypeEpochId(), 1);
+
+        vault.checkpointHype(alice);
+        vm.prank(alice);
+        hNest.transfer(bob, 50 ether);
+
+        hype.mint(address(vault), 100 ether);
+        vault.settleInboundHype();
+
+        vm.prank(alice);
+        vault.claimResidualHype();
+        vm.prank(bob);
+        vault.claimResidualHype();
+
+        assertEq(hype.balanceOf(bob), 0);
+        uint256 net = 100 ether - 1 ether + 99; // 100 ether pot, 1% fee, plus the 100 wei dust net
+        assertApproxEqAbs(hype.balanceOf(alice), net, 2);
+    }
+
+    /// F-07: a transfer after more than 52 frozen weeks must not drop a week.
+    function testF07TransferDoesNotSkipUncreditedEpoch() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+
+        uint256 epochs = 54;
+        for (uint256 i; i < epochs; ++i) {
+            skip(7 days);
+            hype.mint(address(vault), 1 ether);
+            vault.settleInboundHype();
+        }
+        assertEq(vault.hypeEpochId(), epochs);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(NestVaultC1.NotCaughtUp.selector, alice));
+        hNest.transfer(bob, 1 ether);
+
+        while (vault.userHypeEpoch(alice) < vault.hypeEpochId()) {
+            vault.checkpointHype(alice);
+        }
+        assertApproxEqAbs(hype.balanceOf(alice), 54 ether - (54 ether / 100), 1000);
+
+        vm.prank(alice);
+        hNest.transfer(bob, 1 ether);
+        vault.checkpointHype(bob);
+        assertEq(hype.balanceOf(bob), 0);
+    }
+
+    /// NEW-01: an address that did not hold during the frozen weeks cannot be
+    /// replayed into those weeks by receiving hNEST afterwards.
+    function testNew01FreshReceiverDoesNotInheritHistory() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+        for (uint256 i; i < 20; ++i) {
+            skip(7 days);
+            hype.mint(address(vault), 1 ether);
+            vault.settleInboundHype();
+        }
+        while (vault.userHypeEpoch(alice) < vault.hypeEpochId()) {
+            vault.checkpointHype(alice);
+        }
+        uint256 aliceGot = hype.balanceOf(alice);
+        vm.prank(alice);
+        hNest.transfer(bob, 100 ether);
+        vault.checkpointHype(bob);
+        vm.prank(bob);
+        vault.claimResidualHype();
+        assertEq(hype.balanceOf(bob), 0);
+        assertApproxEqAbs(aliceGot, 20 ether - (20 ether / 100), 1000);
+    }
+
+    /// NEW-08: one frozen week is caught up inside the transfer. The seller is
+    /// paid at the pre-transfer balance; the buyer does not inherit that week.
+    function testNew08OneWeekBehindTransferCatchesUp() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+        skip(7 days);
+        hype.mint(address(vault), 1 ether);
+        vault.settleInboundHype();
+
+        vm.prank(alice);
+        hNest.transfer(bob, 40 ether);
+
+        assertEq(hNest.balanceOf(bob), 40 ether);
+        assertApproxEqAbs(hype.balanceOf(alice), 1 ether - 0.01 ether, 10);
+        assertEq(hype.balanceOf(bob), 0);
     }
 }
 
