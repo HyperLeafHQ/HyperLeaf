@@ -317,7 +317,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
 
     function claimResidualHype() external nonReentrant {
         _settleInboundHype();
-        _accrueUser(msg.sender, HYPE_CREDIT_BATCH, false);
+        _accrueUser(msg.sender, HYPE_CREDIT_BATCH);
         _payout(msg.sender);
     }
 
@@ -508,14 +508,18 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
 
     function _checkpoint(address user, uint256 maxEpochs) internal {
         _settleInboundHype();
-        _accrueUser(user, maxEpochs, false);
+        _accrueUser(user, maxEpochs);
         _payout(user);
     }
 
-    /// @dev Transfer, deposit, and yield-fee mint. Reverts if closed weeks are still unpaid.
+    /// @dev Transfer, deposit, and yield-fee mint. Walks up to one batch at the
+    ///      balance still held, then reverts if older weeks remain. One frozen
+    ///      week no longer blocks a transfer. More than 16 weeks still needs
+    ///      `checkpointHype` first, so a later balance cannot be applied backwards.
     function _claimResidualHypeInternal(address user) internal {
         _settleInboundHype();
-        _accrueUser(user, 0, true);
+        _accrueUser(user, HYPE_CREDIT_BATCH);
+        if (lastHypePoke[user] != 0 && userHypeEpoch[user] < hypeEpochId) revert NotCaughtUp(user);
         _payout(user);
     }
 
@@ -535,7 +539,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
         }
     }
 
-    function _accrueUser(address user, uint256 maxEpochs, bool strict) internal {
+    function _accrueUser(address user, uint256 maxEpochs) internal {
         if (user == address(0)) return;
         _accrueGlobal();
         uint256 bal = hNest.balanceOf(user);
@@ -545,10 +549,7 @@ contract NestVaultC1 is Ownable2Step, ReentrancyGuard, Pausable, IERC721Receiver
             return;
         }
         _payTip(user);
-        if (userHypeEpoch[user] < hypeEpochId) {
-            if (strict) revert NotCaughtUp(user);
-            _creditClosedEpochs(user, bal, maxEpochs);
-        }
+        if (userHypeEpoch[user] < hypeEpochId) _creditClosedEpochs(user, bal, maxEpochs);
         uint256 last = lastHypePoke[user];
         if (userHypeEpoch[user] == hypeEpochId && block.timestamp > last) {
             hypePoints[user] += bal * (block.timestamp - last);

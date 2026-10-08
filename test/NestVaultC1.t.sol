@@ -908,6 +908,24 @@ contract NestVaultC1Test is Test {
         assertEq(hype.balanceOf(bob), 0);
         assertApproxEqAbs(aliceGot, 20 ether - (20 ether / 100), 1000);
     }
+
+    /// NEW-08: one frozen week is caught up inside the transfer. The seller is
+    /// paid at the pre-transfer balance; the buyer does not inherit that week.
+    function testNew08OneWeekBehindTransferCatchesUp() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+        skip(7 days);
+        hype.mint(address(vault), 1 ether);
+        vault.settleInboundHype();
+
+        vm.prank(alice);
+        hNest.transfer(bob, 40 ether);
+
+        assertEq(hNest.balanceOf(bob), 40 ether);
+        assertApproxEqAbs(hype.balanceOf(alice), 1 ether - 0.01 ether, 10);
+        assertEq(hype.balanceOf(bob), 0);
+    }
 }
 
 contract StrayNft is ERC721 {

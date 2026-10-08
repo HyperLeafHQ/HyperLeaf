@@ -15,6 +15,7 @@ interface INestVaultDepositV3 {
     function nestToken() external view returns (address);
     function pendingResidualHype(address user) external view returns (uint256);
     function claimResidualHype() external;
+    function checkpointHype(address user) external;
     function depositGate() external view returns (address);
 }
 
@@ -448,6 +449,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         if (newDepositPay > 0) hypeToken.safeTransfer(msg.sender, newDepositPay);
         if (growthPay > 0) hypeToken.safeTransfer(msg.sender, growthPay);
         hypeReserved -= newDepositPay + growthPay;
+        vault.checkpointHype(msg.sender);
         hNest.safeTransfer(msg.sender, t.hNestAmount);
         emit Claimed(epochId, msg.sender, t.hNestAmount, newDepositPay, growthPay);
     }
@@ -544,6 +546,9 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     }
 
     function _syncResidual() internal returns (uint256 pulled) {
+        // A weekly freeze can leave pending at 0. Still walk the gate, or the
+        // next deposit and hNEST transfer revert until an outside checkpoint.
+        vault.checkpointHype(address(this));
         if (vault.pendingResidualHype(address(this)) > 0) {
             uint256 before = hypeToken.balanceOf(address(this));
             vault.claimResidualHype();

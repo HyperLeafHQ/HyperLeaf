@@ -329,6 +329,12 @@ contract EpochHNestGateV3Test is Test {
         assertTrue(hypeFinal);
         assertEq(gate.unassignedHype(), 0);
     }
+
+    function test_syncCheckpointsGateWhenPendingIsZero() public {
+        assertEq(vault.checkpointCalls(), 0);
+        gate.syncResidual();
+        assertEq(vault.checkpointCalls(), 1);
+    }
 }
 
 contract GateV3Step2 is EpochHNestGateV3 {
