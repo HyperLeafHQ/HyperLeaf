@@ -273,6 +273,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         if (amount == 0) revert ZeroAmount();
         hypeToken.safeTransferFrom(msg.sender, address(this), amount);
         unassignedHype += amount;
+        hypeReserved += amount;
         emit UnassignedFunded(msg.sender, amount);
     }
 
@@ -315,14 +316,17 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         emit EpochBooked(epochId, amount, newShare, accounted, per);
     }
 
-    function finalizeHype(uint256 epochId) external {
+    function finalizeHype(uint256 epochId) external nonReentrant {
         Epoch storage ep = epochs[epochId];
         if (ep.start == 0) revert EpochNotOpen();
         if (!ep.closed) revert EpochNotClosed();
         if (ep.hypeFinal) revert HypeAlreadyFinal();
         uint256 earliest = ep.end + HYPE_FINALIZE_DELAY;
         if (block.timestamp < earliest) revert FinalizeTooEarly(earliest);
-        if ((ep.totalNest > 0 || carryPointSupply[epochId] > 0) && !weekBooked[epochId]) revert WeekNotBooked();
+        _syncResidual();
+        if ((ep.totalNest > 0 || carryPointSupply[epochId] > 0) && !weekBooked[epochId] && unassignedHype > 0) {
+            revert WeekNotBooked();
+        }
         ep.hypeFinal = true;
         emit HypeFinalized(epochId, ep.hypeAllocated);
     }
@@ -356,6 +360,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         uint256 paid = _payTrancheGrowth(depositEpoch, msg.sender, trancheIndex);
         if (paid == 0) revert NothingOwed();
         hypeToken.safeTransfer(msg.sender, paid);
+        hypeReserved -= paid;
         emit GrowthClaimed(msg.sender, paid);
     }
 
@@ -434,6 +439,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         uint256 growthPay = _payTrancheGrowth(epochId, msg.sender, trancheIndex);
         if (newDepositPay > 0) hypeToken.safeTransfer(msg.sender, newDepositPay);
         if (growthPay > 0) hypeToken.safeTransfer(msg.sender, growthPay);
+        hypeReserved -= newDepositPay + growthPay;
         hNest.safeTransfer(msg.sender, t.hNestAmount);
         emit Claimed(epochId, msg.sender, t.hNestAmount, newDepositPay, growthPay);
     }
@@ -530,14 +536,28 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     }
 
     function _syncResidual() internal returns (uint256 pulled) {
-        if (vault.pendingResidualHype(address(this)) == 0) return 0;
-        uint256 before = hypeToken.balanceOf(address(this));
-        vault.claimResidualHype();
-        pulled = hypeToken.balanceOf(address(this)) - before;
-        if (pulled == 0) return 0;
-        unassignedHype += pulled;
-        emit ResidualSynced(pulled, unassignedHype);
+        if (vault.pendingResidualHype(address(this)) > 0) {
+            uint256 before = hypeToken.balanceOf(address(this));
+            vault.claimResidualHype();
+            uint256 got = hypeToken.balanceOf(address(this)) - before;
+            if (got > 0) {
+                unassignedHype += got;
+                hypeReserved += got;
+                pulled = got;
+            }
+        }
+        uint256 bal = hypeToken.balanceOf(address(this));
+        if (bal > hypeReserved) {
+            uint256 extra = bal - hypeReserved;
+            unassignedHype += extra;
+            hypeReserved += extra;
+            pulled += extra;
+        }
+        if (pulled > 0) emit ResidualSynced(pulled, unassignedHype);
     }
 
-    uint256[48] private __gap;
+    /// @dev WHYPE the Gate has already counted. Direct transfers sit above this and sync in.
+    uint256 public hypeReserved;
+
+    uint256[47] private __gap;
 }

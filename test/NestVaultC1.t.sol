@@ -826,6 +826,65 @@ contract NestVaultC1Test is Test {
         hNest.transfer(alice, 50 ether);
         assertEq(hNest.balanceOf(alice), 50 ether);
     }
+
+    /// F-02: dust at the week boundary must not hand the later pot to a new buyer.
+    function testF02DustFreezeDoesNotPayLaterBuyer() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+        skip(7 days);
+
+        hype.mint(address(vault), 100);
+        vault.settleInboundHype();
+        assertEq(vault.hypeEpochId(), 1);
+
+        vm.prank(alice);
+        hNest.transfer(bob, 50 ether);
+
+        hype.mint(address(vault), 100 ether);
+        vault.settleInboundHype();
+
+        vm.prank(alice);
+        vault.claimResidualHype();
+        vm.prank(bob);
+        vault.claimResidualHype();
+
+        assertEq(hype.balanceOf(bob), 0);
+        uint256 net = 100 ether - 1 ether + 99; // 100 ether pot, 1% fee, plus the 100 wei dust net
+        assertApproxEqAbs(hype.balanceOf(alice), net, 2);
+    }
+
+    /// F-07: a transfer after more than 52 frozen weeks must not drop a week.
+    function testF07TransferDoesNotSkipUncreditedEpoch() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+
+        uint256 epochs = 54;
+        for (uint256 i; i < epochs; ++i) {
+            skip(7 days);
+            hype.mint(address(vault), 1 ether);
+            vault.settleInboundHype();
+        }
+        assertEq(vault.hypeEpochId(), epochs);
+
+        uint256 before = hype.balanceOf(alice);
+        vm.prank(alice);
+        hNest.transfer(bob, 1 ether);
+        uint256 afterTransfer = hype.balanceOf(alice);
+
+        vm.prank(alice);
+        vault.checkpointHype(alice);
+        vm.prank(alice);
+        vault.claimResidualHype();
+
+        uint256 got = hype.balanceOf(alice) - before;
+        // 54 ether in, 1% fee. Alice held the whole supply until the transfer,
+        // which is after every freeze, so she is owed the full net.
+        assertApproxEqAbs(got, 54 ether - (54 ether / 100), 1000);
+        assertGt(afterTransfer, before);
+        assertGt(got, afterTransfer - before);
+    }
 }
 
 contract StrayNft is ERC721 {

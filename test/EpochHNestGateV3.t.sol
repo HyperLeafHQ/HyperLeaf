@@ -295,6 +295,30 @@ contract EpochHNestGateV3Test is Test {
         (,,,,,,,, bool hypeFinal) = gate.epochs(1);
         assertTrue(hypeFinal);
     }
+
+    function test_f01_unsolicitedHypeIsBookable() public {
+        vm.prank(alice);
+        gate.deposit(10 ether);
+        vm.warp(_end(0));
+        hype.mint(address(gate), 4 ether);
+        assertEq(gate.syncResidual(), 4 ether);
+        assertEq(gate.unassignedHype(), 4 ether);
+        vm.prank(keeper);
+        gate.bookEpoch(0, 4 ether);
+        assertTrue(gate.weekBooked(0));
+        assertEq(gate.hypeReserved(), 4 ether);
+    }
+
+    function test_f04_emptyWeekCanFinalize() public {
+        vm.prank(alice);
+        gate.deposit(10 ether);
+        _rollTo(1);
+        _finalize(0);
+        (,,,,,,, bool closed, bool hypeFinal) = gate.epochs(0);
+        assertTrue(closed);
+        assertTrue(hypeFinal);
+        assertEq(gate.unassignedHype(), 0);
+    }
 }
 
 contract GateV3Step2 is EpochHNestGateV3 {
