@@ -43,6 +43,9 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     uint256 public constant NEST_EPOCH_LENGTH = 7 days;
     uint256 public constant HNEST_MINT_DELAY = 8 days;
     uint256 public constant HYPE_FINALIZE_DELAY = 1 days;
+    /// @dev An unbooked week cannot be finalized until a full extra week has passed,
+    ///      and only by keeper, owner, or guardian. Stops an empty finalize before HYPE arrives.
+    uint256 public constant HYPE_EMPTY_FINALIZE_DELAY = 7 days;
     uint256 public constant GROWTH_INDEX_SCALE = 1e18;
     uint256 public constant MAX_TRANCHES_PER_EPOCH = 32;
     uint256 public constant MAX_ROLLS_PER_TX = 60;
@@ -139,6 +142,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     error AmountExceedsUnassigned(uint256 amount, uint256 unassigned);
     error NothingToAttribute();
     error WeekNotBooked();
+    error NotEmptyFinalizer();
     error EpochsBehind();
     error EnforcedPause();
 
@@ -324,8 +328,12 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         uint256 earliest = ep.end + HYPE_FINALIZE_DELAY;
         if (block.timestamp < earliest) revert FinalizeTooEarly(earliest);
         _syncResidual();
-        if ((ep.totalNest > 0 || carryPointSupply[epochId] > 0) && !weekBooked[epochId] && unassignedHype > 0) {
-            revert WeekNotBooked();
+        bool needsBook = (ep.totalNest > 0 || carryPointSupply[epochId] > 0) && !weekBooked[epochId];
+        if (needsBook) {
+            if (unassignedHype > 0) revert WeekNotBooked();
+            uint256 emptyAt = ep.end + HYPE_EMPTY_FINALIZE_DELAY;
+            if (block.timestamp < emptyAt) revert FinalizeTooEarly(emptyAt);
+            if (msg.sender != keeper && msg.sender != owner && msg.sender != guardian) revert NotEmptyFinalizer();
         }
         ep.hypeFinal = true;
         emit HypeFinalized(epochId, ep.hypeAllocated);

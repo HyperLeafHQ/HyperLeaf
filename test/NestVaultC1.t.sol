@@ -822,6 +822,7 @@ contract NestVaultC1Test is Test {
         hype.mint(address(vault), 1 ether);
         vault.settleInboundHype();
         assertEq(vault.hypeEpochId(), 1);
+        vault.checkpointHype(gate);
         vm.prank(gate);
         hNest.transfer(alice, 50 ether);
         assertEq(hNest.balanceOf(alice), 50 ether);
@@ -838,6 +839,7 @@ contract NestVaultC1Test is Test {
         vault.settleInboundHype();
         assertEq(vault.hypeEpochId(), 1);
 
+        vault.checkpointHype(alice);
         vm.prank(alice);
         hNest.transfer(bob, 50 ether);
 
@@ -868,22 +870,43 @@ contract NestVaultC1Test is Test {
         }
         assertEq(vault.hypeEpochId(), epochs);
 
-        uint256 before = hype.balanceOf(alice);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(NestVaultC1.NotCaughtUp.selector, alice));
+        hNest.transfer(bob, 1 ether);
+
+        while (vault.userHypeEpoch(alice) < vault.hypeEpochId()) {
+            vault.checkpointHype(alice);
+        }
+        assertApproxEqAbs(hype.balanceOf(alice), 54 ether - (54 ether / 100), 1000);
+
         vm.prank(alice);
         hNest.transfer(bob, 1 ether);
-        uint256 afterTransfer = hype.balanceOf(alice);
+        vault.checkpointHype(bob);
+        assertEq(hype.balanceOf(bob), 0);
+    }
 
+    /// NEW-01: an address that did not hold during the frozen weeks cannot be
+    /// replayed into those weeks by receiving hNEST afterwards.
+    function testNew01FreshReceiverDoesNotInheritHistory() public {
+        _deposit(100 ether);
+        vm.prank(gate);
+        hNest.transfer(alice, 100 ether);
+        for (uint256 i; i < 20; ++i) {
+            skip(7 days);
+            hype.mint(address(vault), 1 ether);
+            vault.settleInboundHype();
+        }
+        while (vault.userHypeEpoch(alice) < vault.hypeEpochId()) {
+            vault.checkpointHype(alice);
+        }
+        uint256 aliceGot = hype.balanceOf(alice);
         vm.prank(alice);
-        vault.checkpointHype(alice);
-        vm.prank(alice);
+        hNest.transfer(bob, 100 ether);
+        vault.checkpointHype(bob);
+        vm.prank(bob);
         vault.claimResidualHype();
-
-        uint256 got = hype.balanceOf(alice) - before;
-        // 54 ether in, 1% fee. Alice held the whole supply until the transfer,
-        // which is after every freeze, so she is owed the full net.
-        assertApproxEqAbs(got, 54 ether - (54 ether / 100), 1000);
-        assertGt(afterTransfer, before);
-        assertGt(got, afterTransfer - before);
+        assertEq(hype.balanceOf(bob), 0);
+        assertApproxEqAbs(aliceGot, 20 ether - (20 ether / 100), 1000);
     }
 }
 

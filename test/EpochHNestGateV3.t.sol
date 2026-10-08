@@ -313,7 +313,17 @@ contract EpochHNestGateV3Test is Test {
         vm.prank(alice);
         gate.deposit(10 ether);
         _rollTo(1);
-        _finalize(0);
+        uint256 emptyAt = _end(0) + gate.HYPE_EMPTY_FINALIZE_DELAY();
+        vm.warp(_end(0) + 1 days);
+        vm.prank(stranger);
+        vm.expectRevert(abi.encodeWithSelector(EpochHNestGateV3.FinalizeTooEarly.selector, emptyAt));
+        gate.finalizeHype(0);
+        vm.warp(emptyAt);
+        vm.prank(stranger);
+        vm.expectRevert(EpochHNestGateV3.NotEmptyFinalizer.selector);
+        gate.finalizeHype(0);
+        vm.prank(keeper);
+        gate.finalizeHype(0);
         (,,,,,,, bool closed, bool hypeFinal) = gate.epochs(0);
         assertTrue(closed);
         assertTrue(hypeFinal);
