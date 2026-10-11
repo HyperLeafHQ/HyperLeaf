@@ -25,6 +25,12 @@ contract MockNestVaultDeposit {
         pendingResidualHype[user] += amount;
     }
 
+    uint256 public checkpointCalls;
+
+    function checkpointHype(address) external {
+        checkpointCalls += 1;
+    }
+
     function claimResidualHype() external {
         uint256 amt = pendingResidualHype[msg.sender];
         pendingResidualHype[msg.sender] = 0;

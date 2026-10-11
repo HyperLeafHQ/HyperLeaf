@@ -295,6 +295,46 @@ contract EpochHNestGateV3Test is Test {
         (,,,,,,,, bool hypeFinal) = gate.epochs(1);
         assertTrue(hypeFinal);
     }
+
+    function test_f01_unsolicitedHypeIsBookable() public {
+        vm.prank(alice);
+        gate.deposit(10 ether);
+        vm.warp(_end(0));
+        hype.mint(address(gate), 4 ether);
+        assertEq(gate.syncResidual(), 4 ether);
+        assertEq(gate.unassignedHype(), 4 ether);
+        vm.prank(keeper);
+        gate.bookEpoch(0, 4 ether);
+        assertTrue(gate.weekBooked(0));
+        assertEq(gate.hypeReserved(), 4 ether);
+    }
+
+    function test_f04_emptyWeekCanFinalize() public {
+        vm.prank(alice);
+        gate.deposit(10 ether);
+        _rollTo(1);
+        uint256 emptyAt = _end(0) + gate.HYPE_EMPTY_FINALIZE_DELAY();
+        vm.warp(_end(0) + 1 days);
+        vm.prank(stranger);
+        vm.expectRevert(abi.encodeWithSelector(EpochHNestGateV3.FinalizeTooEarly.selector, emptyAt));
+        gate.finalizeHype(0);
+        vm.warp(emptyAt);
+        vm.prank(stranger);
+        vm.expectRevert(EpochHNestGateV3.NotEmptyFinalizer.selector);
+        gate.finalizeHype(0);
+        vm.prank(keeper);
+        gate.finalizeHype(0);
+        (,,,,,,, bool closed, bool hypeFinal) = gate.epochs(0);
+        assertTrue(closed);
+        assertTrue(hypeFinal);
+        assertEq(gate.unassignedHype(), 0);
+    }
+
+    function test_syncCheckpointsGateWhenPendingIsZero() public {
+        assertEq(vault.checkpointCalls(), 0);
+        gate.syncResidual();
+        assertEq(vault.checkpointCalls(), 1);
+    }
 }
 
 contract GateV3Step2 is EpochHNestGateV3 {

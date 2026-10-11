@@ -15,6 +15,7 @@ interface INestVaultDepositV3 {
     function nestToken() external view returns (address);
     function pendingResidualHype(address user) external view returns (uint256);
     function claimResidualHype() external;
+    function checkpointHype(address user) external;
     function depositGate() external view returns (address);
 }
 
@@ -43,6 +44,9 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     uint256 public constant NEST_EPOCH_LENGTH = 7 days;
     uint256 public constant HNEST_MINT_DELAY = 8 days;
     uint256 public constant HYPE_FINALIZE_DELAY = 1 days;
+    /// @dev An unbooked week cannot be finalized until a full extra week has passed,
+    ///      and only by keeper, owner, or guardian. Stops an empty finalize before HYPE arrives.
+    uint256 public constant HYPE_EMPTY_FINALIZE_DELAY = 7 days;
     uint256 public constant GROWTH_INDEX_SCALE = 1e18;
     uint256 public constant MAX_TRANCHES_PER_EPOCH = 32;
     uint256 public constant MAX_ROLLS_PER_TX = 60;
@@ -139,6 +143,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     error AmountExceedsUnassigned(uint256 amount, uint256 unassigned);
     error NothingToAttribute();
     error WeekNotBooked();
+    error NotEmptyFinalizer();
     error EpochsBehind();
     error EnforcedPause();
 
@@ -273,6 +278,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         if (amount == 0) revert ZeroAmount();
         hypeToken.safeTransferFrom(msg.sender, address(this), amount);
         unassignedHype += amount;
+        hypeReserved += amount;
         emit UnassignedFunded(msg.sender, amount);
     }
 
@@ -315,14 +321,21 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         emit EpochBooked(epochId, amount, newShare, accounted, per);
     }
 
-    function finalizeHype(uint256 epochId) external {
+    function finalizeHype(uint256 epochId) external nonReentrant {
         Epoch storage ep = epochs[epochId];
         if (ep.start == 0) revert EpochNotOpen();
         if (!ep.closed) revert EpochNotClosed();
         if (ep.hypeFinal) revert HypeAlreadyFinal();
         uint256 earliest = ep.end + HYPE_FINALIZE_DELAY;
         if (block.timestamp < earliest) revert FinalizeTooEarly(earliest);
-        if ((ep.totalNest > 0 || carryPointSupply[epochId] > 0) && !weekBooked[epochId]) revert WeekNotBooked();
+        _syncResidual();
+        bool needsBook = (ep.totalNest > 0 || carryPointSupply[epochId] > 0) && !weekBooked[epochId];
+        if (needsBook) {
+            if (unassignedHype > 0) revert WeekNotBooked();
+            uint256 emptyAt = ep.end + HYPE_EMPTY_FINALIZE_DELAY;
+            if (block.timestamp < emptyAt) revert FinalizeTooEarly(emptyAt);
+            if (msg.sender != keeper && msg.sender != owner && msg.sender != guardian) revert NotEmptyFinalizer();
+        }
         ep.hypeFinal = true;
         emit HypeFinalized(epochId, ep.hypeAllocated);
     }
@@ -356,6 +369,7 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         uint256 paid = _payTrancheGrowth(depositEpoch, msg.sender, trancheIndex);
         if (paid == 0) revert NothingOwed();
         hypeToken.safeTransfer(msg.sender, paid);
+        hypeReserved -= paid;
         emit GrowthClaimed(msg.sender, paid);
     }
 
@@ -434,6 +448,8 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
         uint256 growthPay = _payTrancheGrowth(epochId, msg.sender, trancheIndex);
         if (newDepositPay > 0) hypeToken.safeTransfer(msg.sender, newDepositPay);
         if (growthPay > 0) hypeToken.safeTransfer(msg.sender, growthPay);
+        hypeReserved -= newDepositPay + growthPay;
+        vault.checkpointHype(msg.sender);
         hNest.safeTransfer(msg.sender, t.hNestAmount);
         emit Claimed(epochId, msg.sender, t.hNestAmount, newDepositPay, growthPay);
     }
@@ -530,14 +546,31 @@ contract EpochHNestGateV3 is Initializable, UUPSUpgradeable, ReentrancyGuard {
     }
 
     function _syncResidual() internal returns (uint256 pulled) {
-        if (vault.pendingResidualHype(address(this)) == 0) return 0;
-        uint256 before = hypeToken.balanceOf(address(this));
-        vault.claimResidualHype();
-        pulled = hypeToken.balanceOf(address(this)) - before;
-        if (pulled == 0) return 0;
-        unassignedHype += pulled;
-        emit ResidualSynced(pulled, unassignedHype);
+        // A weekly freeze can leave pending at 0. Still walk the gate, or the
+        // next deposit and hNEST transfer revert until an outside checkpoint.
+        vault.checkpointHype(address(this));
+        if (vault.pendingResidualHype(address(this)) > 0) {
+            uint256 before = hypeToken.balanceOf(address(this));
+            vault.claimResidualHype();
+            uint256 got = hypeToken.balanceOf(address(this)) - before;
+            if (got > 0) {
+                unassignedHype += got;
+                hypeReserved += got;
+                pulled = got;
+            }
+        }
+        uint256 bal = hypeToken.balanceOf(address(this));
+        if (bal > hypeReserved) {
+            uint256 extra = bal - hypeReserved;
+            unassignedHype += extra;
+            hypeReserved += extra;
+            pulled += extra;
+        }
+        if (pulled > 0) emit ResidualSynced(pulled, unassignedHype);
     }
 
-    uint256[48] private __gap;
+    /// @dev WHYPE the Gate has already counted. Direct transfers sit above this and sync in.
+    uint256 public hypeReserved;
+
+    uint256[47] private __gap;
 }
