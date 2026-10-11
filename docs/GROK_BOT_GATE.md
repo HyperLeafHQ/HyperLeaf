@@ -1,5 +1,10 @@
 # Grok bot — EpochHNestGate redeploy (HyperEVM mainnet)
 
+**Do not run this file.** It deploys the abandoned v1 gate and names the burned
+keeper `0xc321…`. Current Nest map: [`NEST_STATUS.md`](NEST_STATUS.md).
+
+The rest of this file is kept so the rejected `0xB4C43…` deploy can be recognized.
+
 You deploy. You do **not** reuse `0xB4C43e9cE08ff5540e0E240dB7784f47231d519B`.
 That address is the **wrong binary** (`feat/nest-8d-withdraw-gate` @ `7cd3134`).
 It is empty. Leave it. Frontend must not point at it.

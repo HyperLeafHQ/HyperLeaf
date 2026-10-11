@@ -1,6 +1,7 @@
-# NestVault C1 — `feat/nest-c1`
+# NestVault C1
 
-Replaces live v1 `0x4f6615…` for product use. v1 has only test TVL — abandon, do not patch.
+Current code and the four deployed sets: [`NEST_STATUS.md`](NEST_STATUS.md).
+Do not patch v1 `0x4f6615…`. Do not open `0x3f02…420E`. Do not upgrade Gate `0xc45f…7020`.
 
 ## Product
 

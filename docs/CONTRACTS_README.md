@@ -1,6 +1,9 @@
 # hNEST / NestVault — contracts notes
 
-`forge test`; addresses in `src/config/HyperEVMAddresses.sol` and `deployments/`.
+Addresses and which set is current: [`NEST_STATUS.md`](NEST_STATUS.md).
+This page is the short contract reference. It is not a deploy list.
+
+`forge test`; token addresses in `src/config/HyperEVMAddresses.sol`.
 
 For the complete economic and security model, read [`NEST_ARCHITECTURE.md`](NEST_ARCHITECTURE.md) first. This page is intentionally the short contract reference.
 
