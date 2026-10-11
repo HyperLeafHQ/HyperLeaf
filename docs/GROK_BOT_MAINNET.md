@@ -159,7 +159,7 @@ Full `.so` / Store PDA / `WireSolanaPeer` / `ConfigureJitoDest` steps: [`GROK_BO
 
 - HyperEVM AMM / treasury bids
 - hKAITO / hVIRTUALMAX / hSKY / ve-NFT
-- NestVault v2 / NestVaultC1 / replacing live hNEST vault
+- NestVault v2 / NestVaultC1 / replacing the open hNEST vault. This file is not that GO. A later GO has to name a SHA. Map: [`NEST_STATUS.md`](NEST_STATUS.md).
 - C1 protocol redeem
 - Reusing canary addresses as a real vault
 - jupSOL / mSOL / bnSOL / INF

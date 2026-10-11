@@ -35,7 +35,7 @@ Do not wire abandoned / 50-cap / 100-cap addresses. Catalog `dead[]` is the pois
 
 | Ticker | Path | Live |
 | --- | --- | --- |
-| **hNEST** | HyperEVM occupancy | NestVault `0xaE7C4B1bdbEeD5B5923D856Ae53DF357CC86755c` · hNEST `0x6dC42a28CCDAfA0F925953F13439d5976Ef2122F` · Leaf Market `0x6f29EA2894570b893B00C3f2305c184D7080CB34` |
+| **hNEST** | HyperEVM occupancy | Open set is vault `0x77F2682949978E8228fEC661EC45bAD5C6b9d765` · hNEST `0x584ECE6d1beD8308D0D212bF3D82Ec76B2069017` · Gate `0x567E0856429eBb85cB168bB0552E42eE899E457b`. Older open set `0xaE7C…755c` stays on-chain; do not send new deposits there. Next vault is not deployed. Map: [`docs/NEST_STATUS.md`](docs/NEST_STATUS.md). |
 | **hQUID** | Base xSQUID → HyperEVM | SOURCE `0xe406bBADf8802eB26813fb1447f5E2BCAEDB8F25` · OFT `0x3d2768A86EF75382cd0B83BeC7C7B470CAD840C1` · uncapped |
 | **hAVNT** | Base stkAVNT → HyperEVM | SOURCE `0xEfE86555554cfeba484871571550E4b21B2Cd141` · OFT `0x801688aDb52452658Ea165dd554FC0102E36a1b3` · uncapped |
 | **hgSOON** | BSC gSOON → HyperEVM | SOURCE `0x90A08243b0e3Fe1F00E51c0b5A22336600cfA016` · OFT `0x36c405698776fc28DEceDD25B3f081dB851F4c5b` · rate 1% skim |
