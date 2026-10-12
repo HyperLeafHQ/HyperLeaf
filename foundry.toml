@@ -8,7 +8,7 @@ optimizer_runs = 1
 via_ir = true
 ffi = false
 # Public HyperEVM RPC rate-limits forge fork storage; run FOUNDRY_PROFILE=fork for HevForkTest.
-no_match_path = "test/HevFork.t.sol"
+no_match_path = "test/*Fork*.t.sol"
 
 [profile.default.invariant]
 runs = 64

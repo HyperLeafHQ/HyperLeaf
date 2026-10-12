@@ -52,10 +52,14 @@ contract MockSusdm is ERC20 {
         _mint(to, shares);
     }
 
-    function withdraw(uint256 assets, address receiver, address owner_) external returns (uint256 shares) {
-        shares = previewWithdraw(assets);
-        _burn(owner_, shares);
-        require(assetToken.transfer(receiver, assets), "out");
+    error UseDataFunctions();
+
+    function withdraw(uint256, address, address) external pure returns (uint256) {
+        revert UseDataFunctions();
+    }
+
+    function redeem(uint256, address, address) external pure returns (uint256) {
+        revert UseDataFunctions();
     }
 
     function setRate(uint256 r) external {
@@ -131,13 +135,13 @@ contract PaperOtcTest is Test {
         factory.createOffer(10 * ONE, PRICE, 15e6, type(uint256).max);
     }
 
-    function testCancelOpenPaysUsdmPrincipal() public {
+    function testCancelOpenReturnsPrincipalShares() public {
         uint256 before = usdm.balanceOf(seller);
         uint256 id = _offer(10e6);
         vm.prank(seller);
         factory.cancelOffer(id);
-        assertEq(usdm.balanceOf(seller), before);
-        assertEq(susdm.balanceOf(seller), 0);
+        assertEq(usdm.balanceOf(seller), before - 10e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 10e6);
         assertEq(susdm.balanceOf(fee), 0);
     }
 
@@ -158,9 +162,10 @@ contract PaperOtcTest is Test {
         susdm.setRate(2e6);
         vm.prank(seller);
         factory.cancelOffer(id);
-        assertEq(usdm.balanceOf(seller), 1_000_000e6);
+        assertEq(usdm.balanceOf(seller), 1_000_000e6 - 10e6);
         assertEq(susdm.balanceOf(fee), shares / 2);
-        assertEq(susdm.balanceOf(seller), 0);
+        assertEq(susdm.balanceOf(seller), shares / 2);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 10e6);
     }
 
     function testMutualReturnsEachSide() public {
@@ -173,8 +178,10 @@ contract PaperOtcTest is Test {
         factory.agreeMutual(id);
         (,,,,,,,,,, st,,) = _bag(id);
         assertEq(uint256(st), uint256(PaperOtcFactory.State.Mutual));
-        assertEq(usdm.balanceOf(seller), 1_000_000e6);
-        assertEq(usdm.balanceOf(buyer), 1_000_000e6);
+        assertEq(usdm.balanceOf(seller), 1_000_000e6 - 20e6);
+        assertEq(usdm.balanceOf(buyer), 1_000_000e6 - 10e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 20e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(buyer)), 10e6);
     }
 
     function testSellerWalkGivesBuyerBothBags() public {
@@ -183,7 +190,8 @@ contract PaperOtcTest is Test {
         vm.prank(seller);
         factory.sellerWalk(id);
         assertEq(usdm.balanceOf(seller), sellerBefore - 20e6);
-        assertEq(usdm.balanceOf(buyer), 1_000_000e6 + 20e6);
+        assertEq(usdm.balanceOf(buyer), 1_000_000e6 - 10e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(buyer)), 30e6);
         assertEq(susdm.balanceOf(seller), 0);
     }
 
@@ -194,8 +202,10 @@ contract PaperOtcTest is Test {
         vm.warp(block.timestamp + 180 days);
         vm.prank(stranger);
         factory.timeoutCash(id);
-        assertEq(usdm.balanceOf(seller), 1_000_000e6);
-        assertEq(usdm.balanceOf(buyer), 1_000_000e6);
+        assertEq(usdm.balanceOf(seller), 1_000_000e6 - 10e6);
+        assertEq(usdm.balanceOf(buyer), 1_000_000e6 - 10e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 10e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(buyer)), 10e6);
     }
 
     function testDeliverRequiresEnableAndExactBalance() public {
@@ -213,7 +223,8 @@ contract PaperOtcTest is Test {
         vm.prank(seller);
         factory.settlePhysical(id);
         assertEq(paper.balanceOf(buyer), 10e18);
-        assertEq(usdm.balanceOf(seller), 1_000_000e6 + 10e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 20e6);
+        assertEq(usdm.balanceOf(seller), 1_000_000e6 - 10e6);
         assertEq(paper.balanceOf(address(factory)), 0);
     }
 
@@ -243,9 +254,10 @@ contract PaperOtcTest is Test {
         vm.warp(block.timestamp + 48 hours);
         vm.prank(stranger);
         factory.finalizeSellerDefault(id);
-        assertEq(usdm.balanceOf(buyer), 1_000_000e6 + 20e6);
         assertEq(paper.balanceOf(buyer), 0);
         assertEq(paper.balanceOf(address(factory)), 0);
+        assertEq(usdm.balanceOf(buyer), 1_000_000e6 - 10e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(buyer)), 30e6);
     }
 
     function testDisablePausesDeliveryClock() public {
@@ -326,7 +338,8 @@ contract PaperOtcTest is Test {
         uint256 id = _match(10e6);
         vm.warp(block.timestamp + 180 days);
         factory.timeoutCash(id);
-        assertEq(usdm.balanceOf(seller), 1_000_000e6);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 10e6);
+        assertEq(usdm.balanceOf(seller), 1_000_000e6 - 10e6);
     }
 
     function testDeliverThenNoWalk() public {
@@ -339,6 +352,57 @@ contract PaperOtcTest is Test {
         factory.sellerWalk(id);
     }
 
+    function testPauseBlocksTake() public {
+        uint256 id = _offer(10e6);
+        vm.prank(owner);
+        factory.pause();
+        vm.prank(buyer);
+        vm.expectRevert(PaperOtcFactory.OffersPaused.selector);
+        factory.takeOffer(id, type(uint256).max);
+    }
+
+    function testCancelMatchedReverts() public {
+        uint256 id = _match(10e6);
+        vm.prank(seller);
+        vm.expectRevert(PaperOtcFactory.BadState.selector);
+        factory.cancelOffer(id);
+    }
+
+    function testTimeoutCannotEraseDefaultAfterEnable() public {
+        uint256 id = _match(20e6);
+        _enable();
+        vm.warp(block.timestamp + 180 days);
+        vm.expectRevert(PaperOtcFactory.Transfers.selector);
+        factory.timeoutCash(id);
+        factory.finalizeSellerDefault(id);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(buyer)), 30e6);
+    }
+
+    function testFeeRecipientDelay() public {
+        vm.prank(owner);
+        factory.proposeFeeRecipient(stranger);
+        vm.warp(block.timestamp + 2 days - 1);
+        vm.prank(owner);
+        vm.expectRevert(PaperOtcFactory.Window.selector);
+        factory.acceptFeeRecipient();
+        vm.warp(block.timestamp + 1);
+        vm.prank(owner);
+        factory.acceptFeeRecipient();
+        assertEq(factory.feeRecipient(), stranger);
+    }
+
+    function testTwoTimesCollateralPhysicalPaysSellerShares() public {
+        uint256 id = _match(20e6);
+        _enable();
+        vm.prank(seller);
+        factory.deliverPaper(id);
+        vm.prank(buyer);
+        factory.settlePhysical(id);
+        assertEq(paper.balanceOf(buyer), 10e18);
+        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 30e6);
+        assertEq(susdm.balanceOf(buyer), 0);
+    }
+
     function testBagsStayIsolatedWhenOneIsShort() public {
         uint256 a = _offer(10e6);
         uint256 b = _offer(10e6);
@@ -348,7 +412,8 @@ contract PaperOtcTest is Test {
         susdm.setRate(1e6);
         vm.prank(seller);
         factory.cancelOffer(b);
-        assertEq(usdm.balanceOf(seller), 1_000_000e6 - 10e6);
+        assertEq(usdm.balanceOf(seller), 1_000_000e6 - 20e6);
+        assertEq(susdm.balanceOf(address(factory)), 0);
         assertGt(susdm.balanceOf(seller), 0);
     }
 

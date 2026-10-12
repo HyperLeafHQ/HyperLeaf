@@ -15,10 +15,12 @@ import {PremarketAddresses} from "./PremarketAddresses.sol";
 ///         PAPER is pulled only after transfers are enabled, and only for the exact amount.
 ///         Not a Leaf, not hNEST, not the live PreMarketFactory.
 ///
-///         Exit pays USDM principal. sUSDM yield above that principal goes to `feeRecipient`.
-///         If a bag cannot redeem its USDM principal, that bag's remaining sUSDM shares are
-///         returned instead. The protocol does not top up. Returned shares are not a promise
-///         of the same USDM amount; unstaking them is the recipient's problem.
+///         A covered exit transfers the sUSDM shares that redeem the booked USDM principal.
+///         Surplus shares go to `feeRecipient`. This contract never calls sUSDM
+///         `withdraw` or `redeem` — Monetrix reverts those (`UseDataFunctions`).
+///         The recipient unwraps. If a bag cannot cover its principal, the whole
+///         remaining share balance is returned. No top-up, and returned shares are
+///         not a promise of the same USDM amount.
 ///
 ///         Windows are constants (180d cash, 48h delivery). The only delayed parameter is
 ///         `feeRecipient` (2 days). Non-upgradeable.
@@ -92,7 +94,7 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
     event PaperDelivered(uint256 indexed id, uint256 amount);
     event Settled(uint256 indexed id);
     event SellerDefaulted(uint256 indexed id);
-    event PrincipalPaid(uint256 indexed id, address indexed to, uint256 usdmAmount);
+    event PrincipalShares(uint256 indexed id, address indexed to, uint256 shares);
     event SharesReturned(uint256 indexed id, address indexed to, uint256 shares);
     event YieldScraped(uint256 indexed id, uint256 shares);
     event TransfersProposed();
@@ -237,16 +239,20 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         emit SellerWalked(id);
     }
 
-    /// @notice Anyone, 180 days after match, before PAPER is in escrow. Dual principal return, no penalty.
+    /// @notice Anyone, 180 days after match, only while transfers are still off.
+///         After enable, the 48h default is the unmatched exit. A no-penalty timeout
+///         must not race it. Guardian `disableTransfers` opens this path again.
     function timeoutCash(uint256 id) external nonReentrant {
         Offer storage o = offers[id];
         if (o.state != State.Matched) revert BadState();
+        if (paperTransfersEnabled) revert Transfers();
         if (block.timestamp < uint256(o.matchedAt) + CASH_WINDOW) revert Window();
         _cashSplit(id, o.seller, o.buyer, State.TimedOut);
         emit TimedOut(id);
     }
 
-    /// @notice Exact `paperAmount` in one transaction. Reverts on a partial amount. Blocked while transfers are off.
+    /// @notice Exact `paperAmount` in one transaction. Reverts on a short transfer.
+///         Still allowed after 48h until someone calls `finalizeSellerDefault`.
     function deliverPaper(uint256 id) external nonReentrant {
         Offer storage o = offers[id];
         if (o.state != State.Matched) revert BadState();
@@ -254,7 +260,9 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         if (!paperTransfersEnabled) revert Transfers();
         uint256 amount = o.paperAmount;
         o.state = State.Delivered;
+        uint256 beforeBal = paper.balanceOf(address(this));
         paper.safeTransferFrom(msg.sender, address(this), amount);
+        if (paper.balanceOf(address(this)) != beforeBal + amount) revert Invariant();
         emit PaperDelivered(id, amount);
     }
 
@@ -347,7 +355,7 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         _payBag(id, buyerTo, bp, bs);
     }
 
-    /// @dev Full USDM principal, or the whole remaining share bag. Never a partial USDM top-up.
+    /// @dev Share count that covers `principal`, or the whole bag. Never unwraps sUSDM.
     function _payBag(uint256 id, address to, uint256 principal, uint256 shares) internal {
         if (shares == 0) {
             if (principal == 0) return;
@@ -355,15 +363,16 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         }
         uint256 covered = susdm.convertToAssets(shares);
         if (principal > 0 && covered >= principal) {
-            try susdm.previewWithdraw(principal) returns (uint256 need) {
-                if (need > 0 && need <= shares) {
-                    uint256 burned = susdm.withdraw(principal, to, address(this));
-                    if (burned > shares) revert Invariant();
-                    if (shares > burned) {
-                        IERC20(address(susdm)).safeTransfer(feeRecipient, shares - burned);
-                        emit YieldScraped(id, shares - burned);
+            try susdm.previewWithdraw(principal) returns (uint256 quoted) {
+                uint256 need = quoted;
+                if (need > 0 && susdm.convertToAssets(need) < principal && need < shares) need += 1;
+                if (need > 0 && need <= shares && susdm.convertToAssets(need) >= principal) {
+                    IERC20(address(susdm)).safeTransfer(to, need);
+                    emit PrincipalShares(id, to, need);
+                    if (shares > need) {
+                        IERC20(address(susdm)).safeTransfer(feeRecipient, shares - need);
+                        emit YieldScraped(id, shares - need);
                     }
-                    emit PrincipalPaid(id, to, principal);
                     return;
                 }
             } catch {}

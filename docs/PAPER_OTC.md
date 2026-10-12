@@ -13,15 +13,16 @@ Collateral is exactly 1× or 2× that payment.
 
 Both sides deposit USDM. The factory wraps sUSDM and remembers the principal and the shares minted for that bag.
 
-Exit pays that bag's USDM principal. Shares above the principal go to `feeRecipient`.
-If the bag cannot redeem the full principal, the whole remaining share balance of that bag is returned. No partial top-up. Unstaking the returned sUSDM is the recipient's problem, and it is not a promise of the same USDM amount.
+A covered exit transfers the sUSDM shares that redeem the booked USDM principal. The recipient unwraps. This contract never calls sUSDM `withdraw` or `redeem`.
+Surplus shares go to `feeRecipient`.
+If the bag cannot cover its principal, the whole remaining share balance of that bag is returned. No top-up. Returned shares are not a promise of the same USDM amount.
 
 | Exit | Who | Result |
 | --- | --- | --- |
 | `cancelOffer` | Seller, while Open | Seller's bag back |
 | `agreeMutual` | Both, while Matched | Each bag back to its depositor |
 | `sellerWalk` | Seller, while Matched | Buyer receives both bags. Seller gets nothing |
-| `timeoutCash` | Anyone, 180d after match | Each bag back. No penalty |
+| `timeoutCash` | Anyone, 180d after match, transfers still off | Each bag back. No penalty. Blocked once transfers are on, so it cannot erase a 48h default |
 | `deliverPaper` + `settlePhysical` | Exact PAPER, then seller or buyer | PAPER to the buyer. Both bags to the seller |
 | `finalizeSellerDefault` | Anyone, 48h of enabled-time, no delivery | Buyer receives both bags. No PAPER moves |
 
