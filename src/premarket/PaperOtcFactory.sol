@@ -17,7 +17,7 @@ import {PremarketAddresses} from "./PremarketAddresses.sol";
 ///
 ///         A covered exit transfers the sUSDM shares that redeem the booked USDM principal.
 ///         Surplus shares go to `feeRecipient`. This contract never calls sUSDM
-///         `withdraw` or `redeem` — Monetrix reverts those (`UseDataFunctions`).
+///         `withdraw` or `redeem` — Monetrix reverts those (`UseCooldownFunctions`).
 ///         The recipient unwraps. If a bag cannot cover its principal, the whole
 ///         remaining share balance is returned. No top-up, and returned shares are
 ///         not a promise of the same USDM amount.
@@ -186,7 +186,7 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         emit OfferCreated(id, msg.sender, paperAmount, payment, collateralUsdm);
     }
 
-    /// @notice Open offers only. Seller gets USDM principal, or the remaining sUSDM shares.
+    /// @notice Open offers only. Seller gets sUSDM shares covering principal, or the remaining sUSDM shares.
     function cancelOffer(uint256 id) external nonReentrant {
         Offer storage o = offers[id];
         if (o.state != State.Open) revert BadState();

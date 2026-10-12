@@ -52,14 +52,14 @@ contract MockSusdm is ERC20 {
         _mint(to, shares);
     }
 
-    error UseDataFunctions();
+    error UseCooldownFunctions();
 
     function withdraw(uint256, address, address) external pure returns (uint256) {
-        revert UseDataFunctions();
+        revert UseCooldownFunctions();
     }
 
     function redeem(uint256, address, address) external pure returns (uint256) {
-        revert UseDataFunctions();
+        revert UseCooldownFunctions();
     }
 
     function setRate(uint256 r) external {
