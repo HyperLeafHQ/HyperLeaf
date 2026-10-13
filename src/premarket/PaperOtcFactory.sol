@@ -367,30 +367,53 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         _payBag(id, buyerTo, bp, bs);
     }
 
-    /// @dev Share count that covers `principal`, or the whole bag. Never unwraps sUSDM.
+    /// @dev Shares that cover `principal`, or the whole bag if the quote fails or cannot cover.
+    ///      A reverting `convertToAssets` or `previewWithdraw` must not block the exit.
     function _payBag(uint256 id, address to, uint256 principal, uint256 shares) internal {
         if (shares == 0) {
             if (principal == 0) return;
             revert Invariant();
         }
-        uint256 covered = susdm.convertToAssets(shares);
-        if (principal > 0 && covered >= principal) {
-            try susdm.previewWithdraw(principal) returns (uint256 quoted) {
-                uint256 need = quoted;
-                if (need > 0 && susdm.convertToAssets(need) < principal && need < shares) need += 1;
-                if (need > 0 && need <= shares && susdm.convertToAssets(need) >= principal) {
-                    IERC20(address(susdm)).safeTransfer(to, need);
-                    emit PrincipalShares(id, to, need);
-                    if (shares > need) {
-                        IERC20(address(susdm)).safeTransfer(feeRecipient, shares - need);
-                        emit YieldScraped(id, shares - need);
-                    }
-                    return;
-                }
-            } catch {}
+        (bool quoted, uint256 need) = _quotedNeed(principal, shares);
+        if (quoted) {
+            IERC20(address(susdm)).safeTransfer(to, need);
+            emit PrincipalShares(id, to, need);
+            if (shares > need) {
+                IERC20(address(susdm)).safeTransfer(feeRecipient, shares - need);
+                emit YieldScraped(id, shares - need);
+            }
+            return;
         }
         IERC20(address(susdm)).safeTransfer(to, shares);
         emit SharesReturned(id, to, shares);
+    }
+
+    /// @dev False means "do not skim": shortfall, or any quote call reverted. Never reverts on the vault view.
+    function _quotedNeed(uint256 principal, uint256 shares) internal view returns (bool ok, uint256 need) {
+        if (principal == 0 || shares == 0) return (false, 0);
+        (bool coveredOk, uint256 covered) = _staticUint(abi.encodeCall(IERC4626.convertToAssets, (shares)));
+        if (!coveredOk || covered < principal) return (false, 0);
+        (bool quoteOk, uint256 quoted) = _staticUint(abi.encodeCall(IERC4626.previewWithdraw, (principal)));
+        if (!quoteOk || quoted == 0 || quoted > shares) return (false, 0);
+        (bool needOk, uint256 needAssets) = _staticUint(abi.encodeCall(IERC4626.convertToAssets, (quoted)));
+        if (!needOk) return (false, 0);
+        need = quoted;
+        if (needAssets < principal) {
+            if (need == shares) return (false, 0);
+            unchecked {
+                need += 1;
+            }
+            (bool bumpOk, uint256 bumpAssets) = _staticUint(abi.encodeCall(IERC4626.convertToAssets, (need)));
+            if (!bumpOk || bumpAssets < principal || need > shares) return (false, 0);
+        }
+        ok = true;
+    }
+
+    function _staticUint(bytes memory data) internal view returns (bool ok, uint256 value) {
+        (bool success, bytes memory ret) = address(susdm).staticcall(data);
+        if (!success || ret.length < 32) return (false, 0);
+        value = abi.decode(ret, (uint256));
+        ok = true;
     }
 
     function _wrap(uint256 assets, uint256 maxShares) internal returns (uint256 shares) {

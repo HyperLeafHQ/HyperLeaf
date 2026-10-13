@@ -13,6 +13,7 @@ contract PreviewRevertSusdm is ERC20 {
     MockUsdm public immutable assetToken;
     uint256 public rate = 1e6;
     bool public revertPreview;
+    bool public revertConvert;
 
     error UseCooldownFunctions();
 
@@ -36,7 +37,12 @@ contract PreviewRevertSusdm is ERC20 {
         revertPreview = true;
     }
 
+    function setRevertConvert() external {
+        revertConvert = true;
+    }
+
     function convertToAssets(uint256 shares) public view returns (uint256) {
+        if (revertConvert) revert UseCooldownFunctions();
         return (shares * rate) / 1e12;
     }
 
@@ -130,6 +136,47 @@ contract PaperOtcAuditFixesTest is Test {
         assertEq(evil.balanceOf(seller), shares, "party receives whole bag");
         assertEq(evil.balanceOf(fee), 0, "fee scrape silently stops");
         assertEq(evil.convertToAssets(shares), 20e6, "party got principal + all yield");
+    }
+
+    function testAudit_ConvertRevertCancelReturnsWholeBag() public {
+        PreviewRevertSusdm evil = new PreviewRevertSusdm(usdm);
+        vm.prank(owner);
+        PaperOtcFactory f = new PaperOtcFactory(owner, guardian, fee, address(usdm), address(evil), address(paper));
+        vm.prank(seller);
+        usdm.approve(address(f), type(uint256).max);
+        vm.prank(seller);
+        uint256 id = f.createOffer(10 * ONE, PRICE, 10e6, type(uint256).max);
+        (,,,,,, uint256 shares,,,,,,) = f.offers(id);
+        evil.setRevertConvert();
+        vm.prank(seller);
+        f.cancelOffer(id);
+        (,,,,,,,,,, PaperOtcFactory.State st,,) = f.offers(id);
+        assertEq(uint256(st), uint256(PaperOtcFactory.State.Cancelled));
+        assertEq(evil.balanceOf(seller), shares);
+        assertEq(evil.balanceOf(fee), 0);
+    }
+
+    function testAudit_ConvertRevertWalkReturnsBothBags() public {
+        PreviewRevertSusdm evil = new PreviewRevertSusdm(usdm);
+        vm.prank(owner);
+        PaperOtcFactory f = new PaperOtcFactory(owner, guardian, fee, address(usdm), address(evil), address(paper));
+        vm.prank(seller);
+        usdm.approve(address(f), type(uint256).max);
+        vm.prank(buyer);
+        usdm.approve(address(f), type(uint256).max);
+        vm.prank(seller);
+        uint256 id = f.createOffer(10 * ONE, PRICE, 20e6, type(uint256).max);
+        vm.prank(buyer);
+        f.takeOffer(id, type(uint256).max);
+        (,,,,,, uint256 sellerShares, uint256 buyerShares,,,,,) = f.offers(id);
+        evil.setRevertConvert();
+        vm.prank(seller);
+        f.sellerWalk(id);
+        (,,,,,,,,,, PaperOtcFactory.State st,,) = f.offers(id);
+        assertEq(uint256(st), uint256(PaperOtcFactory.State.Walked));
+        assertEq(evil.balanceOf(buyer), sellerShares + buyerShares);
+        assertEq(evil.balanceOf(seller), 0);
+        assertEq(evil.balanceOf(fee), 0);
     }
 
     /// @notice Once the delivery cycle has started, a later disable does not reopen the 180-day refund.
