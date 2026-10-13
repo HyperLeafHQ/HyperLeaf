@@ -403,6 +403,28 @@ contract PaperOtcTest is Test {
         assertEq(susdm.balanceOf(buyer), 0);
     }
 
+    function testCashWindowDiesOnceDeliveryCycleStarts() public {
+        uint256 id = _match(10e6);
+        _enable();
+        vm.prank(guardian);
+        factory.disableTransfers();
+        vm.warp(block.timestamp + 180 days);
+        assertTrue(factory.deliveryCycleStarted(id));
+        vm.expectRevert(PaperOtcFactory.Transfers.selector);
+        factory.timeoutCash(id);
+    }
+
+    function testMatchWhileEnabledHasNoCashWindow() public {
+        _enable();
+        uint256 id = _match(10e6);
+        assertTrue(factory.deliveryCycleStarted(id));
+        vm.warp(block.timestamp + 180 days);
+        vm.prank(guardian);
+        factory.disableTransfers();
+        vm.expectRevert(PaperOtcFactory.Transfers.selector);
+        factory.timeoutCash(id);
+    }
+
     function testBagsStayIsolatedWhenOneIsShort() public {
         uint256 a = _offer(10e6);
         uint256 b = _offer(10e6);

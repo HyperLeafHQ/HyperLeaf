@@ -22,13 +22,18 @@ If the bag cannot cover its principal, the whole remaining share balance of that
 | `cancelOffer` | Seller, while Open | Seller's bag back |
 | `agreeMutual` | Both, while Matched | Each bag back to its depositor |
 | `sellerWalk` | Seller, while Matched | Buyer receives both bags. Seller gets nothing |
-| `timeoutCash` | Anyone, 180d after match, transfers off at call time | Each bag back. No penalty. Blocked only *while* transfers are on — see the correction below |
-| `deliverPaper` + `settlePhysical` | Exact PAPER, then seller or buyer | PAPER to the buyer. Both bags to the seller |
-| `finalizeSellerDefault` | Anyone, 48h of enabled-time, no delivery | Buyer receives both bags. No PAPER moves |
+| `timeoutCash` | Anyone, 180d after match, and only if that offer's delivery cycle has not started | Each bag back. No penalty |
+| `deliverPaper` + `settlePhysical` | Exact PAPER, then seller or buyer. No deadline on settle | PAPER to the buyer. Both bags to the seller. If the PAPER transfer reverts, the offer stays Delivered and can be retried |
+| `finalizeSellerDefault` | Anyone, 48h of enabled-time, transfers on, no delivery | Buyer receives both bags. No PAPER moves |
 
-48h counts only while `paperTransfersEnabled` is true. Guardian `disableTransfers` pauses that clock. Cash exits do not use that clock.
+48h counts only while `paperTransfersEnabled` is true. Guardian `disableTransfers` pauses that clock so the flow can wait and resume. It does not reopen a 180-day refund whose delivery cycle has already started.
 
-Correction (2026-10-12): `timeoutCash` checks `paperTransfersEnabled` at call time and 180 days of **wall-clock** since `matchedAt`. A guardian `disableTransfers` after a match therefore reopens `timeoutCash` and CAN erase a pending or matured 48h default, converting the buyer's double-bag default claim into a no-penalty split. The earlier wording ("cannot erase a 48h default") was wrong. Whether default maturity should latch (survive a later disable) is an OPEN DESIGN DECISION.
+Signed 2026-10-13:
+
+- No Delivered refund. PAPER already in the contract cannot move while the token restricts transfers, so an exit that tries to send it back would fail the same way. `settlePhysical` waits until the transfer succeeds.
+- While an offer is Matched, guardian turns transfers off to pause the 48h clock if PAPER re-restricts. Otherwise that clock keeps running and the seller can be defaulted.
+- The 180-day refund dies for an offer the moment its 48h cycle starts (transfers were already on at match, or they are turned on later). A later `disableTransfers` does not bring it back.
+- v1 guardian is not rotatable.
 
 Transfers start false. Owner proposes, guardian confirms with a non-zero tx-hash reference. The contract stores the reference and does not replay it. Guardian can turn transfers off alone. Owner cannot turn them on alone.
 
@@ -43,8 +48,8 @@ Pause blocks new create/take only. Windows are constants. `feeRecipient` changes
 PAPER `0xe40f17915DAa230324030003A197cdAEf2261C0e` is a TransparentUpgradeableProxy whose transfers currently revert `TransferRestricted()` for every address except the privileged `stakingContract` (`0xAAd6…F016`, holding ~98.9% of supply). The PAPER owner contract (`0xB915…`) can rotate that privileged sender at any time with no on-chain timelock. Three scenarios:
 
 1. **Policy closed (today):** `deliverPaper` cannot succeed until the policy opens. The two-key enable gate (owner proposes, guardian confirms) exists for exactly this reason — do not confirm enablement without evidence per the `transferProofRef` ops rule above.
-2. **Policy re-restricts while an offer is Delivered:** `settlePhysical` reverts on the final PAPER transfer to the buyer, and every other exit requires Matched. Both sUSDM bags and the delivered PAPER are permanently locked — no escape hatch exists today. OPEN DESIGN DECISION: a mutual-cancel-from-Delivered returning PAPER to the seller and both bags to their depositors is the candidate fix.
-3. **Policy re-restricts while Matched:** sellers are defaulted after 48h of enabled-time through no fault of their own (delivery reverts, the clock keeps accruing). A guardian `disableTransfers` pauses that clock — and, per the correction above, reopens the 180d `timeoutCash`.
+2. **Policy re-restricts while an offer is Delivered:** `settlePhysical` reverts on the PAPER transfer and the offer stays Delivered. There is no refund. Retry `settlePhysical` when the token allows transfers again. Both bags stay locked until then.
+3. **Policy re-restricts while Matched:** guardian `disableTransfers` pauses the 48h clock so the seller is not defaulted for a transfer they cannot make. Turning transfers back on resumes the remaining time. The 180-day refund does not return if this offer's delivery cycle had already started.
 
 ### Monetrix trust surface
 

@@ -132,24 +132,21 @@ contract PaperOtcAuditFixesTest is Test {
         assertEq(evil.convertToAssets(shares), 20e6, "party got principal + all yield");
     }
 
-    /// @notice Characterization: a guardian disableTransfers after match reopens the 180d wall-clock
-    ///         timeoutCash and ERASES a pending/matured 48h default (no-penalty split instead of the
-    ///         buyer's double-bag claim).
-    ///         TODO(open design decision, docs/PAPER_OTC.md): latch default maturity so a later
-    ///         disable cannot erase it. If latched, this test must change.
-    function testAudit_GuardianDisableErasesMaturedDefault() public {
-        uint256 id = _match(20e6); // seller locked 2x collateral
+    /// @notice Once the delivery cycle has started, a later disable does not reopen the 180-day refund.
+    function testAudit_DeliveryCycleKeepsCashWindowClosed() public {
+        uint256 id = _match(20e6);
         _enable();
-        vm.warp(block.timestamp + 47 hours); // one enabled-hour from default
+        vm.warp(block.timestamp + 47 hours);
         vm.prank(guardian);
         factory.disableTransfers();
-        vm.warp(block.timestamp + 200 days); // matchedAt + 180d wall-clock passed
+        vm.warp(block.timestamp + 200 days);
         vm.expectRevert(PaperOtcFactory.Transfers.selector);
-        factory.finalizeSellerDefault(id); // default path stays closed while disabled
-        vm.prank(stranger);
-        factory.timeoutCash(id); // ...but the no-penalty exit reopened
-        assertGe(susdm.convertToAssets(susdm.balanceOf(seller)), 20e6, "seller bag back, no penalty");
-        assertGe(susdm.convertToAssets(susdm.balanceOf(buyer)), 10e6, "buyer own bag back only");
+        factory.finalizeSellerDefault(id);
+        vm.expectRevert(PaperOtcFactory.Transfers.selector);
+        factory.timeoutCash(id);
+        assertTrue(factory.deliveryCycleStarted(id));
+        assertEq(susdm.balanceOf(seller), 0);
+        assertEq(susdm.balanceOf(buyer), 0);
     }
 
     /// @notice On chain 999 the constructor rejects any USDM/sUSDM/PAPER other than the Monetrix pins.

@@ -81,6 +81,10 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
     /// @dev Enabled-time accrued while transfers were on, excluding the current stretch.
     uint64 public enableCursor;
     uint64 public enableSince;
+    /// @dev Increments each time transfers turn on. Once this passes an offer's
+    ///      `matchEnableSeq`, that offer's 180-day refund is gone for good.
+    uint64 public enableSeq;
+    mapping(uint256 => uint64) public matchEnableSeq;
 
     uint256 public nextId = 1;
     mapping(uint256 => Offer) public offers;
@@ -151,6 +155,12 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         return payment;
     }
 
+    /// @notice True once this offer's 48h delivery cycle has started. Stays true if transfers are later turned off.
+    function deliveryCycleStarted(uint256 id) public view returns (bool) {
+        if (offers[id].matchedAt == 0) return false;
+        return enableSeq > matchEnableSeq[id];
+    }
+
     /// @notice Enabled seconds so far. Frozen while `paperTransfersEnabled` is false.
     function enabledTime() public view returns (uint256) {
         if (!paperTransfersEnabled) return enableCursor;
@@ -213,6 +223,8 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         o.buyerShares = shares;
         o.matchedAt = uint64(block.timestamp);
         o.deliveryStart = uint64(enabledTime());
+        // Already on: cycle starts now, so store the previous seq. Still off: store the current seq.
+        matchEnableSeq[id] = paperTransfersEnabled ? enableSeq - 1 : enableSeq;
         o.state = State.Matched;
         emit OfferTaken(id, msg.sender, payment);
     }
@@ -239,20 +251,19 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         emit SellerWalked(id);
     }
 
-    /// @notice Anyone, 180 days after match, only while transfers are still off.
-///         After enable, the 48h default is the unmatched exit. A no-penalty timeout
-///         must not race it. Guardian `disableTransfers` opens this path again.
+    /// @notice Anyone, 180 days after match, and only if this offer's delivery cycle has not started.
+    ///         The first time transfers are on after the match, the 180-day refund dies and does not come back.
     function timeoutCash(uint256 id) external nonReentrant {
         Offer storage o = offers[id];
         if (o.state != State.Matched) revert BadState();
-        if (paperTransfersEnabled) revert Transfers();
+        if (deliveryCycleStarted(id)) revert Transfers();
         if (block.timestamp < uint256(o.matchedAt) + CASH_WINDOW) revert Window();
         _cashSplit(id, o.seller, o.buyer, State.TimedOut);
         emit TimedOut(id);
     }
 
-    /// @notice Exact `paperAmount` in one transaction. Reverts on a short transfer.
-///         Still allowed after 48h until someone calls `finalizeSellerDefault`.
+    /// @notice Exact `paperAmount`. Reverts if the token delivers short.
+    ///         Allowed after 48h until `finalizeSellerDefault`. If PAPER itself reverts, the offer stays Matched.
     function deliverPaper(uint256 id) external nonReentrant {
         Offer storage o = offers[id];
         if (o.state != State.Matched) revert BadState();
@@ -266,7 +277,7 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         emit PaperDelivered(id, amount);
     }
 
-    /// @notice Seller or buyer, after delivery. PAPER to the buyer. Each bag pays the seller.
+    /// @notice Seller or buyer. No deadline: if PAPER transfers revert, the offer stays Delivered and this can be retried.
     function settlePhysical(uint256 id) external nonReentrant {
         Offer storage o = offers[id];
         if (o.state != State.Delivered) revert BadState();
@@ -302,6 +313,7 @@ contract PaperOtcFactory is Ownable2Step, ReentrancyGuard {
         if (proofRef == bytes32(0)) revert Proof();
         enableProposed = false;
         transferProofRef = proofRef;
+        enableSeq += 1;
         paperTransfersEnabled = true;
         enableSince = uint64(block.timestamp);
         emit TransfersEnabled(proofRef);
