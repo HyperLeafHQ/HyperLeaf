@@ -7,8 +7,8 @@ optimizer = true
 optimizer_runs = 1
 via_ir = true
 ffi = false
-# Public HyperEVM RPC rate-limits forge fork storage; run FOUNDRY_PROFILE=fork for HevForkTest.
-no_match_path = "test/HevFork.t.sol"
+# Public HyperEVM RPC rate-limits forge fork storage; run FOUNDRY_PROFILE=fork for the fork suites.
+no_match_path = "test/*Fork*.t.sol"
 
 [profile.default.invariant]
 runs = 64
@@ -41,6 +41,6 @@ optimizer = true
 optimizer_runs = 1
 via_ir = true
 ffi = false
-# Override default no_match_path so HevFork is included under this profile.
+# Override default no_match_path so the fork suites (HevFork, PaperOtcFork) run under this profile.
 no_match_path = "test/NestVault.t.sol"
-match_path = "test/HevFork.t.sol"
+match_path = "test/*Fork*.t.sol"
